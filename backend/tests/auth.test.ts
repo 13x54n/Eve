@@ -1,0 +1,195 @@
+import request from "supertest";
+import {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  it,
+} from "vitest";
+import app from "../src/app.js";
+import { prisma } from "../src/config/prisma.js";
+
+const testEmail = `rider-${Date.now()}@example.com`;
+const testPassword = "password123";
+
+let accessToken = "";
+
+describe("Authentication API", () => {
+  beforeAll(async () => {
+    await prisma.user.deleteMany({
+      where: {
+        email: testEmail,
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany({
+      where: {
+        email: testEmail,
+      },
+    });
+
+    await prisma.$disconnect();
+  });
+
+  it("registers a rider", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Test Rider",
+        email: testEmail,
+        password: testPassword,
+      })
+      .expect(201);
+
+    expect(response.body.accessToken).toEqual(
+      expect.any(String),
+    );
+
+    expect(response.body.user).toMatchObject({
+      name: "Test Rider",
+      email: testEmail,
+      role: "RIDER",
+      isActive: true,
+    });
+
+    expect(response.body.user.passwordHash).toBeUndefined();
+
+    accessToken = response.body.accessToken;
+  });
+
+  it("does not register the same email twice", async () => {
+    const response = await request(app)
+      .post("/api/auth/register")
+      .send({
+        name: "Duplicate Rider",
+        email: testEmail,
+        password: testPassword,
+      })
+      .expect(409);
+
+    expect(response.body.message).toBe(
+      "Unable to create account with these details",
+    );
+  });
+
+  it("logs in with valid credentials", async () => {
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send({
+        email: testEmail,
+        password: testPassword,
+      })
+      .expect(200);
+
+    expect(response.body.accessToken).toEqual(
+      expect.any(String),
+    );
+
+    expect(response.body.user).toMatchObject({
+      email: testEmail,
+      role: "RIDER",
+    });
+
+    accessToken = response.body.accessToken;
+  });
+
+  it("rejects an incorrect password", async () => {
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send({
+        email: testEmail,
+        password: "incorrect-password",
+      })
+      .expect(401);
+
+    expect(response.body).toEqual({
+      message: "Invalid email or password",
+    });
+  });
+
+  it("rejects an unknown email", async () => {
+    const response = await request(app)
+      .post("/api/auth/login")
+      .send({
+        email: "unknown@example.com",
+        password: testPassword,
+      })
+      .expect(401);
+
+    expect(response.body).toEqual({
+      message: "Invalid email or password",
+    });
+  });
+
+  it("returns the current rider with a valid token", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body.user).toMatchObject({
+      email: testEmail,
+      role: "RIDER",
+    });
+  });
+
+  it("rejects /me without an authorization header", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
+      .expect(401);
+
+    expect(response.body).toEqual({
+      message: "Authentication required",
+    });
+  });
+
+  it("rejects /me with an invalid token", async () => {
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", "Bearer invalid-token")
+      .expect(401);
+
+    expect(response.body).toEqual({
+      message: "Invalid or expired token",
+    });
+  });
+});
+
+it("rejects invalid registration data", async () => {
+  const response = await request(app)
+    .post("/api/auth/register")
+    .send({
+      name: "A",
+      email: "invalid-email",
+      password: "123",
+    })
+    .expect(400);
+
+  expect(response.body.message).toBe("Invalid request data");
+  expect(response.body.errors).toBeDefined();
+});
+
+it("normalizes the registration email", async () => {
+  const email = `Rider-${Date.now()}@Example.COM`;
+
+  const response = await request(app)
+    .post("/api/auth/register")
+    .send({
+      name: "Normalized Rider",
+      email,
+      password: testPassword,
+    })
+    .expect(201);
+
+  expect(response.body.user.email).toBe(
+    email.toLowerCase(),
+  );
+
+  await prisma.user.delete({
+    where: {
+      email: email.toLowerCase(),
+    },
+  });
+});
