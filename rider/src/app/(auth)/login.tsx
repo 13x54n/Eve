@@ -1,11 +1,44 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import Feather from '@expo/vector-icons/Feather';
+import {
+  Alert,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import Feather from "@expo/vector-icons/Feather";
+import { login } from "@/services/auth";
+import * as React from "react";
 
 export default function LoginScreen() {
-  function handleLogin() {
-    router.replace("/(tabs)/home");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleLogin() {
+    const normalizedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
+    if (!normalizedEmail || !trimmedPassword) {
+      Alert.alert("Missing fields", "Please enter both email and password.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await login({ email: normalizedEmail, password: trimmedPassword });
+      router.replace("/(tabs)/home");
+    } catch (e: any) {
+      const msg =
+        e.response?.data?.message ||
+        e.response?.data?.error ||
+        "Login failed. Please try again.";
+      Alert.alert("Login error", msg);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -21,25 +54,31 @@ export default function LoginScreen() {
           placeholder="Email"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+          returnKeyType="next"
         />
       </View>
 
       <View style={styles.inputContainer}>
         <Feather name="lock" size={20} color="black" />
-
         <TextInput
           style={styles.input}
           placeholder="Password"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+          returnKeyType="go"
+          onSubmitEditing={handleLogin}
         />
       </View>
 
       <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-        <Text style={{textAlign: "center", color: "#eb2525", marginBottom: 10}}>Forgot password? Click here.</Text>
+        <Text style={{ textAlign: "center", color: "#eb2525", marginBottom: 10 }}>Forgot password? Click here.</Text>
       </Pressable>
 
-      <Pressable style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Log in</Text>
+      <Pressable style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleLogin} disabled={loading}>
+        <Text style={styles.buttonText}>{loading ? "Logging in..." : "Log in"}</Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/(auth)/register")}>
@@ -52,7 +91,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: "center",
     padding: 24,
     backgroundColor: "#f7f8ef",
   },
@@ -74,7 +112,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#D1D5DB",
     borderRadius: 12,
-    backgroundColor: 'white', paddingHorizontal: 16, marginBottom: 14,
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    marginBottom: 14,
     paddingVertical: 6,
     gap: 8,
   },
