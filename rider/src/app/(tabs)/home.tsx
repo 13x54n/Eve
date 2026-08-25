@@ -11,32 +11,37 @@ import {
 import MapView, { Marker, Region } from "react-native-maps";
 
 export default function HomeScreen() {
-  const [region, setRegion] = useState<Region | null>(null);
+  const [region, setRegion] = useState<Region>(fallbackRegion);
   const [loading, setLoading] = useState(true);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadLocation() {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== "granted") {
+        if (status !== "granted") {
+          setLocationMessage("Location permission is off. Showing the default map area.");
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const { latitude, longitude } = location.coords;
+
+        setRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.02,
+          longitudeDelta: 0.02,
+        });
+      } catch {
+        setLocationMessage("Could not find your location. Showing the default map area.");
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-
-      const { latitude, longitude } = location.coords;
-
-      setRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      });
-
-      setLoading(false);
     }
 
     loadLocation();
@@ -53,24 +58,19 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {region ? (
-        <MapView style={StyleSheet.absoluteFillObject} initialRegion={region}>
-          <Marker
-            coordinate={{
-              latitude: region.latitude,
-              longitude: region.longitude,
-            }}
-            title="You are here"
-          />
-        </MapView>
-      ) : (
-        <View style={styles.center}>
-          <Text>Location permission is required to display the map.</Text>
-        </View>
-      )}
+      <MapView style={StyleSheet.absoluteFill} initialRegion={region}>
+        <Marker
+          coordinate={{
+            latitude: region.latitude,
+            longitude: region.longitude,
+          }}
+          title={locationMessage ? "Default map area" : "You are here"}
+        />
+      </MapView>
 
       <View style={styles.searchCard}>
         <Text style={styles.title}>Where would you like to go?</Text>
+        {locationMessage ? <Text style={styles.locationMessage}>{locationMessage}</Text> : null}
 
         <Pressable
           style={styles.destinationButton}
@@ -82,6 +82,13 @@ export default function HomeScreen() {
     </View>
   );
 }
+
+const fallbackRegion: Region = {
+  latitude: 43.6532,
+  longitude: -79.3832,
+  latitudeDelta: 0.08,
+  longitudeDelta: 0.08,
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -111,6 +118,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     fontSize: 18,
     fontWeight: "700",
+  },
+  locationMessage: {
+    marginBottom: 12,
+    color: "#6B7280",
   },
   destinationButton: {
     padding: 16,
