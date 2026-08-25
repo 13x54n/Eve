@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "rider",
-    "slug": "rider",
+    "name": "Eve - Driver",
+    "slug": "eve-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rider",
+    "scheme": "eve-driver",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.anonymous.evedriver"
     },
     "android": {
       "adaptiveIcon": {

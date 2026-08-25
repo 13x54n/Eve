@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "driver",
-    "slug": "driver",
+    "name": "Eve",
+    "slug": "eve",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "driver",
+    "scheme": "eve",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.driver"
+      "bundleIdentifier": "com.anonymous.eve"
     },
     "android": {
       "adaptiveIcon": {
