@@ -193,3 +193,39 @@ it("normalizes the registration email", async () => {
     },
   });
 });
+
+it("resets a password with the development verification code", async () => {
+  const email = `reset-${Date.now()}@example.com`;
+
+  await request(app)
+    .post("/api/auth/register")
+    .send({
+      name: "Reset Rider",
+      email,
+      password: testPassword,
+    })
+    .expect(201);
+
+  const resetRequest = await request(app)
+    .post("/api/auth/forgot-password")
+    .send({ email })
+    .expect(200);
+
+  expect(resetRequest.body.verificationCode).toMatch(/^\d{6}$/);
+
+  await request(app)
+    .post("/api/auth/reset-password")
+    .send({
+      email,
+      code: resetRequest.body.verificationCode,
+      password: "new-password123",
+    })
+    .expect(200);
+
+  await request(app)
+    .post("/api/auth/login")
+    .send({ email, password: "new-password123" })
+    .expect(200);
+
+  await prisma.user.delete({ where: { email } });
+});

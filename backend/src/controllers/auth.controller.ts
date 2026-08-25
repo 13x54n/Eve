@@ -7,10 +7,14 @@ import {
   getUserById,
   loginRider,
   registerRider,
+  requestPasswordReset,
+  resetPassword,
 } from "../services/auth.service.js";
 import {
+  forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resetPasswordSchema,
 } from "../validation/auth.validation.js";
 import type {
   AuthenticatedRequest,
@@ -60,6 +64,39 @@ export async function me(
     );
 
     res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function forgotPassword(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { email } = forgotPasswordSchema.parse(req.body);
+    const result = await requestPasswordReset(email);
+
+    res.status(200).json({
+      message: "If an account exists, a verification code was sent.",
+      ...(result.verificationCode
+        ? { verificationCode: result.verificationCode }
+        : {}),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resetPasswordHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    await resetPassword(resetPasswordSchema.parse(req.body));
+    res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
     next(error);
   }

@@ -9,4 +9,5 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User.js'
+export type * from './models/PasswordResetCode.js'
 export type * from './commonInputTypes.js'

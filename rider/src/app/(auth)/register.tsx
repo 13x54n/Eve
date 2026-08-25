@@ -40,6 +40,7 @@ export default function RegisterScreen() {
 
     try {
       setLoading(true);
+      
       await register({
         name: normalizedName,
         email: normalizedEmail,

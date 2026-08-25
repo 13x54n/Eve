@@ -21,10 +21,23 @@ api.interceptors.request.use(async (config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+  if (__DEV__) {
+    console.log(
+      `[api] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
+    );
+  }
   return config;
 });
 
 api.interceptors.response.use(
   (res) => res,
-  (error: AxiosError) => Promise.reject(error),
+  (error: AxiosError) => {
+    if (__DEV__) {
+      console.error(
+        `[api] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} failed`,
+        error.message,
+      );
+    }
+    return Promise.reject(error);
+  },
 );

@@ -1,3 +1,4 @@
+import { createHash, randomInt } from "node:crypto";
 import { prisma } from "../config/prisma.js";
 import {
   createAccessToken,
@@ -7,6 +8,13 @@ import {
   hashPassword,
   verifyPassword,
 } from "../utils/password.js";
+import { verificationCodeSender } from "./verification-code.service.js";
+
+const resetCodeLifetimeMs = 10 * 60 * 1000;
+
+function hashResetCode(code: string) {
+  return createHash("sha256").update(code).digest("hex");
+}
 
 type UserRecord = {
   id: string;
@@ -116,4 +124,67 @@ export async function getUserById(userId: string) {
   }
 
   return sanitizeUser(user);
+}
+
+export async function requestPasswordReset(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user || !user.isActive) {
+    return { verificationCode: undefined };
+  }
+
+  await prisma.passwordResetCode.deleteMany({ where: { userId: user.id } });
+
+  const code = randomInt(100000, 1000000).toString();
+  await prisma.passwordResetCode.create({
+    data: {
+      userId: user.id,
+      codeHash: hashResetCode(code),
+      expiresAt: new Date(Date.now() + resetCodeLifetimeMs),
+    },
+  });
+
+  await verificationCodeSender.sendCode({ email: user.email, code });
+
+  return {
+    verificationCode:
+      process.env.NODE_ENV === "production" ? undefined : code,
+  };
+}
+
+export async function resetPassword(input: {
+  email: string;
+  code: string;
+  password: string;
+}) {
+  const user = await prisma.user.findUnique({ where: { email: input.email } });
+  const resetCode = user
+    ? await prisma.passwordResetCode.findFirst({
+        where: {
+          userId: user.id,
+          consumedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        orderBy: { createdAt: "desc" },
+      })
+    : null;
+
+  if (!user || !user.isActive || !resetCode ||
+      resetCode.codeHash !== hashResetCode(input.code)) {
+    const error = new Error("Invalid or expired verification code");
+    error.name = "UnauthorizedError";
+    throw error;
+  }
+
+  const passwordHash = await hashPassword(input.password);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash },
+    }),
+    prisma.passwordResetCode.update({
+      where: { id: resetCode.id },
+      data: { consumedAt: new Date() },
+    }),
+  ]);
 }
