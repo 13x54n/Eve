@@ -13,11 +13,6 @@ import {
 import * as Location from "expo-location";
 import { searchAddresses, AddressSuggestion } from "@/services/location"; // adjust path if needed
 
-const rideOptions = [
-  ["Eve Go", "Affordable everyday rides", "$12-16", "user"],
-  ["Eve Comfort", "Extra room and comfort", "$18-23", "star"],
-] as const;
-
 const vehicleOptions = [
   ["Car", "Comfortable private ride", "car"],
   ["Bike", "Quick rides through traffic", "zap"],
@@ -175,7 +170,6 @@ export default function RequestRideScreen() {
           <View style={styles.line} />
           <View style={styles.endDot} />
         </View>
-        {/* on both input when active user should be able to pin the location from map */}
         <View style={styles.routeInputs}>
           <Text style={styles.label}>Pick-up</Text>
           <TextInput
@@ -293,8 +287,6 @@ export default function RequestRideScreen() {
           </Pressable>
         ))}
       </View>
-
-        {/* trip summary working */}
 
       <Pressable
         disabled={!dropoff.trim()}
