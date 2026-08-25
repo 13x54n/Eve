@@ -1,9 +1,10 @@
 import * as Location from "expo-location";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
   ActivityIndicator,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -11,7 +12,7 @@ import {
   View,
   FlatList,
 } from "react-native";
-import MapView, { Marker, Region } from "react-native-maps";
+import MapView, { Marker, Region, UrlTile } from "react-native-maps";
 import { Image } from "expo-image";
 import { searchAddresses, AddressSuggestion } from "@/services/location"; // adjust path if needed
 
@@ -23,6 +24,12 @@ export default function HomeScreen() {
   const [destination, setDestination] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [mapPickerVisible, setMapPickerVisible] = useState(false);
+  const [mapPin, setMapPin] = useState({
+    latitude: fallbackRegion.latitude,
+    longitude: fallbackRegion.longitude,
+  });
+  const mapPickerRef = useRef<MapView | null>(null);
 
   useEffect(() => {
     async function loadLocation() {
@@ -72,6 +79,41 @@ function handleDestinationChange(text: string) {
         pickup: "Current location",
         dropoff: item.display_name,
       },
+    });
+  }
+
+  async function openMapPicker() {
+    let nextRegion = region;
+
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status === "granted") {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        nextRegion = {
+          ...region,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setRegion(nextRegion);
+      }
+    } catch {
+      // Keep the last known location or fallback region.
+    }
+
+    const coordinate = {
+      latitude: nextRegion.latitude,
+      longitude: nextRegion.longitude,
+    };
+    setMapPin(coordinate);
+    setMapPickerVisible(true);
+    requestAnimationFrame(() => {
+      mapPickerRef.current?.animateToRegion({
+        ...nextRegion,
+        latitudeDelta: 0.04,
+        longitudeDelta: 0.04,
+      });
     });
   }
 
@@ -145,9 +187,20 @@ function handleDestinationChange(text: string) {
 
       {searchFocused && (destination || suggestions.length > 0) ? (
         <View style={styles.suggestionsCard}>
-          <Text style={styles.suggestionsTitle}>
-            {destination ? "Suggested destinations" : "Popular destinations"}
-          </Text>
+          <View style={styles.suggestionsHeader}>
+            <Text style={styles.suggestionsTitle}>
+              {destination ? "Suggested destinations" : "Popular destinations"}
+            </Text>
+            <Pressable
+              style={styles.mapChoiceButton}
+              onPress={openMapPicker}
+              accessibilityRole="button"
+              accessibilityLabel="Choose destination on map"
+            >
+              <Feather name="map" size={14} color="#2E4ED5" />
+              <Text style={styles.mapChoiceText}>Choose on map</Text>
+            </Pressable>
+          </View>
           <FlatList
             data={suggestions}
             keyExtractor={(i) => i.display_name}
@@ -179,13 +232,69 @@ function handleDestinationChange(text: string) {
           />
         </View>
       ) : null}
+
+      <Modal
+        visible={mapPickerVisible}
+        animationType="slide"
+        onRequestClose={() => setMapPickerVisible(false)}
+      >
+        <View style={styles.mapPicker}>
+          <View style={styles.mapPickerHeader}>
+            <Pressable
+              onPress={() => setMapPickerVisible(false)}
+              accessibilityLabel="Close map picker"
+            >
+              <Feather name="x" size={22} color="#111827" />
+            </Pressable>
+            <Text style={styles.mapPickerTitle}>Choose on map</Text>
+            <View style={{ width: 22 }} />
+          </View>
+          <MapView
+            ref={mapPickerRef}
+            style={styles.mapPickerView}
+            initialRegion={{ ...region, latitudeDelta: 0.04, longitudeDelta: 0.04 }}
+            onPress={(event) => setMapPin(event.nativeEvent.coordinate)}
+          >
+            <UrlTile
+              urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maximumZ={19}
+              tileSize={256}
+            />
+            <Marker coordinate={mapPin} />
+          </MapView>
+          <Text style={styles.mapAttribution}>© OpenStreetMap contributors</Text>
+          <View style={styles.mapPickerFooter}>
+            <Text style={styles.mapPickerHint}>Tap the map to place your destination pin.</Text>
+            <Pressable
+              style={styles.confirmMapButton}
+              onPress={() => {
+                setDestination("Pinned map location");
+                setSearchFocused(false);
+                setMapPickerVisible(false);
+                router.push({
+                  pathname: "/ride/request",
+                  params: {
+                    pickup: "Current location",
+                    dropoff: "Pinned map location",
+                    dropoff_lat: String(mapPin.latitude),
+                    dropoff_lng: String(mapPin.longitude),
+                  },
+                });
+              }}
+            >
+              <Text style={styles.confirmMapText}>Use this location</Text>
+              <Feather name="arrow-right" size={18} color="#FFFFFF" />
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const fallbackRegion: Region = {
-  latitude: 43.6532,
-  longitude: -79.3832,
+  latitude: 27.7172,
+  longitude: 85.324,
   latitudeDelta: 0.08,
   longitudeDelta: 0.08,
 };
@@ -244,6 +353,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
   },
+  suggestionsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  mapChoiceButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: "#EEF2FF",
+  },
+  mapChoiceText: {
+    color: "#2E4ED5",
+    fontSize: 11,
+    fontWeight: "700",
+  },
   suggestionRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -262,4 +390,13 @@ const styles = StyleSheet.create({
   suggestionCopy: { flex: 1, marginLeft: 10 },
   suggestionTitle: { color: "#111827", fontSize: 14, fontWeight: "700" },
   suggestionSubtitle: { marginTop: 3, color: "#6B7280", fontSize: 12 },
+  mapPicker: { flex: 1, backgroundColor: "#F7F8EF" },
+  mapPickerHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 20, paddingTop: 56, backgroundColor: "#FFFFFF" },
+  mapPickerTitle: { color: "#111827", fontSize: 18, fontWeight: "800" },
+  mapPickerView: { flex: 1 },
+  mapAttribution: { position: "absolute", right: 8, bottom: 8, paddingHorizontal: 6, paddingVertical: 3, color: "#374151", fontSize: 10, backgroundColor: "rgba(255, 255, 255, 0.82)" },
+  mapPickerFooter: { padding: 20, backgroundColor: "#FFFFFF" },
+  mapPickerHint: { marginBottom: 14, color: "#6B7280", fontSize: 13 },
+  confirmMapButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, padding: 16, borderRadius: 12, backgroundColor: "#2E4ED5" },
+  confirmMapText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
 });
