@@ -1,52 +1,8 @@
+import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function SearchingScreen() {
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#111827" />
-      <Text style={styles.title}>Finding a driver</Text>
-      <Text style={styles.subtitle}>
-        We are looking for an available driver near you.
-      </Text>
-
-      <Pressable style={styles.button} onPress={() => router.replace("/(tabs)/home")}>
-        <Text style={styles.buttonText}>Cancel request</Text>
-      </Pressable>
-    </View>
-  );
+  return <View style={styles.container}><View style={styles.radar}><View style={styles.radarRing}><View style={styles.radarCore}><Feather name="navigation" size={24} color="#FFFFFF" /></View></View></View><Text style={styles.eyebrow}>JUST A MOMENT</Text><Text style={styles.title}>Finding your driver</Text><Text style={styles.subtitle}>Matching you with the best ride nearby.</Text><View style={styles.detail}><Feather name="map-pin" size={18} color="#2E4ED5" /><Text style={styles.detailText}>Downtown Toronto</Text></View><Pressable style={styles.cancel} onPress={() => router.replace("/(tabs)/home")}><Text style={styles.cancelText}>Cancel request</Text></Pressable></View>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: "#F9FAFB",
-  },
-  title: {
-    marginTop: 24,
-    fontSize: 24,
-    fontWeight: "800",
-  },
-  subtitle: {
-    marginTop: 10,
-    textAlign: "center",
-    color: "#6B7280",
-  },
-  button: {
-    position: "absolute",
-    bottom: 40,
-    left: 24,
-    right: 24,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#FEE2E2",
-  },
-  buttonText: {
-    color: "#B91C1C",
-    textAlign: "center",
-    fontWeight: "700",
-  },
-});
+const styles = StyleSheet.create({ container: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24, backgroundColor: "#F7F8EF" }, radar: { alignItems: "center", justifyContent: "center", width: 190, height: 190, marginBottom: 38, borderRadius: 95, backgroundColor: "#E4E9FF" }, radarRing: { alignItems: "center", justifyContent: "center", width: 125, height: 125, borderRadius: 63, backgroundColor: "#CBD5FF" }, radarCore: { alignItems: "center", justifyContent: "center", width: 58, height: 58, borderRadius: 29, backgroundColor: "#2E4ED5" }, eyebrow: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 }, title: { marginTop: 7, color: "#111827", fontSize: 26, fontWeight: "800" }, subtitle: { marginTop: 10, color: "#6B7280", textAlign: "center" }, detail: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 28, padding: 13, borderRadius: 12, backgroundColor: "#FFFFFF" }, detailText: { color: "#374151", fontWeight: "600" }, cancel: { position: "absolute", bottom: 38, left: 24, right: 24, alignItems: "center", padding: 16, borderWidth: 1, borderColor: "#FECACA", borderRadius: 12 }, cancelText: { color: "#B91C1C", fontWeight: "700" } });

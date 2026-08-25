@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     paddingHorizontal: 16,
     marginBottom: 14,
-    paddingVertical: 6,
+    paddingVertical: 10,
     gap: 8,
   },
   input: {
