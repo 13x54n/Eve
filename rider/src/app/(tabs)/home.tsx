@@ -1,14 +1,20 @@
 import * as Location from "expo-location";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
+import Feather from '@expo/vector-icons/Feather';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   ActivityIndicator,
   Pressable,
+  SafeAreaView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import MapView, { Marker, Region } from "react-native-maps";
+import { Image } from "expo-image";
 
 export default function HomeScreen() {
   const [region, setRegion] = useState<Region>(fallbackRegion);
@@ -49,7 +55,7 @@ export default function HomeScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View>
         <ActivityIndicator size="large" />
         <Text>Finding your location...</Text>
       </View>
@@ -58,7 +64,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView style={StyleSheet.absoluteFill} initialRegion={region}>
+      {/* <MapView style={StyleSheet.absoluteFill} initialRegion={region}>
         <Marker
           coordinate={{
             latitude: region.latitude,
@@ -78,7 +84,48 @@ export default function HomeScreen() {
         >
           <Text style={styles.destinationText}>Enter destination</Text>
         </Pressable>
+      </View> */}
+      <Text style={styles.title}>
+        Nice to see you, Lex
+      </Text>
+      <View style={styles.searchContainer}>
+        {/* search icon */}
+        <Feather name="search" size={24} color="#2e4ed2" />
+        <TextInput placeholder="Enter destination" />
       </View>
+
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 20, gap: 10, }}>
+        <View style={styles.featuresButton}>
+          <Image source={{ uri: 'https://images.unsplash.com/vector-1768383602208-c45d3af52271?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }} style={{ width: 60, height: 60, marginBottom: 5 }} />
+          <Text style={styles.featureText}>Schedule</Text>
+          <Text>Book Ahead</Text>
+        </View>
+        <View style={styles.featuresButton}>
+          <Image source={{ uri: 'https://images.unsplash.com/vector-1763972891818-fbae102da51e?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }} style={{ width: 60, height: 60, marginBottom: 5 }} />
+          <Text style={styles.featureText}>Courier</Text>
+          <Text>Let's get moving!</Text>
+        </View>
+      </View>
+
+
+      <Pressable style={styles.quickActionButton}>
+        <View style={{ width: 40, height: 40, borderRadius: 3, backgroundColor: "#f0f0f0", alignItems: "center", justifyContent: "center" }}>
+        <MaterialCommunityIcons name="home-map-marker" size={26} color="#2e4ed2" />
+        </View>
+        <View>
+          <Text style={styles.destinationText}>Home</Text>
+          <Text>Set home address</Text>
+        </View>
+      </Pressable>
+      <Pressable style={styles.quickActionButton}>
+        <View style={{ width: 40, height: 40, borderRadius: 3, backgroundColor: "#f0f0f0", alignItems: "center", justifyContent: "center" }}>
+          <Ionicons name="bag-remove-sharp" size={24} color="#2e4ed2" />
+        </View>
+        <View>
+          <Text style={styles.destinationText}>Work</Text>
+          <Text>Set work address</Text>
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -93,44 +140,18 @@ const fallbackRegion: Region = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    backgroundColor: "#f7f8ef",
   },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    padding: 24,
-  },
-  searchCard: {
-    position: "absolute",
-    left: 16,
-    right: 16,
-    bottom: 24,
-    padding: 20,
-    borderRadius: 18,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  title: {
-    marginBottom: 14,
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  locationMessage: {
-    marginBottom: 12,
-    color: "#6B7280",
-  },
-  destinationButton: {
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#111827",
-  },
-  destinationText: {
-    color: "white",
-    textAlign: "center",
-    fontWeight: "600",
-  },
+  title: { fontSize: 24, fontWeight: "700", marginTop: 35, marginBottom: 15 },
+  searchContainer: { flexDirection: "row", borderColor: "#2e4ed2", borderWidth: 2, alignItems: "center", padding: 10, borderRadius: 8, marginBottom: 20, gap: 10 },
+  destinationText: { fontSize: 14, fontWeight: "700" },
+  featuresButton: { flex: 1, backgroundColor: "#f0f0f0", flexDirection: "column", alignItems: "center", alignSelf: "center",
+    padding: 10, borderRadius: 10 ,
+   },
+  featureText: { fontSize: 14, fontWeight: "700", color: "#2e4ed2" },
+  quickActionButton: { 
+    flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20, 
+  }
 });

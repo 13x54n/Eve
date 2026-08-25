@@ -4,7 +4,7 @@ export default function RidesScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Your rides</Text>
-      <Text style={styles.empty}>You have no rides yet.</Text>
+      
     </View>
   );
 }
@@ -12,8 +12,9 @@ export default function RidesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    backgroundColor: "#F9FAFB",
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    backgroundColor: "#f7f8ef",
   },
   title: {
     marginTop: 24,
