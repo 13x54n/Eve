@@ -31,7 +31,13 @@ export type UserMinAggregateOutputType = {
   phone: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  adminStaffRole: $Enums.AdminStaffRole | null
+  accountStatus: $Enums.AccountStatus | null
   isActive: boolean | null
+  flagged: boolean | null
+  city: string | null
+  mfaEnabled: boolean | null
+  lastLoginAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -43,7 +49,13 @@ export type UserMaxAggregateOutputType = {
   phone: string | null
   passwordHash: string | null
   role: $Enums.UserRole | null
+  adminStaffRole: $Enums.AdminStaffRole | null
+  accountStatus: $Enums.AccountStatus | null
   isActive: boolean | null
+  flagged: boolean | null
+  city: string | null
+  mfaEnabled: boolean | null
+  lastLoginAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,7 +67,13 @@ export type UserCountAggregateOutputType = {
   phone: number
   passwordHash: number
   role: number
+  adminStaffRole: number
+  accountStatus: number
   isActive: number
+  flagged: number
+  city: number
+  mfaEnabled: number
+  lastLoginAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -69,7 +87,13 @@ export type UserMinAggregateInputType = {
   phone?: true
   passwordHash?: true
   role?: true
+  adminStaffRole?: true
+  accountStatus?: true
   isActive?: true
+  flagged?: true
+  city?: true
+  mfaEnabled?: true
+  lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -81,7 +105,13 @@ export type UserMaxAggregateInputType = {
   phone?: true
   passwordHash?: true
   role?: true
+  adminStaffRole?: true
+  accountStatus?: true
   isActive?: true
+  flagged?: true
+  city?: true
+  mfaEnabled?: true
+  lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -93,7 +123,13 @@ export type UserCountAggregateInputType = {
   phone?: true
   passwordHash?: true
   role?: true
+  adminStaffRole?: true
+  accountStatus?: true
   isActive?: true
+  flagged?: true
+  city?: true
+  mfaEnabled?: true
+  lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -178,7 +214,13 @@ export type UserGroupByOutputType = {
   phone: string | null
   passwordHash: string
   role: $Enums.UserRole
+  adminStaffRole: $Enums.AdminStaffRole | null
+  accountStatus: $Enums.AccountStatus
   isActive: boolean
+  flagged: boolean
+  city: string | null
+  mfaEnabled: boolean
+  lastLoginAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
@@ -211,10 +253,24 @@ export type UserWhereInput = {
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  flagged?: Prisma.BoolFilter<"User"> | boolean
+  city?: Prisma.StringNullableFilter<"User"> | string | null
+  mfaEnabled?: Prisma.BoolFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   resetCodes?: Prisma.PasswordResetCodeListRelationFilter
+  riderProfile?: Prisma.XOR<Prisma.RiderProfileNullableScalarRelationFilter, Prisma.RiderProfileWhereInput> | null
+  driverProfile?: Prisma.XOR<Prisma.DriverProfileNullableScalarRelationFilter, Prisma.DriverProfileWhereInput> | null
+  loginEvents?: Prisma.AdminLoginEventListRelationFilter
+  sessions?: Prisma.AdminSessionListRelationFilter
+  auditLogs?: Prisma.AuditLogListRelationFilter
+  assignedTickets?: Prisma.SupportTicketListRelationFilter
+  assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -224,10 +280,24 @@ export type UserOrderByWithRelationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  flagged?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaEnabled?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   resetCodes?: Prisma.PasswordResetCodeOrderByRelationAggregateInput
+  riderProfile?: Prisma.RiderProfileOrderByWithRelationInput
+  driverProfile?: Prisma.DriverProfileOrderByWithRelationInput
+  loginEvents?: Prisma.AdminLoginEventOrderByRelationAggregateInput
+  sessions?: Prisma.AdminSessionOrderByRelationAggregateInput
+  auditLogs?: Prisma.AuditLogOrderByRelationAggregateInput
+  assignedTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
+  assignedIncidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -240,10 +310,24 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  flagged?: Prisma.BoolFilter<"User"> | boolean
+  city?: Prisma.StringNullableFilter<"User"> | string | null
+  mfaEnabled?: Prisma.BoolFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   resetCodes?: Prisma.PasswordResetCodeListRelationFilter
+  riderProfile?: Prisma.XOR<Prisma.RiderProfileNullableScalarRelationFilter, Prisma.RiderProfileWhereInput> | null
+  driverProfile?: Prisma.XOR<Prisma.DriverProfileNullableScalarRelationFilter, Prisma.DriverProfileWhereInput> | null
+  loginEvents?: Prisma.AdminLoginEventListRelationFilter
+  sessions?: Prisma.AdminSessionListRelationFilter
+  auditLogs?: Prisma.AuditLogListRelationFilter
+  assignedTickets?: Prisma.SupportTicketListRelationFilter
+  assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "email" | "phone">
 
 export type UserOrderByWithAggregationInput = {
@@ -253,7 +337,13 @@ export type UserOrderByWithAggregationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  flagged?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  mfaEnabled?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
@@ -271,7 +361,13 @@ export type UserScalarWhereWithAggregatesInput = {
   phone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  adminStaffRole?: Prisma.EnumAdminStaffRoleNullableWithAggregatesFilter<"User"> | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusWithAggregatesFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  flagged?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  city?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  mfaEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -283,10 +379,24 @@ export type UserCreateInput = {
   phone?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
   isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -296,10 +406,24 @@ export type UserUncheckedCreateInput = {
   phone?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
   isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -309,10 +433,24 @@ export type UserUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -322,10 +460,24 @@ export type UserUncheckedUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -335,7 +487,13 @@ export type UserCreateManyInput = {
   phone?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
   isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -347,7 +505,13 @@ export type UserUpdateManyMutationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -359,7 +523,13 @@ export type UserUncheckedUpdateManyInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -371,7 +541,13 @@ export type UserCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  adminStaffRole?: Prisma.SortOrder
+  accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  flagged?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  mfaEnabled?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -383,7 +559,13 @@ export type UserMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  adminStaffRole?: Prisma.SortOrder
+  accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  flagged?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  mfaEnabled?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -395,7 +577,13 @@ export type UserMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  adminStaffRole?: Prisma.SortOrder
+  accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  flagged?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  mfaEnabled?: Prisma.SortOrder
+  lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -403,6 +591,11 @@ export type UserMinOrderByAggregateInput = {
 export type UserScalarRelationFilter = {
   is?: Prisma.UserWhereInput
   isNot?: Prisma.UserWhereInput
+}
+
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -417,8 +610,20 @@ export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
 }
 
+export type NullableEnumAdminStaffRoleFieldUpdateOperationsInput = {
+  set?: $Enums.AdminStaffRole | null
+}
+
+export type EnumAccountStatusFieldUpdateOperationsInput = {
+  set?: $Enums.AccountStatus
+}
+
 export type BoolFieldUpdateOperationsInput = {
   set?: boolean
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -439,6 +644,126 @@ export type UserUpdateOneRequiredWithoutResetCodesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutResetCodesInput, Prisma.UserUpdateWithoutResetCodesInput>, Prisma.UserUncheckedUpdateWithoutResetCodesInput>
 }
 
+export type UserCreateNestedOneWithoutRiderProfileInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRiderProfileInput, Prisma.UserUncheckedCreateWithoutRiderProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRiderProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutRiderProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutRiderProfileInput, Prisma.UserUncheckedCreateWithoutRiderProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutRiderProfileInput
+  upsert?: Prisma.UserUpsertWithoutRiderProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutRiderProfileInput, Prisma.UserUpdateWithoutRiderProfileInput>, Prisma.UserUncheckedUpdateWithoutRiderProfileInput>
+}
+
+export type UserCreateNestedOneWithoutDriverProfileInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriverProfileInput, Prisma.UserUncheckedCreateWithoutDriverProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriverProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDriverProfileNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDriverProfileInput, Prisma.UserUncheckedCreateWithoutDriverProfileInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDriverProfileInput
+  upsert?: Prisma.UserUpsertWithoutDriverProfileInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDriverProfileInput, Prisma.UserUpdateWithoutDriverProfileInput>, Prisma.UserUncheckedUpdateWithoutDriverProfileInput>
+}
+
+export type UserCreateNestedOneWithoutAssignedTicketsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedTicketsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutAssignedTicketsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedTicketsInput
+  upsert?: Prisma.UserUpsertWithoutAssignedTicketsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAssignedTicketsInput, Prisma.UserUpdateWithoutAssignedTicketsInput>, Prisma.UserUncheckedUpdateWithoutAssignedTicketsInput>
+}
+
+export type UserCreateNestedOneWithoutAssignedIncidentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedIncidentsInput, Prisma.UserUncheckedCreateWithoutAssignedIncidentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedIncidentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutAssignedIncidentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedIncidentsInput, Prisma.UserUncheckedCreateWithoutAssignedIncidentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedIncidentsInput
+  upsert?: Prisma.UserUpsertWithoutAssignedIncidentsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAssignedIncidentsInput, Prisma.UserUpdateWithoutAssignedIncidentsInput>, Prisma.UserUncheckedUpdateWithoutAssignedIncidentsInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.UserUpsertWithoutNotificationsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserCreateNestedOneWithoutAuditLogsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuditLogsInput, Prisma.UserUncheckedCreateWithoutAuditLogsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuditLogsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutAuditLogsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutAuditLogsInput, Prisma.UserUncheckedCreateWithoutAuditLogsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutAuditLogsInput
+  upsert?: Prisma.UserUpsertWithoutAuditLogsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAuditLogsInput, Prisma.UserUpdateWithoutAuditLogsInput>, Prisma.UserUncheckedUpdateWithoutAuditLogsInput>
+}
+
+export type UserCreateNestedOneWithoutLoginEventsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLoginEventsInput, Prisma.UserUncheckedCreateWithoutLoginEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLoginEventsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutLoginEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutLoginEventsInput, Prisma.UserUncheckedCreateWithoutLoginEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutLoginEventsInput
+  upsert?: Prisma.UserUpsertWithoutLoginEventsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLoginEventsInput, Prisma.UserUpdateWithoutLoginEventsInput>, Prisma.UserUncheckedUpdateWithoutLoginEventsInput>
+}
+
+export type UserCreateNestedOneWithoutSessionsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSessionsInput, Prisma.UserUncheckedCreateWithoutSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutSessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSessionsInput, Prisma.UserUncheckedCreateWithoutSessionsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSessionsInput
+  upsert?: Prisma.UserUpsertWithoutSessionsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSessionsInput, Prisma.UserUpdateWithoutSessionsInput>, Prisma.UserUncheckedUpdateWithoutSessionsInput>
+}
+
 export type UserCreateWithoutResetCodesInput = {
   id?: string
   name: string
@@ -446,9 +771,23 @@ export type UserCreateWithoutResetCodesInput = {
   phone?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
   isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutResetCodesInput = {
@@ -458,9 +797,23 @@ export type UserUncheckedCreateWithoutResetCodesInput = {
   phone?: string | null
   passwordHash: string
   role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
   isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResetCodesInput = {
@@ -486,9 +839,23 @@ export type UserUpdateWithoutResetCodesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResetCodesInput = {
@@ -498,9 +865,983 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutRiderProfileInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutRiderProfileInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutRiderProfileInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutRiderProfileInput, Prisma.UserUncheckedCreateWithoutRiderProfileInput>
+}
+
+export type UserUpsertWithoutRiderProfileInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutRiderProfileInput, Prisma.UserUncheckedUpdateWithoutRiderProfileInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutRiderProfileInput, Prisma.UserUncheckedCreateWithoutRiderProfileInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutRiderProfileInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutRiderProfileInput, Prisma.UserUncheckedUpdateWithoutRiderProfileInput>
+}
+
+export type UserUpdateWithoutRiderProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutRiderProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutDriverProfileInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutDriverProfileInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutDriverProfileInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriverProfileInput, Prisma.UserUncheckedCreateWithoutDriverProfileInput>
+}
+
+export type UserUpsertWithoutDriverProfileInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDriverProfileInput, Prisma.UserUncheckedUpdateWithoutDriverProfileInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDriverProfileInput, Prisma.UserUncheckedCreateWithoutDriverProfileInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDriverProfileInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDriverProfileInput, Prisma.UserUncheckedUpdateWithoutDriverProfileInput>
+}
+
+export type UserUpdateWithoutDriverProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDriverProfileInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAssignedTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAssignedTicketsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAssignedTicketsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
+}
+
+export type UserUpsertWithoutAssignedTicketsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAssignedTicketsInput, Prisma.UserUncheckedUpdateWithoutAssignedTicketsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAssignedTicketsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAssignedTicketsInput, Prisma.UserUncheckedUpdateWithoutAssignedTicketsInput>
+}
+
+export type UserUpdateWithoutAssignedTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutAssignedIncidentsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAssignedIncidentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedIncidentsInput, Prisma.UserUncheckedCreateWithoutAssignedIncidentsInput>
+}
+
+export type UserUpsertWithoutAssignedIncidentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAssignedIncidentsInput, Prisma.UserUncheckedUpdateWithoutAssignedIncidentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAssignedIncidentsInput, Prisma.UserUncheckedCreateWithoutAssignedIncidentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAssignedIncidentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAssignedIncidentsInput, Prisma.UserUncheckedUpdateWithoutAssignedIncidentsInput>
+}
+
+export type UserUpdateWithoutAssignedIncidentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+}
+
+export type UserUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+}
+
+export type UserCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+}
+
+export type UserUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+}
+
+export type UserCreateWithoutAuditLogsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutAuditLogsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutAuditLogsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuditLogsInput, Prisma.UserUncheckedCreateWithoutAuditLogsInput>
+}
+
+export type UserUpsertWithoutAuditLogsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutAuditLogsInput, Prisma.UserUncheckedUpdateWithoutAuditLogsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutAuditLogsInput, Prisma.UserUncheckedCreateWithoutAuditLogsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutAuditLogsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutAuditLogsInput, Prisma.UserUncheckedUpdateWithoutAuditLogsInput>
+}
+
+export type UserUpdateWithoutAuditLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutAuditLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutLoginEventsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutLoginEventsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutLoginEventsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutLoginEventsInput, Prisma.UserUncheckedCreateWithoutLoginEventsInput>
+}
+
+export type UserUpsertWithoutLoginEventsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutLoginEventsInput, Prisma.UserUncheckedUpdateWithoutLoginEventsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutLoginEventsInput, Prisma.UserUncheckedCreateWithoutLoginEventsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutLoginEventsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutLoginEventsInput, Prisma.UserUncheckedUpdateWithoutLoginEventsInput>
+}
+
+export type UserUpdateWithoutLoginEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutLoginEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSessionsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSessionsInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSessionsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSessionsInput, Prisma.UserUncheckedCreateWithoutSessionsInput>
+}
+
+export type UserUpsertWithoutSessionsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSessionsInput, Prisma.UserUncheckedUpdateWithoutSessionsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSessionsInput, Prisma.UserUncheckedCreateWithoutSessionsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSessionsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSessionsInput, Prisma.UserUncheckedUpdateWithoutSessionsInput>
+}
+
+export type UserUpdateWithoutSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -510,10 +1851,22 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
 
 export type UserCountOutputType = {
   resetCodes: number
+  loginEvents: number
+  sessions: number
+  auditLogs: number
+  assignedTickets: number
+  assignedIncidents: number
+  notifications: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   resetCodes?: boolean | UserCountOutputTypeCountResetCodesArgs
+  loginEvents?: boolean | UserCountOutputTypeCountLoginEventsArgs
+  sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+  auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
+  assignedTickets?: boolean | UserCountOutputTypeCountAssignedTicketsArgs
+  assignedIncidents?: boolean | UserCountOutputTypeCountAssignedIncidentsArgs
+  notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -533,6 +1886,48 @@ export type UserCountOutputTypeCountResetCodesArgs<ExtArgs extends runtime.Types
   where?: Prisma.PasswordResetCodeWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountLoginEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AdminLoginEventWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AdminSessionWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAuditLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AuditLogWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAssignedTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SupportTicketWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountAssignedIncidentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SafetyIncidentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -541,10 +1936,24 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   phone?: boolean
   passwordHash?: boolean
   role?: boolean
+  adminStaffRole?: boolean
+  accountStatus?: boolean
   isActive?: boolean
+  flagged?: boolean
+  city?: boolean
+  mfaEnabled?: boolean
+  lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   resetCodes?: boolean | Prisma.User$resetCodesArgs<ExtArgs>
+  riderProfile?: boolean | Prisma.User$riderProfileArgs<ExtArgs>
+  driverProfile?: boolean | Prisma.User$driverProfileArgs<ExtArgs>
+  loginEvents?: boolean | Prisma.User$loginEventsArgs<ExtArgs>
+  sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
+  assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -555,7 +1964,13 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   phone?: boolean
   passwordHash?: boolean
   role?: boolean
+  adminStaffRole?: boolean
+  accountStatus?: boolean
   isActive?: boolean
+  flagged?: boolean
+  city?: boolean
+  mfaEnabled?: boolean
+  lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -567,7 +1982,13 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   phone?: boolean
   passwordHash?: boolean
   role?: boolean
+  adminStaffRole?: boolean
+  accountStatus?: boolean
   isActive?: boolean
+  flagged?: boolean
+  city?: boolean
+  mfaEnabled?: boolean
+  lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -579,14 +2000,28 @@ export type UserSelectScalar = {
   phone?: boolean
   passwordHash?: boolean
   role?: boolean
+  adminStaffRole?: boolean
+  accountStatus?: boolean
   isActive?: boolean
+  flagged?: boolean
+  city?: boolean
+  mfaEnabled?: boolean
+  lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "adminStaffRole" | "accountStatus" | "isActive" | "flagged" | "city" | "mfaEnabled" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   resetCodes?: boolean | Prisma.User$resetCodesArgs<ExtArgs>
+  riderProfile?: boolean | Prisma.User$riderProfileArgs<ExtArgs>
+  driverProfile?: boolean | Prisma.User$driverProfileArgs<ExtArgs>
+  loginEvents?: boolean | Prisma.User$loginEventsArgs<ExtArgs>
+  sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
+  auditLogs?: boolean | Prisma.User$auditLogsArgs<ExtArgs>
+  assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
+  assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -596,6 +2031,14 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "User"
   objects: {
     resetCodes: Prisma.$PasswordResetCodePayload<ExtArgs>[]
+    riderProfile: Prisma.$RiderProfilePayload<ExtArgs> | null
+    driverProfile: Prisma.$DriverProfilePayload<ExtArgs> | null
+    loginEvents: Prisma.$AdminLoginEventPayload<ExtArgs>[]
+    sessions: Prisma.$AdminSessionPayload<ExtArgs>[]
+    auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
+    assignedTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
+    assignedIncidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -604,7 +2047,13 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     phone: string | null
     passwordHash: string
     role: $Enums.UserRole
+    adminStaffRole: $Enums.AdminStaffRole | null
+    accountStatus: $Enums.AccountStatus
     isActive: boolean
+    flagged: boolean
+    city: string | null
+    mfaEnabled: boolean
+    lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1002,6 +2451,14 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   resetCodes<T extends Prisma.User$resetCodesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$resetCodesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PasswordResetCodePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  riderProfile<T extends Prisma.User$riderProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$riderProfileArgs<ExtArgs>>): Prisma.Prisma__RiderProfileClient<runtime.Types.Result.GetResult<Prisma.$RiderProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  driverProfile<T extends Prisma.User$driverProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$driverProfileArgs<ExtArgs>>): Prisma.Prisma__DriverProfileClient<runtime.Types.Result.GetResult<Prisma.$DriverProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  loginEvents<T extends Prisma.User$loginEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$loginEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminLoginEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sessions<T extends Prisma.User$sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AdminSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  auditLogs<T extends Prisma.User$auditLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assignedTickets<T extends Prisma.User$assignedTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assignedIncidents<T extends Prisma.User$assignedIncidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedIncidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1037,7 +2494,13 @@ export interface UserFieldRefs {
   readonly phone: Prisma.FieldRef<"User", 'String'>
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
+  readonly adminStaffRole: Prisma.FieldRef<"User", 'AdminStaffRole'>
+  readonly accountStatus: Prisma.FieldRef<"User", 'AccountStatus'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
+  readonly flagged: Prisma.FieldRef<"User", 'Boolean'>
+  readonly city: Prisma.FieldRef<"User", 'String'>
+  readonly mfaEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -1454,6 +2917,188 @@ export type User$resetCodesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.PasswordResetCodeScalarFieldEnum | Prisma.PasswordResetCodeScalarFieldEnum[]
+}
+
+/**
+ * User.riderProfile
+ */
+export type User$riderProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the RiderProfile
+   */
+  select?: Prisma.RiderProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the RiderProfile
+   */
+  omit?: Prisma.RiderProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.RiderProfileInclude<ExtArgs> | null
+  where?: Prisma.RiderProfileWhereInput
+}
+
+/**
+ * User.driverProfile
+ */
+export type User$driverProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DriverProfile
+   */
+  select?: Prisma.DriverProfileSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DriverProfile
+   */
+  omit?: Prisma.DriverProfileOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DriverProfileInclude<ExtArgs> | null
+  where?: Prisma.DriverProfileWhereInput
+}
+
+/**
+ * User.loginEvents
+ */
+export type User$loginEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AdminLoginEvent
+   */
+  select?: Prisma.AdminLoginEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AdminLoginEvent
+   */
+  omit?: Prisma.AdminLoginEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AdminLoginEventInclude<ExtArgs> | null
+  where?: Prisma.AdminLoginEventWhereInput
+  orderBy?: Prisma.AdminLoginEventOrderByWithRelationInput | Prisma.AdminLoginEventOrderByWithRelationInput[]
+  cursor?: Prisma.AdminLoginEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AdminLoginEventScalarFieldEnum | Prisma.AdminLoginEventScalarFieldEnum[]
+}
+
+/**
+ * User.sessions
+ */
+export type User$sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AdminSession
+   */
+  select?: Prisma.AdminSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AdminSession
+   */
+  omit?: Prisma.AdminSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AdminSessionInclude<ExtArgs> | null
+  where?: Prisma.AdminSessionWhereInput
+  orderBy?: Prisma.AdminSessionOrderByWithRelationInput | Prisma.AdminSessionOrderByWithRelationInput[]
+  cursor?: Prisma.AdminSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AdminSessionScalarFieldEnum | Prisma.AdminSessionScalarFieldEnum[]
+}
+
+/**
+ * User.auditLogs
+ */
+export type User$auditLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AuditLog
+   */
+  select?: Prisma.AuditLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AuditLog
+   */
+  omit?: Prisma.AuditLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AuditLogInclude<ExtArgs> | null
+  where?: Prisma.AuditLogWhereInput
+  orderBy?: Prisma.AuditLogOrderByWithRelationInput | Prisma.AuditLogOrderByWithRelationInput[]
+  cursor?: Prisma.AuditLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AuditLogScalarFieldEnum | Prisma.AuditLogScalarFieldEnum[]
+}
+
+/**
+ * User.assignedTickets
+ */
+export type User$assignedTicketsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SupportTicket
+   */
+  select?: Prisma.SupportTicketSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SupportTicket
+   */
+  omit?: Prisma.SupportTicketOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SupportTicketInclude<ExtArgs> | null
+  where?: Prisma.SupportTicketWhereInput
+  orderBy?: Prisma.SupportTicketOrderByWithRelationInput | Prisma.SupportTicketOrderByWithRelationInput[]
+  cursor?: Prisma.SupportTicketWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SupportTicketScalarFieldEnum | Prisma.SupportTicketScalarFieldEnum[]
+}
+
+/**
+ * User.assignedIncidents
+ */
+export type User$assignedIncidentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SafetyIncident
+   */
+  select?: Prisma.SafetyIncidentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SafetyIncident
+   */
+  omit?: Prisma.SafetyIncidentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SafetyIncidentInclude<ExtArgs> | null
+  where?: Prisma.SafetyIncidentWhereInput
+  orderBy?: Prisma.SafetyIncidentOrderByWithRelationInput | Prisma.SafetyIncidentOrderByWithRelationInput[]
+  cursor?: Prisma.SafetyIncidentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SafetyIncidentScalarFieldEnum | Prisma.SafetyIncidentScalarFieldEnum[]
+}
+
+/**
+ * User.notifications
+ */
+export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**

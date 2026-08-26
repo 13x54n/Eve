@@ -70,59 +70,69 @@ export default function PricingPage() {
 
   return (
     <Guard allowed={can(user, "pricing:read")}>
-      <h1 className="mb-4 text-2xl font-semibold text-white">Pricing, zones & services</h1>
-      {approve ? (
-        <Panel title="Propose fare change">
-          <form className="grid gap-2 md:grid-cols-4" onSubmit={create}>
-            <Input name="city" placeholder="City" defaultValue="New York" required />
-            <Input name="zone" placeholder="Zone" />
-            <Input name="vehicleType" placeholder="Vehicle type" defaultValue="standard" />
-            <Input name="effectiveAt" type="datetime-local" required />
-            <Input name="baseFare" placeholder="Base fare" defaultValue="3.5" />
-            <Input name="perKm" placeholder="Per km" defaultValue="1.4" />
-            <Input name="perMinute" placeholder="Per minute" defaultValue="0.35" />
-            <Input name="minFare" placeholder="Minimum" defaultValue="8" />
-            <Input name="bookingFee" placeholder="Booking fee" defaultValue="1.25" />
-            <Input name="airportFee" placeholder="Airport fee" defaultValue="5" />
-            <Input name="cancellationFee" placeholder="Cancellation" defaultValue="6" />
-            <Input name="waitingFee" placeholder="Waiting" defaultValue="0.4" />
-            <Input name="commissionPercent" placeholder="Commission %" defaultValue="20" />
-            <Input name="surgeMultiplier" placeholder="Surge" defaultValue="1" />
-            <Button className="md:col-span-4">Submit for approval</Button>
-          </form>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Pricing, zones & services</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Configure dynamic fare structures, service tiers, commission rates, and operational zones.
+          </p>
+        </div>
+        {approve ? (
+          <Panel title="Propose fare change">
+            <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={create}>
+              <Input name="city" placeholder="City" defaultValue="New York" required />
+              <Input name="zone" placeholder="Zone" />
+              <Input name="vehicleType" placeholder="Vehicle type" defaultValue="standard" />
+              <Input name="effectiveAt" type="datetime-local" required />
+              <Input name="baseFare" placeholder="Base fare ($)" defaultValue="3.5" />
+              <Input name="perKm" placeholder="Per km ($)" defaultValue="1.4" />
+              <Input name="perMinute" placeholder="Per minute ($)" defaultValue="0.35" />
+              <Input name="minFare" placeholder="Minimum fare ($)" defaultValue="8" />
+              <Input name="bookingFee" placeholder="Booking fee ($)" defaultValue="1.25" />
+              <Input name="airportFee" placeholder="Airport fee ($)" defaultValue="5" />
+              <Input name="cancellationFee" placeholder="Cancellation ($)" defaultValue="6" />
+              <Input name="waitingFee" placeholder="Waiting fee ($)" defaultValue="0.4" />
+              <Input name="commissionPercent" placeholder="Commission %" defaultValue="20" />
+              <Input name="surgeMultiplier" placeholder="Surge multiplier" defaultValue="1" />
+              <Button className="sm:col-span-2 lg:col-span-4">Submit for approval</Button>
+            </form>
+          </Panel>
+        ) : null}
+        <Panel title="Fare configs">
+          <Table
+            columns={["Market & Tier", "Fare Components", "Commission / Surge", "Status", "Actions"]}
+            rows={(data?.configs ?? []).map((row) => [
+              <span key="m" className="font-semibold text-slate-900">{`${row.city} / ${row.zone ?? "All"} / ${row.vehicleType}`}</span>,
+              <span key="c" className="text-xs text-slate-600 font-medium">{`Base $${row.baseFare} · $${row.perKm}/km · $${row.perMinute}/min · Min $${row.minFare}`}</span>,
+              <span key="s" className="font-medium text-slate-800">{`${row.commissionPercent}% commission · ${row.surgeMultiplier}x surge`}</span>,
+              <Badge key="b" tone={statusTone(row.status)}>{row.status}</Badge>,
+              approve ? (
+                <div key="a" className="flex gap-3">
+                  <button className="font-semibold text-emerald-700 hover:text-emerald-800 text-xs transition hover:underline cursor-pointer" onClick={() => void transition(row.id, "approve")}>
+                    Approve
+                  </button>
+                  <button className="font-semibold text-rose-600 hover:text-rose-700 text-xs transition hover:underline cursor-pointer" onClick={() => void transition(row.id, "rollback")}>
+                    Rollback
+                  </button>
+                </div>
+              ) : (
+                "—"
+              ),
+            ])}
+          />
         </Panel>
-      ) : null}
-      <div className="h-4" />
-      <Panel title="Fare configs">
-        <Table
-          columns={["Market", "Components", "Commission", "Status", "Actions"]}
-          rows={(data?.configs ?? []).map((row) => [
-            `${row.city} / ${row.zone ?? "all"} / ${row.vehicleType}`,
-            `base ${row.baseFare} · km ${row.perKm} · min ${row.perMinute} · min fare ${row.minFare}`,
-            `${row.commissionPercent}% · surge ${row.surgeMultiplier}x`,
-            <Badge key="s" tone={statusTone(row.status)}>{row.status}</Badge>,
-            approve ? (
-              <div key="a" className="flex gap-2">
-                <button className="text-emerald-300" onClick={() => void transition(row.id, "approve")}>
-                  Approve
-                </button>
-                <button className="text-rose-300" onClick={() => void transition(row.id, "rollback")}>
-                  Rollback
-                </button>
-              </div>
-            ) : (
-              "—"
-            ),
-          ])}
-        />
-      </Panel>
-      <div className="h-4" />
-      <Panel title="Service areas">
-        <Table
-          columns={["Zone", "City", "Kind"]}
-          rows={(data?.zones ?? []).map((zone) => [zone.name, zone.city, zone.kind])}
-        />
-      </Panel>
+        <Panel title="Service areas & zones">
+          <Table
+            columns={["Zone Name", "City", "Kind"]}
+            rows={(data?.zones ?? []).map((zone) => [
+              <span key="n" className="font-semibold text-slate-900">{zone.name}</span>,
+              <span key="c" className="text-slate-700">{zone.city}</span>,
+              <span key="k" className="capitalize text-slate-600">{zone.kind.toLowerCase()}</span>,
+            ])}
+          />
+        </Panel>
+      </div>
     </Guard>
   );
 }
+

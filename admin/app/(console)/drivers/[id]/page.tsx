@@ -7,6 +7,7 @@ import {
   Button,
   Guard,
   Panel,
+  StatCard,
   Table,
   statusTone,
 } from "@/components/ui";
@@ -59,26 +60,30 @@ export default function DriverDetailPage({
   }
 
   if (!data) {
-    return <p className="text-sm text-slate-500">Loading driver…</p>;
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-xs">
+        Loading driver…
+      </div>
+    );
   }
 
   return (
     <Guard allowed={can(user, "drivers:read")}>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">{data.user.name}</h1>
-          <p className="text-sm text-slate-400">
-            {data.user.email} · {data.presence} · {data.city}
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{data.user.name}</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {data.user.email} · <span className="capitalize">{data.presence.toLowerCase()}</span> · {data.city ?? "No city"}
           </p>
         </div>
-        <div className="grid gap-3 md:grid-cols-4">
-          <Panel title="Rating">{data.rating}</Panel>
-          <Panel title="Acceptance">{data.acceptanceRate}%</Panel>
-          <Panel title="Cancellations">{data.cancellationRate}%</Panel>
-          <Panel title="Earnings">${data.earningsTotal.toFixed(2)}</Panel>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+          <StatCard label="Rating" value={data.rating ? `★ ${data.rating.toFixed(1)}` : "—"} />
+          <StatCard label="Acceptance" value={`${data.acceptanceRate}%`} />
+          <StatCard label="Cancellations" value={`${data.cancellationRate}%`} />
+          <StatCard label="Earnings" value={`$${data.earningsTotal.toFixed(2)}`} />
         </div>
         {write ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2.5">
             <Button onClick={() => void review({ approvalStatus: "APPROVED" })}>
               Approve
             </Button>
@@ -100,15 +105,15 @@ export default function DriverDetailPage({
           <Table
             columns={["Type", "Status", "Expires", "Action"]}
             rows={data.documents.map((doc) => [
-              doc.type,
+              <span key="t" className="font-medium text-slate-900">{doc.type}</span>,
               <Badge key={doc.id} tone={statusTone(doc.status)}>
                 {doc.status}
               </Badge>,
               doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "—",
               write ? (
-                <div key="a" className="flex gap-2">
+                <div key="a" className="flex gap-3">
                   <button
-                    className="text-emerald-300"
+                    className="font-semibold text-emerald-700 hover:text-emerald-800 text-xs transition hover:underline cursor-pointer"
                     onClick={() =>
                       void review({ documentId: doc.id, documentStatus: "APPROVED" })
                     }
@@ -116,7 +121,7 @@ export default function DriverDetailPage({
                     Approve
                   </button>
                   <button
-                    className="text-rose-300"
+                    className="font-semibold text-rose-600 hover:text-rose-700 text-xs transition hover:underline cursor-pointer"
                     onClick={() =>
                       void review({ documentId: doc.id, documentStatus: "REJECTED" })
                     }
@@ -134,33 +139,43 @@ export default function DriverDetailPage({
           <Table
             columns={["Plate", "Vehicle"]}
             rows={data.vehicles.map((vehicle) => [
-              vehicle.plateNumber,
+              <span key="p" className="font-mono font-semibold text-slate-800">{vehicle.plateNumber}</span>,
               `${vehicle.make} ${vehicle.model}`,
             ])}
           />
         </Panel>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Trip history">
             <Table
               columns={["Booking", "Status"]}
-              rows={data.trips.map((trip) => [trip.bookingCode, trip.status])}
+              rows={data.trips.map((trip) => [
+                <span key="b" className="font-mono font-medium text-slate-800">{trip.bookingCode}</span>,
+                <Badge key="s" tone={statusTone(trip.status)}>{trip.status}</Badge>,
+              ])}
             />
           </Panel>
           <Panel title="Safety & incentives">
             <Table
               columns={["Record", "Detail"]}
               rows={[
-                ...data.incidents.map((item) => [item.type, item.severity]),
-                ...data.incentives.map((item) => [item.kind, `$${item.amount}`]),
+                ...data.incidents.map((item) => [
+                  <span key="i" className="font-medium text-slate-900">{item.type}</span>,
+                  <Badge key="s" tone={statusTone(item.severity)}>{item.severity}</Badge>,
+                ]),
+                ...data.incentives.map((item) => [
+                  <span key="k" className="font-medium text-slate-900">{item.kind}</span>,
+                  <span key="a" className="font-semibold text-emerald-700">{`$${item.amount}`}</span>,
+                ]),
               ]}
             />
           </Panel>
         </div>
         <p className="text-xs text-slate-500">
-          Fleet: {data.fleetCompany?.name ?? "Independent"} · Commission tier{" "}
-          {data.commissionTier} · Online hours {data.onlineHours}
+          Fleet: <span className="font-medium text-slate-700">{data.fleetCompany?.name ?? "Independent"}</span> · Commission tier{" "}
+          <span className="font-medium text-slate-700">{data.commissionTier}</span> · Online hours <span className="font-medium text-slate-700">{data.onlineHours}</span>
         </p>
       </div>
     </Guard>
   );
 }
+

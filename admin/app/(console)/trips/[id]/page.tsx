@@ -6,7 +6,6 @@ import {
   Badge,
   Button,
   Guard,
-  Input,
   Panel,
   Table,
   statusTone,
@@ -61,46 +60,65 @@ export default function TripDetailPage({
   }
 
   if (!data) {
-    return <p className="text-sm text-slate-500">Loading trip…</p>;
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-xs">
+        Loading trip…
+      </div>
+    );
   }
 
   return (
     <Guard allowed={can(user, "trips:read")}>
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-white">{data.bookingCode}</h1>
-            <p className="text-sm text-slate-400">
-              {data.rider.name} · {data.driver?.name ?? "No driver"} · {data.city}
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{data.bookingCode}</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              Rider: <span className="font-semibold text-slate-800">{data.rider.name}</span> · Driver: <span className="font-semibold text-slate-800">{data.driver?.name ?? "No driver"}</span> · {data.city}
             </p>
           </div>
           <Badge tone={statusTone(data.status)}>{data.status}</Badge>
         </div>
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2">
           <Panel title="Route">
-            <p className="text-sm">{data.pickupAddress}</p>
-            <p className="text-sm text-slate-400">to {data.dropoffAddress}</p>
+            <p className="text-sm font-medium text-slate-900">{data.pickupAddress}</p>
+            <p className="text-sm text-slate-500">to <span className="font-medium text-slate-900">{data.dropoffAddress}</span></p>
             <p className="mt-3 text-xs text-slate-500">
-              {data.distanceKm} km · {data.durationMin} min · ETA {data.etaMinutes ?? "—"} ·
+              {data.distanceKm} km · {data.durationMin} min · ETA {data.etaMinutes ? `${data.etaMinutes} min` : "—"} ·
               deviation {data.routeDeviation ? "yes" : "no"}
             </p>
             <div className="relative mt-4 h-48 overflow-hidden rounded-xl bg-[linear-gradient(#10263b,#071422)]">
-              <span className="absolute left-[22%] top-[58%] h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="absolute left-[68%] top-[28%] h-2 w-2 rounded-full bg-amber-300" />
+              <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#334155_1px,transparent_1px),linear-gradient(90deg,#334155_1px,transparent_1px)] [background-size:24px_24px]" />
+              <span className="absolute left-[22%] top-[58%] h-2.5 w-2.5 rounded-full bg-emerald-400 ring-4 ring-emerald-400/20" title="Pickup" />
+              <span className="absolute left-[68%] top-[28%] h-2.5 w-2.5 rounded-full bg-amber-400 ring-4 ring-amber-400/20" title="Dropoff" />
             </div>
           </Panel>
           <Panel title="Fare breakdown">
-            <p>Rider fare ${data.fareTotal.toFixed(2)}</p>
-            <p>Commission ${data.commission.toFixed(2)}</p>
-            <p>Payment {data.paymentMethod} · {data.paymentStatus}</p>
-            <p>Cancellation: {data.cancellationReason ?? "—"}</p>
+            <dl className="grid gap-3 text-sm">
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <dt className="text-slate-500">Rider fare</dt>
+                <dd className="font-bold text-slate-900">${data.fareTotal.toFixed(2)}</dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <dt className="text-slate-500">Platform commission</dt>
+                <dd className="font-semibold text-emerald-700">${data.commission.toFixed(2)}</dd>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <dt className="text-slate-500">Payment method & status</dt>
+                <dd className="font-medium text-slate-800">{data.paymentMethod} · {data.paymentStatus}</dd>
+              </div>
+              <div className="flex justify-between py-1">
+                <dt className="text-slate-500">Cancellation reason</dt>
+                <dd className="font-medium text-slate-800">{data.cancellationReason ?? "None"}</dd>
+              </div>
+            </dl>
           </Panel>
         </div>
         {dispatch ? (
           <Panel title="Dispatcher actions">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               <select
-                className="h-10 rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm"
+                className="h-10 rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-900 focus:border-[#2e4ed2] focus:ring-2 focus:ring-[#2e4ed2]/15 outline-none cursor-pointer"
                 onChange={(event) => {
                   if (event.target.value) {
                     void act("assign", { driverId: event.target.value });
@@ -151,10 +169,10 @@ export default function TripDetailPage({
           }
         >
           <Table
-            columns={["Action", "When"]}
+            columns={["Action", "Timestamp"]}
             rows={data.events.map((event) => [
-              event.action,
-              new Date(event.createdAt).toLocaleString(),
+              <span key="a" className="font-medium text-slate-900">{event.action}</span>,
+              <span key="w" className="text-slate-500">{new Date(event.createdAt).toLocaleString()}</span>,
             ])}
           />
         </Panel>
@@ -162,3 +180,4 @@ export default function TripDetailPage({
     </Guard>
   );
 }
+

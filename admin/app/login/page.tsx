@@ -32,45 +32,61 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-slate-950 px-4">
+    <div className="grid min-h-screen bg-[#f7f8ef] place-items-center px-4 py-12">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md space-y-4 rounded-3xl border border-slate-800 bg-slate-900 p-8"
+        className="w-full max-w-md space-y-5 rounded-3xl border border-slate-200/80 bg-white p-8 sm:p-10 shadow-xl shadow-slate-200/60"
       >
-        <div>
-          <p className="text-sm text-emerald-300">Eve operations</p>
-          <h1 className="mt-1 text-2xl font-semibold text-white">
-            Admin console
+        <div className="flex flex-col items-center text-center">
+          <img
+            src="https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742"
+            alt="Eve"
+            className="h-10 w-auto object-contain mb-4"
+          />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Sign in
           </h1>
-          <p className="mt-2 text-sm text-slate-400">
-            Sign in with a staff account. Access is role-based and audited.
+          <p className="mt-1 text-sm text-slate-500">
+            Operations Console · Role-based & audited access
           </p>
         </div>
-        <label className="block text-sm text-slate-400">
-          Email
-          <Input
-            className="mt-1 w-full"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            type="email"
-            required
-          />
-        </label>
-        <label className="block text-sm text-slate-400">
-          Password
-          <Input
-            className="mt-1 w-full"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            type="password"
-            required
-          />
-        </label>
-        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-        <Button className="w-full" disabled={pending}>
-          {pending ? "Signing in…" : "Sign in"}
+
+        <div className="space-y-4 pt-2">
+          <label className="block text-sm font-medium text-slate-700">
+            Email address
+            <Input
+              className="mt-1.5 w-full"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              type="email"
+              placeholder="name@company.com"
+              required
+            />
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            Password
+            <Input
+              className="mt-1.5 w-full"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              type="password"
+              placeholder="••••••••"
+              required
+            />
+          </label>
+        </div>
+
+        {error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-sm text-rose-700 font-medium">
+            {error}
+          </div>
+        ) : null}
+
+        <Button className="w-full h-11 text-sm font-semibold" disabled={pending}>
+          {pending ? "Signing in…" : "Sign in to Console"}
         </Button>
       </form>
     </div>
   );
 }
+

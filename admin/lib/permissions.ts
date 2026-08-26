@@ -4,6 +4,7 @@ export type Permission =
   | "riders:write"
   | "drivers:read"
   | "drivers:approve"
+  | "vehicles:read"
   | "vehicles:write"
   | "trips:read"
   | "trips:dispatch"

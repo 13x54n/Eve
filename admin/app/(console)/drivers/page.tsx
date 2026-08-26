@@ -43,38 +43,54 @@ export default function DriversPage() {
 
   return (
     <Guard allowed={can(user, "drivers:read")}>
-      <h1 className="mb-2 text-2xl font-semibold text-white">
-        Drivers & onboarding
-      </h1>
-      <p className="mb-4 text-sm text-slate-400">
-        Review identity, license, insurance, and vehicle documents before approval.
-      </p>
-      <FilterBar>
-        <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Search drivers" />
-        <Select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="NEEDS_INFO">Needs info</option>
-          <option value="APPROVED">Approved</option>
-          <option value="SUSPENDED">Suspended</option>
-        </Select>
-      </FilterBar>
-      <Panel title={`Verification queue · ${data?.total ?? 0}`}>
-        <Table
-          columns={["Driver", "Presence", "Approval", "Docs", "Rating"]}
-          rows={(data?.items ?? []).map((driver) => [
-            <Link key={driver.id} className="text-emerald-300" href={`/drivers/${driver.id}`}>
-              {driver.user.name}
-            </Link>,
-            driver.presence,
-            <Badge key="a" tone={statusTone(driver.approvalStatus)}>
-              {driver.approvalStatus}
-            </Badge>,
-            `${driver.documents.filter((doc) => doc.status === "PENDING").length} pending`,
-            driver.rating,
-          ])}
-        />
-      </Panel>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            Drivers & onboarding
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Review identity, license, insurance, and vehicle documents before approval.
+          </p>
+        </div>
+        <FilterBar>
+          <Input
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+            placeholder="Search drivers by name or email"
+            className="w-full sm:w-80"
+          />
+          <Select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full sm:w-48">
+            <option value="">All statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="NEEDS_INFO">Needs info</option>
+            <option value="APPROVED">Approved</option>
+            <option value="SUSPENDED">Suspended</option>
+          </Select>
+        </FilterBar>
+        <Panel title={`Verification queue · ${data?.total ?? 0}`}>
+          <Table
+            columns={["Driver", "Presence", "Approval", "Pending Docs", "Rating"]}
+            rows={(data?.items ?? []).map((driver) => [
+              <Link key={driver.id} className="font-semibold text-[#2e4ed2] transition hover:underline" href={`/drivers/${driver.id}`}>
+                {driver.user.name}
+              </Link>,
+              <span key="p" className="text-slate-700 font-medium capitalize">
+                {driver.presence.toLowerCase()}
+              </span>,
+              <Badge key="a" tone={statusTone(driver.approvalStatus)}>
+                {driver.approvalStatus}
+              </Badge>,
+              <span key="d" className="text-slate-700 font-medium">
+                {`${driver.documents.filter((doc) => doc.status === "PENDING").length} pending`}
+              </span>,
+              <span key="r" className="text-slate-700 font-medium">
+                {driver.rating ? `★ ${driver.rating.toFixed(1)}` : "—"}
+              </span>,
+            ])}
+          />
+        </Panel>
+      </div>
     </Guard>
   );
 }
+

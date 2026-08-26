@@ -50,57 +50,70 @@ export default function VehiclesPage() {
 
   return (
     <Guard allowed={can(user, "drivers:read")}>
-      <h1 className="mb-4 text-2xl font-semibold text-white">Vehicles & fleets</h1>
-      <FilterBar>
-        <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Plate, make, model" />
-      </FilterBar>
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
-        {(fleets ?? []).map((fleet) => (
-          <Panel key={fleet.name} title={fleet.name}>
-            <p className="text-sm text-slate-300">
-              {fleet._count.drivers} drivers · {fleet._count.vehicles} vehicles
-            </p>
-          </Panel>
-        ))}
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Vehicles & fleets</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Manage fleet inventory, service tiers, inspections, and driver assignments.
+          </p>
+        </div>
+        <FilterBar>
+          <Input
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+            placeholder="Search plate, make, model"
+            className="w-full sm:w-80"
+          />
+        </FilterBar>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {(fleets ?? []).map((fleet) => (
+            <Panel key={fleet.name} title={fleet.name}>
+              <p className="text-sm font-medium text-slate-700">
+                <span className="font-semibold text-slate-900">{fleet._count.drivers}</span> drivers · <span className="font-semibold text-slate-900">{fleet._count.vehicles}</span> vehicles
+              </p>
+            </Panel>
+          ))}
+        </div>
+        <Panel title={`${data?.total ?? 0} vehicles`}>
+          <Table
+            columns={["Plate", "Vehicle", "Service", "Inspection", "Assigned Driver", "Quick Assign"]}
+            rows={(data?.items ?? []).map((vehicle) => [
+              <span key="p" className="font-mono font-semibold text-slate-900">{vehicle.plateNumber}</span>,
+              `${vehicle.year} ${vehicle.make} ${vehicle.model} · ${vehicle.color}`,
+              <span key="c" className="font-medium text-slate-700">{`${vehicle.serviceCategory} (${vehicle.capacity} pax)`}</span>,
+              <Badge key="i" tone={statusTone(vehicle.inspectionStatus)}>
+                {vehicle.inspectionStatus}
+              </Badge>,
+              <span key="d" className="font-medium text-slate-800">{vehicle.driver?.user.name ?? "Unassigned"}</span>,
+              write ? (
+                <select
+                  key="s"
+                  className="h-8 rounded-lg border border-slate-300 bg-white px-2.5 text-xs font-medium text-slate-900 focus:border-[#2e4ed2] focus:ring-2 focus:ring-[#2e4ed2]/15 outline-none cursor-pointer"
+                  defaultValue={vehicle.driver ? (drivers?.items.find(d => d.user.name === vehicle.driver?.user.name)?.id ?? "") : ""}
+                  onChange={(event) => {
+                    void api(`/admin/vehicles/${vehicle.id}`, {
+                      method: "PATCH",
+                      body: JSON.stringify({
+                        driverId: event.target.value || null,
+                      }),
+                    }).then(() => reload());
+                  }}
+                >
+                  <option value="">Unassign</option>
+                  {(drivers?.items ?? []).map((driver) => (
+                    <option key={driver.id} value={driver.id}>
+                      {driver.user.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                "—"
+              ),
+            ])}
+          />
+        </Panel>
       </div>
-      <Panel title={`${data?.total ?? 0} vehicles`}>
-        <Table
-          columns={["Plate", "Vehicle", "Service", "Inspection", "Assigned", "Assign"]}
-          rows={(data?.items ?? []).map((vehicle) => [
-            vehicle.plateNumber,
-            `${vehicle.year} ${vehicle.make} ${vehicle.model} · ${vehicle.color}`,
-            `${vehicle.serviceCategory} / ${vehicle.capacity}`,
-            <Badge key="i" tone={statusTone(vehicle.inspectionStatus)}>
-              {vehicle.inspectionStatus}
-            </Badge>,
-            vehicle.driver?.user.name ?? "Unassigned",
-            write ? (
-              <select
-                key="s"
-                className="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
-                defaultValue={""}
-                onChange={(event) => {
-                  void api(`/admin/vehicles/${vehicle.id}`, {
-                    method: "PATCH",
-                    body: JSON.stringify({
-                      driverId: event.target.value || null,
-                    }),
-                  }).then(() => reload());
-                }}
-              >
-                <option value="">Unassign</option>
-                {(drivers?.items ?? []).map((driver) => (
-                  <option key={driver.id} value={driver.id}>
-                    {driver.user.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              "—"
-            ),
-          ])}
-        />
-      </Panel>
     </Guard>
   );
 }
+

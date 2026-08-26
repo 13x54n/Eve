@@ -381,10 +381,6 @@ export type PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.PasswordResetCodeScalarWhereInput | Prisma.PasswordResetCodeScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type PasswordResetCodeCreateWithoutUserInput = {
   id?: string
   codeHash: string

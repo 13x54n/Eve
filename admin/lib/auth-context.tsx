@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = getToken();
 
     if (!token) {
-      setLoading(false);
+      Promise.resolve().then(() => setLoading(false));
       return;
     }
 

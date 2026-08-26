@@ -26,8 +26,42 @@ export function useApi<T>(path: string | null) {
   }
 
   useEffect(() => {
-    void reload();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false;
+
+    if (!path) {
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setData(null);
+          setLoading(false);
+        }
+      });
+      return;
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
+    setError("");
+
+    api<T>(path)
+      .then((result) => {
+        if (!cancelled) {
+          setData(result);
+        }
+      })
+      .catch((caught) => {
+        if (!cancelled) {
+          setError(caught instanceof Error ? caught.message : "Request failed");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [path]);
 
   return { data, error, loading, reload, setData };

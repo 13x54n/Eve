@@ -1174,7 +1174,7 @@ export async function updateTicket(
 }
 
 export async function listPromos() {
-  const items = await prisma.promo.findMany({ orderBy: { createdAt: "desc" } });
+  const items = await prisma.promo.findMany({ orderBy: { startsAt: "desc" } });
   return items.map((promo) => ({
     ...promo,
     percentOff: money(promo.percentOff),
