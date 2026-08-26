@@ -2,32 +2,28 @@ name: Deploy Backend to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+    paths:
+      - 'backend/**'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Deploy to EC2
+      - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
           script: |
-            source ~/.bashrc
-            nvm use 24
-            cd /Eve
-            git checkout main
+            set -e
+            cd ~/Eve
             git pull origin main
-            cd /backend
+            cd backend
             npm install
             npm run build
-            pm2 reload all || pm2 start npm --name "backend" -- start
-            pm2 save   
+            pm2 restart server || pm2 start dist/server.js --name server
+            pm2 save
