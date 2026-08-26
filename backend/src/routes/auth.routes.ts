@@ -1,6 +1,7 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
+  adminLogin,
   forgotPassword,
   login,
   me,
@@ -20,6 +21,7 @@ const authLimiter = rateLimit({
 
 router.post("/register", authLimiter, register);
 router.post("/login", authLimiter, login);
+router.post("/admin/login", authLimiter, adminLogin);
 router.post("/forgot-password", authLimiter, forgotPassword);
 router.post("/reset-password", authLimiter, resetPasswordHandler);
 router.get("/me", requireAuth, me);

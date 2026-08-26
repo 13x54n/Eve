@@ -1,7 +1,9 @@
 import { createHash, randomInt } from "node:crypto";
 import { prisma } from "../config/prisma.js";
+import { listPermissions } from "../rbac/permissions.js";
 import {
   createAccessToken,
+  type AdminStaffRole,
   type UserRole,
 } from "../utils/jwt.js";
 import {
@@ -22,19 +24,35 @@ type UserRecord = {
   email: string;
   phone: string | null;
   role: UserRole;
+  adminStaffRole?: AdminStaffRole | null;
+  accountStatus?: string;
   isActive: boolean;
+  flagged?: boolean;
+  city?: string | null;
+  mfaEnabled?: boolean;
+  lastLoginAt?: Date | null;
   createdAt: Date;
 };
 
-function sanitizeUser(user: UserRecord) {
+export function sanitizeUser(user: UserRecord) {
+  const staffRole = user.adminStaffRole ?? null;
+
   return {
     id: user.id,
     name: user.name,
     email: user.email,
     phone: user.phone,
     role: user.role,
+    adminStaffRole: staffRole,
+    accountStatus: user.accountStatus ?? "ACTIVE",
     isActive: user.isActive,
+    flagged: user.flagged ?? false,
+    city: user.city ?? null,
+    mfaEnabled: user.mfaEnabled ?? false,
+    lastLoginAt: user.lastLoginAt ?? null,
     createdAt: user.createdAt,
+    permissions:
+      user.role === "ADMIN" ? listPermissions(staffRole) : [],
   };
 }
 
@@ -108,11 +126,90 @@ export async function loginRider(input: {
   };
 }
 
+export async function loginAdmin(
+  input: {
+    email: string;
+    password: string;
+  },
+  context: {
+    ip?: string;
+    userAgent?: string;
+  } = {},
+) {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: input.email,
+    },
+  });
+
+  const passwordIsValid = user
+    ? await verifyPassword(user.passwordHash, input.password)
+    : false;
+
+  if (
+    !user ||
+    !user.isActive ||
+    user.role !== "ADMIN" ||
+    user.accountStatus === "BLOCKED" ||
+    !passwordIsValid
+  ) {
+    if (user?.role === "ADMIN") {
+      await prisma.adminLoginEvent.create({
+        data: {
+          userId: user.id,
+          ip: context.ip,
+          userAgent: context.userAgent,
+          success: false,
+        },
+      });
+    }
+
+    const error = new Error("Invalid email or password");
+    error.name = "UnauthorizedError";
+    throw error;
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    }),
+    prisma.adminLoginEvent.create({
+      data: {
+        userId: user.id,
+        ip: context.ip,
+        userAgent: context.userAgent,
+        success: true,
+      },
+    }),
+    prisma.adminSession.create({
+      data: {
+        userId: user.id,
+        ip: context.ip,
+        userAgent: context.userAgent,
+      },
+    }),
+    prisma.auditLog.create({
+      data: {
+        actorId: user.id,
+        action: "admin.login",
+        entity: "User",
+        entityId: user.id,
+        ip: context.ip,
+      },
+    }),
+  ]);
+
+  return {
+    accessToken: createAccessToken(user),
+    user: sanitizeUser(user),
+  };
+}
+
 export async function getUserById(userId: string) {
   const user = await prisma.user.findFirst({
     where: {
       id: userId,
-      role: "RIDER",
       isActive: true,
     },
   });
