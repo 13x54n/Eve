@@ -21,13 +21,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            source ~/.bashrc
-            nvm use 24
             cd /Eve
             git checkout main
             git pull origin main
             cd /Eve/backend
             npm install
             npm run build
-            pm2 reload all || pm2 start npm --name "backend" -- start
+            pm2 reload all 
             pm2 save   
