@@ -26,7 +26,7 @@ jobs:
             cd /Eve
             git checkout main
             git pull origin main
-            cd /Eve/backend
+            cd /backend
             npm install
             npm run build
             pm2 reload all || pm2 start npm --name "backend" -- start
