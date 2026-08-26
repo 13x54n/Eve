@@ -59,14 +59,14 @@ export default function HomeScreen() {
   }, []);
 
   // inside HomeScreen
-function handleDestinationChange(text: string) {
-  setDestination(text);
-  searchAddresses(
-    text,
-    (results) => setSuggestions(results),
-    { lat: region.latitude, lng: region.longitude } // bias to current location
-  );
-}
+  function handleDestinationChange(text: string) {
+    setDestination(text);
+    searchAddresses(
+      text,
+      (results) => setSuggestions(results),
+      { lat: region.latitude, lng: region.longitude } // bias to current location
+    );
+  }
 
 
   function handleSelectSuggestion(item: AddressSuggestion) {
@@ -129,37 +129,6 @@ function handleDestinationChange(text: string) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Nice to see you, Lex</Text>
-
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          marginBottom: 20,
-          gap: 10,
-        }}
-      >
-        <View style={styles.featuresButton}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/vector-1768383602208-c45d3af52271?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            }}
-            style={{ width: 60, height: 60, marginBottom: 5 }}
-          />
-          <Text style={styles.featureText}>Schedule</Text>
-          <Text>Book Ahead</Text>
-        </View>
-        <View style={styles.featuresButton}>
-          <Image
-            source={{
-              uri: "https://images.unsplash.com/vector-1763972891818-fbae102da51e?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-            }}
-            style={{ width: 60, height: 60, marginBottom: 5 }}
-          />
-          <Text style={styles.featureText}>Courier</Text>
-          <Text>Let's get moving!</Text>
-        </View>
-      </View>
-
       <View style={styles.searchContainer}>
         <Feather name="search" size={24} color="#2e4ed2" />
         <TextInput
@@ -288,6 +257,37 @@ function handleDestinationChange(text: string) {
           </View>
         </View>
       </Modal>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginBottom: 20,
+          gap: 10,
+        }}
+      >
+        <View style={styles.featuresButton}>
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/vector-1768383602208-c45d3af52271?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            }}
+            style={{ width: 60, height: 60, marginBottom: 5 }}
+          />
+          <Text style={styles.featureText}>Schedule</Text>
+          <Text>Book Ahead</Text>
+        </View>
+        <View style={styles.featuresButton}>
+          <Image
+            source={{
+              uri: "https://images.unsplash.com/vector-1763972891818-fbae102da51e?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            }}
+            style={{ width: 60, height: 60, marginBottom: 5 }}
+          />
+          <Text style={styles.featureText}>Courier</Text>
+          <Text>Let's get moving!</Text>
+        </View>
+      </View>
+
+
     </View>
   );
 }
