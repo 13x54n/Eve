@@ -21,6 +21,7 @@ import type {
   AuthenticatedRequest,
 } from "../middleware/auth.middleware.js";
 
+// controller functions for register
 export async function register(
   req: Request,
   res: Response,
