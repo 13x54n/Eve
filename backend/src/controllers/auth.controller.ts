@@ -5,6 +5,7 @@ import type {
 } from "express";
 import {
   getUserById,
+  loginAdmin,
   loginRider,
   registerRider,
   requestPasswordReset,
@@ -43,6 +44,24 @@ export async function login(
   try {
     const data = loginSchema.parse(req.body);
     const result = await loginRider(data);
+
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function adminLogin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const data = loginSchema.parse(req.body);
+    const result = await loginAdmin(data, {
+      ip: req.ip,
+      userAgent: req.get("user-agent") ?? undefined,
+    });
 
     res.status(200).json(result);
   } catch (error) {

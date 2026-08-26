@@ -293,15 +293,15 @@ export default function RequestRideScreen() {
                 ? "Dropoff suggestions"
                 : `Stop ${activeField.index + 1} suggestions`}
           </Text>
-            <Pressable
-              style={styles.mapChoiceButton}
-              onPress={openMapPicker}
-              accessibilityRole="button"
-              accessibilityLabel="Choose this address on map"
-            >
-              <Feather name="map" size={14} color="#2E4ED5" />
-              <Text style={styles.mapChoiceText}>Choose on map</Text>
-            </Pressable>
+          <Pressable
+            style={styles.mapChoiceButton}
+            onPress={openMapPicker}
+            accessibilityRole="button"
+            accessibilityLabel="Choose this address on map"
+          >
+            <Feather name="map" size={14} color="#2E4ED5" />
+            <Text style={styles.mapChoiceText}>Choose on map</Text>
+          </Pressable>
           {suggesting && <ActivityIndicator style={{ marginVertical: 8 }} />}
           {currentSuggestions.length === 0 && !suggesting ? (
             <Text style={{ padding: 10, color: "#6B7280" }}>No results found</Text>
@@ -349,128 +349,8 @@ export default function RequestRideScreen() {
           </Pressable>
         </View>
       ))}
-      <View style={styles.routePreviewCard}>
-        <View style={styles.routePreviewHeader}>
-          <View>
-            <Text style={styles.routePreviewTitle}>Your route</Text>
-            <Text style={styles.routePreviewSubtitle}>Review the journey before booking</Text>
-          </View>
-          <Feather name="navigation" size={20} color="#2E4ED5" />
-        </View>
-        <MapView style={styles.routePreviewMap} initialRegion={routeRegion} scrollEnabled={false}>
-          <UrlTile
-            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maximumZ={19}
-            tileSize={256}
-          />
-          <Marker coordinate={{ latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng }} pinColor="#2E4ED5" />
-          <Marker coordinate={mapCoordinate} pinColor="#111827" />
-          <Polyline
-            coordinates={[
-              { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng },
-              { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude },
-            ]}
-            strokeColor="#2E4ED5"
-            strokeWidth={4}
-            lineDashPattern={[10, 7]}
-          />
-        </MapView>
-        <Text style={styles.routeMapAttribution}>© OpenStreetMap contributors</Text>
-        <View style={styles.mapLinks}>
-          <Pressable style={styles.mapLink} onPress={() => openExternalMap("google")}>
-            <Feather name="map" size={15} color="#2E4ED5" />
-            <Text style={styles.mapLinkText}>Google Maps</Text>
-          </Pressable>
-          {Platform.OS === "ios" ? (
-            <Pressable style={styles.mapLink} onPress={() => openExternalMap("apple")}>
-              <Feather name="map-pin" size={15} color="#2E4ED5" />
-              <Text style={styles.mapLinkText}>Apple Maps</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      </View>
-
-      
-
-      {hasSuggestions && (
-        <View style={styles.suggestionsCard}>
-          <Text style={styles.suggestionsTitle}>
-            {activeField === "pickup"
-              ? "Pickup suggestions"
-              : activeField === "dropoff"
-                ? "Dropoff suggestions"
-                : `Stop ${activeField.index + 1} suggestions`}
-          </Text>
-            <Pressable
-              style={styles.mapChoiceButton}
-              onPress={openMapPicker}
-              accessibilityRole="button"
-              accessibilityLabel="Choose this address on map"
-            >
-              <Feather name="map" size={14} color="#2E4ED5" />
-              <Text style={styles.mapChoiceText}>Choose on map</Text>
-            </Pressable>
-          {suggesting && <ActivityIndicator style={{ marginVertical: 8 }} />}
-          {currentSuggestions.length === 0 && !suggesting ? (
-            <Text style={{ padding: 10, color: "#6B7280" }}>No results found</Text>
-          ) : (
-            currentSuggestions.map((item) => (
-              <Pressable
-                key={item.display_name}
-                style={styles.suggestionRow}
-                onPress={() => handleSelectSuggestion(item, activeField!)}
-              >
-                <View style={styles.suggestionIcon}>
-                  <Feather name="map-pin" size={17} color="#2e4ed2" />
-                </View>
-                <View style={styles.suggestionCopy}>
-                  <Text style={styles.suggestionTitle} numberOfLines={1}>
-                    {item.label}
-                  </Text>
-                  <Text style={styles.suggestionSubtitle} numberOfLines={1}>
-                    {item.display_name}
-                  </Text>
-                </View>
-                <Feather name="chevron-right" size={18} color="#9CA3AF" />
-              </Pressable>
-            ))
-          )}
-        </View>
-      )}
-
-      <Text style={styles.sectionTitle}>Preferred vehicle</Text>
-      <View style={styles.vehicleRow}>
-        {vehicleOptions.map(([name, description, iconName, imageUri]) => (
-          <Pressable
-            key={name}
-            style={[
-              styles.vehicleOption,
-              selectedVehicle === name && styles.vehicleOptionSelected,
-            ]}
-            onPress={() => setSelectedVehicle(name)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: selectedVehicle === name }}
-          >
-            <View style={styles.vehicleIcon}>
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.vehicleImage}
-                contentFit="contain"
-              />
-            </View>
-            <Text style={styles.vehicleName}>{name}</Text>
-            <Text style={styles.vehicleDescription}>{description}</Text>
-            <View
-              style={[
-                styles.vehicleRadio,
-                selectedVehicle === name && styles.vehicleRadioSelected,
-              ]}
-            />
-          </Pressable>
-        ))}
-      </View>
-
       <Text style={styles.sectionTitle}>Rider</Text>
+
       <View style={styles.vehicleRow}>
         {riderOptions.map(([name, description, iconName, imageUri]) => (
           <Pressable
@@ -515,6 +395,81 @@ export default function RequestRideScreen() {
         </View>
       ) : null}
 
+      <View style={styles.routePreviewCard}>
+        <View style={styles.routePreviewHeader}>
+          <View>
+            <Text style={styles.routePreviewTitle}>Your route</Text>
+            <Text style={styles.routePreviewSubtitle}>Review the journey before booking</Text>
+          </View>
+          <Feather name="navigation" size={20} color="#2E4ED5" />
+        </View>
+        <MapView style={styles.routePreviewMap} initialRegion={routeRegion} scrollEnabled={false}>
+          <UrlTile
+            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maximumZ={19}
+            tileSize={256}
+          />
+          <Marker coordinate={{ latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng }} pinColor="#2E4ED5" />
+          <Marker coordinate={mapCoordinate} pinColor="#111827" />
+          <Polyline
+            coordinates={[
+              { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng },
+              { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude },
+            ]}
+            strokeColor="#2E4ED5"
+            strokeWidth={4}
+            lineDashPattern={[10, 7]}
+          />
+        </MapView>
+
+        <View style={styles.mapLinks}>
+          <Pressable style={styles.mapLink} onPress={() => openExternalMap("google")}>
+            <Feather name="map" size={15} color="#2E4ED5" />
+            <Text style={styles.mapLinkText}>Google Maps</Text>
+          </Pressable>
+          {Platform.OS === "ios" ? (
+            <Pressable style={styles.mapLink} onPress={() => openExternalMap("apple")}>
+              <Feather name="map-pin" size={15} color="#2E4ED5" />
+              <Text style={styles.mapLinkText}>Apple Maps</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </View>
+
+
+      <Text style={styles.sectionTitle}>Preferred vehicle</Text>
+      <View style={styles.vehicleRow}>
+        {vehicleOptions.map(([name, description, iconName, imageUri]) => (
+          <Pressable
+            key={name}
+            style={[
+              styles.vehicleOption,
+              selectedVehicle === name && styles.vehicleOptionSelected,
+            ]}
+            onPress={() => setSelectedVehicle(name)}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: selectedVehicle === name }}
+          >
+            <View style={styles.vehicleIcon}>
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.vehicleImage}
+                contentFit="contain"
+              />
+            </View>
+            <Text style={styles.vehicleName}>{name}</Text>
+            <Text style={styles.vehicleDescription}>{description}</Text>
+            <View
+              style={[
+                styles.vehicleRadio,
+                selectedVehicle === name && styles.vehicleRadioSelected,
+              ]}
+            />
+          </Pressable>
+        ))}
+      </View>
+
+
       <Modal
         visible={mapPickerVisible}
         animationType="slide"
@@ -545,7 +500,7 @@ export default function RequestRideScreen() {
             />
             <Marker coordinate={mapCoordinate} />
           </MapView>
-          <Text style={styles.mapPickerAttribution}>© OpenStreetMap contributors</Text>
+
           <View style={styles.mapPickerFooter}>
             <Text style={styles.mapPickerHint}>Tap the map to place this address.</Text>
             <Pressable style={styles.confirmMapButton} onPress={applyMapLocation}>
@@ -587,10 +542,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   eyebrow: {
-    color: "#6B7280",
-    fontSize: 11,
+    color: "#000",
+    fontSize: 14,
     fontWeight: "700",
-    letterSpacing: 1,
   },
   routeCard: {
     flexDirection: "row",

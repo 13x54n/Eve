@@ -16,3 +16,208 @@ export const UserRole = {
 } as const
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole]
+
+
+export const AdminStaffRole = {
+  OWNER: 'OWNER',
+  OPERATIONS: 'OPERATIONS',
+  FINANCE: 'FINANCE',
+  SUPPORT: 'SUPPORT',
+  SAFETY: 'SAFETY'
+} as const
+
+export type AdminStaffRole = (typeof AdminStaffRole)[keyof typeof AdminStaffRole]
+
+
+export const AccountStatus = {
+  ACTIVE: 'ACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  BLOCKED: 'BLOCKED',
+  PENDING: 'PENDING',
+  DEACTIVATED: 'DEACTIVATED'
+} as const
+
+export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus]
+
+
+export const DriverApprovalStatus = {
+  PENDING: 'PENDING',
+  NEEDS_INFO: 'NEEDS_INFO',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  SUSPENDED: 'SUSPENDED',
+  DEACTIVATED: 'DEACTIVATED'
+} as const
+
+export type DriverApprovalStatus = (typeof DriverApprovalStatus)[keyof typeof DriverApprovalStatus]
+
+
+export const DriverPresence = {
+  OFFLINE: 'OFFLINE',
+  ONLINE: 'ONLINE',
+  IDLE: 'IDLE',
+  ON_TRIP: 'ON_TRIP'
+} as const
+
+export type DriverPresence = (typeof DriverPresence)[keyof typeof DriverPresence]
+
+
+export const DocumentType = {
+  IDENTITY: 'IDENTITY',
+  LICENSE: 'LICENSE',
+  INSURANCE: 'INSURANCE',
+  BACKGROUND_CHECK: 'BACKGROUND_CHECK',
+  VEHICLE_REGISTRATION: 'VEHICLE_REGISTRATION',
+  VEHICLE_INSPECTION: 'VEHICLE_INSPECTION'
+} as const
+
+export type DocumentType = (typeof DocumentType)[keyof typeof DocumentType]
+
+
+export const ReviewStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus]
+
+
+export const TripStatus = {
+  SCHEDULED: 'SCHEDULED',
+  SEARCHING: 'SEARCHING',
+  ASSIGNED: 'ASSIGNED',
+  ONGOING: 'ONGOING',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+  NO_DRIVER: 'NO_DRIVER',
+  DRIVER_NO_SHOW: 'DRIVER_NO_SHOW',
+  RIDER_NO_SHOW: 'RIDER_NO_SHOW',
+  TECHNICAL_FAILURE: 'TECHNICAL_FAILURE'
+} as const
+
+export type TripStatus = (typeof TripStatus)[keyof typeof TripStatus]
+
+
+export const RideType = {
+  STANDARD: 'STANDARD',
+  AIRPORT: 'AIRPORT',
+  MULTI_STOP: 'MULTI_STOP',
+  SCHEDULED: 'SCHEDULED',
+  CORPORATE: 'CORPORATE'
+} as const
+
+export type RideType = (typeof RideType)[keyof typeof RideType]
+
+
+export const PaymentMethodKind = {
+  CARD: 'CARD',
+  WALLET: 'WALLET',
+  CASH: 'CASH',
+  CORPORATE: 'CORPORATE',
+  PROMO: 'PROMO'
+} as const
+
+export type PaymentMethodKind = (typeof PaymentMethodKind)[keyof typeof PaymentMethodKind]
+
+
+export const LedgerType = {
+  CHARGE: 'CHARGE',
+  REFUND: 'REFUND',
+  COMMISSION: 'COMMISSION',
+  PAYOUT: 'PAYOUT',
+  WALLET_TOPUP: 'WALLET_TOPUP',
+  WALLET_WITHDRAW: 'WALLET_WITHDRAW',
+  CREDIT: 'CREDIT',
+  ADJUSTMENT: 'ADJUSTMENT'
+} as const
+
+export type LedgerType = (typeof LedgerType)[keyof typeof LedgerType]
+
+
+export const LedgerStatus = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+  DISPUTED: 'DISPUTED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type LedgerStatus = (typeof LedgerStatus)[keyof typeof LedgerStatus]
+
+
+export const TicketStatus = {
+  OPEN: 'OPEN',
+  IN_PROGRESS: 'IN_PROGRESS',
+  WAITING: 'WAITING',
+  RESOLVED: 'RESOLVED',
+  CLOSED: 'CLOSED'
+} as const
+
+export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus]
+
+
+export const TicketPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT'
+} as const
+
+export type TicketPriority = (typeof TicketPriority)[keyof typeof TicketPriority]
+
+
+export const IncidentType = {
+  SOS: 'SOS',
+  ACCIDENT: 'ACCIDENT',
+  ASSAULT: 'ASSAULT',
+  HARASSMENT: 'HARASSMENT',
+  UNSAFE_DRIVING: 'UNSAFE_DRIVING',
+  LOST_ITEM: 'LOST_ITEM',
+  MEDICAL: 'MEDICAL',
+  OTHER: 'OTHER'
+} as const
+
+export type IncidentType = (typeof IncidentType)[keyof typeof IncidentType]
+
+
+export const IncidentSeverity = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL'
+} as const
+
+export type IncidentSeverity = (typeof IncidentSeverity)[keyof typeof IncidentSeverity]
+
+
+export const PricingStatus = {
+  DRAFT: 'DRAFT',
+  PENDING_APPROVAL: 'PENDING_APPROVAL',
+  ACTIVE: 'ACTIVE',
+  ROLLED_BACK: 'ROLLED_BACK'
+} as const
+
+export type PricingStatus = (typeof PricingStatus)[keyof typeof PricingStatus]
+
+
+export const ZoneKind = {
+  SERVICE: 'SERVICE',
+  AIRPORT: 'AIRPORT',
+  NO_SERVICE: 'NO_SERVICE',
+  RESTRICTED: 'RESTRICTED'
+} as const
+
+export type ZoneKind = (typeof ZoneKind)[keyof typeof ZoneKind]
+
+
+export const AlertKind = {
+  SOS: 'SOS',
+  PAYMENT_FAILURE: 'PAYMENT_FAILURE',
+  UNUSUAL_CANCELLATION: 'UNUSUAL_CANCELLATION',
+  SYSTEM: 'SYSTEM',
+  DOCUMENT_EXPIRY: 'DOCUMENT_EXPIRY'
+} as const
+
+export type AlertKind = (typeof AlertKind)[keyof typeof AlertKind]

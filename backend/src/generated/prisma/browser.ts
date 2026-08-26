@@ -27,3 +27,118 @@ export type User = Prisma.UserModel
  * 
  */
 export type PasswordResetCode = Prisma.PasswordResetCodeModel
+/**
+ * Model RiderProfile
+ * 
+ */
+export type RiderProfile = Prisma.RiderProfileModel
+/**
+ * Model FleetCompany
+ * 
+ */
+export type FleetCompany = Prisma.FleetCompanyModel
+/**
+ * Model DriverProfile
+ * 
+ */
+export type DriverProfile = Prisma.DriverProfileModel
+/**
+ * Model Vehicle
+ * 
+ */
+export type Vehicle = Prisma.VehicleModel
+/**
+ * Model DriverDocument
+ * 
+ */
+export type DriverDocument = Prisma.DriverDocumentModel
+/**
+ * Model Trip
+ * 
+ */
+export type Trip = Prisma.TripModel
+/**
+ * Model TripEvent
+ * 
+ */
+export type TripEvent = Prisma.TripEventModel
+/**
+ * Model PaymentMethod
+ * 
+ */
+export type PaymentMethod = Prisma.PaymentMethodModel
+/**
+ * Model LedgerEntry
+ * 
+ */
+export type LedgerEntry = Prisma.LedgerEntryModel
+/**
+ * Model FareConfig
+ * 
+ */
+export type FareConfig = Prisma.FareConfigModel
+/**
+ * Model Zone
+ * 
+ */
+export type Zone = Prisma.ZoneModel
+/**
+ * Model SupportTicket
+ * 
+ */
+export type SupportTicket = Prisma.SupportTicketModel
+/**
+ * Model TicketMessage
+ * 
+ */
+export type TicketMessage = Prisma.TicketMessageModel
+/**
+ * Model SafetyIncident
+ * 
+ */
+export type SafetyIncident = Prisma.SafetyIncidentModel
+/**
+ * Model LostItem
+ * 
+ */
+export type LostItem = Prisma.LostItemModel
+/**
+ * Model PrivacyRequest
+ * 
+ */
+export type PrivacyRequest = Prisma.PrivacyRequestModel
+/**
+ * Model Promo
+ * 
+ */
+export type Promo = Prisma.PromoModel
+/**
+ * Model DriverIncentive
+ * 
+ */
+export type DriverIncentive = Prisma.DriverIncentiveModel
+/**
+ * Model Notification
+ * 
+ */
+export type Notification = Prisma.NotificationModel
+/**
+ * Model AuditLog
+ * 
+ */
+export type AuditLog = Prisma.AuditLogModel
+/**
+ * Model AdminLoginEvent
+ * 
+ */
+export type AdminLoginEvent = Prisma.AdminLoginEventModel
+/**
+ * Model AdminSession
+ * 
+ */
+export type AdminSession = Prisma.AdminSessionModel
+/**
+ * Model Alert
+ * 
+ */
+export type Alert = Prisma.AlertModel
