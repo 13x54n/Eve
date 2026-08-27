@@ -11,6 +11,15 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
+  phone?: string;
+  city: string;
+  vehicleMake: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  vehicleColor: string;
+  vehiclePlateNumber: string;
+  vehicleType: 'BIKE' | 'CAR';
+  vehicleCapacity: number;
 }
 
 export interface AuthResponse {
@@ -21,6 +30,8 @@ export interface AuthResponse {
     name: string;
     email: string;
     phone: string | null;
+    city: string | null;
+    accountStatus: string;
     isActive: boolean;
     createdAt: string;
   };
@@ -32,13 +43,13 @@ export interface PasswordResetRequestResponse {
 }
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>('/auth/login', payload);
+  const { data } = await api.post<AuthResponse>('/auth/driver/login', payload);
   await SecureStore.setItemAsync('access_token', data.accessToken);
   return data;
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>('/auth/register', payload);
+  const { data } = await api.post<AuthResponse>('/auth/driver/register', payload);
   await SecureStore.setItemAsync('access_token', data.accessToken);
   return data;
 }

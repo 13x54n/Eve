@@ -1,17 +1,26 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { getTrips, Trip } from "@/services/trips";
 
-const rides = [
-  ["Today, 9:42 AM", "King St W", "Union Station", "$18.40", "Completed"],
-  ["Yesterday, 6:18 PM", "Queen St E", "Yorkdale Mall", "$27.80", "Completed"],
-  ["Aug 18, 12:05 PM", "Dufferin St", "Kensington Market", "$14.25", "Cancelled"],
-] as const;
+function displayStatus(status: string) {
+  if (status === "COMPLETED") return "Completed";
+  if (status === "CANCELLED") return "Cancelled";
+  return status;
+}
 
 export default function RidesScreen() {
   const [filter, setFilter] = useState<"All" | "Completed" | "Cancelled">("All");
-  const visibleRides = rides.filter((ride) => filter === "All" || ride[5] === filter);
+  const [trips, setTrips] = useState<Trip[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    void getTrips().then((result) => { if (mounted) setTrips(result); }).catch(() => { /* keep empty state on failure */ });
+    return () => { mounted = false; };
+  }, []);
+
+  const visibleRides = trips.filter((trip) => filter === "All" || displayStatus(trip.status) === filter);
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
@@ -27,17 +36,20 @@ export default function RidesScreen() {
         ))}
       </View>
       <View style={styles.monthRow}><Text style={styles.sectionTitle}>Recent activity</Text><Text style={styles.count}>{visibleRides.length} rides</Text></View>
-      {visibleRides.map((ride) => (
-        <Pressable key={ride[0]} style={styles.rideCard} onPress={() => router.push("/ride/completed")}>
-          <View style={styles.rideHeader}>
-            <View style={[styles.statusIcon, { backgroundColor: ride[5] === "Cancelled" ? "#FEE2E2" : "#DCFCE7" }]}><Feather name={ride[5] === "Cancelled" ? "x" : "check"} size={16} color={ride[5] === "Cancelled" ? "#B91C1C" : "#15803D"} /></View>
-            <View style={styles.rideMeta}><Text style={styles.date}>{ride[0]}</Text><Text style={styles.status}>{ride[5]}</Text></View>
-            <Text style={styles.price}>{ride[4]}</Text>
-          </View>
-          <View style={styles.route}><View style={styles.routeDots}><View style={styles.startDot} /><View style={styles.routeLine} /><View style={styles.endDot} /></View><View style={styles.places}><Text style={styles.place}>{ride[1]}</Text><Text style={styles.place}>{ride[2]}</Text></View></View>
-          <View style={styles.receipt}><Text style={styles.receiptText}>View receipt</Text><Feather name="chevron-right" size={16} color="#9CA3AF" /></View>
-        </Pressable>
-      ))}
+      {visibleRides.map((trip) => {
+        const status = displayStatus(trip.status);
+        return (
+          <Pressable key={trip.id} style={styles.rideCard} onPress={() => router.push("/ride/completed")}>
+            <View style={styles.rideHeader}>
+              <View style={[styles.statusIcon, { backgroundColor: status === "Cancelled" ? "#FEE2E2" : "#DCFCE7" }]}><Feather name={status === "Cancelled" ? "x" : "check"} size={16} color={status === "Cancelled" ? "#B91C1C" : "#15803D"} /></View>
+              <View style={styles.rideMeta}><Text style={styles.date}>{new Date(trip.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</Text><Text style={styles.status}>{status}</Text></View>
+              <Text style={styles.price}>${trip.fareTotal.toFixed(2)}</Text>
+            </View>
+            <View style={styles.route}><View style={styles.routeDots}><View style={styles.startDot} /><View style={styles.routeLine} /><View style={styles.endDot} /></View><View style={styles.places}><Text style={styles.place}>{trip.pickupAddress}</Text><Text style={styles.place}>{trip.dropoffAddress}</Text></View></View>
+            <View style={styles.receipt}><Text style={styles.receiptText}>View receipt</Text><Feather name="chevron-right" size={16} color="#9CA3AF" /></View>
+          </Pressable>
+        );
+      })}
       {visibleRides.length === 0 && <Text style={styles.empty}>No rides in this filter.</Text>}
       <Pressable style={styles.bookButton} onPress={() => router.push("/(tabs)/home")}><Feather name="plus" size={18} color="#FFFFFF" /><Text style={styles.bookText}>Book a new ride</Text></Pressable>
     </ScrollView>

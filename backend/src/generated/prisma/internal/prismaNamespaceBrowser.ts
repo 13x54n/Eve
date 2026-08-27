@@ -59,6 +59,7 @@ export const ModelName = {
   Vehicle: 'Vehicle',
   DriverDocument: 'DriverDocument',
   Trip: 'Trip',
+  TripOffer: 'TripOffer',
   TripEvent: 'TripEvent',
   PaymentMethod: 'PaymentMethod',
   LedgerEntry: 'LedgerEntry',
@@ -181,6 +182,7 @@ export const VehicleScalarFieldEnum = {
   year: 'year',
   plateNumber: 'plateNumber',
   color: 'color',
+  vehicleType: 'vehicleType',
   serviceCategory: 'serviceCategory',
   capacity: 'capacity',
   inspectionStatus: 'inspectionStatus',
@@ -197,6 +199,11 @@ export const DriverDocumentScalarFieldEnum = {
   status: 'status',
   expiresAt: 'expiresAt',
   notes: 'notes',
+  imageKitFileId: 'imageKitFileId',
+  fileUrl: 'fileUrl',
+  fileName: 'fileName',
+  mimeType: 'mimeType',
+  fileSize: 'fileSize',
   reviewedAt: 'reviewedAt',
   reviewedById: 'reviewedById'
 } as const
@@ -212,6 +219,7 @@ export const TripScalarFieldEnum = {
   vehicleId: 'vehicleId',
   status: 'status',
   rideType: 'rideType',
+  vehicleType: 'vehicleType',
   city: 'city',
   zone: 'zone',
   pickupAddress: 'pickupAddress',
@@ -237,6 +245,21 @@ export const TripScalarFieldEnum = {
 } as const
 
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
+
+
+export const TripOfferScalarFieldEnum = {
+  id: 'id',
+  tripId: 'tripId',
+  driverId: 'driverId',
+  proposedFare: 'proposedFare',
+  etaMinutes: 'etaMinutes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  respondedAt: 'respondedAt'
+} as const
+
+export type TripOfferScalarFieldEnum = (typeof TripOfferScalarFieldEnum)[keyof typeof TripOfferScalarFieldEnum]
 
 
 export const TripEventScalarFieldEnum = {

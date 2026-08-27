@@ -84,6 +84,7 @@ export async function registerRider(input: {
       email: input.email,
       passwordHash,
       role: "RIDER",
+      riderProfile: { create: {} },
     },
   });
 

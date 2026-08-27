@@ -11,13 +11,19 @@
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "ca.sherpafoods.evedriver",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
       }
     },
     "android": {
       "icon": "./assets/images/icon.png",
       "predictiveBackGestureEnabled": false,
-      "package": "ca.sherpafoods.evedriver"
+      "package": "ca.sherpafoods.evedriver",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -34,7 +40,10 @@
           "imageWidth": 76
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-font",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

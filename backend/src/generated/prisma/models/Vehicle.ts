@@ -45,6 +45,7 @@ export type VehicleMinAggregateOutputType = {
   year: number | null
   plateNumber: string | null
   color: string | null
+  vehicleType: $Enums.VehicleType | null
   serviceCategory: string | null
   capacity: number | null
   inspectionStatus: $Enums.ReviewStatus | null
@@ -60,6 +61,7 @@ export type VehicleMaxAggregateOutputType = {
   year: number | null
   plateNumber: string | null
   color: string | null
+  vehicleType: $Enums.VehicleType | null
   serviceCategory: string | null
   capacity: number | null
   inspectionStatus: $Enums.ReviewStatus | null
@@ -75,6 +77,7 @@ export type VehicleCountAggregateOutputType = {
   year: number
   plateNumber: number
   color: number
+  vehicleType: number
   serviceCategory: number
   capacity: number
   inspectionStatus: number
@@ -102,6 +105,7 @@ export type VehicleMinAggregateInputType = {
   year?: true
   plateNumber?: true
   color?: true
+  vehicleType?: true
   serviceCategory?: true
   capacity?: true
   inspectionStatus?: true
@@ -117,6 +121,7 @@ export type VehicleMaxAggregateInputType = {
   year?: true
   plateNumber?: true
   color?: true
+  vehicleType?: true
   serviceCategory?: true
   capacity?: true
   inspectionStatus?: true
@@ -132,6 +137,7 @@ export type VehicleCountAggregateInputType = {
   year?: true
   plateNumber?: true
   color?: true
+  vehicleType?: true
   serviceCategory?: true
   capacity?: true
   inspectionStatus?: true
@@ -234,6 +240,7 @@ export type VehicleGroupByOutputType = {
   year: number
   plateNumber: string
   color: string
+  vehicleType: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus: $Enums.ReviewStatus
@@ -272,6 +279,7 @@ export type VehicleWhereInput = {
   year?: Prisma.IntFilter<"Vehicle"> | number
   plateNumber?: Prisma.StringFilter<"Vehicle"> | string
   color?: Prisma.StringFilter<"Vehicle"> | string
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Vehicle"> | $Enums.VehicleType
   serviceCategory?: Prisma.StringFilter<"Vehicle"> | string
   capacity?: Prisma.IntFilter<"Vehicle"> | number
   inspectionStatus?: Prisma.EnumReviewStatusFilter<"Vehicle"> | $Enums.ReviewStatus
@@ -290,6 +298,7 @@ export type VehicleOrderByWithRelationInput = {
   year?: Prisma.SortOrder
   plateNumber?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   serviceCategory?: Prisma.SortOrder
   capacity?: Prisma.SortOrder
   inspectionStatus?: Prisma.SortOrder
@@ -311,6 +320,7 @@ export type VehicleWhereUniqueInput = Prisma.AtLeast<{
   model?: Prisma.StringFilter<"Vehicle"> | string
   year?: Prisma.IntFilter<"Vehicle"> | number
   color?: Prisma.StringFilter<"Vehicle"> | string
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Vehicle"> | $Enums.VehicleType
   serviceCategory?: Prisma.StringFilter<"Vehicle"> | string
   capacity?: Prisma.IntFilter<"Vehicle"> | number
   inspectionStatus?: Prisma.EnumReviewStatusFilter<"Vehicle"> | $Enums.ReviewStatus
@@ -329,6 +339,7 @@ export type VehicleOrderByWithAggregationInput = {
   year?: Prisma.SortOrder
   plateNumber?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   serviceCategory?: Prisma.SortOrder
   capacity?: Prisma.SortOrder
   inspectionStatus?: Prisma.SortOrder
@@ -352,6 +363,7 @@ export type VehicleScalarWhereWithAggregatesInput = {
   year?: Prisma.IntWithAggregatesFilter<"Vehicle"> | number
   plateNumber?: Prisma.StringWithAggregatesFilter<"Vehicle"> | string
   color?: Prisma.StringWithAggregatesFilter<"Vehicle"> | string
+  vehicleType?: Prisma.EnumVehicleTypeWithAggregatesFilter<"Vehicle"> | $Enums.VehicleType
   serviceCategory?: Prisma.StringWithAggregatesFilter<"Vehicle"> | string
   capacity?: Prisma.IntWithAggregatesFilter<"Vehicle"> | number
   inspectionStatus?: Prisma.EnumReviewStatusWithAggregatesFilter<"Vehicle"> | $Enums.ReviewStatus
@@ -365,6 +377,7 @@ export type VehicleCreateInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -383,6 +396,7 @@ export type VehicleUncheckedCreateInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -397,6 +411,7 @@ export type VehicleUpdateInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -415,6 +430,7 @@ export type VehicleUncheckedUpdateInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -431,6 +447,7 @@ export type VehicleCreateManyInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -444,6 +461,7 @@ export type VehicleUpdateManyMutationInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -459,6 +477,7 @@ export type VehicleUncheckedUpdateManyInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -484,6 +503,7 @@ export type VehicleCountOrderByAggregateInput = {
   year?: Prisma.SortOrder
   plateNumber?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   serviceCategory?: Prisma.SortOrder
   capacity?: Prisma.SortOrder
   inspectionStatus?: Prisma.SortOrder
@@ -504,6 +524,7 @@ export type VehicleMaxOrderByAggregateInput = {
   year?: Prisma.SortOrder
   plateNumber?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   serviceCategory?: Prisma.SortOrder
   capacity?: Prisma.SortOrder
   inspectionStatus?: Prisma.SortOrder
@@ -519,6 +540,7 @@ export type VehicleMinOrderByAggregateInput = {
   year?: Prisma.SortOrder
   plateNumber?: Prisma.SortOrder
   color?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   serviceCategory?: Prisma.SortOrder
   capacity?: Prisma.SortOrder
   inspectionStatus?: Prisma.SortOrder
@@ -619,6 +641,10 @@ export type VehicleUncheckedUpdateManyWithoutDriverNestedInput = {
   deleteMany?: Prisma.VehicleScalarWhereInput | Prisma.VehicleScalarWhereInput[]
 }
 
+export type EnumVehicleTypeFieldUpdateOperationsInput = {
+  set?: $Enums.VehicleType
+}
+
 export type VehicleCreateNestedOneWithoutTripsInput = {
   create?: Prisma.XOR<Prisma.VehicleCreateWithoutTripsInput, Prisma.VehicleUncheckedCreateWithoutTripsInput>
   connectOrCreate?: Prisma.VehicleCreateOrConnectWithoutTripsInput
@@ -642,6 +668,7 @@ export type VehicleCreateWithoutFleetCompanyInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -658,6 +685,7 @@ export type VehicleUncheckedCreateWithoutFleetCompanyInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -703,6 +731,7 @@ export type VehicleScalarWhereInput = {
   year?: Prisma.IntFilter<"Vehicle"> | number
   plateNumber?: Prisma.StringFilter<"Vehicle"> | string
   color?: Prisma.StringFilter<"Vehicle"> | string
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Vehicle"> | $Enums.VehicleType
   serviceCategory?: Prisma.StringFilter<"Vehicle"> | string
   capacity?: Prisma.IntFilter<"Vehicle"> | number
   inspectionStatus?: Prisma.EnumReviewStatusFilter<"Vehicle"> | $Enums.ReviewStatus
@@ -716,6 +745,7 @@ export type VehicleCreateWithoutDriverInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -732,6 +762,7 @@ export type VehicleUncheckedCreateWithoutDriverInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -772,6 +803,7 @@ export type VehicleCreateWithoutTripsInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -789,6 +821,7 @@ export type VehicleUncheckedCreateWithoutTripsInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -818,6 +851,7 @@ export type VehicleUpdateWithoutTripsInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -835,6 +869,7 @@ export type VehicleUncheckedUpdateWithoutTripsInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -849,6 +884,7 @@ export type VehicleCreateManyFleetCompanyInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -862,6 +898,7 @@ export type VehicleUpdateWithoutFleetCompanyInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -878,6 +915,7 @@ export type VehicleUncheckedUpdateWithoutFleetCompanyInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -893,6 +931,7 @@ export type VehicleUncheckedUpdateManyWithoutFleetCompanyInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -907,6 +946,7 @@ export type VehicleCreateManyDriverInput = {
   year: number
   plateNumber: string
   color: string
+  vehicleType?: $Enums.VehicleType
   serviceCategory: string
   capacity: number
   inspectionStatus?: $Enums.ReviewStatus
@@ -920,6 +960,7 @@ export type VehicleUpdateWithoutDriverInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -936,6 +977,7 @@ export type VehicleUncheckedUpdateWithoutDriverInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -951,6 +993,7 @@ export type VehicleUncheckedUpdateManyWithoutDriverInput = {
   year?: Prisma.IntFieldUpdateOperationsInput | number
   plateNumber?: Prisma.StringFieldUpdateOperationsInput | string
   color?: Prisma.StringFieldUpdateOperationsInput | string
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   serviceCategory?: Prisma.StringFieldUpdateOperationsInput | string
   capacity?: Prisma.IntFieldUpdateOperationsInput | number
   inspectionStatus?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
@@ -997,6 +1040,7 @@ export type VehicleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   year?: boolean
   plateNumber?: boolean
   color?: boolean
+  vehicleType?: boolean
   serviceCategory?: boolean
   capacity?: boolean
   inspectionStatus?: boolean
@@ -1016,6 +1060,7 @@ export type VehicleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exten
   year?: boolean
   plateNumber?: boolean
   color?: boolean
+  vehicleType?: boolean
   serviceCategory?: boolean
   capacity?: boolean
   inspectionStatus?: boolean
@@ -1033,6 +1078,7 @@ export type VehicleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exten
   year?: boolean
   plateNumber?: boolean
   color?: boolean
+  vehicleType?: boolean
   serviceCategory?: boolean
   capacity?: boolean
   inspectionStatus?: boolean
@@ -1050,13 +1096,14 @@ export type VehicleSelectScalar = {
   year?: boolean
   plateNumber?: boolean
   color?: boolean
+  vehicleType?: boolean
   serviceCategory?: boolean
   capacity?: boolean
   inspectionStatus?: boolean
   city?: boolean
 }
 
-export type VehicleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "driverId" | "fleetCompanyId" | "make" | "model" | "year" | "plateNumber" | "color" | "serviceCategory" | "capacity" | "inspectionStatus" | "city", ExtArgs["result"]["vehicle"]>
+export type VehicleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "driverId" | "fleetCompanyId" | "make" | "model" | "year" | "plateNumber" | "color" | "vehicleType" | "serviceCategory" | "capacity" | "inspectionStatus" | "city", ExtArgs["result"]["vehicle"]>
 export type VehicleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   driver?: boolean | Prisma.Vehicle$driverArgs<ExtArgs>
   fleetCompany?: boolean | Prisma.Vehicle$fleetCompanyArgs<ExtArgs>
@@ -1088,6 +1135,7 @@ export type $VehiclePayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     year: number
     plateNumber: string
     color: string
+    vehicleType: $Enums.VehicleType
     serviceCategory: string
     capacity: number
     inspectionStatus: $Enums.ReviewStatus
@@ -1526,6 +1574,7 @@ export interface VehicleFieldRefs {
   readonly year: Prisma.FieldRef<"Vehicle", 'Int'>
   readonly plateNumber: Prisma.FieldRef<"Vehicle", 'String'>
   readonly color: Prisma.FieldRef<"Vehicle", 'String'>
+  readonly vehicleType: Prisma.FieldRef<"Vehicle", 'VehicleType'>
   readonly serviceCategory: Prisma.FieldRef<"Vehicle", 'String'>
   readonly capacity: Prisma.FieldRef<"Vehicle", 'Int'>
   readonly inspectionStatus: Prisma.FieldRef<"Vehicle", 'ReviewStatus'>

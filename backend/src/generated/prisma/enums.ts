@@ -84,6 +84,14 @@ export const ReviewStatus = {
 export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus]
 
 
+export const VehicleType = {
+  BIKE: 'BIKE',
+  CAR: 'CAR'
+} as const
+
+export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType]
+
+
 export const TripStatus = {
   SCHEDULED: 'SCHEDULED',
   SEARCHING: 'SEARCHING',
@@ -98,6 +106,17 @@ export const TripStatus = {
 } as const
 
 export type TripStatus = (typeof TripStatus)[keyof typeof TripStatus]
+
+
+export const TripOfferStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  EXPIRED: 'EXPIRED',
+  WITHDRAWN: 'WITHDRAWN'
+} as const
+
+export type TripOfferStatus = (typeof TripOfferStatus)[keyof typeof TripOfferStatus]
 
 
 export const RideType = {

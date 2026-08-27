@@ -1,22 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { CartesianChart, Bar } from 'victory-native';
+import { View, Text, StyleSheet } from 'react-native';
 
-// This is Victory Native XL (v42+), which is Skia-based — it does NOT use react-native-svg.
-// Requires a custom dev client (won't run in plain Expo Go):
-//
-//   npx expo install @shopify/react-native-skia react-native-reanimated
-//   npx expo prebuild
-//   npx expo run:ios      (or: npx expo run:android)
-//
-// If you already set up a dev client for react-native-maps, you can install these
-// alongside it and just rebuild once.
-//
-// Also make sure react-native-reanimated's babel plugin is in babel.config.js:
-//   plugins: ['react-native-reanimated/plugin'],   // must be listed LAST
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_WIDTH = SCREEN_WIDTH - 32;
 const CURRENT_HOUR = new Date().getHours();
 
 // Mock "how busy it is" data, 0 (quiet) - 100 (very busy), one point per hour.
@@ -55,36 +39,29 @@ function formatHour(hour: number) {
 }
 
 export default function BusyHoursChart() {
+  const maxBusy = Math.max(...BUSY_DATA.map((item) => item.busy));
+
   return (
     <View style={styles.card}>
-      <View style={{ width: CHART_WIDTH, height: 200 }}>
-        <CartesianChart
-          data={BUSY_DATA}
-          xKey="hour"
-          yKeys={['busy']}
-          domainPadding={{ left: 12, right: 12, top: 12 }}
-          axisOptions={{
-            tickCount: { x: 5, y: 0 },
-            formatXLabel: (v) => formatHour(v),
-            labelColor: '#6B7280',
-            lineColor: '#E5E7EB',
-            font: null, // pass a useFont() result here if you want custom label font
-          }}
-        >
-          {({ points, chartBounds }) => (
-            <Bar
-              points={points.busy}
-              chartBounds={chartBounds}
-              color="#3B82F6"
-              roundedCorners={{ topLeft: 4, topRight: 4 }}
-              barWidth={14}
-              // Highlight the current hour, dim the rest
-              // (Victory Native XL doesn't support per-bar color directly,
-              // so this uses opacity as the highlight mechanism instead.)
-              opacity={1}
-            />
-          )}
-        </CartesianChart>
+      <View style={styles.chart}>
+        {BUSY_DATA.map((item) => (
+          <View key={item.hour} style={styles.barColumn}>
+            <View style={styles.barTrack}>
+              <View
+                style={[
+                  styles.bar,
+                  {
+                    height: `${(item.busy / maxBusy) * 100}%`,
+                    backgroundColor: item.hour === CURRENT_HOUR ? '#3B82F6' : '#CBD5E1',
+                  },
+                ]}
+              />
+            </View>
+            {/* {item.hour % 4 === 0 ? (
+              <Text style={styles.hourLabel}>{formatHour(item.hour)}</Text>
+            ) : null} */}
+          </View>
+        ))}
       </View>
 
       <View style={styles.legendRow}>
@@ -101,9 +78,38 @@ export default function BusyHoursChart() {
 
 const styles = StyleSheet.create({
   card: {
-    paddingTop: 16,
     paddingHorizontal: 16,
     paddingBottom: 12,
+  },
+  chart: {
+    height: 200,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  barColumn: {
+    flex: 1,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  barTrack: {
+    width: '100%',
+    height: 168,
+    justifyContent: 'flex-end',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  bar: {
+    width: '100%',
+    minHeight: 3,
+    borderRadius: 3,
+  },
+  hourLabel: {
+    height: 18,
+    marginTop: 5,
+    fontSize: 9,
+    color: '#94A3B8',
   },
   title: {
     fontSize: 16,

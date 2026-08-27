@@ -5,6 +5,8 @@ import {
   arrivedAtPickup,
   cancelTrip,
   completeTrip,
+  createOffer,
+  documentUploadAuth,
   earnings,
   incomingTrips,
   login,
@@ -36,6 +38,8 @@ router.get("/me", requireAuth, me);
 router.patch("/presence", requireAuth, updatePresence);
 router.post("/vehicles", requireAuth, saveVehicle);
 router.post("/documents", requireAuth, saveDocument);
+router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
+router.post("/trips/:id/offers", requireAuth, createOffer);
 
 // Trips & Dispatching
 router.get("/trips", requireAuth, trips);

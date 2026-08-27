@@ -4,15 +4,31 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Platform,
   ScrollView,
+  TextInput,
+  Vibration,
 } from 'react-native';
-import MapView, { UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { UrlTile, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import BusyHoursChart from '@/components/busyHourChart';
 import { Image } from 'expo-image';
+import { useEffect, useRef, useState } from 'react';
+import {
+  createTripOffer,
+  DriverPresence,
+  getDriverProfile,
+  getIncomingTrips,
+  IncomingTrip,
+  updatePresence,
+} from '@/services/driver';
+import { connectDriverSocket, disconnectDriverSocket } from '@/services/socket';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import { sendDriverLocation } from '@/services/socket';
 
 // npm install react-native-maps @expo/vector-icons expo-image
 // Native map — requires a custom dev client (won't run in plain Expo Go):
@@ -23,14 +39,116 @@ import { Image } from 'expo-image';
 // OSM's free tile server has usage limits — swap the urlTemplate for a paid
 // provider (MapTiler, Stadia Maps, etc.) before shipping to production.
 
-const HELSINKI_REGION = {
+// Fallback region only used until the device's real location is available.
+const DEFAULT_REGION: Region = {
   latitude: 60.1699,
   longitude: 24.9384,
   latitudeDelta: 0.02,
   longitudeDelta: 0.02,
 };
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
 export default function Home() {
+  const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
+  const [offerFare, setOfferFare] = useState<Record<string, string>>({});
+  const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
+  const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
+  const [region, setRegion] = useState<Region>(DEFAULT_REGION);
+  const mapRef = useRef<MapView | null>(null);
+  const presenceRef = useRef<DriverPresence>('OFFLINE');
+  const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      try { if (mounted) setIncomingTrips(await getIncomingTrips()); } catch { /* retry on next poll */ }
+    };
+    void refresh();
+    const timer = setInterval(() => void refresh(), 5000);
+    void connectDriverSocket((event, payload) => {
+      if (!mounted) return;
+      if (event === 'trip:requested') {
+        void refresh();
+        Vibration.vibrate();
+        const trip = payload as { pickupAddress?: string; fareTotal?: number } | undefined;
+        void Notifications.scheduleNotificationAsync({
+          content: {
+            title: 'New ride request',
+            body: trip?.pickupAddress ? `Pickup at ${trip.pickupAddress} · est. $${Number(trip.fareTotal ?? 0).toFixed(2)}` : 'A rider nearby is requesting a trip.',
+          },
+          trigger: null,
+        });
+      } else if (event === 'trip:assigned') {
+        const assignedTrip = payload as { id?: string } | undefined;
+        if (assignedTrip?.id) router.push(`/trip/${assignedTrip.id}`);
+      }
+    });
+    void getDriverProfile().then((driver) => {
+      if (!mounted) return;
+      if (driver?.presence) {
+        presenceRef.current = driver.presence;
+        setPresence(driver.presence);
+      }
+      if (driver?.activeTrip?.id) {
+        router.push(`/trip/${driver.activeTrip.id}`);
+      }
+    }).catch(() => { /* keep default OFFLINE state */ });
+    void Notifications.requestPermissionsAsync();
+    void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
+      if (!mounted || status !== 'granted') return;
+      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      if (mounted) {
+        setRegion({ latitude: current.coords.latitude, longitude: current.coords.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 });
+      }
+      locationSubscriptionRef.current = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.Balanced, timeInterval: 5000, distanceInterval: 25 },
+        (location) => {
+          if (presenceRef.current === 'ONLINE') {
+            sendDriverLocation(location.coords.latitude, location.coords.longitude);
+          }
+        },
+      );
+    });
+    return () => { mounted = false; clearInterval(timer); locationSubscriptionRef.current?.remove(); disconnectDriverSocket(); };
+  }, []);
+
+  async function togglePresence() {
+    const next: DriverPresence = presence === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
+    try {
+      if (next === 'ONLINE') {
+        const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        await updatePresence({ presence: next, latitude: current.coords.latitude, longitude: current.coords.longitude });
+      } else {
+        await updatePresence({ presence: next });
+      }
+      presenceRef.current = next;
+      setPresence(next);
+    } catch { /* keep previous state if the update fails */ }
+  }
+
+  function recenter() {
+    mapRef.current?.animateToRegion(region, 300);
+  }
+
+  async function submitOffer(trip: IncomingTrip) {
+    const fare = Number(offerFare[trip.id] ?? trip.fareTotal);
+    if (!Number.isFinite(fare) || fare < trip.fareTotal) return;
+    try {
+      setOfferingTripId(trip.id);
+      await createTripOffer(trip.id, fare, Math.max(1, Math.ceil(trip.durationMin / 3)));
+      setIncomingTrips((trips) => trips.filter((item) => item.id !== trip.id));
+    } catch { /* request may have expired or been claimed */ }
+    finally { setOfferingTripId(null); }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
@@ -50,49 +168,46 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
+        {incomingTrips.length > 0 ? (
+          <View style={styles.requestSection}>
+            <Text style={styles.sectionTitle}>Ride requests nearby</Text>
+            {incomingTrips.map((trip) => (
+              <View style={styles.requestCard} key={trip.id}>
+                <View style={styles.requestHeader}>
+                  <Text style={styles.requestTitle}>{trip.riderName}</Text>
+                  <Text style={styles.requestType}>{trip.vehicleType === 'BIKE' ? 'Bike' : 'Car'}</Text>
+                </View>
+                <Text style={styles.requestRoute}>{trip.pickupAddress}</Text>
+                <Text style={styles.requestRoute}>to {trip.dropoffAddress}</Text>
+                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · base fare ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
+                <View style={styles.offerRow}>
+                  <TextInput
+                    style={styles.offerInput}
+                    placeholder={`From $${trip.fareTotal.toFixed(2)}`}
+                    keyboardType="decimal-pad"
+                    value={offerFare[trip.id] ?? String(trip.fareTotal.toFixed(2))}
+                    onChangeText={(value) => setOfferFare((current) => ({ ...current, [trip.id]: value }))}
+                  />
+                  <TouchableOpacity style={styles.offerButton} onPress={() => void submitOffer(trip)} disabled={offeringTripId === trip.id}>
+                    <Text style={styles.offerButtonText}>{offeringTripId === trip.id ? 'Sending...' : 'Offer price'}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : null}
+
         {/* Section: Your Progress */}
-        <View style={styles.sectionHeader}>
+        {/* <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Ready to go?</Text>
-        </View>
+        </View> */}
 
         {/* Map */}
-        <View style={styles.mapCard}>
-          <View style={styles.mapContainer}>
-            <MapView
-              provider={PROVIDER_DEFAULT}
-              style={StyleSheet.absoluteFillObject}
-              initialRegion={HELSINKI_REGION}
-              showsUserLocation={false}
-              rotateEnabled={false}
-              pitchEnabled={false}
-            >
-              <UrlTile
-                urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maximumZ={19}
-                flipY={false}
-              />
-            </MapView>
-
-            {/* Demand heat circle */}
-            <View pointerEvents="none" style={styles.heatCircle} />
-
-            {/* Current location marker */}
-            <View pointerEvents="none" style={styles.locationDotOuter}>
-              <View style={styles.locationDotInner} />
-            </View>
-
-            {/* Recenter button */}
-            <TouchableOpacity
-              style={styles.recenterButton}
-              activeOpacity={0.65}
-            >
-              <Ionicons name="locate" size={20} color="#3B82F6" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        
 
         {/* Section: Earnings */}
-        <View style={styles.sectionHeader}>
+        <View style={{ marginTop: 20, marginBottom: 12, paddingHorizontal: 10, backgroundColor: '#ffffff', marginHorizontal: 16, borderRadius: 20, paddingVertical: 12, shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 }}>
+          <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Earnings</Text>
           <Text style={styles.sectionSubtitle}>
             Earning trends for drivers in your current area
@@ -103,6 +218,7 @@ export default function Home() {
         </View>
 
         <BusyHoursChart />
+        </View>
 
         {/* Spacer so content isn't hidden behind the fixed button */}
         <View style={{ height: 96 }} />
@@ -114,13 +230,24 @@ export default function Home() {
           the tab navigator's tab bar begins, position: 'absolute' + bottom: 0
           here places it directly above the tabs without covering them. */}
       <View style={styles.goOnlineWrapper} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.goOnlineButton}
-          activeOpacity={0.85}
-        >
-          <MaterialCommunityIcons name="car" size={20} color="#FFFFFF" />
-          <Text style={styles.goOnlineText}>Go Online</Text>
-        </TouchableOpacity>
+        {presence === 'ONLINE' ? (
+          <TouchableOpacity
+            style={styles.goOfflineButton}
+            activeOpacity={0.85}
+            onPress={() => void togglePresence()}
+          >
+            <MaterialCommunityIcons name="stop" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.goOnlineButton}
+            activeOpacity={0.85}
+            onPress={() => void togglePresence()}
+          >
+            <MaterialCommunityIcons name="car" size={20} color="#FFFFFF" />
+            <Text style={styles.goOnlineText}>Go Online</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -133,6 +260,67 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 32,
+  },
+  requestSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  requestCard: {
+    marginTop: 10,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  requestHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  requestTitle: {
+    color: '#111827',
+    fontWeight: '800',
+  },
+  requestType: {
+    color: '#2E4ED5',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  requestRoute: {
+    marginTop: 5,
+    color: '#374151',
+    fontSize: 13,
+  },
+  requestMeta: {
+    marginTop: 10,
+    color: '#6B7280',
+    fontSize: 12,
+  },
+  offerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
+  offerInput: {
+    flex: 1,
+    height: 42,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 10,
+    color: '#111827',
+  },
+  offerButton: {
+    height: 42,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: '#2E4ED5',
+  },
+  offerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
 
   // --- Top bar ---
@@ -287,5 +475,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.2,
+  },
+  goOfflineButton: {
+    alignSelf: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#DC2626',
+    shadowColor: '#DC2626',
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
   },
 });

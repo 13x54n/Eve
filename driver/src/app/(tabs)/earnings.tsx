@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
 
 // npm install expo-linear-gradient @expo/vector-icons
 // (expo-linear-gradient works fine in Expo Go — no dev client needed)
@@ -31,42 +32,32 @@ type Section = {
   data: Transaction[];
 };
 
-// Mock data — replace with your real transaction history from the API/DB.
-const SECTIONS: Section[] = [
-  {
-    title: 'Today',
-    total: 84.5,
-    data: [
-      { id: '1', type: 'trip', title: 'Trip earnings', time: '9:42 PM', amount: 18.2 },
-      { id: '2', type: 'tip', title: 'Tip from rider', time: '9:44 PM', amount: 5.0 },
-      { id: '3', type: 'trip', title: 'Trip earnings', time: '8:15 PM', amount: 22.75 },
-      { id: '4', type: 'bonus', title: 'Peak hour bonus', time: '6:00 PM', amount: 12.0 },
-      { id: '5', type: 'trip', title: 'Trip earnings', time: '4:30 PM', amount: 26.55 },
-    ],
-  },
-  {
-    title: 'Yesterday',
-    total: 142.3,
-    data: [
-      { id: '6', type: 'trip', title: 'Trip earnings', time: '11:05 PM', amount: 31.4 },
-      { id: '7', type: 'cashout', title: 'Cashed out to bank', time: '7:00 PM', amount: -100.0 },
-      { id: '8', type: 'tip', title: 'Tip from rider', time: '5:20 PM', amount: 8.0 },
-      { id: '9', type: 'trip', title: 'Trip earnings', time: '2:10 PM', amount: 19.9 },
-      { id: '10', type: 'bonus', title: 'Weekly streak bonus', time: '9:00 AM', amount: 15.0 },
-      { id: '11', type: 'trip', title: 'Trip earnings', time: '8:45 AM', amount: 168.0 },
-    ],
-  },
-  {
-    title: 'Mon, Aug 24',
-    total: 96.8,
-    data: [
-      { id: '12', type: 'trip', title: 'Trip earnings', time: '10:30 PM', amount: 27.6 },
-      { id: '13', type: 'trip', title: 'Trip earnings', time: '6:50 PM', amount: 21.0 },
-      { id: '14', type: 'tip', title: 'Tip from rider', time: '6:52 PM', amount: 4.0 },
-      { id: '15', type: 'trip', title: 'Trip earnings', time: '1:15 PM', amount: 44.2 },
-    ],
-  },
-];
+// Groups completed trips returned by the backend into day-based sections.
+function groupTripsIntoSections(trips: EarningsTrip[]): Section[] {
+  const todayLabel = new Date().toDateString();
+  const byDay = new Map<string, Transaction[]>();
+  for (const trip of trips) {
+    const created = new Date(trip.createdAt);
+    const dayKey = created.toDateString();
+    const title = dayKey === todayLabel
+      ? 'Today'
+      : created.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const list = byDay.get(title) ?? [];
+    list.push({
+      id: trip.id,
+      type: 'trip',
+      title: 'Trip earnings',
+      time: created.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+      amount: trip.netEarnings,
+    });
+    byDay.set(title, list);
+  }
+  return Array.from(byDay.entries()).map(([title, data]) => ({
+    title,
+    total: data.reduce((sum, item) => sum + item.amount, 0),
+    data,
+  }));
+}
 
 const TX_ICON: Record<TxType, { name: any; lib: 'ion' | 'mci'; bg: string; fg: string }> = {
   trip: { name: 'car', lib: 'mci', bg: '#EFF6FF', fg: '#3B82F6' },
@@ -91,10 +82,21 @@ function formatMoney(n: number) {
 }
 
 export default function Earnings() {
-  const balance = useMemo(
-    () => SECTIONS.reduce((sum, s) => sum + s.data.reduce((a, t) => a + t.amount, 0), 0),
-    []
-  );
+  const [summary, setSummary] = useState<EarningsSummary | null>(null);
+  const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    void getEarnings().then((result) => {
+      if (!mounted) return;
+      setSummary(result.summary);
+      setRecentTrips(result.recentTrips);
+    }).catch(() => { /* keep empty state on failure */ });
+    return () => { mounted = false; };
+  }, []);
+
+  const sections = useMemo(() => groupTripsIntoSections(recentTrips), [recentTrips]);
+  const balance = summary?.lifetimeEarnings ?? 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -112,7 +114,7 @@ export default function Earnings() {
       </View>
 
       <SectionList
-        sections={SECTIONS}
+        sections={sections}
         keyExtractor={(item) => item.id}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.listContent}
@@ -152,22 +154,15 @@ export default function Earnings() {
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Today</Text>
-                <Text style={styles.statValue}>${SECTIONS[0].total.toFixed(2)}</Text>
+                <Text style={styles.statValue}>${(summary?.todayEarnings ?? 0).toFixed(2)}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>This week</Text>
-                <Text style={styles.statValue}>
-                  ${SECTIONS.reduce((s, sec) => s + sec.total, 0).toFixed(2)}
-                </Text>
+                <Text style={styles.statValue}>${(summary?.weekEarnings ?? 0).toFixed(2)}</Text>
               </View>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Trips</Text>
-                <Text style={styles.statValue}>
-                  {SECTIONS.reduce(
-                    (n, sec) => n + sec.data.filter((t) => t.type === 'trip').length,
-                    0
-                  )}
-                </Text>
+                <Text style={styles.statValue}>{summary?.weekTrips ?? 0}</Text>
               </View>
             </View>
 

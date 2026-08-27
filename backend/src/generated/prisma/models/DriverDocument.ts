@@ -20,8 +20,18 @@ export type DriverDocumentModel = runtime.Types.Result.DefaultSelection<Prisma.$
 
 export type AggregateDriverDocument = {
   _count: DriverDocumentCountAggregateOutputType | null
+  _avg: DriverDocumentAvgAggregateOutputType | null
+  _sum: DriverDocumentSumAggregateOutputType | null
   _min: DriverDocumentMinAggregateOutputType | null
   _max: DriverDocumentMaxAggregateOutputType | null
+}
+
+export type DriverDocumentAvgAggregateOutputType = {
+  fileSize: number | null
+}
+
+export type DriverDocumentSumAggregateOutputType = {
+  fileSize: number | null
 }
 
 export type DriverDocumentMinAggregateOutputType = {
@@ -31,6 +41,11 @@ export type DriverDocumentMinAggregateOutputType = {
   status: $Enums.ReviewStatus | null
   expiresAt: Date | null
   notes: string | null
+  imageKitFileId: string | null
+  fileUrl: string | null
+  fileName: string | null
+  mimeType: string | null
+  fileSize: number | null
   reviewedAt: Date | null
   reviewedById: string | null
 }
@@ -42,6 +57,11 @@ export type DriverDocumentMaxAggregateOutputType = {
   status: $Enums.ReviewStatus | null
   expiresAt: Date | null
   notes: string | null
+  imageKitFileId: string | null
+  fileUrl: string | null
+  fileName: string | null
+  mimeType: string | null
+  fileSize: number | null
   reviewedAt: Date | null
   reviewedById: string | null
 }
@@ -53,11 +73,24 @@ export type DriverDocumentCountAggregateOutputType = {
   status: number
   expiresAt: number
   notes: number
+  imageKitFileId: number
+  fileUrl: number
+  fileName: number
+  mimeType: number
+  fileSize: number
   reviewedAt: number
   reviewedById: number
   _all: number
 }
 
+
+export type DriverDocumentAvgAggregateInputType = {
+  fileSize?: true
+}
+
+export type DriverDocumentSumAggregateInputType = {
+  fileSize?: true
+}
 
 export type DriverDocumentMinAggregateInputType = {
   id?: true
@@ -66,6 +99,11 @@ export type DriverDocumentMinAggregateInputType = {
   status?: true
   expiresAt?: true
   notes?: true
+  imageKitFileId?: true
+  fileUrl?: true
+  fileName?: true
+  mimeType?: true
+  fileSize?: true
   reviewedAt?: true
   reviewedById?: true
 }
@@ -77,6 +115,11 @@ export type DriverDocumentMaxAggregateInputType = {
   status?: true
   expiresAt?: true
   notes?: true
+  imageKitFileId?: true
+  fileUrl?: true
+  fileName?: true
+  mimeType?: true
+  fileSize?: true
   reviewedAt?: true
   reviewedById?: true
 }
@@ -88,6 +131,11 @@ export type DriverDocumentCountAggregateInputType = {
   status?: true
   expiresAt?: true
   notes?: true
+  imageKitFileId?: true
+  fileUrl?: true
+  fileName?: true
+  mimeType?: true
+  fileSize?: true
   reviewedAt?: true
   reviewedById?: true
   _all?: true
@@ -131,6 +179,18 @@ export type DriverDocumentAggregateArgs<ExtArgs extends runtime.Types.Extensions
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: DriverDocumentAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: DriverDocumentSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: DriverDocumentMinAggregateInputType
@@ -161,6 +221,8 @@ export type DriverDocumentGroupByArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   _count?: DriverDocumentCountAggregateInputType | true
+  _avg?: DriverDocumentAvgAggregateInputType
+  _sum?: DriverDocumentSumAggregateInputType
   _min?: DriverDocumentMinAggregateInputType
   _max?: DriverDocumentMaxAggregateInputType
 }
@@ -172,9 +234,16 @@ export type DriverDocumentGroupByOutputType = {
   status: $Enums.ReviewStatus
   expiresAt: Date | null
   notes: string | null
+  imageKitFileId: string | null
+  fileUrl: string | null
+  fileName: string | null
+  mimeType: string | null
+  fileSize: number | null
   reviewedAt: Date | null
   reviewedById: string | null
   _count: DriverDocumentCountAggregateOutputType | null
+  _avg: DriverDocumentAvgAggregateOutputType | null
+  _sum: DriverDocumentSumAggregateOutputType | null
   _min: DriverDocumentMinAggregateOutputType | null
   _max: DriverDocumentMaxAggregateOutputType | null
 }
@@ -204,6 +273,11 @@ export type DriverDocumentWhereInput = {
   status?: Prisma.EnumReviewStatusFilter<"DriverDocument"> | $Enums.ReviewStatus
   expiresAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  imageKitFileId?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileName?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  mimeType?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileSize?: Prisma.IntNullableFilter<"DriverDocument"> | number | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   reviewedById?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
   driver?: Prisma.XOR<Prisma.DriverProfileScalarRelationFilter, Prisma.DriverProfileWhereInput>
@@ -216,6 +290,11 @@ export type DriverDocumentOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  imageKitFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileName?: Prisma.SortOrderInput | Prisma.SortOrder
+  mimeType?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileSize?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   driver?: Prisma.DriverProfileOrderByWithRelationInput
@@ -231,6 +310,11 @@ export type DriverDocumentWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.EnumReviewStatusFilter<"DriverDocument"> | $Enums.ReviewStatus
   expiresAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  imageKitFileId?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileName?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  mimeType?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileSize?: Prisma.IntNullableFilter<"DriverDocument"> | number | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   reviewedById?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
   driver?: Prisma.XOR<Prisma.DriverProfileScalarRelationFilter, Prisma.DriverProfileWhereInput>
@@ -243,11 +327,18 @@ export type DriverDocumentOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
+  imageKitFileId?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileName?: Prisma.SortOrderInput | Prisma.SortOrder
+  mimeType?: Prisma.SortOrderInput | Prisma.SortOrder
+  fileSize?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedById?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.DriverDocumentCountOrderByAggregateInput
+  _avg?: Prisma.DriverDocumentAvgOrderByAggregateInput
   _max?: Prisma.DriverDocumentMaxOrderByAggregateInput
   _min?: Prisma.DriverDocumentMinOrderByAggregateInput
+  _sum?: Prisma.DriverDocumentSumOrderByAggregateInput
 }
 
 export type DriverDocumentScalarWhereWithAggregatesInput = {
@@ -260,6 +351,11 @@ export type DriverDocumentScalarWhereWithAggregatesInput = {
   status?: Prisma.EnumReviewStatusWithAggregatesFilter<"DriverDocument"> | $Enums.ReviewStatus
   expiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DriverDocument"> | Date | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
+  imageKitFileId?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
+  fileUrl?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
+  fileName?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
+  mimeType?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
+  fileSize?: Prisma.IntNullableWithAggregatesFilter<"DriverDocument"> | number | null
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DriverDocument"> | Date | string | null
   reviewedById?: Prisma.StringNullableWithAggregatesFilter<"DriverDocument"> | string | null
 }
@@ -270,6 +366,11 @@ export type DriverDocumentCreateInput = {
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
   driver: Prisma.DriverProfileCreateNestedOneWithoutDocumentsInput
@@ -282,6 +383,11 @@ export type DriverDocumentUncheckedCreateInput = {
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
 }
@@ -292,6 +398,11 @@ export type DriverDocumentUpdateInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   driver?: Prisma.DriverProfileUpdateOneRequiredWithoutDocumentsNestedInput
@@ -304,6 +415,11 @@ export type DriverDocumentUncheckedUpdateInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -315,6 +431,11 @@ export type DriverDocumentCreateManyInput = {
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
 }
@@ -325,6 +446,11 @@ export type DriverDocumentUpdateManyMutationInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -336,6 +462,11 @@ export type DriverDocumentUncheckedUpdateManyInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -357,8 +488,17 @@ export type DriverDocumentCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  imageKitFileId?: Prisma.SortOrder
+  fileUrl?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  mimeType?: Prisma.SortOrder
+  fileSize?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
+}
+
+export type DriverDocumentAvgOrderByAggregateInput = {
+  fileSize?: Prisma.SortOrder
 }
 
 export type DriverDocumentMaxOrderByAggregateInput = {
@@ -368,6 +508,11 @@ export type DriverDocumentMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  imageKitFileId?: Prisma.SortOrder
+  fileUrl?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  mimeType?: Prisma.SortOrder
+  fileSize?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
 }
@@ -379,8 +524,17 @@ export type DriverDocumentMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   expiresAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
+  imageKitFileId?: Prisma.SortOrder
+  fileUrl?: Prisma.SortOrder
+  fileName?: Prisma.SortOrder
+  mimeType?: Prisma.SortOrder
+  fileSize?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedById?: Prisma.SortOrder
+}
+
+export type DriverDocumentSumOrderByAggregateInput = {
+  fileSize?: Prisma.SortOrder
 }
 
 export type DriverDocumentCreateNestedManyWithoutDriverInput = {
@@ -429,12 +583,25 @@ export type EnumDocumentTypeFieldUpdateOperationsInput = {
   set?: $Enums.DocumentType
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type DriverDocumentCreateWithoutDriverInput = {
   id?: string
   type: $Enums.DocumentType
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
 }
@@ -445,6 +612,11 @@ export type DriverDocumentUncheckedCreateWithoutDriverInput = {
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
 }
@@ -485,6 +657,11 @@ export type DriverDocumentScalarWhereInput = {
   status?: Prisma.EnumReviewStatusFilter<"DriverDocument"> | $Enums.ReviewStatus
   expiresAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  imageKitFileId?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileUrl?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileName?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  mimeType?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
+  fileSize?: Prisma.IntNullableFilter<"DriverDocument"> | number | null
   reviewedAt?: Prisma.DateTimeNullableFilter<"DriverDocument"> | Date | string | null
   reviewedById?: Prisma.StringNullableFilter<"DriverDocument"> | string | null
 }
@@ -495,6 +672,11 @@ export type DriverDocumentCreateManyDriverInput = {
   status?: $Enums.ReviewStatus
   expiresAt?: Date | string | null
   notes?: string | null
+  imageKitFileId?: string | null
+  fileUrl?: string | null
+  fileName?: string | null
+  mimeType?: string | null
+  fileSize?: number | null
   reviewedAt?: Date | string | null
   reviewedById?: string | null
 }
@@ -505,6 +687,11 @@ export type DriverDocumentUpdateWithoutDriverInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -515,6 +702,11 @@ export type DriverDocumentUncheckedUpdateWithoutDriverInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -525,6 +717,11 @@ export type DriverDocumentUncheckedUpdateManyWithoutDriverInput = {
   status?: Prisma.EnumReviewStatusFieldUpdateOperationsInput | $Enums.ReviewStatus
   expiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  imageKitFileId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mimeType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileSize?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
@@ -538,6 +735,11 @@ export type DriverDocumentSelect<ExtArgs extends runtime.Types.Extensions.Intern
   status?: boolean
   expiresAt?: boolean
   notes?: boolean
+  imageKitFileId?: boolean
+  fileUrl?: boolean
+  fileName?: boolean
+  mimeType?: boolean
+  fileSize?: boolean
   reviewedAt?: boolean
   reviewedById?: boolean
   driver?: boolean | Prisma.DriverProfileDefaultArgs<ExtArgs>
@@ -550,6 +752,11 @@ export type DriverDocumentSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   status?: boolean
   expiresAt?: boolean
   notes?: boolean
+  imageKitFileId?: boolean
+  fileUrl?: boolean
+  fileName?: boolean
+  mimeType?: boolean
+  fileSize?: boolean
   reviewedAt?: boolean
   reviewedById?: boolean
   driver?: boolean | Prisma.DriverProfileDefaultArgs<ExtArgs>
@@ -562,6 +769,11 @@ export type DriverDocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   status?: boolean
   expiresAt?: boolean
   notes?: boolean
+  imageKitFileId?: boolean
+  fileUrl?: boolean
+  fileName?: boolean
+  mimeType?: boolean
+  fileSize?: boolean
   reviewedAt?: boolean
   reviewedById?: boolean
   driver?: boolean | Prisma.DriverProfileDefaultArgs<ExtArgs>
@@ -574,11 +786,16 @@ export type DriverDocumentSelectScalar = {
   status?: boolean
   expiresAt?: boolean
   notes?: boolean
+  imageKitFileId?: boolean
+  fileUrl?: boolean
+  fileName?: boolean
+  mimeType?: boolean
+  fileSize?: boolean
   reviewedAt?: boolean
   reviewedById?: boolean
 }
 
-export type DriverDocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "driverId" | "type" | "status" | "expiresAt" | "notes" | "reviewedAt" | "reviewedById", ExtArgs["result"]["driverDocument"]>
+export type DriverDocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "driverId" | "type" | "status" | "expiresAt" | "notes" | "imageKitFileId" | "fileUrl" | "fileName" | "mimeType" | "fileSize" | "reviewedAt" | "reviewedById", ExtArgs["result"]["driverDocument"]>
 export type DriverDocumentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   driver?: boolean | Prisma.DriverProfileDefaultArgs<ExtArgs>
 }
@@ -601,6 +818,11 @@ export type $DriverDocumentPayload<ExtArgs extends runtime.Types.Extensions.Inte
     status: $Enums.ReviewStatus
     expiresAt: Date | null
     notes: string | null
+    imageKitFileId: string | null
+    fileUrl: string | null
+    fileName: string | null
+    mimeType: string | null
+    fileSize: number | null
     reviewedAt: Date | null
     reviewedById: string | null
   }, ExtArgs["result"]["driverDocument"]>
@@ -1033,6 +1255,11 @@ export interface DriverDocumentFieldRefs {
   readonly status: Prisma.FieldRef<"DriverDocument", 'ReviewStatus'>
   readonly expiresAt: Prisma.FieldRef<"DriverDocument", 'DateTime'>
   readonly notes: Prisma.FieldRef<"DriverDocument", 'String'>
+  readonly imageKitFileId: Prisma.FieldRef<"DriverDocument", 'String'>
+  readonly fileUrl: Prisma.FieldRef<"DriverDocument", 'String'>
+  readonly fileName: Prisma.FieldRef<"DriverDocument", 'String'>
+  readonly mimeType: Prisma.FieldRef<"DriverDocument", 'String'>
+  readonly fileSize: Prisma.FieldRef<"DriverDocument", 'Int'>
   readonly reviewedAt: Prisma.FieldRef<"DriverDocument", 'DateTime'>
   readonly reviewedById: Prisma.FieldRef<"DriverDocument", 'String'>
 }

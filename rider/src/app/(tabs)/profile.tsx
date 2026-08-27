@@ -1,21 +1,38 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { getSessionUser } from "@/services/auth";
 
 const items = [
   ["map-pin", "Saved places", "Home, Work and more"],
-  ["credit-card", "Payment", "Visa ending in 4242"],
+  ["dollar-sign", "Payment", "Cash — settle directly with your driver"],
   ["bell", "Notifications", "Ride updates and offers"],
   ["help-circle", "Help and support", "FAQs and contact us"],
 ] as const;
 
 export default function ProfileScreen() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [memberSince, setMemberSince] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    void getSessionUser().then((user) => {
+      if (!mounted) return;
+      setName(user.name);
+      setEmail(user.email);
+      setMemberSince(new Date(user.createdAt).getFullYear().toString());
+    }).catch(() => { /* keep empty state on failure */ });
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}><Text style={styles.eyebrow}>ACCOUNT</Text><Text style={styles.title}>Profile</Text></View>
       <View style={styles.profileCard}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>L</Text></View>
-        <View style={styles.identity}><Text style={styles.name}>Lex Rider</Text><Text style={styles.email}>rider@example.com</Text><Text style={styles.member}>Member since 2026</Text></View>
+        <View style={styles.avatar}><Text style={styles.avatarText}>{name ? name[0].toUpperCase() : "?"}</Text></View>
+        <View style={styles.identity}><Text style={styles.name}>{name || "Loading..."}</Text><Text style={styles.email}>{email}</Text><Text style={styles.member}>{memberSince ? `Member since ${memberSince}` : ""}</Text></View>
         <Pressable style={styles.editButton} accessibilityLabel="Edit profile" onPress={() => Alert.alert("Edit profile", "Profile editing will be available soon.")}><Feather name="edit-2" size={17} color="#2E4ED5" /></Pressable>
       </View>
       <Text style={styles.sectionTitle}>Preferences</Text>

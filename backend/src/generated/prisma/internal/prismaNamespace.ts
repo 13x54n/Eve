@@ -405,6 +405,7 @@ export const ModelName = {
   Vehicle: 'Vehicle',
   DriverDocument: 'DriverDocument',
   Trip: 'Trip',
+  TripOffer: 'TripOffer',
   TripEvent: 'TripEvent',
   PaymentMethod: 'PaymentMethod',
   LedgerEntry: 'LedgerEntry',
@@ -437,7 +438,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
+    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1030,6 +1031,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.TripCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.TripCountAggregateOutputType> | number
+        }
+      }
+    }
+    TripOffer: {
+      payload: Prisma.$TripOfferPayload<ExtArgs>
+      fields: Prisma.TripOfferFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TripOfferFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TripOfferFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        findFirst: {
+          args: Prisma.TripOfferFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TripOfferFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        findMany: {
+          args: Prisma.TripOfferFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>[]
+        }
+        create: {
+          args: Prisma.TripOfferCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        createMany: {
+          args: Prisma.TripOfferCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TripOfferCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>[]
+        }
+        delete: {
+          args: Prisma.TripOfferDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        update: {
+          args: Prisma.TripOfferUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        deleteMany: {
+          args: Prisma.TripOfferDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TripOfferUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TripOfferUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>[]
+        }
+        upsert: {
+          args: Prisma.TripOfferUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripOfferPayload>
+        }
+        aggregate: {
+          args: Prisma.TripOfferAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTripOffer>
+        }
+        groupBy: {
+          args: Prisma.TripOfferGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripOfferGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TripOfferCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripOfferCountAggregateOutputType> | number
         }
       }
     }
@@ -2417,6 +2492,7 @@ export const VehicleScalarFieldEnum = {
   year: 'year',
   plateNumber: 'plateNumber',
   color: 'color',
+  vehicleType: 'vehicleType',
   serviceCategory: 'serviceCategory',
   capacity: 'capacity',
   inspectionStatus: 'inspectionStatus',
@@ -2433,6 +2509,11 @@ export const DriverDocumentScalarFieldEnum = {
   status: 'status',
   expiresAt: 'expiresAt',
   notes: 'notes',
+  imageKitFileId: 'imageKitFileId',
+  fileUrl: 'fileUrl',
+  fileName: 'fileName',
+  mimeType: 'mimeType',
+  fileSize: 'fileSize',
   reviewedAt: 'reviewedAt',
   reviewedById: 'reviewedById'
 } as const
@@ -2448,6 +2529,7 @@ export const TripScalarFieldEnum = {
   vehicleId: 'vehicleId',
   status: 'status',
   rideType: 'rideType',
+  vehicleType: 'vehicleType',
   city: 'city',
   zone: 'zone',
   pickupAddress: 'pickupAddress',
@@ -2473,6 +2555,21 @@ export const TripScalarFieldEnum = {
 } as const
 
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
+
+
+export const TripOfferScalarFieldEnum = {
+  id: 'id',
+  tripId: 'tripId',
+  driverId: 'driverId',
+  proposedFare: 'proposedFare',
+  etaMinutes: 'etaMinutes',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  respondedAt: 'respondedAt'
+} as const
+
+export type TripOfferScalarFieldEnum = (typeof TripOfferScalarFieldEnum)[keyof typeof TripOfferScalarFieldEnum]
 
 
 export const TripEventScalarFieldEnum = {
@@ -2946,6 +3043,20 @@ export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMode
 
 
 /**
+ * Reference to a field of type 'VehicleType'
+ */
+export type EnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType'>
+    
+
+
+/**
+ * Reference to a field of type 'VehicleType[]'
+ */
+export type ListEnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType[]'>
+    
+
+
+/**
  * Reference to a field of type 'DocumentType'
  */
 export type EnumDocumentTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DocumentType'>
@@ -3012,6 +3123,20 @@ export type EnumPaymentMethodKindFieldRefInput<$PrismaModel> = FieldRefInputType
  * Reference to a field of type 'PaymentMethodKind[]'
  */
 export type ListEnumPaymentMethodKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PaymentMethodKind[]'>
+    
+
+
+/**
+ * Reference to a field of type 'TripOfferStatus'
+ */
+export type EnumTripOfferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TripOfferStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'TripOfferStatus[]'
+ */
+export type ListEnumTripOfferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TripOfferStatus[]'>
     
 
 
@@ -3299,6 +3424,7 @@ export type GlobalOmitConfig = {
   vehicle?: Prisma.VehicleOmit
   driverDocument?: Prisma.DriverDocumentOmit
   trip?: Prisma.TripOmit
+  tripOffer?: Prisma.TripOfferOmit
   tripEvent?: Prisma.TripEventOmit
   paymentMethod?: Prisma.PaymentMethodOmit
   ledgerEntry?: Prisma.LedgerEntryOmit

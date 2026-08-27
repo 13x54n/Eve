@@ -1,11 +1,11 @@
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE = process.env.EXPO_PUBLIC_API_URL;
+export const API_BASE = process.env.EXPO_PUBLIC_API_URL;
 
 if (!API_BASE) {
   throw new Error(
-    'EXPO_PUBLIC_API_URL is not configured. Start Expo again after setting it in rider/.env.',
+    'EXPO_PUBLIC_API_URL is not configured. Start Expo again after setting it in driver/.env.',
   );
 }
 

@@ -9,7 +9,8 @@
       "@/assets/*": [
         "./assets/*"
       ]
-    }
+    },
+    "jsx": "react-jsx"
   },
   "include": [
     "**/*.ts",

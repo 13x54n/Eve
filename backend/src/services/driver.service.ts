@@ -3,6 +3,8 @@ import { createAccessToken } from "../utils/jwt.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { money, startOfDay } from "../utils/serialize.js";
 import { recordTripEvent } from "./audit.service.js";
+import { createHmac, randomBytes } from "node:crypto";
+import { emitTripEvent, emitUserEvent } from "../realtime.js";
 
 export function sanitizeDriverUser(user: {
   id: string;
@@ -39,6 +41,7 @@ export async function registerDriver(input: {
   vehicleYear: number;
   vehicleColor: string;
   vehiclePlateNumber: string;
+  vehicleType: "BIKE" | "CAR";
   vehicleCategory?: string;
   vehicleCapacity?: number;
 }) {
@@ -101,6 +104,7 @@ export async function registerDriver(input: {
         year: input.vehicleYear,
         color: input.vehicleColor.trim(),
         plateNumber: input.vehiclePlateNumber.trim().toUpperCase(),
+        vehicleType: input.vehicleType,
         serviceCategory: input.vehicleCategory?.trim() || "standard",
         capacity: input.vehicleCapacity || 4,
         inspectionStatus: "PENDING",
@@ -301,6 +305,7 @@ export async function updateDriverPresence(
 ) {
   const profile = await prisma.driverProfile.findUnique({
     where: { userId },
+    include: { vehicles: true },
   });
 
   if (!profile) {
@@ -339,6 +344,7 @@ export async function addOrUpdateVehicle(
     year: number;
     color: string;
     plateNumber: string;
+    vehicleType: "BIKE" | "CAR";
     serviceCategory?: string;
     capacity?: number;
     city?: string;
@@ -380,6 +386,7 @@ export async function addOrUpdateVehicle(
         year: input.year,
         color: input.color.trim(),
         plateNumber: plate,
+        vehicleType: input.vehicleType,
         serviceCategory: input.serviceCategory || "standard",
         capacity: input.capacity || 4,
         city: input.city || profile.city,
@@ -394,6 +401,7 @@ export async function addOrUpdateVehicle(
         year: input.year,
         color: input.color.trim(),
         plateNumber: plate,
+        vehicleType: input.vehicleType,
         serviceCategory: input.serviceCategory || "standard",
         capacity: input.capacity || 4,
         city: input.city || profile.city,
@@ -416,6 +424,11 @@ export async function submitDriverDocument(
       | "VEHICLE_INSPECTION";
     expiresAt?: string | null;
     notes?: string;
+    imageKitFileId?: string;
+    fileUrl?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
   },
 ) {
   const profile = await prisma.driverProfile.findUnique({
@@ -442,6 +455,11 @@ export async function submitDriverDocument(
         status: "PENDING",
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : existingDoc.expiresAt,
         notes: input.notes ?? existingDoc.notes,
+        imageKitFileId: input.imageKitFileId,
+        fileUrl: input.fileUrl,
+        fileName: input.fileName,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
         reviewedAt: null,
         reviewedById: null,
       },
@@ -454,6 +472,11 @@ export async function submitDriverDocument(
         status: "PENDING",
         expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
         notes: input.notes,
+        imageKitFileId: input.imageKitFileId,
+        fileUrl: input.fileUrl,
+        fileName: input.fileName,
+        mimeType: input.mimeType,
+        fileSize: input.fileSize,
       },
     });
   }
@@ -461,9 +484,30 @@ export async function submitDriverDocument(
   return getDriverProfile(userId);
 }
 
+export function getDocumentUploadAuth() {
+  const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+  const publicKey = process.env.IMAGEKIT_PUBLIC_KEY;
+  const folder = process.env.IMAGEKIT_DRIVER_FOLDER || "/eve/drivers";
+
+  if (!privateKey || !publicKey) {
+    const error = new Error("ImageKit upload is not configured");
+    error.name = "ConfigurationError";
+    throw error;
+  }
+
+  const expire = Math.floor(Date.now() / 1000) + 600;
+  const token = randomBytes(16).toString("hex");
+  const signature = createHmac("sha1", privateKey)
+    .update(token + expire)
+    .digest("hex");
+
+  return { token, expire, signature, publicKey, folder };
+}
+
 export async function getIncomingTrips(userId: string) {
   const profile = await prisma.driverProfile.findUnique({
     where: { userId },
+    include: { vehicles: true },
   });
 
   if (!profile) {
@@ -472,19 +516,33 @@ export async function getIncomingTrips(userId: string) {
     throw error;
   }
 
+  if (profile.approvalStatus !== "APPROVED" || !["ONLINE", "IDLE"].includes(profile.presence)) {
+    return [];
+  }
+
   const trips = await prisma.trip.findMany({
     where: {
       status: "SEARCHING",
       ...(profile.city ? { city: profile.city } : {}),
+      vehicleType: { in: profile.vehicles.map((vehicle) => vehicle.vehicleType) },
     },
     include: {
       rider: { include: { user: true } },
     },
     orderBy: { createdAt: "desc" },
-    take: 5,
   });
 
-  return trips.map((trip) => ({
+  return trips
+    .map((trip) => ({
+      ...trip,
+      distanceToPickup: profile.latitude == null || profile.longitude == null
+        ? Number.POSITIVE_INFINITY
+        : distanceBetween(profile.latitude, profile.longitude, trip.pickupLat, trip.pickupLng),
+    }))
+    .filter((trip) => trip.distanceToPickup <= 25)
+    .sort((left, right) => left.distanceToPickup - right.distanceToPickup)
+    .slice(0, 5)
+    .map((trip) => ({
     id: trip.id,
     bookingCode: trip.bookingCode,
     riderName: trip.rider?.user?.name || "Rider",
@@ -501,7 +559,38 @@ export async function getIncomingTrips(userId: string) {
     estimatedEarnings: money(Number(trip.fareTotal) - Number(trip.commission)),
     rideType: trip.rideType,
     createdAt: trip.createdAt,
+    distanceToPickup: Number.isFinite(trip.distanceToPickup) ? trip.distanceToPickup : null,
   }));
+}
+
+function distanceBetween(fromLat: number, fromLng: number, toLat: number, toLng: number) {
+  const radians = (value: number) => (value * Math.PI) / 180;
+  const latitudeDelta = radians(toLat - fromLat);
+  const longitudeDelta = radians(toLng - fromLng);
+  const a = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(radians(fromLat)) * Math.cos(radians(toLat)) * Math.sin(longitudeDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export async function createTripOffer(userId: string, tripId: string, input: { proposedFare: number; etaMinutes: number }) {
+  const profile = await prisma.driverProfile.findUnique({ where: { userId }, include: { vehicles: true } });
+  if (!profile) { const error = new Error("Driver profile not found"); error.name = "NotFoundError"; throw error; }
+  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  if (!trip) { const error = new Error("Trip not found"); error.name = "NotFoundError"; throw error; }
+  if (trip.status !== "SEARCHING" || trip.city !== profile.city || !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType)) {
+    const error = new Error("This trip is not available to this driver"); error.name = "ConflictError"; throw error;
+  }
+  if (input.proposedFare < Number(trip.fareTotal) || input.proposedFare > Number(trip.fareTotal) * 2) {
+    const error = new Error("Offer must start at the base fare for this distance and can go up to double it"); error.name = "ConflictError"; throw error;
+  }
+  try {
+    const offer = await prisma.tripOffer.create({ data: { tripId, driverId: profile.id, proposedFare: input.proposedFare, etaMinutes: input.etaMinutes } });
+    emitTripEvent(tripId, "offer:created", offer);
+    return offer;
+  } catch (error: any) {
+    if (error?.code === "P2002") { error.name = "ConflictError"; error.message = "You already offered on this trip"; }
+    throw error;
+  }
 }
 
 export async function acceptTrip(userId: string, tripId: string) {

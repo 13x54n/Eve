@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { router, type Href } from 'expo-router';
+import { getDriverProfile } from '@/services/driver';
 
 // npm install @expo/vector-icons expo-image
 // No dev client needed — everything here works in plain Expo Go.
@@ -34,8 +36,30 @@ function iconWrap(bg: string, child: React.ReactNode) {
 }
 
 export default function MenuScreen() {
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    void getDriverProfile().then((driver) => { if (mounted) setProfile(driver); }).catch(() => { /* keep placeholder state */ });
+    return () => { mounted = false; };
+  }, []);
+
+  const vehicle = profile?.vehicles?.[0];
+  const vehicleSublabel = vehicle
+    ? `${vehicle.year} ${vehicle.make} ${vehicle.model} · ${vehicle.plateNumber}`
+    : 'Add your vehicle details';
+  const personalInfoSublabel = profile?.user
+    ? [profile.user.name, profile.user.phone].filter(Boolean).join(' · ')
+    : 'Name, phone, email';
+
   // Swap for your real navigation/auth logic.
-  const goTo = (screen: string) => () => console.log(`navigate: ${screen}`);
+  const goTo = (screen: string) => () => {
+    if (screen === 'VehicleManagement') {
+      router.push('/onboarding/vehicle' as Href);
+    } else if (screen === 'Documents') {
+      router.push('/onboarding/documents' as Href);
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
@@ -51,7 +75,7 @@ export default function MenuScreen() {
         {
           icon: iconWrap('#EFF6FF', <Feather name="user" size={17} color="#3B82F6" />),
           label: 'Personal info',
-          sublabel: 'Name, phone, email',
+          sublabel: personalInfoSublabel,
           onPress: goTo('PersonalInfo'),
         },
         {
@@ -60,7 +84,7 @@ export default function MenuScreen() {
             <MaterialCommunityIcons name="car-side" size={18} color="#16A34A" />
           ),
           label: 'Vehicle management',
-          sublabel: '2021 Toyota Prius · ABC-123',
+          sublabel: vehicleSublabel,
           onPress: goTo('VehicleManagement'),
         },
         {
@@ -165,12 +189,12 @@ export default function MenuScreen() {
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Alex Rivera</Text>
+            <Text style={styles.profileName}>{profile?.user?.name ?? 'Loading...'}</Text>
             <View style={styles.ratingRow}>
               <Ionicons name="star" size={13} color="#F59E0B" />
-              <Text style={styles.ratingText}>4.92</Text>
+              <Text style={styles.ratingText}>{profile?.rating ? Number(profile.rating).toFixed(2) : '—'}</Text>
               <View style={styles.dot} />
-              <Text style={styles.tripsText}>1,204 trips</Text>
+              <Text style={styles.tripsText}>{profile?.city ?? 'No city set'}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={20} color="#C7CAD1" />
