@@ -271,7 +271,7 @@ export default function RequestRideScreen() {
       const trip = await createTrip({
         pickupAddress: pickup.trim(),
         dropoffAddress: dropoff.trim(),
-        city: pickupCity || "Kathmandu",
+        city: pickupCity || dropoffCity || "Kathmandu",
         pickupLat: pickupPoint.lat,
         pickupLng: pickupPoint.lng,
         dropoffLat: dropoffPoint.lat,
