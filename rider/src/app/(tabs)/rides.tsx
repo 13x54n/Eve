@@ -1,8 +1,9 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Button, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getTrips, Trip } from "@/services/trips";
+import { Image } from "expo-image";
 
 function displayStatus(status: string) {
   if (status === "COMPLETED") return "Completed";
@@ -25,15 +26,33 @@ export default function RidesScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <View><Text style={styles.eyebrow}>YOUR ACTIVITY</Text><Text style={styles.title}>Rides</Text></View>
-        <Pressable style={styles.iconButton} accessibilityLabel="Search rides"><Feather name="search" size={20} color="#111827" /></Pressable>
+        <View>
+          <Text style={styles.title}>Your trips</Text>
+        </View>
+        {/* <Pressable style={styles.iconButton} accessibilityLabel="Settings"><Feather name="settings" size={20} color="#111827" /></Pressable> */}
       </View>
+
+      <View style={styles.monthRow}><Text style={styles.sectionTitle}>Upcoming</Text></View>
+
+      <View style={{ marginBottom: 28, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 16, paddingHorizontal: 16, paddingBottom: 8 }}>
+
+        <View >
+          <Text style={styles.sectionTitle}>No upcoming rides.</Text>
+          <Text style={{ color: "#2e4ed2", textDecorationLine: "underline", fontWeight: "bold" }}>Reserve your ride</Text>
+        </View>
+
+        <Image source={{ uri: "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }} style={{ width: "100%", height: 62, borderRadius: 16 }} contentFit="contain" />
+      </View>
+
       <View style={styles.filterRow}>
         {(["All", "Completed", "Cancelled"] as const).map((item) => (
           <Pressable key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterActive]}>
             <Text style={[styles.filterText, filter === item && styles.filterTextActive]}>{item}</Text>
           </Pressable>
         ))}
+
+        {/* <Pressable style={styles.iconButton} accessibilityLabel="Search rides"><Feather name="search" size={20} color="#111827" /></Pressable> */}
+
       </View>
       <View style={styles.monthRow}><Text style={styles.sectionTitle}>Recent activity</Text><Text style={styles.count}>{visibleRides.length} rides</Text></View>
       {visibleRides.map((trip) => {
@@ -42,11 +61,15 @@ export default function RidesScreen() {
           <Pressable key={trip.id} style={styles.rideCard} onPress={() => router.push("/ride/completed")}>
             <View style={styles.rideHeader}>
               <View style={[styles.statusIcon, { backgroundColor: status === "Cancelled" ? "#FEE2E2" : "#DCFCE7" }]}><Feather name={status === "Cancelled" ? "x" : "check"} size={16} color={status === "Cancelled" ? "#B91C1C" : "#15803D"} /></View>
-              <View style={styles.rideMeta}><Text style={styles.date}>{new Date(trip.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</Text><Text style={styles.status}>{status}</Text></View>
+              <View style={styles.rideMeta}>
+                <Text style={styles.date}>
+                  {trip.dropoffAddress}
+                </Text>
+                <Text style={styles.status}>{status}</Text>
+            <Text style={styles.place}>{new Date(trip.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</Text>
+              </View>
               <Text style={styles.price}>${trip.fareTotal.toFixed(2)}</Text>
             </View>
-            <View style={styles.route}><View style={styles.routeDots}><View style={styles.startDot} /><View style={styles.routeLine} /><View style={styles.endDot} /></View><View style={styles.places}><Text style={styles.place}>{trip.pickupAddress}</Text><Text style={styles.place}>{trip.dropoffAddress}</Text></View></View>
-            <View style={styles.receipt}><Text style={styles.receiptText}>View receipt</Text><Feather name="chevron-right" size={16} color="#9CA3AF" /></View>
           </Pressable>
         );
       })}
@@ -57,7 +80,7 @@ export default function RidesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, paddingTop: 36, backgroundColor: "#F7F8EF" },
+  container: { flexGrow: 1, padding: 20, paddingTop: 56, backgroundColor: "#F7F8EF" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
   eyebrow: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   title: { marginTop: 4, color: "#111827", fontSize: 30, fontWeight: "800" },
@@ -70,7 +93,7 @@ const styles = StyleSheet.create({
   monthRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 12 },
   sectionTitle: { color: "#111827", fontSize: 17, fontWeight: "700" },
   count: { color: "#6B7280", fontSize: 13 },
-  rideCard: { marginBottom: 12, padding: 16, borderRadius: 16, backgroundColor: "#FFFFFF" },
+  rideCard: { marginBottom: 12, borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingBottom: 12 },
   rideHeader: { flexDirection: "row", alignItems: "center" },
   statusIcon: { alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 17 },
   rideMeta: { flex: 1, marginLeft: 10 },

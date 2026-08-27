@@ -73,12 +73,6 @@ export default function MenuScreen() {
       title: 'Account',
       items: [
         {
-          icon: iconWrap('#EFF6FF', <Feather name="user" size={17} color="#3B82F6" />),
-          label: 'Personal info',
-          sublabel: personalInfoSublabel,
-          onPress: goTo('PersonalInfo'),
-        },
-        {
           icon: iconWrap(
             '#F0FDF4',
             <MaterialCommunityIcons name="car-side" size={18} color="#16A34A" />
@@ -96,14 +90,6 @@ export default function MenuScreen() {
           sublabel: 'License, insurance, background check',
           onPress: goTo('Documents'),
         },
-        {
-          icon: iconWrap(
-            '#F5F3FF',
-            <Ionicons name="card-outline" size={18} color="#7C3AED" />
-          ),
-          label: 'Payment & tax info',
-          onPress: goTo('PaymentInfo'),
-        },
       ],
     },
     {
@@ -114,25 +100,25 @@ export default function MenuScreen() {
             '#EFF6FF',
             <Ionicons name="help-buoy-outline" size={18} color="#3B82F6" />
           ),
-          label: 'Help center',
+          label: 'Support',
           onPress: goTo('HelpCenter'),
         },
-        {
-          icon: iconWrap(
-            '#FEF2F2',
-            <Ionicons name="shield-checkmark-outline" size={18} color="#DC2626" />
-          ),
-          label: 'Safety toolkit',
-          onPress: goTo('Safety'),
-        },
-        {
-          icon: iconWrap(
-            '#F0FDF4',
-            <Ionicons name="people-outline" size={18} color="#16A34A" />
-          ),
-          label: 'Community guidelines',
-          onPress: goTo('Community'),
-        },
+        // {
+        //   icon: iconWrap(
+        //     '#FEF2F2',
+        //     <Ionicons name="shield-checkmark-outline" size={18} color="#DC2626" />
+        //   ),
+        //   label: 'Safety toolkit',
+        //   onPress: goTo('Safety'),
+        // },
+        // {
+        //   icon: iconWrap(
+        //     '#F0FDF4',
+        //     <Ionicons name="people-outline" size={18} color="#16A34A" />
+        //   ),
+        //   label: 'Community guidelines',
+        //   onPress: goTo('Community'),
+        // },
         {
           icon: iconWrap(
             '#F8FAFC',
@@ -154,14 +140,14 @@ export default function MenuScreen() {
           label: 'Notifications',
           onPress: goTo('Notifications'),
         },
-        {
-          icon: iconWrap(
-            '#F8FAFC',
-            <Ionicons name="settings-outline" size={18} color="#64748B" />
-          ),
-          label: 'App settings',
-          onPress: goTo('Settings'),
-        },
+        // {
+        //   icon: iconWrap(
+        //     '#F8FAFC',
+        //     <Ionicons name="settings-outline" size={18} color="#64748B" />
+        //   ),
+        //   label: 'App settings',
+        //   onPress: goTo('Settings'),
+        // },
       ],
     },
   ];
@@ -185,7 +171,7 @@ export default function MenuScreen() {
           onPress={goTo('Profile')}
         >
           <Image
-            source={{ uri: 'https://i.pravatar.cc/120?img=47' }}
+            source={{ uri: 'https://images.unsplash.com/vector-1755257875851-08e44758a35b?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' }}
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
@@ -236,7 +222,7 @@ export default function MenuScreen() {
           activeOpacity={0.7}
           onPress={handleSignOut}
         >
-          <Feather name="log-out" size={17} color="#DC2626" />
+          <Feather name="log-out" size={17} color="#ffffff" />
           <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
 
@@ -257,7 +243,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   topBarTitle: {
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.4,
@@ -271,9 +257,7 @@ const styles = StyleSheet.create({
   profileCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
+    
     marginTop: 8,
     shadowColor: '#0F172A',
     shadowOpacity: 0.05,
@@ -333,20 +317,20 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    
     overflow: 'hidden',
     shadowColor: '#0F172A',
     shadowOpacity: 0.04,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 1 },
     elevation: 1,
+
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 14,
+    // paddingHorizontal: 14,
   },
   rowIcon: {
     width: 36,
@@ -382,7 +366,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'red',
     borderRadius: 18,
     paddingVertical: 14,
     marginTop: 28,
@@ -392,7 +376,7 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#DC2626',
+    color: '#fff',
   },
   versionText: {
     fontSize: 12,

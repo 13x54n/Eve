@@ -161,7 +161,7 @@ export default function Home() {
         <View style={styles.topBar}>
           <Image
             source={{ uri: 'https://ik.imagekit.io/lexy/Eve/logo.png' }}
-            style={{ width: 40, height: 40, marginRight: 'auto' }}
+            style={{ width: 60, height: 60, marginRight: 'auto' }}
           />
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
             <Ionicons name="shield-outline" size={20} color="#111827" />
@@ -206,7 +206,7 @@ export default function Home() {
         
 
         {/* Section: Earnings */}
-        <View style={{ marginTop: 20, marginBottom: 12, paddingHorizontal: 10, backgroundColor: '#ffffff', marginHorizontal: 16, borderRadius: 20, paddingVertical: 12, shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 }}>
+        <View style={{ borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12, marginHorizontal: 16, borderRadius: 20, shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 }}>
           <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Earnings</Text>
           <Text style={styles.sectionSubtitle}>

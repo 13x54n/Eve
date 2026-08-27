@@ -5,10 +5,9 @@ import { prisma } from "../src/config/prisma.js";
 
 const createdEmails: string[] = [];
 
-// Pickup/dropoff coordinates both inside New York, ~5km apart.
 const PICKUP = { lat: 40.7128, lng: -74.006 };
 const DROPOFF = { lat: 40.758, lng: -73.9855 };
-const FAR_AWAY = { lat: 34.0522, lng: -118.2437 }; // Los Angeles — outside the 25km match radius
+const FAR_AWAY = { lat: 34.0522, lng: -118.2437 }; 
 
 function registerRider() {
   const email = `rider-match-${Date.now()}-${Math.random()}@example.com`;

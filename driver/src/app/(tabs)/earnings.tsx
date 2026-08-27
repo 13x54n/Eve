@@ -107,10 +107,10 @@ export default function Earnings() {
         <TouchableOpacity style={styles.backButton} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={22} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.topBarTitle}>Wallet</Text>
-        <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
+        <Text style={styles.topBarTitle}>Eve Wallet</Text>
+        {/* <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
           <Ionicons name="time-outline" size={20} color="#0F172A" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       <SectionList
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   topBarTitle: {
-    fontSize: 17,
+    fontSize: 27,
     fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.2,
@@ -329,8 +329,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderWidth: 1,

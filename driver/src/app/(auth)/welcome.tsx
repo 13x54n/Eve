@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
 
 
       <Text style={styles.subtitle}>
-        Connect with fellow drivers to make your travel experience more convenient and enjoyable.
+        Connect with fellow riders to earn by helping them get around.
       </Text>
 
       <Pressable
