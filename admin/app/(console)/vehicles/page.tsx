@@ -24,6 +24,7 @@ type VehicleList = {
     year: number;
     plateNumber: string;
     color: string;
+    vehicleType: "BIKE" | "CAR";
     serviceCategory: string;
     capacity: number;
     inspectionStatus: string;
@@ -76,10 +77,11 @@ export default function VehiclesPage() {
         </div>
         <Panel title={`${data?.total ?? 0} vehicles`}>
           <Table
-            columns={["Plate", "Vehicle", "Service", "Inspection", "Assigned Driver", "Quick Assign"]}
+            columns={["Plate", "Vehicle", "Type", "Service", "Inspection", "Assigned Driver", "Quick Assign"]}
             rows={(data?.items ?? []).map((vehicle) => [
               <span key="p" className="font-mono font-semibold text-slate-900">{vehicle.plateNumber}</span>,
               `${vehicle.year} ${vehicle.make} ${vehicle.model} · ${vehicle.color}`,
+              <span key="t" className="font-semibold text-slate-700">{vehicle.vehicleType === "BIKE" ? "Bike" : "Car"}</span>,
               <span key="c" className="font-medium text-slate-700">{`${vehicle.serviceCategory} (${vehicle.capacity} pax)`}</span>,
               <Badge key="i" tone={statusTone(vehicle.inspectionStatus)}>
                 {vehicle.inspectionStatus}

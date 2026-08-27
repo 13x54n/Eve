@@ -1,7 +1,8 @@
 "use client";
 
 import { use, useState } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -79,12 +80,17 @@ export default function RiderDetailPage({
   const [message, setMessage] = useState("");
 
   async function patch(body: Record<string, unknown>) {
-    await api(`/admin/riders/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
+    try {
+      await api(`/admin/riders/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
 
-    await reload();
+      await reload();
+      toast.success("Rider updated");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   const isEditable = can(user, "riders:write");
@@ -291,7 +297,7 @@ export default function RiderDetailPage({
 
                       if (!channel) return;
 
-                      void api("/admin/notifications", {
+                      api("/admin/notifications", {
                         method: "POST",
                         body: JSON.stringify({
                           userId: data.id,
@@ -300,7 +306,9 @@ export default function RiderDetailPage({
                           title: "Message from Eve support",
                           body: "A support agent needs to reach you about your account.",
                         }),
-                      });
+                      })
+                        .then(() => toast.success(`Message sent via ${channel}`))
+                        .catch((error) => toast.error(apiErrorMessage(error)));
 
                       event.currentTarget.value = "";
                     }}

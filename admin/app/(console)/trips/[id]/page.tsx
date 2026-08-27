@@ -1,7 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -52,11 +53,16 @@ export default function TripDetailPage({
   const dispatch = can(user, "trips:dispatch");
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
-    await api(`/admin/trips/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ action, ...extra }),
-    });
-    await reload();
+    try {
+      await api(`/admin/trips/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ action, ...extra }),
+      });
+      await reload();
+      toast.success("Trip updated");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   if (!data) {

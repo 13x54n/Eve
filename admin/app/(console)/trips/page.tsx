@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -52,17 +53,28 @@ export default function TripsPage() {
   async function createTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    await api("/admin/trips", {
-      method: "POST",
-      body: JSON.stringify({
-        riderId: form.get("riderId"),
-        pickupAddress: form.get("pickup"),
-        dropoffAddress: form.get("dropoff"),
-        city: form.get("city"),
-        rideType: form.get("rideType"),
-      }),
-    });
-    await reload();
+    try {
+      await api("/admin/trips", {
+        method: "POST",
+        body: JSON.stringify({
+          riderId: form.get("riderId"),
+          pickupAddress: form.get("pickup"),
+          dropoffAddress: form.get("dropoff"),
+          city: form.get("city"),
+          rideType: form.get("rideType"),
+          vehicleType: form.get("vehicleType"),
+          pickupLat: Number(form.get("pickupLat")),
+          pickupLng: Number(form.get("pickupLng")),
+          dropoffLat: Number(form.get("dropoffLat")),
+          dropoffLng: Number(form.get("dropoffLng")),
+        }),
+      });
+      await reload();
+      toast.success("Trip created");
+      event.currentTarget.reset();
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   return (
@@ -100,7 +112,7 @@ export default function TripsPage() {
               <Input name="riderId" placeholder="Rider user or profile ID" required />
               <Input name="pickup" placeholder="Pickup address" required />
               <Input name="dropoff" placeholder="Destination address" required />
-              <Input name="city" placeholder="City" defaultValue="New York" />
+              <Input name="city" placeholder="City (e.g. New York)" required />
               <Select name="rideType" defaultValue="STANDARD">
                 <option>STANDARD</option>
                 <option>AIRPORT</option>
@@ -108,6 +120,14 @@ export default function TripsPage() {
                 <option>SCHEDULED</option>
                 <option>CORPORATE</option>
               </Select>
+              <Select name="vehicleType" defaultValue="CAR">
+                <option value="CAR">Car</option>
+                <option value="BIKE">Bike</option>
+              </Select>
+              <Input name="pickupLat" type="number" step="any" placeholder="Pickup latitude" required />
+              <Input name="pickupLng" type="number" step="any" placeholder="Pickup longitude" required />
+              <Input name="dropoffLat" type="number" step="any" placeholder="Dropoff latitude" required />
+              <Input name="dropoffLng" type="number" step="any" placeholder="Dropoff longitude" required />
               <Button className="sm:col-span-2 lg:col-span-5">Create trip</Button>
             </form>
           </Panel>

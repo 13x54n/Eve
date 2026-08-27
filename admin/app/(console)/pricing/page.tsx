@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import { Badge, Button, Guard, Input, Panel, Table, statusTone } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
@@ -37,35 +38,45 @@ export default function PricingPage() {
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    await api("/admin/pricing", {
-      method: "POST",
-      body: JSON.stringify({
-        city: form.get("city"),
-        zone: form.get("zone") || null,
-        vehicleType: form.get("vehicleType"),
-        baseFare: Number(form.get("baseFare")),
-        perKm: Number(form.get("perKm")),
-        perMinute: Number(form.get("perMinute")),
-        minFare: Number(form.get("minFare")),
-        bookingFee: Number(form.get("bookingFee")),
-        airportFee: Number(form.get("airportFee")),
-        cancellationFee: Number(form.get("cancellationFee")),
-        waitingFee: Number(form.get("waitingFee")),
-        commissionPercent: Number(form.get("commissionPercent")),
-        surgeMultiplier: Number(form.get("surgeMultiplier")),
-        effectiveAt: form.get("effectiveAt"),
-        status: "PENDING_APPROVAL",
-      }),
-    });
-    await reload();
+    try {
+      await api("/admin/pricing", {
+        method: "POST",
+        body: JSON.stringify({
+          city: form.get("city"),
+          zone: form.get("zone") || null,
+          vehicleType: form.get("vehicleType"),
+          baseFare: Number(form.get("baseFare")),
+          perKm: Number(form.get("perKm")),
+          perMinute: Number(form.get("perMinute")),
+          minFare: Number(form.get("minFare")),
+          bookingFee: Number(form.get("bookingFee")),
+          airportFee: Number(form.get("airportFee")),
+          cancellationFee: Number(form.get("cancellationFee")),
+          waitingFee: Number(form.get("waitingFee")),
+          commissionPercent: Number(form.get("commissionPercent")),
+          surgeMultiplier: Number(form.get("surgeMultiplier")),
+          effectiveAt: form.get("effectiveAt"),
+          status: "PENDING_APPROVAL",
+        }),
+      });
+      await reload();
+      toast.success("Fare change submitted for approval");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   async function transition(id: string, action: "approve" | "rollback") {
-    await api(`/admin/pricing/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ action }),
-    });
-    await reload();
+    try {
+      await api(`/admin/pricing/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ action }),
+      });
+      await reload();
+      toast.success(action === "approve" ? "Fare config approved" : "Fare config rolled back");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   return (

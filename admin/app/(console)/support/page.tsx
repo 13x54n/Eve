@@ -1,6 +1,8 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   FilterBar,
@@ -46,11 +48,16 @@ export default function SupportPage() {
   const write = can(user, "support:write");
 
   async function update(id: string, body: Record<string, unknown>) {
-    await api(`/admin/tickets/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    await reload();
+    try {
+      await api(`/admin/tickets/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      await reload();
+      toast.success("Ticket updated");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   return (

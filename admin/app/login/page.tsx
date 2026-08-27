@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { Button, Input } from "@/components/ui";
@@ -21,11 +22,12 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      toast.success("Signed in");
       router.replace("/dashboard");
     } catch (caught) {
-      setError(
-        caught instanceof ApiError ? caught.message : "Unable to sign in",
-      );
+      const message = caught instanceof ApiError ? caught.message : "Unable to sign in";
+      setError(message);
+      toast.error(message);
     } finally {
       setPending(false);
     }

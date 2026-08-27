@@ -1,6 +1,7 @@
 "use client";
 
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import { Badge, Button, Guard, Panel, Table, statusTone } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
@@ -35,11 +36,16 @@ export default function SafetyPage() {
   const write = can(user, "safety:write");
 
   async function update(id: string, status: string) {
-    await api(`/admin/safety/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status, assigneeId: user?.id }),
-    });
-    await reload();
+    try {
+      await api(`/admin/safety/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status, assigneeId: user?.id }),
+      });
+      await reload();
+      toast.success("Safety record updated");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   return (

@@ -1,7 +1,8 @@
 "use client";
 
 import { use } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
@@ -29,7 +30,7 @@ type Driver = {
   notes: string | null;
   user: { name: string; email: string; phone: string | null; accountStatus: string };
   fleetCompany: { name: string } | null;
-  vehicles: { id: string; plateNumber: string; make: string; model: string }[];
+  vehicles: { id: string; plateNumber: string; make: string; model: string; vehicleType: "BIKE" | "CAR" }[];
   documents: {
     id: string;
     type: string;
@@ -52,11 +53,16 @@ export default function DriverDetailPage({
   const write = can(user, "drivers:approve");
 
   async function review(body: Record<string, unknown>) {
-    await api(`/admin/drivers/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    await reload();
+    try {
+      await api(`/admin/drivers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      await reload();
+      toast.success("Driver updated");
+    } catch (error) {
+      toast.error(apiErrorMessage(error));
+    }
   }
 
   if (!data) {
@@ -135,12 +141,13 @@ export default function DriverDetailPage({
             ])}
           />
         </Panel>
-        <Panel title="Vehicles">
+          <Panel title="Vehicles">
           <Table
-            columns={["Plate", "Vehicle"]}
+            columns={["Plate", "Vehicle", "Type"]}
             rows={data.vehicles.map((vehicle) => [
               <span key="p" className="font-mono font-semibold text-slate-800">{vehicle.plateNumber}</span>,
               `${vehicle.make} ${vehicle.model}`,
+              <span key="t" className="font-semibold text-slate-700">{vehicle.vehicleType === "BIKE" ? "Bike" : "Car"}</span>,
             ])}
           />
         </Panel>
