@@ -2,6 +2,8 @@
 import { api } from './api';
 import * as SecureStore from 'expo-secure-store';
 
+export const ACCESS_TOKEN_KEY = 'access_token';
+
 export interface LoginPayload {
   email: string;
   password: string;
@@ -33,18 +35,22 @@ export interface PasswordResetRequestResponse {
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/auth/login', payload);
-  await SecureStore.setItemAsync('access_token', data.accessToken);
+  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.accessToken);
   return data;
 }
 
 export async function register(payload: RegisterPayload): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/auth/register', payload);
-  await SecureStore.setItemAsync('access_token', data.accessToken);
+  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.accessToken);
   return data;
 }
 
+export async function getAccessToken() {
+  return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+}
+
 export async function logout() {
-  await SecureStore.deleteItemAsync('access_token');
+  await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
 }
 
 export async function getSessionUser() {

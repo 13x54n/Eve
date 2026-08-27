@@ -28,9 +28,15 @@ export type AccessTokenPayload = {
   staffRole?: AdminStaffRole | null;
 };
 
-const jwtOptions: SignOptions = {
-  expiresIn: 15 * 60,
-};
+const ADMIN_ACCESS_TTL_SECONDS = 15 * 60;
+const MOBILE_ACCESS_TTL_SECONDS = 30 * 24 * 60 * 60;
+
+function accessTokenOptions(role: UserRole): SignOptions {
+  return {
+    expiresIn:
+      role === "ADMIN" ? ADMIN_ACCESS_TTL_SECONDS : MOBILE_ACCESS_TTL_SECONDS,
+  };
+}
 
 export function createAccessToken(user: {
   id: string;
@@ -44,7 +50,7 @@ export function createAccessToken(user: {
       staffRole: user.adminStaffRole ?? null,
     },
     JWT_SECRET,
-    jwtOptions,
+    accessTokenOptions(user.role),
   );
 }
 

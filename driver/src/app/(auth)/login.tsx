@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { login } from "@/services/auth";
+import { useAuth } from "@/context/auth-context";
 import * as React from "react";
 
 export default function LoginScreen() {
+  const { setUser } = useAuth();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -28,7 +30,8 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-      await login({ email: normalizedEmail, password: trimmedPassword });
+      const session = await login({ email: normalizedEmail, password: trimmedPassword });
+      setUser(session.user);
       router.replace("/(tabs)/home");
     } catch (e: any) {
       const msg =

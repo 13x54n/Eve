@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
+import jwt from "jsonwebtoken";
 import {
   createAccessToken,
   verifyAccessToken,
 } from "../src/utils/jwt.js";
+
+function tokenLifetimeSeconds(token: string): number {
+  const payload = jwt.decode(token);
+
+  if (!payload || typeof payload === "string" || !payload.iat || !payload.exp) {
+    throw new Error("Token payload is missing iat/exp");
+  }
+
+  return payload.exp - payload.iat;
+}
 
 describe("JWT utilities", () => {
   it("creates and verifies an access token", () => {
@@ -29,5 +40,24 @@ describe("JWT utilities", () => {
     expect(() => {
       verifyAccessToken("");
     }).toThrow();
+  });
+
+  it("issues longer-lived tokens for riders and drivers than admins", () => {
+    const riderToken = createAccessToken({
+      id: "rider-1",
+      role: "RIDER",
+    });
+    const driverToken = createAccessToken({
+      id: "driver-1",
+      role: "DRIVER",
+    });
+    const adminToken = createAccessToken({
+      id: "admin-1",
+      role: "ADMIN",
+    });
+
+    expect(tokenLifetimeSeconds(riderToken)).toBe(30 * 24 * 60 * 60);
+    expect(tokenLifetimeSeconds(driverToken)).toBe(30 * 24 * 60 * 60);
+    expect(tokenLifetimeSeconds(adminToken)).toBe(15 * 60);
   });
 });
