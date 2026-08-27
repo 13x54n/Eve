@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.anonymous.eve",
+      "bundleIdentifier": "ca.sherpafoods.eve",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

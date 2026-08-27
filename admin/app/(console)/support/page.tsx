@@ -1,12 +1,16 @@
 "use client";
 
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { apiErrorMessage } from "@/lib/api";
 import {
   Badge,
+  ErrorBanner,
   FilterBar,
   Guard,
   Input,
   Panel,
+  PageHeader,
   Select,
   Table,
   statusTone,
@@ -14,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 import { useMemo, useState } from "react";
 
 type Tickets = {
@@ -36,70 +41,80 @@ export default function SupportPage() {
   const { user } = useAuth();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
+  const debouncedQ = useDebouncedValue(q);
   const path = useMemo(() => {
     const params = new URLSearchParams();
-    if (q) params.set("q", q);
+    if (debouncedQ) params.set("q", debouncedQ);
     if (status) params.set("status", status);
     return `/admin/tickets?${params}`;
-  }, [q, status]);
-  const { data, reload } = useApi<Tickets>(path);
+  }, [debouncedQ, status]);
+  const { data, reload, error, loading } = useApi<Tickets>(path);
   const write = can(user, "support:write");
 
   async function update(id: string, body: Record<string, unknown>) {
-    await api(`/admin/tickets/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    });
-    await reload();
+    try {
+      await api(`/admin/tickets/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      await reload();
+      toast.success("Ticket updated");
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
+    }
   }
 
   return (
     <Guard allowed={can(user, "support:read")}>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Support & disputes</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Handle customer service inquiries, rider disputes, lost item claims, and escalation tickets.
-          </p>
-        </div>
-        <FilterBar>
-          <Input
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder="Search subject or category"
-            className="w-full sm:w-80"
-          />
-          <Select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full sm:w-48">
-            <option value="">All statuses</option>
-            <option value="OPEN">Open</option>
-            <option value="IN_PROGRESS">In progress</option>
-            <option value="WAITING">Waiting</option>
-            <option value="RESOLVED">Resolved</option>
-          </Select>
-        </FilterBar>
-        <Panel title={`${data?.total ?? 0} support tickets`}>
+      <div className="space-y-5">
+        <PageHeader title="Support" subtitle="Inquiries, disputes, and escalations." />
+        {error ? <ErrorBanner message={error} /> : null}
+        <Panel
+          title={`${data?.total ?? 0} tickets`}
+          padded={false}
+          actions={
+            <FilterBar>
+              <Input
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+                placeholder="Subject or category"
+                className="w-56"
+              />
+              <Select value={status} onChange={(event) => setStatus(event.target.value)} className="w-40">
+                <option value="">All statuses</option>
+                <option value="OPEN">Open</option>
+                <option value="IN_PROGRESS">In progress</option>
+                <option value="WAITING">Waiting</option>
+                <option value="RESOLVED">Resolved</option>
+              </Select>
+            </FilterBar>
+          }
+        >
           <Table
-            columns={["Ticket Details", "Rider", "Priority", "Status", "SLA Actions"]}
+            loading={loading && !data}
+            empty="No tickets match the current filters."
+            columns={["Ticket", "Rider", "Priority", "Status", "Actions"]}
             rows={(data?.items ?? []).map((ticket) => [
               <div key="t">
-                <p className="font-semibold text-slate-900">{ticket.subject}</p>
-                <p className="text-xs text-slate-500">
-                  {ticket.category} · Channel: {ticket.channel} · {ticket.trip?.bookingCode ? `Trip: ${ticket.trip.bookingCode}` : "No trip"}
+                <p className="font-medium">{ticket.subject}</p>
+                <p className="text-xs text-muted-foreground">
+                  {ticket.category} · {ticket.channel}
+                  {ticket.trip?.bookingCode ? ` · ${ticket.trip.bookingCode}` : ""}
                 </p>
               </div>,
-              <span key="r" className="font-medium text-slate-800">{ticket.rider?.user.name ?? "—"}</span>,
+              ticket.rider?.user.name ?? "—",
               <Badge key="p" tone={statusTone(ticket.priority)}>{ticket.priority}</Badge>,
-              <span key="st" className="font-medium text-slate-700">{ticket.status}</span>,
+              ticket.status,
               write ? (
-                <div key="a" className="flex items-center gap-3">
+                <div key="a" className="flex gap-3">
                   <button
-                    className="font-semibold text-emerald-700 hover:text-emerald-800 text-xs transition hover:underline cursor-pointer"
+                    className="text-xs font-medium text-emerald-700 hover:underline cursor-pointer"
                     onClick={() => void update(ticket.id, { status: "RESOLVED", csatScore: 5, message: "Resolved via canned response." })}
                   >
                     Resolve
                   </button>
                   <button
-                    className="font-semibold text-[#2e4ed2] hover:text-[#233eb8] text-xs transition hover:underline cursor-pointer"
+                    className="text-xs font-medium hover:underline cursor-pointer"
                     onClick={() => void update(ticket.id, { status: "IN_PROGRESS", assigneeId: user?.id, message: "Escalating internally.", internal: true })}
                   >
                     Escalate
@@ -115,4 +130,3 @@ export default function SupportPage() {
     </Guard>
   );
 }
-

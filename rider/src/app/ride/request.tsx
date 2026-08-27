@@ -12,11 +12,13 @@ import {
   TextInput,
   View,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import * as Location from "expo-location";
-import { searchAddresses, AddressSuggestion } from "@/services/location"; // adjust path if needed
+import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
 import { Image } from "expo-image";
 import MapView, { Marker, Polyline, UrlTile } from "react-native-maps";
+import { createTrip } from "@/services/trips";
 
 const vehicleOptions = [
   ["Car", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
@@ -56,6 +58,14 @@ export default function RequestRideScreen() {
   });
 
   const [currentLoc, setCurrentLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [pickupCoord, setPickupCoord] = useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffCoord, setDropoffCoord] = useState<{ lat: number; lng: number } | null>(
+    params.dropoff_lat && params.dropoff_lng
+      ? { lat: Number(params.dropoff_lat), lng: Number(params.dropoff_lng) }
+      : null,
+  );
+  const [pickupCity, setPickupCity] = useState("");
+  const [dropoffCity, setDropoffCity] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -63,7 +73,9 @@ export default function RequestRideScreen() {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") return;
         const loc = await Location.getCurrentPositionAsync({ accuracy: 3 });
-        setCurrentLoc({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        const coords = { lat: loc.coords.latitude, lng: loc.coords.longitude };
+        setCurrentLoc(coords);
+        setPickupCoord((current) => current ?? coords);
       } catch {
         // ignore
       }
@@ -118,13 +130,22 @@ export default function RequestRideScreen() {
     );
   }
 
-  function handleSelectSuggestion(item: AddressSuggestion, field: ActiveField) {
+  async function handleSelectSuggestion(item: AddressSuggestion, field: ActiveField) {
+    const city = item.municipality || item.district || item.province || "";
+    const coords = await geocodeSuggestion(item, currentLoc ?? undefined);
     if (field === "pickup") {
       setPickup(item.label);
       setPickupSuggestions([]);
+      setPickupCity(city);
+      if (coords) setPickupCoord(coords);
     } else if (field === "dropoff") {
       setDropoff(item.label);
       setDropoffSuggestions([]);
+      setDropoffCity(city);
+      if (coords) {
+        setDropoffCoord(coords);
+        setMapCoordinate({ latitude: coords.lat, longitude: coords.lng });
+      }
     } else {
       setStops((currentStops) =>
         currentStops.map((stop, index) =>
@@ -160,6 +181,13 @@ export default function RequestRideScreen() {
   function swapLocations() {
     setPickup(dropoff);
     setDropoff(pickup);
+    setPickupCity(dropoffCity);
+    setDropoffCity(pickupCity);
+    setPickupCoord(dropoffCoord);
+    setDropoffCoord(pickupCoord);
+    if (pickupCoord) {
+      setMapCoordinate({ latitude: pickupCoord.lat, longitude: pickupCoord.lng });
+    }
     setStops((currentStops) => [...currentStops].reverse());
     setStopSuggestions((currentSuggestions) => [...currentSuggestions].reverse());
   }
@@ -175,12 +203,16 @@ export default function RequestRideScreen() {
   function applyMapLocation() {
     const label = `Pinned location (${mapCoordinate.latitude.toFixed(5)}, ${mapCoordinate.longitude.toFixed(5)})`;
 
+    const pinned = { lat: mapCoordinate.latitude, lng: mapCoordinate.longitude };
+
     if (activeField === "pickup") {
       setPickup(label);
       setPickupSuggestions([]);
+      setPickupCoord(pinned);
     } else if (activeField === "dropoff") {
       setDropoff(label);
       setDropoffSuggestions([]);
+      setDropoffCoord(pinned);
     } else if (activeField && activeField.type === "stop") {
       setStops((currentStops) =>
         currentStops.map((stop, index) => (index === activeField.index ? label : stop)),
@@ -211,7 +243,7 @@ export default function RequestRideScreen() {
     void Linking.openURL(url);
   }
 
-  const pickupCoordinate = currentLoc ?? {
+  const pickupCoordinate = pickupCoord ?? currentLoc ?? {
     lat: mapCoordinate.latitude - 0.01,
     lng: mapCoordinate.longitude - 0.01,
   };
@@ -224,6 +256,33 @@ export default function RequestRideScreen() {
 
   const riderDetailsValid =
     selectedRider === "For me" || (riderName.trim().length > 1 && riderPhone.trim().length >= 7);
+
+  async function submitRideRequest() {
+    const pickupPoint = pickupCoord ?? currentLoc;
+    const dropoffPoint = dropoffCoord ?? (params.dropoff_lat && params.dropoff_lng
+      ? { lat: Number(params.dropoff_lat), lng: Number(params.dropoff_lng) }
+      : null);
+    if (!pickup.trim() || !dropoff.trim() || !pickupPoint || !dropoffPoint) {
+      Alert.alert("Choose both locations", "Select a pickup and drop-off location before requesting a ride.");
+      return;
+    }
+
+    try {
+      const trip = await createTrip({
+        pickupAddress: pickup.trim(),
+        dropoffAddress: dropoff.trim(),
+        city: pickupCity || dropoffCity || "Kathmandu",
+        pickupLat: pickupPoint.lat,
+        pickupLng: pickupPoint.lng,
+        dropoffLat: dropoffPoint.lat,
+        dropoffLng: dropoffPoint.lng,
+        vehicleType: selectedVehicle === "Bike" ? "BIKE" : "CAR",
+      });
+      router.replace({ pathname: "/ride/searching", params: { tripId: trip.id } });
+    } catch (error: any) {
+      Alert.alert("Could not request ride", error.response?.data?.message ?? "Please try again.");
+    }
+  }
 
   const hasSuggestions =
     activeField !== null;
@@ -310,7 +369,7 @@ export default function RequestRideScreen() {
               <Pressable
                 key={item.display_name}
                 style={styles.suggestionRow}
-                onPress={() => handleSelectSuggestion(item, activeField!)}
+                onPress={() => void handleSelectSuggestion(item, activeField!)}
               >
                 <View style={styles.suggestionIcon}>
                   <Feather name="map-pin" size={17} color="#2e4ed2" />
@@ -514,12 +573,7 @@ export default function RequestRideScreen() {
       <Pressable
         disabled={!dropoff.trim() || !riderDetailsValid}
         style={[styles.button, (!dropoff.trim() || !riderDetailsValid) && styles.disabled]}
-        onPress={() =>
-          router.replace({
-            pathname: "/ride/searching",
-            params: { vehicle: selectedVehicle, rider: selectedRider },
-          })
-        }
+        onPress={() => void submitRideRequest()}
       >
         <Text style={styles.buttonText}>Find a driver</Text>
         <Feather name="arrow-right" size={18} color="#FFFFFF" />

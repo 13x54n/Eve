@@ -1,44 +1,40 @@
+/**
+ * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
+ * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ */
+
 import '@/global.css';
+
 import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#0F172A',
-    background: '#F8FAFC',
-    backgroundElement: '#FFFFFF',
-    backgroundSelected: '#E2E8F0',
-    textSecondary: '#64748B',
+    text: '#000000',
+    background: '#ffffff',
+    backgroundElement: '#F0F0F3',
+    backgroundSelected: '#E0E1E6',
+    textSecondary: '#60646C',
   },
   dark: {
-    text: '#F8FAFC',
-    background: '#0F172A',
-    backgroundElement: '#1E293B',
-    backgroundSelected: '#334155',
-    textSecondary: '#94A3B8',
+    text: '#ffffff',
+    background: '#000000',
+    backgroundElement: '#212225',
+    backgroundSelected: '#2E3135',
+    textSecondary: '#B0B4BA',
   },
 } as const;
-
-export const DriverTheme = {
-  primary: '#0F172A',       // Sleek dark main header / buttons
-  accent: '#2563EB',        // Electric blue accents
-  onlineGreen: '#10B981',   // Uber Driver Online Emerald
-  offlineGray: '#64748B',   // Offline Slate
-  amberWarning: '#F59E0B',  // Pending / review warnings
-  dangerRed: '#EF4444',     // Cancellation / SOS
-  cardBg: '#FFFFFF',
-  pageBg: '#F8FAFC',
-  textMain: '#0F172A',
-  textMuted: '#64748B',
-  borderColor: '#E2E8F0',
-};
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
+    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
+    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
+    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
+    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {

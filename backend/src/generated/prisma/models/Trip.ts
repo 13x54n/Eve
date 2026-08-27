@@ -58,6 +58,7 @@ export type TripMinAggregateOutputType = {
   vehicleId: string | null
   status: $Enums.TripStatus | null
   rideType: $Enums.RideType | null
+  vehicleType: $Enums.VehicleType | null
   city: string | null
   zone: string | null
   pickupAddress: string | null
@@ -90,6 +91,7 @@ export type TripMaxAggregateOutputType = {
   vehicleId: string | null
   status: $Enums.TripStatus | null
   rideType: $Enums.RideType | null
+  vehicleType: $Enums.VehicleType | null
   city: string | null
   zone: string | null
   pickupAddress: string | null
@@ -122,6 +124,7 @@ export type TripCountAggregateOutputType = {
   vehicleId: number
   status: number
   rideType: number
+  vehicleType: number
   city: number
   zone: number
   pickupAddress: number
@@ -180,6 +183,7 @@ export type TripMinAggregateInputType = {
   vehicleId?: true
   status?: true
   rideType?: true
+  vehicleType?: true
   city?: true
   zone?: true
   pickupAddress?: true
@@ -212,6 +216,7 @@ export type TripMaxAggregateInputType = {
   vehicleId?: true
   status?: true
   rideType?: true
+  vehicleType?: true
   city?: true
   zone?: true
   pickupAddress?: true
@@ -244,6 +249,7 @@ export type TripCountAggregateInputType = {
   vehicleId?: true
   status?: true
   rideType?: true
+  vehicleType?: true
   city?: true
   zone?: true
   pickupAddress?: true
@@ -363,6 +369,7 @@ export type TripGroupByOutputType = {
   vehicleId: string | null
   status: $Enums.TripStatus
   rideType: $Enums.RideType
+  vehicleType: $Enums.VehicleType
   city: string
   zone: string | null
   pickupAddress: string
@@ -418,6 +425,7 @@ export type TripWhereInput = {
   vehicleId?: Prisma.StringNullableFilter<"Trip"> | string | null
   status?: Prisma.EnumTripStatusFilter<"Trip"> | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFilter<"Trip"> | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Trip"> | $Enums.VehicleType
   city?: Prisma.StringFilter<"Trip"> | string
   zone?: Prisma.StringNullableFilter<"Trip"> | string | null
   pickupAddress?: Prisma.StringFilter<"Trip"> | string
@@ -447,6 +455,7 @@ export type TripWhereInput = {
   ledger?: Prisma.LedgerEntryListRelationFilter
   tickets?: Prisma.SupportTicketListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
+  offers?: Prisma.TripOfferListRelationFilter
 }
 
 export type TripOrderByWithRelationInput = {
@@ -457,6 +466,7 @@ export type TripOrderByWithRelationInput = {
   vehicleId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   rideType?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   city?: Prisma.SortOrder
   zone?: Prisma.SortOrderInput | Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
@@ -486,6 +496,7 @@ export type TripOrderByWithRelationInput = {
   ledger?: Prisma.LedgerEntryOrderByRelationAggregateInput
   tickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   incidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
+  offers?: Prisma.TripOfferOrderByRelationAggregateInput
 }
 
 export type TripWhereUniqueInput = Prisma.AtLeast<{
@@ -499,6 +510,7 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   vehicleId?: Prisma.StringNullableFilter<"Trip"> | string | null
   status?: Prisma.EnumTripStatusFilter<"Trip"> | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFilter<"Trip"> | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Trip"> | $Enums.VehicleType
   city?: Prisma.StringFilter<"Trip"> | string
   zone?: Prisma.StringNullableFilter<"Trip"> | string | null
   pickupAddress?: Prisma.StringFilter<"Trip"> | string
@@ -528,6 +540,7 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   ledger?: Prisma.LedgerEntryListRelationFilter
   tickets?: Prisma.SupportTicketListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
+  offers?: Prisma.TripOfferListRelationFilter
 }, "id" | "bookingCode">
 
 export type TripOrderByWithAggregationInput = {
@@ -538,6 +551,7 @@ export type TripOrderByWithAggregationInput = {
   vehicleId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   rideType?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   city?: Prisma.SortOrder
   zone?: Prisma.SortOrderInput | Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
@@ -578,6 +592,7 @@ export type TripScalarWhereWithAggregatesInput = {
   vehicleId?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   status?: Prisma.EnumTripStatusWithAggregatesFilter<"Trip"> | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeWithAggregatesFilter<"Trip"> | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeWithAggregatesFilter<"Trip"> | $Enums.VehicleType
   city?: Prisma.StringWithAggregatesFilter<"Trip"> | string
   zone?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   pickupAddress?: Prisma.StringWithAggregatesFilter<"Trip"> | string
@@ -607,6 +622,7 @@ export type TripCreateInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -636,6 +652,7 @@ export type TripCreateInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateInput = {
@@ -646,6 +663,7 @@ export type TripUncheckedCreateInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -672,6 +690,7 @@ export type TripUncheckedCreateInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripUpdateInput = {
@@ -679,6 +698,7 @@ export type TripUpdateInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -708,6 +728,7 @@ export type TripUpdateInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateInput = {
@@ -718,6 +739,7 @@ export type TripUncheckedUpdateInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -744,6 +766,7 @@ export type TripUncheckedUpdateInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateManyInput = {
@@ -754,6 +777,7 @@ export type TripCreateManyInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -783,6 +807,7 @@ export type TripUpdateManyMutationInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -815,6 +840,7 @@ export type TripUncheckedUpdateManyInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -857,6 +883,7 @@ export type TripCountOrderByAggregateInput = {
   vehicleId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   rideType?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   city?: Prisma.SortOrder
   zone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
@@ -901,6 +928,7 @@ export type TripMaxOrderByAggregateInput = {
   vehicleId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   rideType?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   city?: Prisma.SortOrder
   zone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
@@ -933,6 +961,7 @@ export type TripMinOrderByAggregateInput = {
   vehicleId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   rideType?: Prisma.SortOrder
+  vehicleType?: Prisma.SortOrder
   city?: Prisma.SortOrder
   zone?: Prisma.SortOrder
   pickupAddress?: Prisma.SortOrder
@@ -1129,12 +1158,18 @@ export type EnumPaymentMethodKindFieldUpdateOperationsInput = {
   set?: $Enums.PaymentMethodKind
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
+export type TripCreateNestedOneWithoutOffersInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutOffersInput, Prisma.TripUncheckedCreateWithoutOffersInput>
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutOffersInput
+  connect?: Prisma.TripWhereUniqueInput
+}
+
+export type TripUpdateOneRequiredWithoutOffersNestedInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutOffersInput, Prisma.TripUncheckedCreateWithoutOffersInput>
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutOffersInput
+  upsert?: Prisma.TripUpsertWithoutOffersInput
+  connect?: Prisma.TripWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TripUpdateToOneWithWhereWithoutOffersInput, Prisma.TripUpdateWithoutOffersInput>, Prisma.TripUncheckedUpdateWithoutOffersInput>
 }
 
 export type TripCreateNestedOneWithoutEventsInput = {
@@ -1204,6 +1239,7 @@ export type TripCreateWithoutRiderInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1232,6 +1268,7 @@ export type TripCreateWithoutRiderInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutRiderInput = {
@@ -1241,6 +1278,7 @@ export type TripUncheckedCreateWithoutRiderInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1267,6 +1305,7 @@ export type TripUncheckedCreateWithoutRiderInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutRiderInput = {
@@ -1306,6 +1345,7 @@ export type TripScalarWhereInput = {
   vehicleId?: Prisma.StringNullableFilter<"Trip"> | string | null
   status?: Prisma.EnumTripStatusFilter<"Trip"> | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFilter<"Trip"> | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Trip"> | $Enums.VehicleType
   city?: Prisma.StringFilter<"Trip"> | string
   zone?: Prisma.StringNullableFilter<"Trip"> | string | null
   pickupAddress?: Prisma.StringFilter<"Trip"> | string
@@ -1335,6 +1375,7 @@ export type TripCreateWithoutDriverInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1363,6 +1404,7 @@ export type TripCreateWithoutDriverInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutDriverInput = {
@@ -1372,6 +1414,7 @@ export type TripUncheckedCreateWithoutDriverInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1398,6 +1441,7 @@ export type TripUncheckedCreateWithoutDriverInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutDriverInput = {
@@ -1431,6 +1475,7 @@ export type TripCreateWithoutVehicleInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1459,6 +1504,7 @@ export type TripCreateWithoutVehicleInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutVehicleInput = {
@@ -1468,6 +1514,7 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   driverId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1494,6 +1541,7 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutVehicleInput = {
@@ -1522,11 +1570,176 @@ export type TripUpdateManyWithWhereWithoutVehicleInput = {
   data: Prisma.XOR<Prisma.TripUpdateManyMutationInput, Prisma.TripUncheckedUpdateManyWithoutVehicleInput>
 }
 
+export type TripCreateWithoutOffersInput = {
+  id?: string
+  bookingCode: string
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  commission: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
+  driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
+  vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  events?: Prisma.TripEventCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+}
+
+export type TripUncheckedCreateWithoutOffersInput = {
+  id?: string
+  bookingCode: string
+  riderId: string
+  driverId?: string | null
+  vehicleId?: string | null
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  commission: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+}
+
+export type TripCreateOrConnectWithoutOffersInput = {
+  where: Prisma.TripWhereUniqueInput
+  create: Prisma.XOR<Prisma.TripCreateWithoutOffersInput, Prisma.TripUncheckedCreateWithoutOffersInput>
+}
+
+export type TripUpsertWithoutOffersInput = {
+  update: Prisma.XOR<Prisma.TripUpdateWithoutOffersInput, Prisma.TripUncheckedUpdateWithoutOffersInput>
+  create: Prisma.XOR<Prisma.TripCreateWithoutOffersInput, Prisma.TripUncheckedCreateWithoutOffersInput>
+  where?: Prisma.TripWhereInput
+}
+
+export type TripUpdateToOneWithWhereWithoutOffersInput = {
+  where?: Prisma.TripWhereInput
+  data: Prisma.XOR<Prisma.TripUpdateWithoutOffersInput, Prisma.TripUncheckedUpdateWithoutOffersInput>
+}
+
+export type TripUpdateWithoutOffersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  commission?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
+  driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
+  vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+}
+
+export type TripUncheckedUpdateWithoutOffersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  riderId?: Prisma.StringFieldUpdateOperationsInput | string
+  driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  commission?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+}
+
 export type TripCreateWithoutEventsInput = {
   id?: string
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1555,6 +1768,7 @@ export type TripCreateWithoutEventsInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutEventsInput = {
@@ -1565,6 +1779,7 @@ export type TripUncheckedCreateWithoutEventsInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1590,6 +1805,7 @@ export type TripUncheckedCreateWithoutEventsInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutEventsInput = {
@@ -1613,6 +1829,7 @@ export type TripUpdateWithoutEventsInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1641,6 +1858,7 @@ export type TripUpdateWithoutEventsInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutEventsInput = {
@@ -1651,6 +1869,7 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1676,6 +1895,7 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutLedgerInput = {
@@ -1683,6 +1903,7 @@ export type TripCreateWithoutLedgerInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1711,6 +1932,7 @@ export type TripCreateWithoutLedgerInput = {
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutLedgerInput = {
@@ -1721,6 +1943,7 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1746,6 +1969,7 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutLedgerInput = {
@@ -1769,6 +1993,7 @@ export type TripUpdateWithoutLedgerInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1797,6 +2022,7 @@ export type TripUpdateWithoutLedgerInput = {
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutLedgerInput = {
@@ -1807,6 +2033,7 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1832,6 +2059,7 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutTicketsInput = {
@@ -1839,6 +2067,7 @@ export type TripCreateWithoutTicketsInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1867,6 +2096,7 @@ export type TripCreateWithoutTicketsInput = {
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutTicketsInput = {
@@ -1877,6 +2107,7 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -1902,6 +2133,7 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutTicketsInput = {
@@ -1925,6 +2157,7 @@ export type TripUpdateWithoutTicketsInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1953,6 +2186,7 @@ export type TripUpdateWithoutTicketsInput = {
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutTicketsInput = {
@@ -1963,6 +2197,7 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1988,6 +2223,7 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutIncidentsInput = {
@@ -1995,6 +2231,7 @@ export type TripCreateWithoutIncidentsInput = {
   bookingCode: string
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -2023,6 +2260,7 @@ export type TripCreateWithoutIncidentsInput = {
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutIncidentsInput = {
@@ -2033,6 +2271,7 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -2058,6 +2297,7 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutIncidentsInput = {
@@ -2081,6 +2321,7 @@ export type TripUpdateWithoutIncidentsInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2109,6 +2350,7 @@ export type TripUpdateWithoutIncidentsInput = {
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutIncidentsInput = {
@@ -2119,6 +2361,7 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2144,6 +2387,7 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateManyRiderInput = {
@@ -2153,6 +2397,7 @@ export type TripCreateManyRiderInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -2182,6 +2427,7 @@ export type TripUpdateWithoutRiderInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2210,6 +2456,7 @@ export type TripUpdateWithoutRiderInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutRiderInput = {
@@ -2219,6 +2466,7 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2245,6 +2493,7 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutRiderInput = {
@@ -2254,6 +2503,7 @@ export type TripUncheckedUpdateManyWithoutRiderInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2285,6 +2535,7 @@ export type TripCreateManyDriverInput = {
   vehicleId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -2314,6 +2565,7 @@ export type TripUpdateWithoutDriverInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2342,6 +2594,7 @@ export type TripUpdateWithoutDriverInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutDriverInput = {
@@ -2351,6 +2604,7 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2377,6 +2631,7 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutDriverInput = {
@@ -2386,6 +2641,7 @@ export type TripUncheckedUpdateManyWithoutDriverInput = {
   vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2417,6 +2673,7 @@ export type TripCreateManyVehicleInput = {
   driverId?: string | null
   status: $Enums.TripStatus
   rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
   city: string
   zone?: string | null
   pickupAddress: string
@@ -2446,6 +2703,7 @@ export type TripUpdateWithoutVehicleInput = {
   bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2474,6 +2732,7 @@ export type TripUpdateWithoutVehicleInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutVehicleInput = {
@@ -2483,6 +2742,7 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2509,6 +2769,7 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutVehicleInput = {
@@ -2518,6 +2779,7 @@ export type TripUncheckedUpdateManyWithoutVehicleInput = {
   driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
   rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
   city?: Prisma.StringFieldUpdateOperationsInput | string
   zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
@@ -2552,6 +2814,7 @@ export type TripCountOutputType = {
   ledger: number
   tickets: number
   incidents: number
+  offers: number
 }
 
 export type TripCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2559,6 +2822,7 @@ export type TripCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   ledger?: boolean | TripCountOutputTypeCountLedgerArgs
   tickets?: boolean | TripCountOutputTypeCountTicketsArgs
   incidents?: boolean | TripCountOutputTypeCountIncidentsArgs
+  offers?: boolean | TripCountOutputTypeCountOffersArgs
 }
 
 /**
@@ -2599,6 +2863,13 @@ export type TripCountOutputTypeCountIncidentsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.SafetyIncidentWhereInput
 }
 
+/**
+ * TripCountOutputType without action
+ */
+export type TripCountOutputTypeCountOffersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TripOfferWhereInput
+}
+
 
 export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2608,6 +2879,7 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   vehicleId?: boolean
   status?: boolean
   rideType?: boolean
+  vehicleType?: boolean
   city?: boolean
   zone?: boolean
   pickupAddress?: boolean
@@ -2637,6 +2909,7 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   ledger?: boolean | Prisma.Trip$ledgerArgs<ExtArgs>
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
   incidents?: boolean | Prisma.Trip$incidentsArgs<ExtArgs>
+  offers?: boolean | Prisma.Trip$offersArgs<ExtArgs>
   _count?: boolean | Prisma.TripCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["trip"]>
 
@@ -2648,6 +2921,7 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   vehicleId?: boolean
   status?: boolean
   rideType?: boolean
+  vehicleType?: boolean
   city?: boolean
   zone?: boolean
   pickupAddress?: boolean
@@ -2683,6 +2957,7 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   vehicleId?: boolean
   status?: boolean
   rideType?: boolean
+  vehicleType?: boolean
   city?: boolean
   zone?: boolean
   pickupAddress?: boolean
@@ -2718,6 +2993,7 @@ export type TripSelectScalar = {
   vehicleId?: boolean
   status?: boolean
   rideType?: boolean
+  vehicleType?: boolean
   city?: boolean
   zone?: boolean
   pickupAddress?: boolean
@@ -2742,7 +3018,7 @@ export type TripSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "distanceKm" | "durationMin" | "fareTotal" | "commission" | "paymentStatus" | "paymentMethod" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
+export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "distanceKm" | "durationMin" | "fareTotal" | "commission" | "paymentStatus" | "paymentMethod" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
 export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
@@ -2751,6 +3027,7 @@ export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   ledger?: boolean | Prisma.Trip$ledgerArgs<ExtArgs>
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
   incidents?: boolean | Prisma.Trip$incidentsArgs<ExtArgs>
+  offers?: boolean | Prisma.Trip$offersArgs<ExtArgs>
   _count?: boolean | Prisma.TripCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TripIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2774,6 +3051,7 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     ledger: Prisma.$LedgerEntryPayload<ExtArgs>[]
     tickets: Prisma.$SupportTicketPayload<ExtArgs>[]
     incidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
+    offers: Prisma.$TripOfferPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2783,6 +3061,7 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     vehicleId: string | null
     status: $Enums.TripStatus
     rideType: $Enums.RideType
+    vehicleType: $Enums.VehicleType
     city: string
     zone: string | null
     pickupAddress: string
@@ -3206,6 +3485,7 @@ export interface Prisma__TripClient<T, Null = never, ExtArgs extends runtime.Typ
   ledger<T extends Prisma.Trip$ledgerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$ledgerArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LedgerEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tickets<T extends Prisma.Trip$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidents<T extends Prisma.Trip$incidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$incidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  offers<T extends Prisma.Trip$offersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$offersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripOfferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3242,6 +3522,7 @@ export interface TripFieldRefs {
   readonly vehicleId: Prisma.FieldRef<"Trip", 'String'>
   readonly status: Prisma.FieldRef<"Trip", 'TripStatus'>
   readonly rideType: Prisma.FieldRef<"Trip", 'RideType'>
+  readonly vehicleType: Prisma.FieldRef<"Trip", 'VehicleType'>
   readonly city: Prisma.FieldRef<"Trip", 'String'>
   readonly zone: Prisma.FieldRef<"Trip", 'String'>
   readonly pickupAddress: Prisma.FieldRef<"Trip", 'String'>
@@ -3796,6 +4077,30 @@ export type Trip$incidentsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.SafetyIncidentScalarFieldEnum | Prisma.SafetyIncidentScalarFieldEnum[]
+}
+
+/**
+ * Trip.offers
+ */
+export type Trip$offersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TripOffer
+   */
+  select?: Prisma.TripOfferSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TripOffer
+   */
+  omit?: Prisma.TripOfferOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TripOfferInclude<ExtArgs> | null
+  where?: Prisma.TripOfferWhereInput
+  orderBy?: Prisma.TripOfferOrderByWithRelationInput | Prisma.TripOfferOrderByWithRelationInput[]
+  cursor?: Prisma.TripOfferWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TripOfferScalarFieldEnum | Prisma.TripOfferScalarFieldEnum[]
 }
 
 /**

@@ -2,21 +2,27 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { api } from "@/lib/api";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
+  ErrorBanner,
+  Field,
   FilterBar,
   Guard,
   Input,
+  PageHeader,
   Panel,
   Select,
   Table,
+  money,
   statusTone,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 type TripList = {
   total: number;
@@ -39,102 +45,164 @@ export default function TripsPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
   const [city, setCity] = useState("");
+  const delayedQ = useDebouncedValue(q);
+  const delayedCity = useDebouncedValue(city);
   const path = useMemo(() => {
     const params = new URLSearchParams();
-    if (q) params.set("q", q);
+    if (delayedQ) params.set("q", delayedQ);
     if (status) params.set("status", status);
-    if (city) params.set("city", city);
+    if (delayedCity) params.set("city", delayedCity);
     return `/admin/trips?${params}`;
-  }, [q, status, city]);
-  const { data, reload } = useApi<TripList>(path);
+  }, [delayedQ, status, delayedCity]);
+  const { data, reload, error, loading } = useApi<TripList>(path);
   const dispatch = can(user, "trips:dispatch");
 
   async function createTrip(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    await api("/admin/trips", {
-      method: "POST",
-      body: JSON.stringify({
-        riderId: form.get("riderId"),
-        pickupAddress: form.get("pickup"),
-        dropoffAddress: form.get("dropoff"),
-        city: form.get("city"),
-        rideType: form.get("rideType"),
-      }),
-    });
-    await reload();
+    try {
+      await api("/admin/trips", {
+        method: "POST",
+        body: JSON.stringify({
+          riderId: form.get("riderId"),
+          pickupAddress: form.get("pickup"),
+          dropoffAddress: form.get("dropoff"),
+          city: form.get("city"),
+          rideType: form.get("rideType"),
+          vehicleType: form.get("vehicleType"),
+          pickupLat: Number(form.get("pickupLat")),
+          pickupLng: Number(form.get("pickupLng")),
+          dropoffLat: Number(form.get("dropoffLat")),
+          dropoffLng: Number(form.get("dropoffLng")),
+        }),
+      });
+      await reload();
+      toast.success("Trip created");
+      event.currentTarget.reset();
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
+    }
   }
 
   return (
     <Guard allowed={can(user, "trips:read")}>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Trip & dispatch</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Monitor real-time ride states, dispatch interventions, and manage bookings.
-          </p>
-        </div>
-        <FilterBar>
-          <Input
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            placeholder="Search booking, rider, driver, route"
-            className="w-full sm:w-72"
-          />
-          <Input
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-            placeholder="City / zone"
-            className="w-full sm:w-44"
-          />
-          <Select value={status} onChange={(event) => setStatus(event.target.value)} className="w-full sm:w-48">
-            <option value="">All statuses</option>
-            {["SCHEDULED", "SEARCHING", "ASSIGNED", "ONGOING", "COMPLETED", "CANCELLED", "NO_DRIVER", "DRIVER_NO_SHOW", "RIDER_NO_SHOW", "TECHNICAL_FAILURE"].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </Select>
-        </FilterBar>
-        {dispatch ? (
+      <PageHeader title="Trips" subtitle="Live ride states, dispatch, and bookings." />
+      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+      {dispatch ? (
+        <div className="mb-5">
           <Panel title="Create booking on behalf of a rider">
-            <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5" onSubmit={createTrip}>
-              <Input name="riderId" placeholder="Rider user or profile ID" required />
-              <Input name="pickup" placeholder="Pickup address" required />
-              <Input name="dropoff" placeholder="Destination address" required />
-              <Input name="city" placeholder="City" defaultValue="New York" />
-              <Select name="rideType" defaultValue="STANDARD">
-                <option>STANDARD</option>
-                <option>AIRPORT</option>
-                <option>MULTI_STOP</option>
-                <option>SCHEDULED</option>
-                <option>CORPORATE</option>
-              </Select>
-              <Button className="sm:col-span-2 lg:col-span-5">Create trip</Button>
+            <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" onSubmit={createTrip}>
+              <Field label="Rider ID">
+                <Input name="riderId" className="w-full" placeholder="User or profile ID" required />
+              </Field>
+              <Field label="Pickup">
+                <Input name="pickup" className="w-full" placeholder="Pickup address" required />
+              </Field>
+              <Field label="Dropoff">
+                <Input name="dropoff" className="w-full" placeholder="Destination" required />
+              </Field>
+              <Field label="City">
+                <Input name="city" className="w-full" placeholder="City" required />
+              </Field>
+              <Field label="Service">
+                <Select name="rideType" defaultValue="STANDARD" className="w-full">
+                  <option>STANDARD</option>
+                  <option>AIRPORT</option>
+                  <option>MULTI_STOP</option>
+                  <option>SCHEDULED</option>
+                  <option>CORPORATE</option>
+                </Select>
+              </Field>
+              <Field label="Vehicle">
+                <Select name="vehicleType" defaultValue="CAR" className="w-full">
+                  <option value="CAR">Car</option>
+                  <option value="BIKE">Bike</option>
+                </Select>
+              </Field>
+              <Field label="Pickup lat">
+                <Input name="pickupLat" className="w-full" type="number" step="any" required />
+              </Field>
+              <Field label="Pickup lng">
+                <Input name="pickupLng" className="w-full" type="number" step="any" required />
+              </Field>
+              <Field label="Dropoff lat">
+                <Input name="dropoffLat" className="w-full" type="number" step="any" required />
+              </Field>
+              <Field label="Dropoff lng">
+                <Input name="dropoffLng" className="w-full" type="number" step="any" required />
+              </Field>
+              <div className="flex items-end sm:col-span-2 lg:col-span-3">
+                <Button>Create trip</Button>
+              </div>
             </form>
           </Panel>
-        ) : null}
-        <Panel title={`${data?.total ?? 0} trips`}>
-          <Table
-            columns={["Booking Code", "People", "Route", "Service", "Fare", "Status"]}
-            rows={(data?.items ?? []).map((trip) => [
-              <Link key={trip.id} className="font-mono font-semibold text-[#2e4ed2] transition hover:underline" href={`/trips/${trip.id}`}>
-                {trip.bookingCode}
-              </Link>,
-              <div key="p">
-                <p className="font-medium text-slate-800">{trip.rider.name}</p>
-                <p className="text-xs text-slate-500">{trip.driver?.name ? `Driver: ${trip.driver.name}` : "No driver assigned"}</p>
-              </div>,
-              <div key="r" className="max-w-xs truncate text-xs text-slate-600">
-                <p className="truncate font-medium text-slate-800">{trip.pickupAddress}</p>
-                <p className="truncate text-slate-500">to {trip.dropoffAddress}</p>
-              </div>,
-              <span key="t" className="font-medium text-slate-700">{trip.rideType}</span>,
-              <span key="f" className="font-semibold text-slate-900">{`$${trip.fareTotal.toFixed(2)}`}</span>,
-              <Badge key="s" tone={statusTone(trip.status)}>{trip.status}</Badge>,
-            ])}
-          />
-        </Panel>
-      </div>
+        </div>
+      ) : null}
+      <Panel
+        title={`${data?.total ?? 0} trips`}
+        actions={
+          <FilterBar>
+            <Input
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              placeholder="Booking, rider, driver"
+              className="w-52"
+            />
+            <Input
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              placeholder="City"
+              className="w-32"
+            />
+            <Select value={status} onChange={(event) => setStatus(event.target.value)} className="w-40">
+              <option value="">All statuses</option>
+              {[
+                "SCHEDULED",
+                "SEARCHING",
+                "ASSIGNED",
+                "ONGOING",
+                "COMPLETED",
+                "CANCELLED",
+                "NO_DRIVER",
+                "DRIVER_NO_SHOW",
+                "RIDER_NO_SHOW",
+                "TECHNICAL_FAILURE",
+              ].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </Select>
+          </FilterBar>
+        }
+        flush
+      >
+        <Table
+          loading={loading && !data}
+          empty="No trips match the current filters."
+          columns={["Booking", "People", "Route", "Service", "Fare", "Status"]}
+          rows={(data?.items ?? []).map((trip) => [
+            <Link key={trip.id} className="font-mono font-semibold hover:underline" href={`/trips/${trip.id}`}>
+              {trip.bookingCode}
+            </Link>,
+            <div key="p">
+              <p className="font-medium">{trip.rider.name}</p>
+              <p className="text-[12px] text-muted-foreground">
+                {trip.driver?.name ? `Driver: ${trip.driver.name}` : "Unassigned"}
+              </p>
+            </div>,
+            <div key="r" className="max-w-xs">
+              <p className="truncate font-medium">{trip.pickupAddress}</p>
+              <p className="truncate text-[12px] text-muted-foreground">to {trip.dropoffAddress}</p>
+            </div>,
+            trip.rideType,
+            <span key="f" className="font-semibold">
+              {money(trip.fareTotal)}
+            </span>,
+            <Badge key="s" tone={statusTone(trip.status)}>
+              {trip.status}
+            </Badge>,
+          ])}
+        />
+      </Panel>
     </Guard>
   );
 }
-

@@ -7,6 +7,7 @@ import {
   driverPresenceSchema,
   driverRegisterSchema,
   driverVehicleSchema,
+  driverOfferSchema,
   tripActionSchema,
 } from "../validation/driver.validation.js";
 
@@ -99,6 +100,27 @@ export async function saveDocument(
   } catch (error) {
     next(error);
   }
+}
+
+export async function documentUploadAuth(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    res.status(200).json(driverService.getDocumentUploadAuth());
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createOffer(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = getAuthUser(req);
+    const data = driverOfferSchema.parse(req.body);
+    const offer = await driverService.createTripOffer(user.id, String(req.params.id), data);
+    res.status(201).json({ offer });
+  } catch (error) { next(error); }
 }
 
 export async function incomingTrips(

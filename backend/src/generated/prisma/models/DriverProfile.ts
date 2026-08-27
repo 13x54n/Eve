@@ -327,6 +327,7 @@ export type DriverProfileWhereInput = {
   trips?: Prisma.TripListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
   incentives?: Prisma.DriverIncentiveListRelationFilter
+  offers?: Prisma.TripOfferListRelationFilter
 }
 
 export type DriverProfileOrderByWithRelationInput = {
@@ -352,6 +353,7 @@ export type DriverProfileOrderByWithRelationInput = {
   trips?: Prisma.TripOrderByRelationAggregateInput
   incidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
   incentives?: Prisma.DriverIncentiveOrderByRelationAggregateInput
+  offers?: Prisma.TripOfferOrderByRelationAggregateInput
 }
 
 export type DriverProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -380,6 +382,7 @@ export type DriverProfileWhereUniqueInput = Prisma.AtLeast<{
   trips?: Prisma.TripListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
   incentives?: Prisma.DriverIncentiveListRelationFilter
+  offers?: Prisma.TripOfferListRelationFilter
 }, "id" | "userId">
 
 export type DriverProfileOrderByWithAggregationInput = {
@@ -447,6 +450,7 @@ export type DriverProfileCreateInput = {
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateInput = {
@@ -470,6 +474,7 @@ export type DriverProfileUncheckedCreateInput = {
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUpdateInput = {
@@ -493,6 +498,7 @@ export type DriverProfileUpdateInput = {
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateInput = {
@@ -516,6 +522,7 @@ export type DriverProfileUncheckedUpdateInput = {
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateManyInput = {
@@ -800,6 +807,20 @@ export type DriverProfileUpdateOneWithoutTripsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DriverProfileUpdateToOneWithWhereWithoutTripsInput, Prisma.DriverProfileUpdateWithoutTripsInput>, Prisma.DriverProfileUncheckedUpdateWithoutTripsInput>
 }
 
+export type DriverProfileCreateNestedOneWithoutOffersInput = {
+  create?: Prisma.XOR<Prisma.DriverProfileCreateWithoutOffersInput, Prisma.DriverProfileUncheckedCreateWithoutOffersInput>
+  connectOrCreate?: Prisma.DriverProfileCreateOrConnectWithoutOffersInput
+  connect?: Prisma.DriverProfileWhereUniqueInput
+}
+
+export type DriverProfileUpdateOneRequiredWithoutOffersNestedInput = {
+  create?: Prisma.XOR<Prisma.DriverProfileCreateWithoutOffersInput, Prisma.DriverProfileUncheckedCreateWithoutOffersInput>
+  connectOrCreate?: Prisma.DriverProfileCreateOrConnectWithoutOffersInput
+  upsert?: Prisma.DriverProfileUpsertWithoutOffersInput
+  connect?: Prisma.DriverProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DriverProfileUpdateToOneWithWhereWithoutOffersInput, Prisma.DriverProfileUpdateWithoutOffersInput>, Prisma.DriverProfileUncheckedUpdateWithoutOffersInput>
+}
+
 export type DriverProfileCreateNestedOneWithoutIncidentsInput = {
   create?: Prisma.XOR<Prisma.DriverProfileCreateWithoutIncidentsInput, Prisma.DriverProfileUncheckedCreateWithoutIncidentsInput>
   connectOrCreate?: Prisma.DriverProfileCreateOrConnectWithoutIncidentsInput
@@ -850,6 +871,7 @@ export type DriverProfileCreateWithoutUserInput = {
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutUserInput = {
@@ -872,6 +894,7 @@ export type DriverProfileUncheckedCreateWithoutUserInput = {
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutUserInput = {
@@ -910,6 +933,7 @@ export type DriverProfileUpdateWithoutUserInput = {
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutUserInput = {
@@ -932,6 +956,7 @@ export type DriverProfileUncheckedUpdateWithoutUserInput = {
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateWithoutFleetCompanyInput = {
@@ -954,6 +979,7 @@ export type DriverProfileCreateWithoutFleetCompanyInput = {
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutFleetCompanyInput = {
@@ -976,6 +1002,7 @@ export type DriverProfileUncheckedCreateWithoutFleetCompanyInput = {
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutFleetCompanyInput = {
@@ -1045,6 +1072,7 @@ export type DriverProfileCreateWithoutVehiclesInput = {
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutVehiclesInput = {
@@ -1067,6 +1095,7 @@ export type DriverProfileUncheckedCreateWithoutVehiclesInput = {
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutVehiclesInput = {
@@ -1105,6 +1134,7 @@ export type DriverProfileUpdateWithoutVehiclesInput = {
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutVehiclesInput = {
@@ -1127,6 +1157,7 @@ export type DriverProfileUncheckedUpdateWithoutVehiclesInput = {
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateWithoutDocumentsInput = {
@@ -1149,6 +1180,7 @@ export type DriverProfileCreateWithoutDocumentsInput = {
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutDocumentsInput = {
@@ -1171,6 +1203,7 @@ export type DriverProfileUncheckedCreateWithoutDocumentsInput = {
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutDocumentsInput = {
@@ -1209,6 +1242,7 @@ export type DriverProfileUpdateWithoutDocumentsInput = {
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutDocumentsInput = {
@@ -1231,6 +1265,7 @@ export type DriverProfileUncheckedUpdateWithoutDocumentsInput = {
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateWithoutTripsInput = {
@@ -1253,6 +1288,7 @@ export type DriverProfileCreateWithoutTripsInput = {
   vehicles?: Prisma.VehicleCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutTripsInput = {
@@ -1275,6 +1311,7 @@ export type DriverProfileUncheckedCreateWithoutTripsInput = {
   vehicles?: Prisma.VehicleUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutTripsInput = {
@@ -1313,6 +1350,7 @@ export type DriverProfileUpdateWithoutTripsInput = {
   vehicles?: Prisma.VehicleUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutTripsInput = {
@@ -1333,6 +1371,115 @@ export type DriverProfileUncheckedUpdateWithoutTripsInput = {
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   documents?: Prisma.DriverDocumentUncheckedUpdateManyWithoutDriverNestedInput
   vehicles?: Prisma.VehicleUncheckedUpdateManyWithoutDriverNestedInput
+  incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
+  incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
+}
+
+export type DriverProfileCreateWithoutOffersInput = {
+  id?: string
+  approvalStatus?: $Enums.DriverApprovalStatus
+  presence?: $Enums.DriverPresence
+  rating?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  acceptanceRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  commissionTier?: string
+  city?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  notes?: string | null
+  user: Prisma.UserCreateNestedOneWithoutDriverProfileInput
+  fleetCompany?: Prisma.FleetCompanyCreateNestedOneWithoutDriversInput
+  documents?: Prisma.DriverDocumentCreateNestedManyWithoutDriverInput
+  vehicles?: Prisma.VehicleCreateNestedManyWithoutDriverInput
+  trips?: Prisma.TripCreateNestedManyWithoutDriverInput
+  incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
+  incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+}
+
+export type DriverProfileUncheckedCreateWithoutOffersInput = {
+  id?: string
+  userId: string
+  fleetCompanyId?: string | null
+  approvalStatus?: $Enums.DriverApprovalStatus
+  presence?: $Enums.DriverPresence
+  rating?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  acceptanceRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  commissionTier?: string
+  city?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  notes?: string | null
+  documents?: Prisma.DriverDocumentUncheckedCreateNestedManyWithoutDriverInput
+  vehicles?: Prisma.VehicleUncheckedCreateNestedManyWithoutDriverInput
+  trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
+  incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
+  incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+}
+
+export type DriverProfileCreateOrConnectWithoutOffersInput = {
+  where: Prisma.DriverProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.DriverProfileCreateWithoutOffersInput, Prisma.DriverProfileUncheckedCreateWithoutOffersInput>
+}
+
+export type DriverProfileUpsertWithoutOffersInput = {
+  update: Prisma.XOR<Prisma.DriverProfileUpdateWithoutOffersInput, Prisma.DriverProfileUncheckedUpdateWithoutOffersInput>
+  create: Prisma.XOR<Prisma.DriverProfileCreateWithoutOffersInput, Prisma.DriverProfileUncheckedCreateWithoutOffersInput>
+  where?: Prisma.DriverProfileWhereInput
+}
+
+export type DriverProfileUpdateToOneWithWhereWithoutOffersInput = {
+  where?: Prisma.DriverProfileWhereInput
+  data: Prisma.XOR<Prisma.DriverProfileUpdateWithoutOffersInput, Prisma.DriverProfileUncheckedUpdateWithoutOffersInput>
+}
+
+export type DriverProfileUpdateWithoutOffersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  approvalStatus?: Prisma.EnumDriverApprovalStatusFieldUpdateOperationsInput | $Enums.DriverApprovalStatus
+  presence?: Prisma.EnumDriverPresenceFieldUpdateOperationsInput | $Enums.DriverPresence
+  rating?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  acceptanceRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  commissionTier?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutDriverProfileNestedInput
+  fleetCompany?: Prisma.FleetCompanyUpdateOneWithoutDriversNestedInput
+  documents?: Prisma.DriverDocumentUpdateManyWithoutDriverNestedInput
+  vehicles?: Prisma.VehicleUpdateManyWithoutDriverNestedInput
+  trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
+  incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
+  incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+}
+
+export type DriverProfileUncheckedUpdateWithoutOffersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  fleetCompanyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  approvalStatus?: Prisma.EnumDriverApprovalStatusFieldUpdateOperationsInput | $Enums.DriverApprovalStatus
+  presence?: Prisma.EnumDriverPresenceFieldUpdateOperationsInput | $Enums.DriverPresence
+  rating?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  acceptanceRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  commissionTier?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  documents?: Prisma.DriverDocumentUncheckedUpdateManyWithoutDriverNestedInput
+  vehicles?: Prisma.VehicleUncheckedUpdateManyWithoutDriverNestedInput
+  trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
 }
@@ -1357,6 +1504,7 @@ export type DriverProfileCreateWithoutIncidentsInput = {
   vehicles?: Prisma.VehicleCreateNestedManyWithoutDriverInput
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutIncidentsInput = {
@@ -1379,6 +1527,7 @@ export type DriverProfileUncheckedCreateWithoutIncidentsInput = {
   vehicles?: Prisma.VehicleUncheckedCreateNestedManyWithoutDriverInput
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incentives?: Prisma.DriverIncentiveUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutIncidentsInput = {
@@ -1417,6 +1566,7 @@ export type DriverProfileUpdateWithoutIncidentsInput = {
   vehicles?: Prisma.VehicleUpdateManyWithoutDriverNestedInput
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutIncidentsInput = {
@@ -1439,6 +1589,7 @@ export type DriverProfileUncheckedUpdateWithoutIncidentsInput = {
   vehicles?: Prisma.VehicleUncheckedUpdateManyWithoutDriverNestedInput
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateWithoutIncentivesInput = {
@@ -1461,6 +1612,7 @@ export type DriverProfileCreateWithoutIncentivesInput = {
   vehicles?: Prisma.VehicleCreateNestedManyWithoutDriverInput
   trips?: Prisma.TripCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileUncheckedCreateWithoutIncentivesInput = {
@@ -1483,6 +1635,7 @@ export type DriverProfileUncheckedCreateWithoutIncentivesInput = {
   vehicles?: Prisma.VehicleUncheckedCreateNestedManyWithoutDriverInput
   trips?: Prisma.TripUncheckedCreateNestedManyWithoutDriverInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutDriverInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutDriverInput
 }
 
 export type DriverProfileCreateOrConnectWithoutIncentivesInput = {
@@ -1521,6 +1674,7 @@ export type DriverProfileUpdateWithoutIncentivesInput = {
   vehicles?: Prisma.VehicleUpdateManyWithoutDriverNestedInput
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutIncentivesInput = {
@@ -1543,6 +1697,7 @@ export type DriverProfileUncheckedUpdateWithoutIncentivesInput = {
   vehicles?: Prisma.VehicleUncheckedUpdateManyWithoutDriverNestedInput
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileCreateManyFleetCompanyInput = {
@@ -1582,6 +1737,7 @@ export type DriverProfileUpdateWithoutFleetCompanyInput = {
   trips?: Prisma.TripUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateWithoutFleetCompanyInput = {
@@ -1604,6 +1760,7 @@ export type DriverProfileUncheckedUpdateWithoutFleetCompanyInput = {
   trips?: Prisma.TripUncheckedUpdateManyWithoutDriverNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutDriverNestedInput
   incentives?: Prisma.DriverIncentiveUncheckedUpdateManyWithoutDriverNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutDriverNestedInput
 }
 
 export type DriverProfileUncheckedUpdateManyWithoutFleetCompanyInput = {
@@ -1634,6 +1791,7 @@ export type DriverProfileCountOutputType = {
   trips: number
   incidents: number
   incentives: number
+  offers: number
 }
 
 export type DriverProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1642,6 +1800,7 @@ export type DriverProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Ext
   trips?: boolean | DriverProfileCountOutputTypeCountTripsArgs
   incidents?: boolean | DriverProfileCountOutputTypeCountIncidentsArgs
   incentives?: boolean | DriverProfileCountOutputTypeCountIncentivesArgs
+  offers?: boolean | DriverProfileCountOutputTypeCountOffersArgs
 }
 
 /**
@@ -1689,6 +1848,13 @@ export type DriverProfileCountOutputTypeCountIncentivesArgs<ExtArgs extends runt
   where?: Prisma.DriverIncentiveWhereInput
 }
 
+/**
+ * DriverProfileCountOutputType without action
+ */
+export type DriverProfileCountOutputTypeCountOffersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TripOfferWhereInput
+}
+
 
 export type DriverProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1713,6 +1879,7 @@ export type DriverProfileSelect<ExtArgs extends runtime.Types.Extensions.Interna
   trips?: boolean | Prisma.DriverProfile$tripsArgs<ExtArgs>
   incidents?: boolean | Prisma.DriverProfile$incidentsArgs<ExtArgs>
   incentives?: boolean | Prisma.DriverProfile$incentivesArgs<ExtArgs>
+  offers?: boolean | Prisma.DriverProfile$offersArgs<ExtArgs>
   _count?: boolean | Prisma.DriverProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["driverProfile"]>
 
@@ -1783,6 +1950,7 @@ export type DriverProfileInclude<ExtArgs extends runtime.Types.Extensions.Intern
   trips?: boolean | Prisma.DriverProfile$tripsArgs<ExtArgs>
   incidents?: boolean | Prisma.DriverProfile$incidentsArgs<ExtArgs>
   incentives?: boolean | Prisma.DriverProfile$incentivesArgs<ExtArgs>
+  offers?: boolean | Prisma.DriverProfile$offersArgs<ExtArgs>
   _count?: boolean | Prisma.DriverProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DriverProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1804,6 +1972,7 @@ export type $DriverProfilePayload<ExtArgs extends runtime.Types.Extensions.Inter
     trips: Prisma.$TripPayload<ExtArgs>[]
     incidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
     incentives: Prisma.$DriverIncentivePayload<ExtArgs>[]
+    offers: Prisma.$TripOfferPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2222,6 +2391,7 @@ export interface Prisma__DriverProfileClient<T, Null = never, ExtArgs extends ru
   trips<T extends Prisma.DriverProfile$tripsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DriverProfile$tripsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidents<T extends Prisma.DriverProfile$incidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DriverProfile$incidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incentives<T extends Prisma.DriverProfile$incentivesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DriverProfile$incentivesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DriverIncentivePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  offers<T extends Prisma.DriverProfile$offersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.DriverProfile$offersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripOfferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2803,6 +2973,30 @@ export type DriverProfile$incentivesArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.DriverIncentiveScalarFieldEnum | Prisma.DriverIncentiveScalarFieldEnum[]
+}
+
+/**
+ * DriverProfile.offers
+ */
+export type DriverProfile$offersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TripOffer
+   */
+  select?: Prisma.TripOfferSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TripOffer
+   */
+  omit?: Prisma.TripOfferOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TripOfferInclude<ExtArgs> | null
+  where?: Prisma.TripOfferWhereInput
+  orderBy?: Prisma.TripOfferOrderByWithRelationInput | Prisma.TripOfferOrderByWithRelationInput[]
+  cursor?: Prisma.TripOfferWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TripOfferScalarFieldEnum | Prisma.TripOfferScalarFieldEnum[]
 }
 
 /**

@@ -2,6 +2,7 @@ import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../config/prisma.js";
 import { money, startOfDay } from "../utils/serialize.js";
 import { recordTripEvent, writeAudit } from "./audit.service.js";
+import { calculateFare, distanceKm, durationMinutes } from "../utils/trip-pricing.js";
 
 function parseFilters(query: Record<string, unknown>) {
   const city = typeof query.city === "string" && query.city ? query.city : undefined;
@@ -782,6 +783,11 @@ export async function createTrip(
     pickupAddress: string;
     dropoffAddress: string;
     city: string;
+    pickupLat: number;
+    pickupLng: number;
+    dropoffLat: number;
+    dropoffLng: number;
+    vehicleType: "BIKE" | "CAR";
     rideType?: Prisma.TripCreateInput["rideType"];
     scheduledAt?: string;
     driverId?: string;
@@ -798,6 +804,15 @@ export async function createTrip(
     throw error;
   }
 
+  const distance = distanceKm(body.pickupLat, body.pickupLng, body.dropoffLat, body.dropoffLng);
+  if (!Number.isFinite(distance) || distance < 0.05) {
+    const error = new Error("Pickup and drop-off must be different, real locations");
+    error.name = "ConflictError";
+    throw error;
+  }
+  const duration = durationMinutes(distance);
+  const fare = await calculateFare(body.city, body.vehicleType, distance, duration);
+
   const trip = await prisma.trip.create({
     data: {
       bookingCode: `EVE-${Date.now().toString(36).toUpperCase()}`,
@@ -809,18 +824,19 @@ export async function createTrip(
           ? "ASSIGNED"
           : "SEARCHING",
       rideType: body.rideType ?? "STANDARD",
+      vehicleType: body.vehicleType,
       city: body.city,
       pickupAddress: body.pickupAddress,
       dropoffAddress: body.dropoffAddress,
-      pickupLat: 40.7128,
-      pickupLng: -74.006,
-      dropoffLat: 40.758,
-      dropoffLng: -73.9855,
-      distanceKm: 5,
-      durationMin: 18,
-      fareTotal: 18.5,
-      commission: 3.7,
-      paymentMethod: "CARD",
+      pickupLat: body.pickupLat,
+      pickupLng: body.pickupLng,
+      dropoffLat: body.dropoffLat,
+      dropoffLng: body.dropoffLng,
+      distanceKm: distance,
+      durationMin: duration,
+      fareTotal: fare,
+      commission: fare * 0.2,
+      paymentMethod: "CASH",
       scheduledAt: body.scheduledAt ? new Date(body.scheduledAt) : null,
     },
   });

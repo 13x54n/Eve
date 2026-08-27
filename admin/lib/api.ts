@@ -35,6 +35,10 @@ export class ApiError extends Error {
   }
 }
 
+export function apiErrorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : "Something went wrong";
+}
+
 export async function api<T>(
   path: string,
   options: RequestInit = {},

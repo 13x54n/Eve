@@ -5,6 +5,8 @@ import {
   arrivedAtPickup,
   cancelTrip,
   completeTrip,
+  createOffer,
+  documentUploadAuth,
   earnings,
   incomingTrips,
   login,
@@ -27,15 +29,26 @@ const driverAuthLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const driverApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Driver Auth
 router.post("/register", driverAuthLimiter, register);
 router.post("/login", driverAuthLimiter, login);
+
+router.use(driverApiLimiter);
 
 // Profile & Presence
 router.get("/me", requireAuth, me);
 router.patch("/presence", requireAuth, updatePresence);
 router.post("/vehicles", requireAuth, saveVehicle);
 router.post("/documents", requireAuth, saveDocument);
+router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
+router.post("/trips/:id/offers", requireAuth, createOffer);
 
 // Trips & Dispatching
 router.get("/trips", requireAuth, trips);

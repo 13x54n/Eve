@@ -1,62 +1,38 @@
+import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
 
-let socket: WebSocket | null = null;
-let pingTimer: any;
+let socket: Socket | null = null;
+let subscribedTripId: string | null = null;
 
-type SocketMessage =
-  | { type: 'LOCATION_UPDATE'; driver_id?: string; lat: number; lng: number; ts: number }
-  | { type: 'TRIP_UPDATE'; ride_id: string; status: string; eta?: number };
+function socketUrl() {
+  return process.env.EXPO_PUBLIC_WS_URL || (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/api\/?$/, '');
+}
 
-export function connectSocket(
-  onMessage: (msg: SocketMessage) => void,
-  onError?: (err: any) => void
-) {
-  const wsUrl = process.env.EXPO_PUBLIC_WS_URL + '/ws';
-  const token = SecureStore.getItemAsync('access_token');
+function joinSubscribedTrip() {
+  if (subscribedTripId) socket?.emit('trip:subscribe', subscribedTripId);
+}
 
-  // Use the global WebSocket (React Native / Expo)
-  socket = new WebSocket(wsUrl);
-
-  socket.onopen = () => {
-    // Send auth header after open if your server expects it in a message
-    // Otherwise, rely on query param or cookie auth on your backend
-    pingTimer = setInterval(() => {
-      if (socket?.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: 'PING' }));
-      }
-    }, 30000);
-  };
-
-  socket.onmessage = (ev) => {
-    try {
-      const msg = JSON.parse(ev.data as string) as SocketMessage;
-      onMessage(msg);
-    } catch {
-      // ignore malformed
-    }
-  };
-
-  socket.onerror = (err) => onError?.(err);
-  socket.onclose = () => {
-    if (pingTimer) clearInterval(pingTimer);
-    socket = null;
-  };
-
+export async function connectSocket(onTripEvent: (event: string, payload: unknown) => void) {
+  const token = await SecureStore.getItemAsync('access_token');
+  socket?.disconnect();
+  socket = io(socketUrl(), { auth: { token }, transports: ['websocket'] });
+  socket.onAny((event, payload) => onTripEvent(event, payload));
+  socket.on('connect', joinSubscribedTrip);
+  if (socket.connected) return socket;
+  await new Promise<void>((resolve, reject) => {
+    socket?.once('connect', () => resolve());
+    socket?.once('connect_error', (error) => reject(error));
+  });
   return socket;
 }
 
-export function sendDriverLocation(lat: number, lng: number) {
-  if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  socket.send(JSON.stringify({ type: 'LOCATION_UPDATE', lat, lng, ts: Date.now() }));
-}
-
-export function subscribeTrip(rideId: string) {
-  if (!socket || socket.readyState !== WebSocket.OPEN) return;
-  socket.send(JSON.stringify({ type: 'SUBSCRIBE_TRIP', ride_id: rideId }));
+export function subscribeTrip(tripId: string) {
+  subscribedTripId = tripId;
+  if (socket?.connected) socket.emit('trip:subscribe', tripId);
 }
 
 export function disconnectSocket() {
-  if (pingTimer) clearInterval(pingTimer);
-  socket?.close();
+  subscribedTripId = null;
+  socket?.disconnect();
   socket = null;
 }

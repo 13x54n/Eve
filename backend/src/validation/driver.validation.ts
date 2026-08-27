@@ -11,6 +11,7 @@ export const driverRegisterSchema = z.object({
   vehicleYear: z.coerce.number().int().min(1995).max(2030).default(2022),
   vehicleColor: z.string().trim().min(2).max(40).default("Black"),
   vehiclePlateNumber: z.string().trim().min(2).max(20),
+  vehicleType: z.enum(["BIKE", "CAR"]),
   vehicleCategory: z.string().trim().default("standard"),
   vehicleCapacity: z.coerce.number().int().min(1).max(10).default(4),
 });
@@ -32,6 +33,7 @@ export const driverVehicleSchema = z.object({
   year: z.coerce.number().int().min(1995).max(2030),
   color: z.string().trim().min(2).max(40),
   plateNumber: z.string().trim().min(2).max(20),
+  vehicleType: z.enum(["BIKE", "CAR"]),
   serviceCategory: z.string().trim().default("standard"),
   capacity: z.coerce.number().int().min(1).max(10).default(4),
   city: z.string().trim().optional(),
@@ -48,10 +50,20 @@ export const driverDocumentSchema = z.object({
   ]),
   expiresAt: z.string().datetime().optional().nullable(),
   notes: z.string().max(250).optional(),
+  imageKitFileId: z.string().trim().min(1).max(200).optional(),
+  fileUrl: z.string().url().max(2000).optional(),
+  fileName: z.string().trim().min(1).max(255).optional(),
+  mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]).optional(),
+  fileSize: z.coerce.number().int().positive().max(10_000_000).optional(),
 });
 
 export const tripActionSchema = z.object({
   reason: z.string().max(250).optional(),
   rating: z.coerce.number().min(1).max(5).optional(),
   feedback: z.string().max(250).optional(),
+});
+
+export const driverOfferSchema = z.object({
+  proposedFare: z.coerce.number().positive().max(10000),
+  etaMinutes: z.coerce.number().int().min(1).max(180),
 });
