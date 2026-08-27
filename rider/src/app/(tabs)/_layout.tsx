@@ -9,6 +9,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: "#111827",
         tabBarInactiveTintColor: "#9CA3AF",
       }}
+      
     >
       <Tabs.Screen
         name="home"

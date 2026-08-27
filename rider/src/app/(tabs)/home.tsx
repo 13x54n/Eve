@@ -305,9 +305,10 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     paddingHorizontal: 16,
     backgroundColor: "#f7f8ef",
+    
   },
   searchText: { fontSize: 14, color: "gray", width: "80%" },
-  title: { fontSize: 24, fontWeight: "700", marginTop: 35, marginBottom: 15 },
+  title: { fontSize: 24, fontWeight: "700", marginTop: 45, marginBottom: 15 },
   searchContainer: {
     flexDirection: "row",
     borderColor: "#2e4ed2",
