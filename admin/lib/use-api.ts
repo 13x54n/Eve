@@ -31,7 +31,6 @@ export function useApi<T>(path: string | null) {
     if (!path) {
       Promise.resolve().then(() => {
         if (!cancelled) {
-          setData(null);
           setLoading(false);
         }
       });

@@ -9,6 +9,7 @@ import {
   ScrollView,
   TextInput,
   Vibration,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { UrlTile, PROVIDER_DEFAULT, Region } from 'react-native-maps';
@@ -69,6 +70,10 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
+      if (presenceRef.current !== 'ONLINE' && presenceRef.current !== 'IDLE') {
+        if (mounted) setIncomingTrips([]);
+        return;
+      }
       try { if (mounted) setIncomingTrips(await getIncomingTrips()); } catch { /* retry on next poll */ }
     };
     void refresh();
@@ -90,7 +95,7 @@ export default function Home() {
         const assignedTrip = payload as { id?: string } | undefined;
         if (assignedTrip?.id) router.push(`/trip/${assignedTrip.id}`);
       }
-    });
+    }).catch(() => { /* HTTP polling still lists incoming trips */ });
     void getDriverProfile().then((driver) => {
       if (!mounted) return;
       if (driver?.presence) {
@@ -99,6 +104,9 @@ export default function Home() {
       }
       if (driver?.activeTrip?.id) {
         router.push(`/trip/${driver.activeTrip.id}`);
+      }
+      if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
+        void refresh();
       }
     }).catch(() => { /* keep default OFFLINE state */ });
     void Notifications.requestPermissionsAsync();
@@ -131,7 +139,17 @@ export default function Home() {
       }
       presenceRef.current = next;
       setPresence(next);
-    } catch { /* keep previous state if the update fails */ }
+      if (next === 'ONLINE') {
+        setIncomingTrips(await getIncomingTrips());
+      } else {
+        setIncomingTrips([]);
+      }
+    } catch (error: any) {
+      Alert.alert(
+        next === 'ONLINE' ? 'Could not go online' : 'Could not go offline',
+        error?.response?.data?.message ?? 'Please try again.',
+      );
+    }
   }
 
   function recenter() {
@@ -168,6 +186,11 @@ export default function Home() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.requestSection}>
+          <Text style={styles.presenceLabel}>
+            {presence === 'ONLINE' || presence === 'IDLE' ? 'You are online' : 'You are offline'}
+          </Text>
+        </View>
         {incomingTrips.length > 0 ? (
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Ride requests nearby</Text>
@@ -264,6 +287,11 @@ const styles = StyleSheet.create({
   requestSection: {
     paddingHorizontal: 16,
     paddingTop: 12,
+  },
+  presenceLabel: {
+    color: '#6B7280',
+    fontSize: 13,
+    fontWeight: '600',
   },
   requestCard: {
     marginTop: 10,

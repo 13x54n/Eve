@@ -19,7 +19,7 @@ export default function SearchingScreen() {
       if (mounted && ["offer:created", "trip:assigned", "trip:cancelled"].includes(event)) {
         void getTrip(tripId).then(setTrip);
       }
-    }).then(() => subscribeTrip(tripId));
+    }).then(() => subscribeTrip(tripId)).catch(() => { /* offers still refresh over HTTP */ });
     const refresh = async () => {
       try { if (mounted) setTrip(await getTrip(tripId)); } catch { /* retry on next poll */ }
       finally { if (mounted) setLoading(false); }

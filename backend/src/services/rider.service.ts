@@ -63,7 +63,6 @@ export async function createTrip(userId: string, input: {
   const result = serializeTrip(trip);
   const drivers = await prisma.driverProfile.findMany({
     where: {
-      city: input.city,
       approvalStatus: "APPROVED",
       presence: { in: ["ONLINE", "IDLE"] },
       vehicles: { some: { vehicleType: input.vehicleType } },
@@ -107,7 +106,7 @@ export async function listTrips(userId: string) {
 
 export async function acceptOffer(userId: string, tripId: string, offerId: string) {
   const rider = await getRider(userId);
-  const acceptedDriverId = await prisma.$transaction(async (tx) => {
+  const acceptedDriverUserId = await prisma.$transaction(async (tx) => {
     const offer = await tx.tripOffer.findFirst({
       where: { id: offerId, tripId, status: "PENDING", trip: { riderId: rider.id, status: "SEARCHING" } },
       include: { trip: true, driver: { include: { vehicles: true } } },
@@ -118,12 +117,13 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
     await tx.trip.update({ where: { id: tripId }, data: { driverId: offer.driverId, vehicleId: vehicle.id, status: "ASSIGNED" } });
     await tx.tripOffer.update({ where: { id: offerId }, data: { status: "ACCEPTED", respondedAt: new Date() } });
     await tx.tripOffer.updateMany({ where: { tripId, id: { not: offerId }, status: "PENDING" }, data: { status: "REJECTED", respondedAt: new Date() } });
-    return offer.driverId;
+    await tx.driverProfile.update({ where: { id: offer.driverId }, data: { presence: "ON_TRIP" } });
+    return offer.driver.userId;
   });
   // Re-read outside the transaction so this reflects the committed state.
   const result = await getTrip(userId, tripId);
   emitTripEvent(tripId, "trip:assigned", result);
-  emitUserEvent("DRIVER", acceptedDriverId, "trip:assigned", result);
+  emitUserEvent("DRIVER", acceptedDriverUserId, "trip:assigned", result);
   return result;
 }
 
@@ -139,11 +139,18 @@ export async function cancelTrip(userId: string, tripId: string) {
   if (["COMPLETED", "CANCELLED"].includes(trip.status)) {
     fail("This trip cannot be cancelled", "ConflictError");
   }
-  await prisma.$transaction([
-    prisma.trip.update({ where: { id: tripId }, data: { status: "CANCELLED", cancellationReason: "Cancelled by rider" } }),
-    prisma.tripOffer.updateMany({ where: { tripId, status: "PENDING" }, data: { status: "REJECTED", respondedAt: new Date() } }),
-  ]);
+  await prisma.$transaction(async (tx) => {
+    await tx.trip.update({ where: { id: tripId }, data: { status: "CANCELLED", cancellationReason: "Cancelled by rider" } });
+    await tx.tripOffer.updateMany({ where: { tripId, status: "PENDING" }, data: { status: "REJECTED", respondedAt: new Date() } });
+    if (trip.driverId) {
+      await tx.driverProfile.update({ where: { id: trip.driverId }, data: { presence: "ONLINE" } });
+    }
+  });
   const result = await getTrip(userId, tripId);
   emitTripEvent(tripId, "trip:cancelled", result);
+  if (trip.driverId) {
+    const assigned = await prisma.driverProfile.findUnique({ where: { id: trip.driverId }, select: { userId: true } });
+    if (assigned) emitUserEvent("DRIVER", assigned.userId, "trip:cancelled", result);
+  }
   return result;
 }

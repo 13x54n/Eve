@@ -43,6 +43,7 @@ export default function RidesScreen() {
 
         <Image source={{ uri: "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }} style={{ width: "100%", height: 62, borderRadius: 16 }} contentFit="contain" />
       </View>
+      <View style={styles.monthRow}><Text style={styles.sectionTitle}>Recent activity</Text><Text style={styles.count}>{visibleRides.length} rides</Text></View>
 
       <View style={styles.filterRow}>
         {(["All", "Completed", "Cancelled"] as const).map((item) => (
@@ -54,7 +55,6 @@ export default function RidesScreen() {
         {/* <Pressable style={styles.iconButton} accessibilityLabel="Search rides"><Feather name="search" size={20} color="#111827" /></Pressable> */}
 
       </View>
-      <View style={styles.monthRow}><Text style={styles.sectionTitle}>Recent activity</Text><Text style={styles.count}>{visibleRides.length} rides</Text></View>
       {visibleRides.map((trip) => {
         const status = displayStatus(trip.status);
         return (

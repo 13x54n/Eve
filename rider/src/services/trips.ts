@@ -16,6 +16,13 @@ export type Trip = {
   durationMin: number;
   fareTotal: number;
   vehicleType?: RiderVehicleType;
+  driver?: {
+    rating?: number;
+    latitude?: number | null;
+    longitude?: number | null;
+    user?: { name: string; phone?: string | null };
+  };
+  vehicle?: { make: string; model: string; plateNumber: string; color?: string };
   offers?: TripOffer[];
   createdAt: string;
 };

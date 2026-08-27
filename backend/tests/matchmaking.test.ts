@@ -109,7 +109,7 @@ describe("Rider-driver matchmaking", () => {
       .expect(200);
 
     expect(incomingRes.body.trips).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: trip.id })]),
+      expect.arrayContaining([expect.objectContaining({ id: trip.id, vehicleType: "CAR" })]),
     );
 
     const offerRes = await request(app)
@@ -253,5 +253,39 @@ describe("Rider-driver matchmaking", () => {
       .expect(401);
 
     expect(response.body.message).toMatch(/under review/i);
+  });
+
+  it("surfaces a nearby trip even when the driver city string differs from the trip city", async () => {
+    const riderRes = await registerRider().expect(201);
+    const riderToken = riderRes.body.accessToken;
+
+    const driverRes = await registerDriver({ city: "Kathmandu" }).expect(201);
+    const driverToken = driverRes.body.accessToken;
+    await approveDriver(driverRes.body.driverProfile.id);
+    await goOnline(driverToken, PICKUP);
+
+    const tripRes = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${riderToken}`)
+      .send({
+        pickupAddress: "Pickup St",
+        dropoffAddress: "Dropoff Ave",
+        city: "New York",
+        pickupLat: PICKUP.lat,
+        pickupLng: PICKUP.lng,
+        dropoffLat: DROPOFF.lat,
+        dropoffLng: DROPOFF.lng,
+        vehicleType: "CAR",
+      })
+      .expect(201);
+
+    const incomingRes = await request(app)
+      .get("/api/driver/trips/incoming")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .expect(200);
+
+    expect(incomingRes.body.trips).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: tripRes.body.trip.id })]),
+    );
   });
 });

@@ -6,9 +6,12 @@ import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
+  ErrorBanner,
   Guard,
+  PageHeader,
   Panel,
   Table,
+  money,
   statusTone,
 } from "@/components/ui";
 import { downloadText, toCsv } from "@/lib/api";
@@ -24,6 +27,10 @@ type Trip = {
   city: string;
   pickupAddress: string;
   dropoffAddress: string;
+  pickupLat: number;
+  pickupLng: number;
+  dropoffLat: number;
+  dropoffLng: number;
   distanceKm: number;
   durationMin: number;
   fareTotal: number;
@@ -41,6 +48,19 @@ type Trip = {
 
 type DriverList = { items: { id: string; user: { name: string } }[] };
 
+function plot(lat: number, lng: number, a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const minLat = Math.min(a.lat, b.lat);
+  const maxLat = Math.max(a.lat, b.lat);
+  const minLng = Math.min(a.lng, b.lng);
+  const maxLng = Math.max(a.lng, b.lng);
+  const latSpan = maxLat - minLat || 1;
+  const lngSpan = maxLng - minLng || 1;
+  return {
+    left: `${14 + ((lng - minLng) / lngSpan) * 72}%`,
+    top: `${18 + ((maxLat - lat) / latSpan) * 64}%`,
+  };
+}
+
 export default function TripDetailPage({
   params,
 }: {
@@ -48,7 +68,7 @@ export default function TripDetailPage({
 }) {
   const { id } = use(params);
   const { user } = useAuth();
-  const { data, reload } = useApi<Trip>(`/admin/trips/${id}`);
+  const { data, reload, error, loading } = useApi<Trip>(`/admin/trips/${id}`);
   const { data: drivers } = useApi<DriverList>("/admin/drivers?status=APPROVED");
   const dispatch = can(user, "trips:dispatch");
 
@@ -60,130 +80,153 @@ export default function TripDetailPage({
       });
       await reload();
       toast.success("Trip updated");
-    } catch (error) {
-      toast.error(apiErrorMessage(error));
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
     }
-  }
-
-  if (!data) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-xs">
-        Loading trip…
-      </div>
-    );
   }
 
   return (
     <Guard allowed={can(user, "trips:read")}>
-      <div className="space-y-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{data.bookingCode}</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Rider: <span className="font-semibold text-slate-800">{data.rider.name}</span> · Driver: <span className="font-semibold text-slate-800">{data.driver?.name ?? "No driver"}</span> · {data.city}
-            </p>
-          </div>
-          <Badge tone={statusTone(data.status)}>{data.status}</Badge>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Panel title="Route">
-            <p className="text-sm font-medium text-slate-900">{data.pickupAddress}</p>
-            <p className="text-sm text-slate-500">to <span className="font-medium text-slate-900">{data.dropoffAddress}</span></p>
-            <p className="mt-3 text-xs text-slate-500">
-              {data.distanceKm} km · {data.durationMin} min · ETA {data.etaMinutes ? `${data.etaMinutes} min` : "—"} ·
-              deviation {data.routeDeviation ? "yes" : "no"}
-            </p>
-            <div className="relative mt-4 h-48 overflow-hidden rounded-xl bg-[linear-gradient(#10263b,#071422)]">
-              <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#334155_1px,transparent_1px),linear-gradient(90deg,#334155_1px,transparent_1px)] [background-size:24px_24px]" />
-              <span className="absolute left-[22%] top-[58%] h-2.5 w-2.5 rounded-full bg-emerald-400 ring-4 ring-emerald-400/20" title="Pickup" />
-              <span className="absolute left-[68%] top-[28%] h-2.5 w-2.5 rounded-full bg-amber-400 ring-4 ring-amber-400/20" title="Dropoff" />
-            </div>
-          </Panel>
-          <Panel title="Fare breakdown">
-            <dl className="grid gap-3 text-sm">
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <dt className="text-slate-500">Rider fare</dt>
-                <dd className="font-bold text-slate-900">${data.fareTotal.toFixed(2)}</dd>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <dt className="text-slate-500">Platform commission</dt>
-                <dd className="font-semibold text-emerald-700">${data.commission.toFixed(2)}</dd>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <dt className="text-slate-500">Payment method & status</dt>
-                <dd className="font-medium text-slate-800">{data.paymentMethod} · {data.paymentStatus}</dd>
-              </div>
-              <div className="flex justify-between py-1">
-                <dt className="text-slate-500">Cancellation reason</dt>
-                <dd className="font-medium text-slate-800">{data.cancellationReason ?? "None"}</dd>
-              </div>
-            </dl>
-          </Panel>
-        </div>
-        {dispatch ? (
-          <Panel title="Dispatcher actions">
-            <div className="flex flex-wrap items-center gap-3">
-              <select
-                className="h-10 rounded-xl border border-slate-300 bg-white px-3.5 text-sm font-medium text-slate-900 focus:border-[#2e4ed2] focus:ring-2 focus:ring-[#2e4ed2]/15 outline-none cursor-pointer"
-                onChange={(event) => {
-                  if (event.target.value) {
-                    void act("assign", { driverId: event.target.value });
-                  }
-                }}
-              >
-                <option value="">Assign / reassign driver</option>
-                {(drivers?.items ?? []).map((driver) => (
-                  <option key={driver.id} value={driver.id}>
-                    {driver.user.name}
-                  </option>
-                ))}
-              </select>
-              <Button tone="ghost" onClick={() => void act("complete")}>
-                End trip
-              </Button>
-              <Button
-                tone="danger"
-                onClick={() =>
-                  void act("cancel", { reason: "admin_intervention" })
-                }
-              >
-                Cancel ride
-              </Button>
-            </div>
-          </Panel>
-        ) : null}
-        <Panel
-          title="Immutable trip history"
-          actions={
-            <Button
-              tone="ghost"
-              onClick={() =>
-                downloadText(
-                  `${data.bookingCode}.csv`,
-                  toCsv(
-                    data.events.map((event) => ({
-                      action: event.action,
-                      at: event.createdAt,
-                    })),
-                  ),
-                  "text/csv",
-                )
-              }
-            >
-              Download log
-            </Button>
-          }
-        >
-          <Table
-            columns={["Action", "Timestamp"]}
-            rows={data.events.map((event) => [
-              <span key="a" className="font-medium text-slate-900">{event.action}</span>,
-              <span key="w" className="text-slate-500">{new Date(event.createdAt).toLocaleString()}</span>,
-            ])}
+      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+      {loading && !data ? (
+        <div className="h-40 animate-pulse rounded-lg border border-border bg-white" />
+      ) : !data ? (
+        <p className="text-[13px] text-muted-foreground">Trip not found.</p>
+      ) : (
+        <div className="space-y-5">
+          <PageHeader
+            backHref="/trips"
+            backLabel="Trips"
+            title={data.bookingCode}
+            subtitle={`Rider ${data.rider.name} · Driver ${data.driver?.name ?? "Unassigned"} · ${data.city}`}
+            actions={<Badge tone={statusTone(data.status)}>{data.status}</Badge>}
           />
-        </Panel>
-      </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <Panel title="Route">
+                <p className="font-medium">{data.pickupAddress}</p>
+                <p className="text-muted-foreground">
+                  to <span className="font-medium text-foreground">{data.dropoffAddress}</span>
+                </p>
+                <p className="mt-2 text-[12px] text-muted-foreground">
+                  {data.distanceKm} km · {data.durationMin} min · ETA{" "}
+                  {data.etaMinutes ? `${data.etaMinutes} min` : "—"} · deviation{" "}
+                  {data.routeDeviation ? "yes" : "no"}
+                </p>
+                <div className="relative mt-3 h-44 overflow-hidden rounded-md bg-[#111]">
+                  <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#3a3a3a_1px,transparent_1px),linear-gradient(90deg,#3a3a3a_1px,transparent_1px)] [background-size:24px_24px]" />
+                  <span
+                    className="absolute h-2.5 w-2.5 rounded-full bg-live"
+                    style={plot(
+                      data.pickupLat,
+                      data.pickupLng,
+                      { lat: data.pickupLat, lng: data.pickupLng },
+                      { lat: data.dropoffLat, lng: data.dropoffLng },
+                    )}
+                    title="Pickup"
+                  />
+                  <span
+                    className="absolute h-2.5 w-2.5 rounded-full bg-amber-400"
+                    style={plot(
+                      data.dropoffLat,
+                      data.dropoffLng,
+                      { lat: data.pickupLat, lng: data.pickupLng },
+                      { lat: data.dropoffLat, lng: data.dropoffLng },
+                    )}
+                    title="Dropoff"
+                  />
+                </div>
+              </Panel>
+              <Panel
+                title="Trip history"
+                actions={
+                  <Button
+                    tone="ghost"
+                    onClick={() =>
+                      downloadText(
+                        `${data.bookingCode}.csv`,
+                        toCsv(
+                          data.events.map((event) => ({
+                            action: event.action,
+                            at: event.createdAt,
+                          })),
+                        ),
+                        "text/csv",
+                      )
+                    }
+                  >
+                    Download log
+                  </Button>
+                }
+                flush
+              >
+                <Table
+                  columns={["Action", "Timestamp"]}
+                  rows={data.events.map((event) => [
+                    event.action,
+                    new Date(event.createdAt).toLocaleString(),
+                  ])}
+                />
+              </Panel>
+            </div>
+            <div className="space-y-5">
+              <Panel title="Fare">
+                <dl className="space-y-2 text-[13px]">
+                  <div className="flex justify-between border-b border-border py-1.5">
+                    <dt className="text-muted-foreground">Rider fare</dt>
+                    <dd className="font-semibold">{money(data.fareTotal)}</dd>
+                  </div>
+                  <div className="flex justify-between border-b border-border py-1.5">
+                    <dt className="text-muted-foreground">Commission</dt>
+                    <dd className="font-semibold text-emerald-700">{money(data.commission)}</dd>
+                  </div>
+                  <div className="flex justify-between border-b border-border py-1.5">
+                    <dt className="text-muted-foreground">Payment</dt>
+                    <dd>
+                      {data.paymentMethod} · {data.paymentStatus}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between py-1.5">
+                    <dt className="text-muted-foreground">Cancel reason</dt>
+                    <dd>{data.cancellationReason ?? "None"}</dd>
+                  </div>
+                </dl>
+              </Panel>
+              {dispatch ? (
+                <Panel title="Dispatch">
+                  <div className="space-y-2">
+                    <select
+                      className="h-9 w-full cursor-pointer rounded-md border border-input bg-white px-3 text-[13px] outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
+                      onChange={(event) => {
+                        if (event.target.value) {
+                          void act("assign", { driverId: event.target.value });
+                        }
+                      }}
+                    >
+                      <option value="">Assign / reassign driver</option>
+                      {(drivers?.items ?? []).map((driver) => (
+                        <option key={driver.id} value={driver.id}>
+                          {driver.user.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button className="w-full" tone="ghost" onClick={() => void act("complete")}>
+                      End trip
+                    </Button>
+                    <Button
+                      className="w-full"
+                      tone="danger"
+                      onClick={() => void act("cancel", { reason: "admin_intervention" })}
+                    >
+                      Cancel ride
+                    </Button>
+                  </div>
+                </Panel>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
     </Guard>
   );
 }
-

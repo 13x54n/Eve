@@ -6,11 +6,14 @@ import { api, apiErrorMessage } from "@/lib/api";
 import {
   Badge,
   Button,
+  ErrorBanner,
   Guard,
   Input,
+  PageHeader,
   Panel,
   Select,
   Table,
+  money,
   statusTone,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
@@ -71,13 +74,10 @@ export default function RiderDetailPage({
 }) {
   const { id } = use(params);
   const { user } = useAuth();
-
-  const { data, reload, error, loading } = useApi<Rider>(
-    `/admin/riders/${id}`,
-  );
-
+  const { data, reload, error, loading } = useApi<Rider>(`/admin/riders/${id}`);
   const [credit, setCredit] = useState("10");
   const [message, setMessage] = useState("");
+  const isEditable = can(user, "riders:write");
 
   async function patch(body: Record<string, unknown>) {
     try {
@@ -85,310 +85,216 @@ export default function RiderDetailPage({
         method: "PATCH",
         body: JSON.stringify(body),
       });
-
       await reload();
       toast.success("Rider updated");
-    } catch (error) {
-      toast.error(apiErrorMessage(error));
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
     }
   }
 
-  const isEditable = can(user, "riders:write");
-
   return (
     <Guard allowed={can(user, "riders:read")}>
-      <div className="space-y-6">
-        {!data ? (
-          <div
-            className={`rounded-2xl border p-8 text-center text-sm ${
-              error
-                ? "border-rose-200 bg-rose-50 text-rose-700"
-                : "border-slate-200 bg-white text-slate-500 shadow-xs"
-            }`}
-          >
-            {error || (loading ? "Loading rider…" : "Rider not found.")}
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-                    {data.name}
-                  </h1>
+      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+      {loading && !data ? (
+        <div className="h-40 animate-pulse rounded-lg border border-border bg-white" />
+      ) : !data ? (
+        <p className="text-[13px] text-muted-foreground">Rider not found.</p>
+      ) : (
+        <div className="space-y-5">
+          <PageHeader
+            backHref="/riders"
+            backLabel="Riders"
+            title={data.name}
+            subtitle={`${data.email} · ${data.phone ?? "No phone"} · ${data.city ?? "No city"}`}
+            actions={<Badge tone={statusTone(data.accountStatus)}>{data.accountStatus}</Badge>}
+          />
+          {data.flagged ? <Badge tone="amber">Flagged</Badge> : null}
 
-                  {data.flagged ? (
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-                      Flagged
-                    </span>
-                  ) : null}
-                </div>
-
-                <p className="mt-2 break-all text-sm text-slate-500">
-                  {data.email}
-                  <span className="mx-2 text-slate-300">·</span>
-                  {data.phone ?? "No phone"}
-                  <span className="mx-2 text-slate-300">·</span>
-                  <span className="font-mono text-xs text-slate-400">
-                    {data.id}
-                  </span>
-                </p>
-
-                <p className="mt-1 text-xs font-medium text-slate-500">
-                  {data.city ?? "No city assigned"}
-                </p>
-              </div>
-
-              <Badge tone={statusTone(data.accountStatus)}>
-                {data.accountStatus}
-              </Badge>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-5">
               <Panel title="Profile">
-                <dl className="grid gap-4 text-sm sm:grid-cols-2">
+                <dl className="grid gap-4 text-[13px] sm:grid-cols-2">
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Verification
-                    </dt>
-                    <dd className="mt-1 font-medium text-slate-800">
-                      {data.profile?.verificationStatus ?? "—"}
-                    </dd>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Verification</dt>
+                    <dd className="mt-1 font-medium">{data.profile?.verificationStatus ?? "—"}</dd>
                   </div>
-
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Rating
-                    </dt>
-                    <dd className="mt-1 font-medium text-slate-800">
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Rating</dt>
+                    <dd className="mt-1 font-medium">
                       {data.profile?.rating ? `★ ${data.profile.rating.toFixed(1)}` : "—"}
                     </dd>
                   </div>
-
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Wallet balance
-                    </dt>
-                    <dd className="mt-1 font-bold text-emerald-700">
-                      {data.profile
-                        ? `$${data.profile.walletBalance.toFixed(2)}`
-                        : "—"}
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Wallet</dt>
+                    <dd className="mt-1 font-semibold text-emerald-700">
+                      {data.profile ? money(data.profile.walletBalance) : "—"}
                     </dd>
                   </div>
-
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Loyalty points
-                    </dt>
-                    <dd className="mt-1 font-medium text-slate-800">
-                      {data.profile?.loyaltyPoints ?? "—"}
-                    </dd>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Loyalty</dt>
+                    <dd className="mt-1 font-medium">{data.profile?.loyaltyPoints ?? "—"}</dd>
                   </div>
-
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Marketing consent
-                    </dt>
-                    <dd className="mt-1 font-medium text-slate-800">
-                      {data.profile?.consentMarketing ? "Yes" : "No"}
-                    </dd>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Marketing</dt>
+                    <dd className="mt-1 font-medium">{data.profile?.consentMarketing ? "Yes" : "No"}</dd>
                   </div>
-
                   <div>
-                    <dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                      Deletion request
-                    </dt>
-                    <dd className="mt-1 font-medium text-slate-800">
-                      {data.profile?.deletionRequestedAt ?? "None"}
-                    </dd>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Deletion</dt>
+                    <dd className="mt-1 font-medium">{data.profile?.deletionRequestedAt ?? "None"}</dd>
                   </div>
                 </dl>
+                <p className="mt-4 font-mono text-[11px] text-muted-foreground">{data.id}</p>
               </Panel>
 
-              <Panel title="Payment methods">
-                <p className="mb-3 text-xs text-slate-500">
-                  Full card numbers are never stored or shown.
-                </p>
-
+              <Panel title="Ride history" flush>
                 <Table
-                  columns={["Method", "Brand", "Last 4"]}
-                  rows={(data.profile?.paymentMethods ?? []).map(
-                    (method) => [
-                      method.kind,
-                      method.brand ?? "—",
-                      method.last4 ? `•••• ${method.last4}` : "—",
-                    ],
-                  )}
-                />
-              </Panel>
-            </div>
-
-            {isEditable ? (
-              <Panel title="Account actions">
-                <div className="flex flex-wrap gap-2.5">
-                  <Button
-                    onClick={() =>
-                      void patch({ accountStatus: "SUSPENDED" })
-                    }
-                  >
-                    Suspend
-                  </Button>
-
-                  <Button
-                    tone="danger"
-                    onClick={() =>
-                      void patch({ accountStatus: "BLOCKED" })
-                    }
-                  >
-                    Block
-                  </Button>
-
-                  <Button
-                    tone="ghost"
-                    onClick={() =>
-                      void patch({
-                        accountStatus: "ACTIVE",
-                        flagged: false,
-                      })
-                    }
-                  >
-                    Unblock
-                  </Button>
-
-                  <Button
-                    tone="ghost"
-                    onClick={() => void patch({ flagged: true })}
-                  >
-                    Flag account
-                  </Button>
-                </div>
-
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                  <Input
-                    value={credit}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    aria-label="Wallet credit amount"
-                    onChange={(event) => setCredit(event.target.value)}
-                    className="sm:w-36"
-                    placeholder="Amount"
-                  />
-
-                  <Button
-                    tone="ghost"
-                    onClick={() => {
-                      const amount = Number(credit);
-
-                      if (!Number.isFinite(amount) || amount <= 0) return;
-
-                      void patch({ credit: amount });
-                    }}
-                  >
-                    Add wallet credit
-                  </Button>
-
-                  <Select
-                    defaultValue=""
-                    aria-label="Contact rider channel"
-                    onChange={(event) => {
-                      const channel = event.target.value;
-
-                      if (!channel) return;
-
-                      api("/admin/notifications", {
-                        method: "POST",
-                        body: JSON.stringify({
-                          userId: data.id,
-                          channel,
-                          template: "support",
-                          title: "Message from Eve support",
-                          body: "A support agent needs to reach you about your account.",
-                        }),
-                      })
-                        .then(() => toast.success(`Message sent via ${channel}`))
-                        .catch((error) => toast.error(apiErrorMessage(error)));
-
-                      event.currentTarget.value = "";
-                    }}
-                  >
-                    <option value="">Contact rider</option>
-                    <option value="push">Push notification</option>
-                    <option value="sms">SMS</option>
-                    <option value="email">Email</option>
-                    <option value="chat">Support chat</option>
-                  </Select>
-                </div>
-              </Panel>
-            ) : null}
-
-            <Panel title="Ride history">
-              <Table
-                columns={["Booking", "Status"]}
-                rows={(data.profile?.trips ?? []).map((trip) => [
-                  trip.bookingCode,
-                  <Badge key={trip.id} tone={statusTone(trip.status)}>
-                    {trip.status}
-                  </Badge>,
-                ])}
-              />
-            </Panel>
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Panel title="Complaints & tickets">
-                <Table
-                  columns={["Subject", "Status"]}
-                  rows={(data.profile?.tickets ?? []).map((ticket) => [
-                    ticket.subject,
-                    <Badge key={ticket.id} tone={statusTone(ticket.status)}>
-                      {ticket.status}
+                  columns={["Booking", "Status"]}
+                  rows={(data.profile?.trips ?? []).map((trip) => [
+                    trip.bookingCode,
+                    <Badge key={trip.id} tone={statusTone(trip.status)}>
+                      {trip.status}
                     </Badge>,
                   ])}
                 />
               </Panel>
 
-              <Panel title="Lost items & privacy">
-                <Table
-                  columns={["Item or request", "Status"]}
-                  rows={[
-                    ...(data.profile?.lostItems ?? []).map((item) => [
-                      item.description,
-                      <Badge key={item.id} tone={statusTone(item.status)}>
-                        {item.status}
+              <div className="grid gap-5 lg:grid-cols-2">
+                <Panel title="Tickets" flush>
+                  <Table
+                    columns={["Subject", "Status"]}
+                    rows={(data.profile?.tickets ?? []).map((ticket) => [
+                      ticket.subject,
+                      <Badge key={ticket.id} tone={statusTone(ticket.status)}>
+                        {ticket.status}
                       </Badge>,
-                    ]),
-                    ...(data.profile?.privacyRequests ?? []).map((request) => [
-                      request.kind,
-                      <Badge key={request.id} tone={statusTone(request.status)}>
-                        {request.status}
-                      </Badge>,
-                    ]),
-                  ]}
-                />
-              </Panel>
+                    ])}
+                  />
+                </Panel>
+                <Panel title="Lost items & privacy" flush>
+                  <Table
+                    columns={["Item or request", "Status"]}
+                    rows={[
+                      ...(data.profile?.lostItems ?? []).map((item) => [
+                        item.description,
+                        <Badge key={item.id} tone={statusTone(item.status)}>
+                          {item.status}
+                        </Badge>,
+                      ]),
+                      ...(data.profile?.privacyRequests ?? []).map((request) => [
+                        request.kind,
+                        <Badge key={request.id} tone={statusTone(request.status)}>
+                          {request.status}
+                        </Badge>,
+                      ]),
+                    ]}
+                  />
+                </Panel>
+              </div>
             </div>
 
-            <Panel title="Internal notes">
-              <textarea
-                className="h-28 w-full resize-y rounded-xl border border-slate-300 bg-white p-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 transition focus:border-[#2e4ed2] focus:ring-2 focus:ring-[#2e4ed2]/15"
-                placeholder="Add internal notes visible to authorized staff only…"
-                defaultValue={data.profile?.notes ?? ""}
-                onChange={(event) => setMessage(event.target.value)}
-                disabled={!isEditable}
-              />
-
+            <div className="space-y-5">
               {isEditable ? (
-                <div className="mt-3">
-                  <Button onClick={() => void patch({ notes: message })}>
-                    Save notes
-                  </Button>
-                </div>
+                <Panel title="Account actions">
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={() => void patch({ accountStatus: "SUSPENDED" })}>Suspend</Button>
+                    <Button tone="danger" onClick={() => void patch({ accountStatus: "BLOCKED" })}>
+                      Block
+                    </Button>
+                    <Button
+                      tone="ghost"
+                      onClick={() => void patch({ accountStatus: "ACTIVE", flagged: false })}
+                    >
+                      Unblock
+                    </Button>
+                    <Button tone="ghost" onClick={() => void patch({ flagged: true })}>
+                      Flag
+                    </Button>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        value={credit}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        aria-label="Wallet credit amount"
+                        onChange={(event) => setCredit(event.target.value)}
+                        className="w-28"
+                      />
+                      <Button
+                        tone="ghost"
+                        onClick={() => {
+                          const amount = Number(credit);
+                          if (!Number.isFinite(amount) || amount <= 0) return;
+                          void patch({ credit: amount });
+                        }}
+                      >
+                        Add credit
+                      </Button>
+                    </div>
+                    <Select
+                      defaultValue=""
+                      aria-label="Contact rider channel"
+                      className="w-full"
+                      onChange={(event) => {
+                        const channel = event.target.value;
+                        if (!channel) return;
+                        api("/admin/notifications", {
+                          method: "POST",
+                          body: JSON.stringify({
+                            userId: data.id,
+                            channel,
+                            template: "support",
+                            title: "Message from Eve support",
+                            body: "A support agent needs to reach you about your account.",
+                          }),
+                        })
+                          .then(() => toast.success(`Message sent via ${channel}`))
+                          .catch((caught) => toast.error(apiErrorMessage(caught)));
+                        event.currentTarget.value = "";
+                      }}
+                    >
+                      <option value="">Contact rider</option>
+                      <option value="push">Push notification</option>
+                      <option value="sms">SMS</option>
+                      <option value="email">Email</option>
+                      <option value="chat">Support chat</option>
+                    </Select>
+                  </div>
+                </Panel>
               ) : null}
-            </Panel>
+
+              <Panel title="Payment methods" flush>
+                <Table
+                  columns={["Method", "Brand", "Last 4"]}
+                  empty="No payment methods on file."
+                  rows={(data.profile?.paymentMethods ?? []).map((method) => [
+                    method.kind,
+                    method.brand ?? "—",
+                    method.last4 ? `•••• ${method.last4}` : "—",
+                  ])}
+                />
+              </Panel>
+
+              <Panel title="Internal notes">
+                <textarea
+                  className="h-28 w-full resize-y rounded-md border border-input bg-white p-3 text-[13px] outline-none placeholder:text-muted-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                  placeholder="Staff-only notes…"
+                  defaultValue={data.profile?.notes ?? ""}
+                  onChange={(event) => setMessage(event.target.value)}
+                  disabled={!isEditable}
+                />
+                {isEditable ? (
+                  <div className="mt-3">
+                    <Button onClick={() => void patch({ notes: message })}>Save notes</Button>
+                  </div>
+                ) : null}
+              </Panel>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </Guard>
   );
 }

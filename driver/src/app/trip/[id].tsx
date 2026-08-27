@@ -22,7 +22,7 @@ import {
   getDriverProfile,
   startTrip,
 } from '@/services/driver';
-import { sendDriverLocation } from '@/services/socket';
+import { connectDriverSocket, disconnectDriverSocket, sendDriverLocation, subscribeTrip } from '@/services/socket';
 
 export default function ActiveTripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -48,6 +48,9 @@ export default function ActiveTripScreen() {
     void refresh();
     const timer = setInterval(() => void refresh(), 5000);
     let subscription: Location.LocationSubscription | null = null;
+    void connectDriverSocket(() => { /* location is sent from this screen; status is polled */ })
+      .then(() => { if (id) subscribeTrip(id); })
+      .catch(() => { /* GPS still updates locally; rider may lag until reconnect */ });
     void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
       if (status !== 'granted') return;
       subscription = await Location.watchPositionAsync(
@@ -58,8 +61,32 @@ export default function ActiveTripScreen() {
         },
       );
     });
-    return () => { clearInterval(timer); subscription?.remove(); };
-  }, [refresh]);
+    return () => { clearInterval(timer); subscription?.remove(); disconnectDriverSocket(); };
+  }, [id, refresh]);
+
+  useEffect(() => {
+    if (!trip || !mapRef.current) return;
+    const headingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
+    const points = [
+      ...(driverLocation ? [driverLocation] : []),
+      {
+        latitude: headingToPickup ? trip.pickupLat : trip.dropoffLat,
+        longitude: headingToPickup ? trip.pickupLng : trip.dropoffLng,
+      },
+    ];
+    if (points.length === 1) {
+      mapRef.current.animateToRegion({
+        ...points[0],
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }, 400);
+      return;
+    }
+    mapRef.current.fitToCoordinates(points, {
+      edgePadding: { top: 48, right: 48, bottom: 48, left: 48 },
+      animated: true,
+    });
+  }, [driverLocation, trip, hasArrived]);
 
   function openDirections(lat: number, lng: number) {
     const fallback = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
@@ -189,7 +216,7 @@ export default function ActiveTripScreen() {
           </View>
           <View style={styles.riderCopy}>
             <Text style={styles.riderName}>{trip.rider.user.name}</Text>
-            <Text style={styles.riderFare}>Cash fare · ${trip.fareTotal.toFixed(2)}</Text>
+            <Text style={styles.riderFare}>Cash fare · ${Number(trip.fareTotal).toFixed(2)}</Text>
           </View>
           {trip.rider.user.phone ? (
             <TouchableOpacity style={styles.callButton} onPress={() => void Linking.openURL(`tel:${trip.rider.user.phone}`)}>

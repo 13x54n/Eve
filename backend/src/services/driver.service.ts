@@ -286,7 +286,17 @@ export async function getDriverProfile(userId: string) {
     vehicles: profile.vehicles,
     activeVehicle: profile.vehicles[0] || null,
     documents: profile.documents,
-    activeTrip: profile.trips[0] || null,
+    activeTrip: profile.trips[0]
+      ? {
+          ...profile.trips[0],
+          fareTotal: money(profile.trips[0].fareTotal),
+          commission: money(profile.trips[0].commission),
+          distanceKm: money(profile.trips[0].distanceKm),
+          rider: profile.trips[0].rider
+            ? { ...profile.trips[0].rider, rating: money(profile.trips[0].rider.rating) }
+            : profile.trips[0].rider,
+        }
+      : null,
     todayStats: {
       earnings: Number(todayEarnings.toFixed(2)),
       completedTrips: todayTrips.length,
@@ -523,7 +533,6 @@ export async function getIncomingTrips(userId: string) {
   const trips = await prisma.trip.findMany({
     where: {
       status: "SEARCHING",
-      ...(profile.city ? { city: profile.city } : {}),
       vehicleType: { in: profile.vehicles.map((vehicle) => vehicle.vehicleType) },
     },
     include: {
@@ -558,6 +567,7 @@ export async function getIncomingTrips(userId: string) {
     fareTotal: money(trip.fareTotal),
     estimatedEarnings: money(Number(trip.fareTotal) - Number(trip.commission)),
     rideType: trip.rideType,
+    vehicleType: trip.vehicleType,
     createdAt: trip.createdAt,
     distanceToPickup: Number.isFinite(trip.distanceToPickup) ? trip.distanceToPickup : null,
   }));
@@ -577,7 +587,16 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
   if (!profile) { const error = new Error("Driver profile not found"); error.name = "NotFoundError"; throw error; }
   const trip = await prisma.trip.findUnique({ where: { id: tripId } });
   if (!trip) { const error = new Error("Trip not found"); error.name = "NotFoundError"; throw error; }
-  if (trip.status !== "SEARCHING" || trip.city !== profile.city || !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType)) {
+  const distanceToPickup = profile.latitude == null || profile.longitude == null
+    ? Number.POSITIVE_INFINITY
+    : distanceBetween(profile.latitude, profile.longitude, trip.pickupLat, trip.pickupLng);
+  if (
+    trip.status !== "SEARCHING"
+    || profile.approvalStatus !== "APPROVED"
+    || !["ONLINE", "IDLE"].includes(profile.presence)
+    || distanceToPickup > 25
+    || !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType)
+  ) {
     const error = new Error("This trip is not available to this driver"); error.name = "ConflictError"; throw error;
   }
   if (input.proposedFare < Number(trip.fareTotal) || input.proposedFare > Number(trip.fareTotal) * 2) {
@@ -689,6 +708,9 @@ export async function arrivedAtPickup(userId: string, tripId: string) {
     },
   });
 
+  emitTripEvent(tripId, "driver:arrived", trip);
+  emitUserEvent("RIDER", trip.rider.userId, "driver:arrived", trip);
+
   return trip;
 }
 
@@ -734,6 +756,9 @@ export async function startTrip(userId: string, tripId: string) {
       startedAt: new Date().toISOString(),
     },
   });
+
+  emitTripEvent(tripId, "trip:started", updated);
+  emitUserEvent("RIDER", updated.rider.userId, "trip:started", updated);
 
   return updated;
 }
@@ -816,6 +841,9 @@ export async function completeTrip(
     },
   });
 
+  emitTripEvent(tripId, "trip:completed", updatedTrip);
+  emitUserEvent("RIDER", updatedTrip.rider.userId, "trip:completed", updatedTrip);
+
   return {
     trip: updatedTrip,
     earnings: {
@@ -883,6 +911,9 @@ export async function cancelTrip(
       reason,
     },
   });
+
+  emitTripEvent(tripId, "trip:cancelled", cancelledTrip);
+  emitUserEvent("RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
 
   return cancelledTrip;
 }

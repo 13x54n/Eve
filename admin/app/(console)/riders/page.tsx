@@ -4,16 +4,20 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Badge,
+  ErrorBanner,
   FilterBar,
   Guard,
   Input,
+  PageHeader,
   Panel,
   Table,
+  money,
   statusTone,
 } from "@/components/ui";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 type RiderList = {
   total: number;
@@ -35,123 +39,68 @@ type RiderList = {
 
 export default function RidersPage() {
   const { user } = useAuth();
-
   const [q, setQ] = useState("");
   const [city, setCity] = useState("");
+  const delayedQ = useDebouncedValue(q);
+  const delayedCity = useDebouncedValue(city);
 
   const path = useMemo(() => {
     const params = new URLSearchParams();
-
-    if (q.trim()) params.set("q", q.trim());
-    if (city.trim()) params.set("city", city.trim());
-
+    if (delayedQ.trim()) params.set("q", delayedQ.trim());
+    if (delayedCity.trim()) params.set("city", delayedCity.trim());
     const query = params.toString();
-
     return `/admin/riders${query ? `?${query}` : ""}`;
-  }, [q, city]);
+  }, [delayedQ, delayedCity]);
 
   const { data, error, loading } = useApi<RiderList>(path);
 
   return (
     <Guard allowed={can(user, "riders:read")}>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Rider management
-          </h1>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Search, review, and manage rider accounts.
-          </p>
-        </div>
-
-        <FilterBar>
-          <Input
-            placeholder="Name, phone, email, or user ID"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            className="w-full sm:w-80"
-          />
-
-          <Input
-            placeholder="Filter by city"
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-            className="w-full sm:w-48"
-          />
-        </FilterBar>
-
-        {error ? (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {error}
-          </div>
-        ) : null}
-
-        {loading ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500 shadow-xs">
-            Loading riders…
-          </div>
-        ) : (
-          <Panel title={`${data?.total ?? 0} riders`}>
-            {!data?.items.length ? (
-              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-10 text-center text-sm text-slate-500">
-                No riders match the current filters.
-              </div>
-            ) : (
-              <Table
-                columns={[
-                  "Rider",
-                  "Contact",
-                  "City",
-                  "Status",
-                  "Rating",
-                  "Wallet",
-                ]}
-                rows={data.items.map((rider) => [
-                  <Link
-                    key={rider.id}
-                    href={`/riders/${rider.id}`}
-                    className="font-semibold text-[#2e4ed2] transition hover:underline"
-                  >
-                    {rider.name}
-                  </Link>,
-
-                  <div key={`${rider.id}-contact`}>
-                    <p className="text-sm font-medium text-slate-800">{rider.email}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">
-                      {rider.phone ?? "No phone number"}
-                    </p>
-                  </div>,
-
-                  <span key={`${rider.id}-city`} className="text-slate-700">
-                    {rider.city ?? "—"}
-                  </span>,
-
-                  <Badge
-                    key={`${rider.id}-status`}
-                    tone={statusTone(rider.flagged ? "FLAGGED" : rider.accountStatus)}
-                  >
-                    {rider.flagged ? "FLAGGED" : rider.accountStatus}
-                  </Badge>,
-
-                  <span key={`${rider.id}-rating`} className="text-slate-700">
-                    {rider.profile?.rating ? `★ ${rider.profile.rating.toFixed(1)}` : "—"}
-                  </span>,
-
-                  <span
-                    key={`${rider.id}-wallet`}
-                    className="font-semibold text-emerald-700"
-                  >
-                    {rider.profile
-                      ? `$${rider.profile.walletBalance.toFixed(2)}`
-                      : "—"}
-                  </span>,
-                ])}
-              />
-            )}
-          </Panel>
-        )}
-      </div>
+      <PageHeader title="Riders" subtitle="Search, review, and manage rider accounts." />
+      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+      <Panel
+        title={`${data?.total ?? 0} riders`}
+        actions={
+          <FilterBar>
+            <Input
+              placeholder="Name, phone, email, or ID"
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              className="w-56"
+            />
+            <Input
+              placeholder="City"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              className="w-36"
+            />
+          </FilterBar>
+        }
+        flush
+      >
+        <Table
+          loading={loading && !data}
+          empty="No riders match the current filters."
+          columns={["Rider", "Contact", "City", "Status", "Rating", "Wallet"]}
+          rows={(data?.items ?? []).map((rider) => [
+            <Link key={rider.id} href={`/riders/${rider.id}`} className="font-semibold hover:underline">
+              {rider.name}
+            </Link>,
+            <div key={`${rider.id}-contact`}>
+              <p className="font-medium">{rider.email}</p>
+              <p className="text-[12px] text-muted-foreground">{rider.phone ?? "No phone"}</p>
+            </div>,
+            rider.city ?? "—",
+            <Badge key={`${rider.id}-status`} tone={statusTone(rider.flagged ? "FLAGGED" : rider.accountStatus)}>
+              {rider.flagged ? "FLAGGED" : rider.accountStatus}
+            </Badge>,
+            rider.profile?.rating ? `★ ${rider.profile.rating.toFixed(1)}` : "—",
+            <span key={`${rider.id}-wallet`} className="font-semibold text-emerald-700">
+              {rider.profile ? money(rider.profile.walletBalance) : "—"}
+            </span>,
+          ])}
+        />
+      </Panel>
     </Guard>
   );
 }
