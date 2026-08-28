@@ -456,6 +456,7 @@ export type TripWhereInput = {
   tickets?: Prisma.SupportTicketListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
   offers?: Prisma.TripOfferListRelationFilter
+  chatMessages?: Prisma.TripMessageListRelationFilter
 }
 
 export type TripOrderByWithRelationInput = {
@@ -497,6 +498,7 @@ export type TripOrderByWithRelationInput = {
   tickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   incidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
   offers?: Prisma.TripOfferOrderByRelationAggregateInput
+  chatMessages?: Prisma.TripMessageOrderByRelationAggregateInput
 }
 
 export type TripWhereUniqueInput = Prisma.AtLeast<{
@@ -541,6 +543,7 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   tickets?: Prisma.SupportTicketListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
   offers?: Prisma.TripOfferListRelationFilter
+  chatMessages?: Prisma.TripMessageListRelationFilter
 }, "id" | "bookingCode">
 
 export type TripOrderByWithAggregationInput = {
@@ -653,6 +656,7 @@ export type TripCreateInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateInput = {
@@ -691,6 +695,7 @@ export type TripUncheckedCreateInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripUpdateInput = {
@@ -729,6 +734,7 @@ export type TripUpdateInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateInput = {
@@ -767,6 +773,7 @@ export type TripUncheckedUpdateInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateManyInput = {
@@ -1158,6 +1165,20 @@ export type EnumPaymentMethodKindFieldUpdateOperationsInput = {
   set?: $Enums.PaymentMethodKind
 }
 
+export type TripCreateNestedOneWithoutChatMessagesInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutChatMessagesInput, Prisma.TripUncheckedCreateWithoutChatMessagesInput>
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutChatMessagesInput
+  connect?: Prisma.TripWhereUniqueInput
+}
+
+export type TripUpdateOneRequiredWithoutChatMessagesNestedInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutChatMessagesInput, Prisma.TripUncheckedCreateWithoutChatMessagesInput>
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutChatMessagesInput
+  upsert?: Prisma.TripUpsertWithoutChatMessagesInput
+  connect?: Prisma.TripWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TripUpdateToOneWithWhereWithoutChatMessagesInput, Prisma.TripUpdateWithoutChatMessagesInput>, Prisma.TripUncheckedUpdateWithoutChatMessagesInput>
+}
+
 export type TripCreateNestedOneWithoutOffersInput = {
   create?: Prisma.XOR<Prisma.TripCreateWithoutOffersInput, Prisma.TripUncheckedCreateWithoutOffersInput>
   connectOrCreate?: Prisma.TripCreateOrConnectWithoutOffersInput
@@ -1269,6 +1290,7 @@ export type TripCreateWithoutRiderInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutRiderInput = {
@@ -1306,6 +1328,7 @@ export type TripUncheckedCreateWithoutRiderInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutRiderInput = {
@@ -1405,6 +1428,7 @@ export type TripCreateWithoutDriverInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutDriverInput = {
@@ -1442,6 +1466,7 @@ export type TripUncheckedCreateWithoutDriverInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutDriverInput = {
@@ -1505,6 +1530,7 @@ export type TripCreateWithoutVehicleInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutVehicleInput = {
@@ -1542,6 +1568,7 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutVehicleInput = {
@@ -1568,6 +1595,174 @@ export type TripUpdateWithWhereUniqueWithoutVehicleInput = {
 export type TripUpdateManyWithWhereWithoutVehicleInput = {
   where: Prisma.TripScalarWhereInput
   data: Prisma.XOR<Prisma.TripUpdateManyMutationInput, Prisma.TripUncheckedUpdateManyWithoutVehicleInput>
+}
+
+export type TripCreateWithoutChatMessagesInput = {
+  id?: string
+  bookingCode: string
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
+  driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
+  vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  events?: Prisma.TripEventCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+}
+
+export type TripUncheckedCreateWithoutChatMessagesInput = {
+  id?: string
+  bookingCode: string
+  riderId: string
+  driverId?: string | null
+  vehicleId?: string | null
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+}
+
+export type TripCreateOrConnectWithoutChatMessagesInput = {
+  where: Prisma.TripWhereUniqueInput
+  create: Prisma.XOR<Prisma.TripCreateWithoutChatMessagesInput, Prisma.TripUncheckedCreateWithoutChatMessagesInput>
+}
+
+export type TripUpsertWithoutChatMessagesInput = {
+  update: Prisma.XOR<Prisma.TripUpdateWithoutChatMessagesInput, Prisma.TripUncheckedUpdateWithoutChatMessagesInput>
+  create: Prisma.XOR<Prisma.TripCreateWithoutChatMessagesInput, Prisma.TripUncheckedCreateWithoutChatMessagesInput>
+  where?: Prisma.TripWhereInput
+}
+
+export type TripUpdateToOneWithWhereWithoutChatMessagesInput = {
+  where?: Prisma.TripWhereInput
+  data: Prisma.XOR<Prisma.TripUpdateWithoutChatMessagesInput, Prisma.TripUncheckedUpdateWithoutChatMessagesInput>
+}
+
+export type TripUpdateWithoutChatMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
+  driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
+  vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+}
+
+export type TripUncheckedUpdateWithoutChatMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  riderId?: Prisma.StringFieldUpdateOperationsInput | string
+  driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutOffersInput = {
@@ -1605,6 +1800,7 @@ export type TripCreateWithoutOffersInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutOffersInput = {
@@ -1642,6 +1838,7 @@ export type TripUncheckedCreateWithoutOffersInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutOffersInput = {
@@ -1695,6 +1892,7 @@ export type TripUpdateWithoutOffersInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutOffersInput = {
@@ -1732,6 +1930,7 @@ export type TripUncheckedUpdateWithoutOffersInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutEventsInput = {
@@ -1769,6 +1968,7 @@ export type TripCreateWithoutEventsInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutEventsInput = {
@@ -1806,6 +2006,7 @@ export type TripUncheckedCreateWithoutEventsInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutEventsInput = {
@@ -1859,6 +2060,7 @@ export type TripUpdateWithoutEventsInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutEventsInput = {
@@ -1896,6 +2098,7 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutLedgerInput = {
@@ -1933,6 +2136,7 @@ export type TripCreateWithoutLedgerInput = {
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutLedgerInput = {
@@ -1970,6 +2174,7 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutLedgerInput = {
@@ -2023,6 +2228,7 @@ export type TripUpdateWithoutLedgerInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutLedgerInput = {
@@ -2060,6 +2266,7 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutTicketsInput = {
@@ -2097,6 +2304,7 @@ export type TripCreateWithoutTicketsInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutTicketsInput = {
@@ -2134,6 +2342,7 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutTicketsInput = {
@@ -2187,6 +2396,7 @@ export type TripUpdateWithoutTicketsInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutTicketsInput = {
@@ -2224,6 +2434,7 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateWithoutIncidentsInput = {
@@ -2261,6 +2472,7 @@ export type TripCreateWithoutIncidentsInput = {
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
 }
 
 export type TripUncheckedCreateWithoutIncidentsInput = {
@@ -2298,6 +2510,7 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
   offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
 }
 
 export type TripCreateOrConnectWithoutIncidentsInput = {
@@ -2351,6 +2564,7 @@ export type TripUpdateWithoutIncidentsInput = {
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutIncidentsInput = {
@@ -2388,6 +2602,7 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripCreateManyRiderInput = {
@@ -2457,6 +2672,7 @@ export type TripUpdateWithoutRiderInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutRiderInput = {
@@ -2494,6 +2710,7 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutRiderInput = {
@@ -2595,6 +2812,7 @@ export type TripUpdateWithoutDriverInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutDriverInput = {
@@ -2632,6 +2850,7 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutDriverInput = {
@@ -2733,6 +2952,7 @@ export type TripUpdateWithoutVehicleInput = {
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateWithoutVehicleInput = {
@@ -2770,6 +2990,7 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
   offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
 export type TripUncheckedUpdateManyWithoutVehicleInput = {
@@ -2815,6 +3036,7 @@ export type TripCountOutputType = {
   tickets: number
   incidents: number
   offers: number
+  chatMessages: number
 }
 
 export type TripCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2823,6 +3045,7 @@ export type TripCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   tickets?: boolean | TripCountOutputTypeCountTicketsArgs
   incidents?: boolean | TripCountOutputTypeCountIncidentsArgs
   offers?: boolean | TripCountOutputTypeCountOffersArgs
+  chatMessages?: boolean | TripCountOutputTypeCountChatMessagesArgs
 }
 
 /**
@@ -2870,6 +3093,13 @@ export type TripCountOutputTypeCountOffersArgs<ExtArgs extends runtime.Types.Ext
   where?: Prisma.TripOfferWhereInput
 }
 
+/**
+ * TripCountOutputType without action
+ */
+export type TripCountOutputTypeCountChatMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TripMessageWhereInput
+}
+
 
 export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2910,6 +3140,7 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
   incidents?: boolean | Prisma.Trip$incidentsArgs<ExtArgs>
   offers?: boolean | Prisma.Trip$offersArgs<ExtArgs>
+  chatMessages?: boolean | Prisma.Trip$chatMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.TripCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["trip"]>
 
@@ -3028,6 +3259,7 @@ export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
   incidents?: boolean | Prisma.Trip$incidentsArgs<ExtArgs>
   offers?: boolean | Prisma.Trip$offersArgs<ExtArgs>
+  chatMessages?: boolean | Prisma.Trip$chatMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.TripCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TripIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3052,6 +3284,7 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     tickets: Prisma.$SupportTicketPayload<ExtArgs>[]
     incidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
     offers: Prisma.$TripOfferPayload<ExtArgs>[]
+    chatMessages: Prisma.$TripMessagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3486,6 +3719,7 @@ export interface Prisma__TripClient<T, Null = never, ExtArgs extends runtime.Typ
   tickets<T extends Prisma.Trip$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   incidents<T extends Prisma.Trip$incidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$incidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   offers<T extends Prisma.Trip$offersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$offersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripOfferPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  chatMessages<T extends Prisma.Trip$chatMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$chatMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4101,6 +4335,30 @@ export type Trip$offersArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   distinct?: Prisma.TripOfferScalarFieldEnum | Prisma.TripOfferScalarFieldEnum[]
+}
+
+/**
+ * Trip.chatMessages
+ */
+export type Trip$chatMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TripMessage
+   */
+  select?: Prisma.TripMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TripMessage
+   */
+  omit?: Prisma.TripMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TripMessageInclude<ExtArgs> | null
+  where?: Prisma.TripMessageWhereInput
+  orderBy?: Prisma.TripMessageOrderByWithRelationInput | Prisma.TripMessageOrderByWithRelationInput[]
+  cursor?: Prisma.TripMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TripMessageScalarFieldEnum | Prisma.TripMessageScalarFieldEnum[]
 }
 
 /**

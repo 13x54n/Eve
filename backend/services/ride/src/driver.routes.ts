@@ -9,7 +9,9 @@ import {
   documentUploadAuth,
   earnings,
   incomingTrips,
+  listMessages,
   me,
+  postMessage,
   saveDocument,
   saveVehicle,
   startTrip,
@@ -35,6 +37,8 @@ router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
 router.post("/trips/:id/offers", requireAuth, createOffer);
 router.get("/trips", requireAuth, trips);
 router.get("/trips/incoming", requireAuth, incomingTrips);
+router.get("/trips/:id/messages", requireAuth, listMessages);
+router.post("/trips/:id/messages", requireAuth, postMessage);
 router.post("/trips/:id/accept", requireAuth, acceptTrip);
 router.post("/trips/:id/arrived", requireAuth, arrivedAtPickup);
 router.post("/trips/:id/start", requireAuth, startTrip);

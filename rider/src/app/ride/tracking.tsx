@@ -5,7 +5,7 @@ import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } 
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cancelTrip, getTrip, Trip } from "@/services/trips";
-import { connectSocket, disconnectSocket, subscribeTrip } from "@/services/socket";
+import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived"];
@@ -49,7 +49,8 @@ export default function TrackingScreen() {
   useEffect(() => {
     if (!tripId) return;
     let mounted = true;
-    void connectSocket((event, payload) => {
+    void connectSocket().then(() => subscribeTrip(tripId)).catch(() => { /* HTTP poll still loads the trip */ });
+    const remove = addSocketListener((event, payload) => {
       if (!mounted) return;
       if (event === "driver:location" && payload && typeof payload === "object") {
         const location = payload as { latitude?: number; longitude?: number };
@@ -59,10 +60,10 @@ export default function TrackingScreen() {
         return;
       }
       if (STATUS_EVENTS.includes(event)) void refresh();
-    }).then(() => subscribeTrip(tripId)).catch(() => { /* HTTP poll still loads the trip */ });
+    });
     void refresh(true);
     const timer = setInterval(() => void refresh(), 4000);
-    return () => { mounted = false; clearInterval(timer); disconnectSocket(); };
+    return () => { mounted = false; clearInterval(timer); remove(); };
   }, [refresh, tripId]);
 
   useEffect(() => {
@@ -185,11 +186,6 @@ export default function TrackingScreen() {
             <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
             <Text style={styles.time}>{etaLabel}</Text>
           </View>
-          {trip.driver?.user?.phone ? (
-            <Pressable style={styles.contact} onPress={() => void Linking.openURL(`tel:${trip.driver?.user?.phone}`)}>
-              <Feather name="phone" size={18} color="#15803D" />
-            </Pressable>
-          ) : null}
         </View>
         <View style={styles.driverRow}>
           <View style={styles.driverAvatar}>
@@ -204,6 +200,35 @@ export default function TrackingScreen() {
           {trip.driver?.rating != null ? (
             <Text style={styles.rating}>★ {Number(trip.driver.rating).toFixed(1)}</Text>
           ) : null}
+        </View>
+        <View style={styles.actions}>
+          <Pressable
+            style={[styles.action, !trip.driver?.user?.phone && styles.actionDisabled]}
+            onPress={() => {
+              if (!trip.driver?.user?.phone) {
+                Alert.alert("No phone on file", "This driver has not added a phone number yet.");
+                return;
+              }
+              void Linking.openURL(`tel:${trip.driver.user.phone}`);
+            }}
+          >
+            <Feather name="phone" size={16} color="#15803D" />
+            <Text style={styles.actionText}>Call</Text>
+          </Pressable>
+          <Pressable
+            style={styles.action}
+            onPress={() => router.push({ pathname: "/ride/chat", params: { tripId: trip.id } })}
+          >
+            <Feather name="message-circle" size={16} color="#2E4ED5" />
+            <Text style={styles.actionText}>Chat</Text>
+          </Pressable>
+          <Pressable
+            style={styles.action}
+            onPress={() => router.push({ pathname: "/ride/support", params: { tripId: trip.id } })}
+          >
+            <Feather name="help-circle" size={16} color="#B45309" />
+            <Text style={styles.actionText}>Help</Text>
+          </Pressable>
         </View>
         <View style={styles.addressRow}>
           <View style={[styles.addressDot, { backgroundColor: "#16A34A" }]} />
@@ -261,7 +286,19 @@ const styles = StyleSheet.create({
   arrivalCopy: { flex: 1 },
   eyebrow: { color: "#6B7280", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   time: { marginTop: 3, color: "#111827", fontSize: 24, fontWeight: "800" },
-  contact: { alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 21, backgroundColor: "#ECFDF5" },
+  actions: { flexDirection: "row", gap: 8, marginTop: 16 },
+  action: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  actionDisabled: { opacity: 0.55 },
+  actionText: { color: "#111827", fontSize: 13, fontWeight: "700" },
   driverRow: { flexDirection: "row", alignItems: "center", marginTop: 18, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
   driverAvatar: { alignItems: "center", justifyContent: "center", width: 46, height: 46, borderRadius: 23, backgroundColor: "#FDE68A" },
   driverInitial: { color: "#111827", fontSize: 18, fontWeight: "800" },

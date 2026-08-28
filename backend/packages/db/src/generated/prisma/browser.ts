@@ -58,6 +58,11 @@ export type DriverDocument = Prisma.DriverDocumentModel
  */
 export type Trip = Prisma.TripModel
 /**
+ * Model TripMessage
+ * 
+ */
+export type TripMessage = Prisma.TripMessageModel
+/**
  * Model TripOffer
  * 
  */

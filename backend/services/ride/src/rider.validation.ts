@@ -11,3 +11,14 @@ export const riderTripSchema = z.object({
   vehicleType: z.enum(["BIKE", "CAR"]).default("CAR"),
   rideType: z.enum(["STANDARD", "AIRPORT", "MULTI_STOP", "SCHEDULED", "CORPORATE"]).default("STANDARD"),
 });
+
+export const chatMessageSchema = z.object({
+  body: z.string().trim().min(1).max(1000),
+});
+
+export const supportTicketSchema = z.object({
+  subject: z.string().trim().min(2).max(120),
+  category: z.string().trim().min(2).max(40).default("TRIP"),
+  body: z.string().trim().min(1).max(2000),
+  tripId: z.string().trim().min(1).optional(),
+});

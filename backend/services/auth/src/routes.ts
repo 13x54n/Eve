@@ -104,7 +104,7 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.get("/me", requireAuth, async (req, res, next) => {
+authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
   try {
     const user = await getUserById((req as AuthenticatedRequest).user.id);
     res.status(200).json({ user });

@@ -11,6 +11,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="trip/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="trip/chat" options={{ headerShown: false }} />
           <Stack.Screen name="ride/request" options={{ headerShown: false }} />
           <Stack.Screen name="ride/searching" options={{ headerShown: false }} />
           <Stack.Screen name="ride/tracking" options={{ headerShown: false }} />

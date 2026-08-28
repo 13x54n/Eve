@@ -1,4 +1,5 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare } from "@eve/db";
+import { emitUserEvent } from "@eve/notify";
 import { money, startOfDay, distanceKm, durationMinutes } from "@eve/shared";
 
 function parseFilters(query: Record<string, unknown>) {
@@ -1167,6 +1168,13 @@ export async function updateTicket(
     where: { id },
     include: { messages: true, rider: { include: { user: true } } },
   });
+
+  if (body.message && !body.internal && ticket?.requesterId) {
+    emitUserEvent("RIDER", ticket.requesterId, "support:message", {
+      ticketId: id,
+      body: body.message,
+    });
+  }
 
   return ticket;
 }

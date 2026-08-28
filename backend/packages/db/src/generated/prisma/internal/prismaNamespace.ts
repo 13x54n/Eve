@@ -405,6 +405,7 @@ export const ModelName = {
   Vehicle: 'Vehicle',
   DriverDocument: 'DriverDocument',
   Trip: 'Trip',
+  TripMessage: 'TripMessage',
   TripOffer: 'TripOffer',
   TripEvent: 'TripEvent',
   PaymentMethod: 'PaymentMethod',
@@ -438,7 +439,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
+    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1031,6 +1032,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.TripCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.TripCountAggregateOutputType> | number
+        }
+      }
+    }
+    TripMessage: {
+      payload: Prisma.$TripMessagePayload<ExtArgs>
+      fields: Prisma.TripMessageFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TripMessageFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TripMessageFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        findFirst: {
+          args: Prisma.TripMessageFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TripMessageFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        findMany: {
+          args: Prisma.TripMessageFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>[]
+        }
+        create: {
+          args: Prisma.TripMessageCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        createMany: {
+          args: Prisma.TripMessageCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TripMessageCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>[]
+        }
+        delete: {
+          args: Prisma.TripMessageDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        update: {
+          args: Prisma.TripMessageUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        deleteMany: {
+          args: Prisma.TripMessageDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TripMessageUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TripMessageUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>[]
+        }
+        upsert: {
+          args: Prisma.TripMessageUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripMessagePayload>
+        }
+        aggregate: {
+          args: Prisma.TripMessageAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTripMessage>
+        }
+        groupBy: {
+          args: Prisma.TripMessageGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripMessageGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TripMessageCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripMessageCountAggregateOutputType> | number
         }
       }
     }
@@ -2556,6 +2631,17 @@ export const TripScalarFieldEnum = {
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
 
 
+export const TripMessageScalarFieldEnum = {
+  id: 'id',
+  tripId: 'tripId',
+  authorId: 'authorId',
+  body: 'body',
+  createdAt: 'createdAt'
+} as const
+
+export type TripMessageScalarFieldEnum = (typeof TripMessageScalarFieldEnum)[keyof typeof TripMessageScalarFieldEnum]
+
+
 export const TripOfferScalarFieldEnum = {
   id: 'id',
   tripId: 'tripId',
@@ -3422,6 +3508,7 @@ export type GlobalOmitConfig = {
   vehicle?: Prisma.VehicleOmit
   driverDocument?: Prisma.DriverDocumentOmit
   trip?: Prisma.TripOmit
+  tripMessage?: Prisma.TripMessageOmit
   tripOffer?: Prisma.TripOfferOmit
   tripEvent?: Prisma.TripEventOmit
   paymentMethod?: Prisma.PaymentMethodOmit

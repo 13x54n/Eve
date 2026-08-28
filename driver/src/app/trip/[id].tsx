@@ -267,6 +267,12 @@ export default function ActiveTripScreen() {
               <Feather name="phone" size={18} color="#16A34A" />
             </TouchableOpacity>
           ) : null}
+          <TouchableOpacity
+            style={styles.callButton}
+            onPress={() => router.push({ pathname: '/trip/chat', params: { id: trip.id } })}
+          >
+            <Feather name="message-circle" size={18} color="#2E4ED5" />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.addressRow}>
@@ -349,7 +355,7 @@ const styles = StyleSheet.create({
   riderCopy: { flex: 1, marginLeft: 12 },
   riderName: { color: '#111827', fontSize: 15, fontWeight: '700' },
   riderFare: { marginTop: 3, color: '#6B7280', fontSize: 12 },
-  callButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5' },
+  callButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5', marginLeft: 8 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { flex: 1, color: '#374151', fontSize: 13 },

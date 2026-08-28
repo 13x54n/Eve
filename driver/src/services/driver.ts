@@ -125,6 +125,26 @@ export async function cancelTrip(tripId: string, reason?: string) {
   return data.trip;
 }
 
+export type TripMessage = {
+  id: string;
+  tripId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  authorName: string;
+  authorRole: string;
+};
+
+export async function getTripMessages(tripId: string) {
+  const { data } = await api.get<{ messages: TripMessage[] }>(`/driver/trips/${tripId}/messages`);
+  return data.messages;
+}
+
+export async function sendTripMessage(tripId: string, body: string) {
+  const { data } = await api.post<{ message: TripMessage }>(`/driver/trips/${tripId}/messages`, { body });
+  return data.message;
+}
+
 export async function saveVehicle(input: {
   make: string;
   model: string;

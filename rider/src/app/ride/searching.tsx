@@ -3,10 +3,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { acceptOffer, cancelTrip, getTrip, Trip } from "@/services/trips";
-import { connectSocket, disconnectSocket, subscribeTrip } from "@/services/socket";
+import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
+import { useRideSession } from "@/context/ride-session";
 
 export default function SearchingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
+  const { refreshActive } = useRideSession();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -16,19 +18,7 @@ export default function SearchingScreen() {
   useEffect(() => {
     if (!tripId) return;
     let mounted = true;
-    void connectSocket((event) => {
-      if (mounted && ["offer:created", "trip:assigned", "trip:cancelled"].includes(event)) {
-        void getTrip(tripId).then((next) => {
-          if (!mounted) return;
-          setTrip(next);
-          if (next.status === "ASSIGNED" || next.status === "ONGOING") {
-            router.replace({ pathname: "/ride/tracking", params: { tripId } });
-          } else if (next.status === "CANCELLED" || next.status === "COMPLETED") {
-            router.replace("/(tabs)/home");
-          }
-        }).catch(() => { /* poll retries */ });
-      }
-    }).then(() => subscribeTrip(tripId)).catch(() => { /* offers still refresh over HTTP */ });
+    void connectSocket().then(() => subscribeTrip(tripId)).catch(() => { /* offers still refresh over HTTP */ });
     const refresh = async (isFirst = false) => {
       try {
         const next = await getTrip(tripId);
@@ -47,8 +37,12 @@ export default function SearchingScreen() {
       }
     };
     void refresh(true);
+    const remove = addSocketListener((event) => {
+      if (!mounted) return;
+      if (["offer:created", "trip:assigned", "trip:cancelled"].includes(event)) void refresh();
+    });
     const timer = setInterval(() => void refresh(), 3000);
-    return () => { mounted = false; clearInterval(timer); disconnectSocket(); };
+    return () => { mounted = false; clearInterval(timer); remove(); };
   }, [tripId]);
 
   const offers = trip?.offers?.filter((offer) => offer.status === "PENDING") ?? [];
@@ -82,6 +76,7 @@ export default function SearchingScreen() {
             try {
               setCancelling(true);
               await cancelTrip(tripId);
+              await refreshActive();
               router.replace("/(tabs)/home");
             } catch {
               Alert.alert("Could not cancel", "Please try again.");

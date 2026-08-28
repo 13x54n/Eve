@@ -106,6 +106,24 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
     20000,
   );
 
+  it("rejects a second rider trip while one is SEARCHING and exposes GET /trips/active", async () => {
+    const rider = await spawnRider();
+    const trip = await createSearchingTrip(rider.token);
+    const active = await request(app)
+      .get("/api/rider/trips/active")
+      .set("Authorization", `Bearer ${rider.token}`)
+      .expect(200);
+    expect(active.body.trip.id).toBe(trip.id);
+    expect(active.body.trip.status).toBe("SEARCHING");
+
+    const second = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${rider.token}`)
+      .send(nycTripPayload())
+      .expect(409);
+    expect(second.body.message).toMatch(/already have an active trip/i);
+  });
+
   it("lets a rider cancel while SEARCHING", async () => {
     const rider = await spawnRider();
     const trip = await createSearchingTrip(rider.token);

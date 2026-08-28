@@ -271,6 +271,7 @@ export type UserWhereInput = {
   assignedTickets?: Prisma.SupportTicketListRelationFilter
   assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  tripMessages?: Prisma.TripMessageListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -298,6 +299,7 @@ export type UserOrderByWithRelationInput = {
   assignedTickets?: Prisma.SupportTicketOrderByRelationAggregateInput
   assignedIncidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
+  tripMessages?: Prisma.TripMessageOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -328,6 +330,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   assignedTickets?: Prisma.SupportTicketListRelationFilter
   assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
+  tripMessages?: Prisma.TripMessageListRelationFilter
 }, "id" | "email" | "phone">
 
 export type UserOrderByWithAggregationInput = {
@@ -397,6 +400,7 @@ export type UserCreateInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -424,6 +428,7 @@ export type UserUncheckedCreateInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUpdateInput = {
@@ -451,6 +456,7 @@ export type UserUpdateInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -478,6 +484,7 @@ export type UserUncheckedUpdateInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -672,6 +679,20 @@ export type UserUpdateOneRequiredWithoutDriverProfileNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDriverProfileInput, Prisma.UserUpdateWithoutDriverProfileInput>, Prisma.UserUncheckedUpdateWithoutDriverProfileInput>
 }
 
+export type UserCreateNestedOneWithoutTripMessagesInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTripMessagesInput, Prisma.UserUncheckedCreateWithoutTripMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTripMessagesInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutTripMessagesNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTripMessagesInput, Prisma.UserUncheckedCreateWithoutTripMessagesInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTripMessagesInput
+  upsert?: Prisma.UserUpsertWithoutTripMessagesInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTripMessagesInput, Prisma.UserUpdateWithoutTripMessagesInput>, Prisma.UserUncheckedUpdateWithoutTripMessagesInput>
+}
+
 export type UserCreateNestedOneWithoutAssignedTicketsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutAssignedTicketsInput, Prisma.UserUncheckedCreateWithoutAssignedTicketsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutAssignedTicketsInput
@@ -788,6 +809,7 @@ export type UserCreateWithoutResetCodesInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutResetCodesInput = {
@@ -814,6 +836,7 @@ export type UserUncheckedCreateWithoutResetCodesInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutResetCodesInput = {
@@ -856,6 +879,7 @@ export type UserUpdateWithoutResetCodesInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResetCodesInput = {
@@ -882,6 +906,7 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutRiderProfileInput = {
@@ -908,6 +933,7 @@ export type UserCreateWithoutRiderProfileInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutRiderProfileInput = {
@@ -934,6 +960,7 @@ export type UserUncheckedCreateWithoutRiderProfileInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutRiderProfileInput = {
@@ -976,6 +1003,7 @@ export type UserUpdateWithoutRiderProfileInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRiderProfileInput = {
@@ -1002,6 +1030,7 @@ export type UserUncheckedUpdateWithoutRiderProfileInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutDriverProfileInput = {
@@ -1028,6 +1057,7 @@ export type UserCreateWithoutDriverProfileInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutDriverProfileInput = {
@@ -1054,6 +1084,7 @@ export type UserUncheckedCreateWithoutDriverProfileInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutDriverProfileInput = {
@@ -1096,6 +1127,7 @@ export type UserUpdateWithoutDriverProfileInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDriverProfileInput = {
@@ -1116,6 +1148,131 @@ export type UserUncheckedUpdateWithoutDriverProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
   riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserCreateWithoutTripMessagesInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutTripMessagesInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutTripMessagesInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTripMessagesInput, Prisma.UserUncheckedCreateWithoutTripMessagesInput>
+}
+
+export type UserUpsertWithoutTripMessagesInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTripMessagesInput, Prisma.UserUncheckedUpdateWithoutTripMessagesInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTripMessagesInput, Prisma.UserUncheckedCreateWithoutTripMessagesInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTripMessagesInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTripMessagesInput, Prisma.UserUncheckedUpdateWithoutTripMessagesInput>
+}
+
+export type UserUpdateWithoutTripMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTripMessagesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
   loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
@@ -1148,6 +1305,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -1174,6 +1332,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -1216,6 +1375,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -1242,6 +1402,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutAssignedIncidentsInput = {
@@ -1268,6 +1429,7 @@ export type UserCreateWithoutAssignedIncidentsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
@@ -1294,6 +1456,7 @@ export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAssignedIncidentsInput = {
@@ -1336,6 +1499,7 @@ export type UserUpdateWithoutAssignedIncidentsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
@@ -1362,6 +1526,7 @@ export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -1388,6 +1553,7 @@ export type UserCreateWithoutNotificationsInput = {
   auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -1414,6 +1580,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -1456,6 +1623,7 @@ export type UserUpdateWithoutNotificationsInput = {
   auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -1482,6 +1650,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -1508,6 +1677,7 @@ export type UserCreateWithoutAuditLogsInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -1534,6 +1704,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -1576,6 +1747,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -1602,6 +1774,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutLoginEventsInput = {
@@ -1628,6 +1801,7 @@ export type UserCreateWithoutLoginEventsInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutLoginEventsInput = {
@@ -1654,6 +1828,7 @@ export type UserUncheckedCreateWithoutLoginEventsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutLoginEventsInput = {
@@ -1696,6 +1871,7 @@ export type UserUpdateWithoutLoginEventsInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLoginEventsInput = {
@@ -1722,6 +1898,7 @@ export type UserUncheckedUpdateWithoutLoginEventsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1748,6 +1925,7 @@ export type UserCreateWithoutSessionsInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1774,6 +1952,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1816,6 +1995,7 @@ export type UserUpdateWithoutSessionsInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1842,6 +2022,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
 }
 
 
@@ -1857,6 +2038,7 @@ export type UserCountOutputType = {
   assignedTickets: number
   assignedIncidents: number
   notifications: number
+  tripMessages: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1867,6 +2049,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   assignedTickets?: boolean | UserCountOutputTypeCountAssignedTicketsArgs
   assignedIncidents?: boolean | UserCountOutputTypeCountAssignedIncidentsArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
+  tripMessages?: boolean | UserCountOutputTypeCountTripMessagesArgs
 }
 
 /**
@@ -1928,6 +2111,13 @@ export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.NotificationWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTripMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TripMessageWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1954,6 +2144,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2022,6 +2213,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   assignedTickets?: boolean | Prisma.User$assignedTicketsArgs<ExtArgs>
   assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
+  tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2039,6 +2231,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     assignedTickets: Prisma.$SupportTicketPayload<ExtArgs>[]
     assignedIncidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
+    tripMessages: Prisma.$TripMessagePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2459,6 +2652,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   assignedTickets<T extends Prisma.User$assignedTicketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedTicketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   assignedIncidents<T extends Prisma.User$assignedIncidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedIncidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tripMessages<T extends Prisma.User$tripMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tripMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3099,6 +3293,30 @@ export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
+}
+
+/**
+ * User.tripMessages
+ */
+export type User$tripMessagesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TripMessage
+   */
+  select?: Prisma.TripMessageSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TripMessage
+   */
+  omit?: Prisma.TripMessageOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TripMessageInclude<ExtArgs> | null
+  where?: Prisma.TripMessageWhereInput
+  orderBy?: Prisma.TripMessageOrderByWithRelationInput | Prisma.TripMessageOrderByWithRelationInput[]
+  cursor?: Prisma.TripMessageWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TripMessageScalarFieldEnum | Prisma.TripMessageScalarFieldEnum[]
 }
 
 /**

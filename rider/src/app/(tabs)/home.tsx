@@ -1,9 +1,10 @@
 import * as Location from "expo-location";
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   StyleSheet,
@@ -14,10 +15,15 @@ import {
 } from "react-native";
 import MapView, { Marker, Region, UrlTile } from "react-native-maps";
 import { Image } from "expo-image";
-import { searchAddresses, AddressSuggestion } from "@/services/location"; // adjust path if needed
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { searchAddresses, AddressSuggestion } from "@/services/location";
+import { cancelTrip } from "@/services/trips";
+import { useRideSession } from "@/context/ride-session";
+import { FindingBanner } from "@/components/finding-banner";
 
 
 export default function HomeScreen() {
+  const { activeTrip, refreshActive } = useRideSession();
   const [region, setRegion] = useState<Region>(fallbackRegion);
   const [loading, setLoading] = useState(true);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
@@ -25,11 +31,24 @@ export default function HomeScreen() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [mapPickerVisible, setMapPickerVisible] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [mapPin, setMapPin] = useState({
     latitude: fallbackRegion.latitude,
     longitude: fallbackRegion.longitude,
   });
   const mapPickerRef = useRef<MapView | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshActive();
+    }, [refreshActive]),
+  );
+
+  useEffect(() => {
+    if (activeTrip?.status === "ASSIGNED" || activeTrip?.status === "ONGOING") {
+      router.replace({ pathname: "/ride/tracking", params: { tripId: activeTrip.id } });
+    }
+  }, [activeTrip?.id, activeTrip?.status]);
 
   useEffect(() => {
     async function loadLocation() {
@@ -117,6 +136,30 @@ export default function HomeScreen() {
     });
   }
 
+  async function handleCancelSearch() {
+    if (!activeTrip) return;
+    Alert.alert("Cancel request", "Stop looking for a driver?", [
+      { text: "Keep waiting", style: "cancel" },
+      {
+        text: "Cancel request",
+        style: "destructive",
+        onPress: () => {
+          void (async () => {
+            try {
+              setCancelling(true);
+              await cancelTrip(activeTrip.id);
+              await refreshActive();
+            } catch {
+              Alert.alert("Could not cancel", "Please try again.");
+            } finally {
+              setCancelling(false);
+            }
+          })();
+        },
+      },
+    ]);
+  }
+
   if (loading) {
     return (
       <View>
@@ -128,8 +171,17 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Nice to see you, Lex</Text>
-      <View style={styles.searchContainer}>
+      <Animated.Text entering={FadeInDown.duration(420)} style={styles.title}>Nice to see you, Lex</Animated.Text>
+      {activeTrip?.status === "SEARCHING" ? (
+        <FindingBanner
+          destination={activeTrip.dropoffAddress}
+          offerCount={activeTrip.offers?.filter((offer) => offer.status === "PENDING").length ?? 0}
+          cancelling={cancelling}
+          onOpen={() => router.push({ pathname: "/ride/searching", params: { tripId: activeTrip.id } })}
+          onCancel={() => void handleCancelSearch()}
+        />
+      ) : null}
+      <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.searchContainer}>
         <Feather name="search" size={24} color="#2e4ed2" />
         <TextInput
           style={styles.searchText}
@@ -152,7 +204,7 @@ export default function HomeScreen() {
             <Feather name="x-circle" size={20} color="#9CA3AF" />
           </Pressable>
         ) : null}
-      </View>
+      </Animated.View>
 
       {searchFocused && (destination || suggestions.length > 0) ? (
         <View style={styles.suggestionsCard}>
@@ -257,7 +309,8 @@ export default function HomeScreen() {
           </View>
         </View>
       </Modal>
-      <View
+      <Animated.View
+        entering={FadeInDown.delay(160).duration(420)}
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -265,7 +318,7 @@ export default function HomeScreen() {
           gap: 10,
         }}
       >
-        <View style={styles.featuresButton}>
+        <Pressable style={styles.featuresButton}>
           <Image
             source={{
               uri: "https://images.unsplash.com/vector-1768383602208-c45d3af52271?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -274,8 +327,8 @@ export default function HomeScreen() {
           />
           <Text style={styles.featureText}>Schedule</Text>
           <Text>Book Ahead</Text>
-        </View>
-        <View style={styles.featuresButton}>
+        </Pressable>
+        <Pressable style={styles.featuresButton}>
           <Image
             source={{
               uri: "https://images.unsplash.com/vector-1763972891818-fbae102da51e?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -284,8 +337,8 @@ export default function HomeScreen() {
           />
           <Text style={styles.featureText}>Courier</Text>
           <Text>Let's get moving!</Text>
-        </View>
-      </View>
+        </Pressable>
+      </Animated.View>
 
 
     </View>

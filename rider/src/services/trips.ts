@@ -60,6 +60,31 @@ export async function getTrips() {
   return data.trips;
 }
 
+export async function getActiveTrip() {
+  const { data } = await api.get<{ trip: Trip | null }>('/rider/trips/active');
+  return data.trip;
+}
+
+export type TripMessage = {
+  id: string;
+  tripId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  authorName: string;
+  authorRole: string;
+};
+
+export async function getTripMessages(tripId: string) {
+  const { data } = await api.get<{ messages: TripMessage[] }>(`/rider/trips/${tripId}/messages`);
+  return data.messages;
+}
+
+export async function sendTripMessage(tripId: string, body: string) {
+  const { data } = await api.post<{ message: TripMessage }>(`/rider/trips/${tripId}/messages`, { body });
+  return data.message;
+}
+
 export async function acceptOffer(tripId: string, offerId: string) {
   const { data } = await api.post<{ trip: Trip }>(
     `/rider/trips/${tripId}/offers/${offerId}/accept`,

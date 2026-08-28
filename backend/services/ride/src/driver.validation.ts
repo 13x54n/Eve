@@ -67,3 +67,7 @@ export const driverOfferSchema = z.object({
   proposedFare: z.coerce.number().positive().max(10000),
   etaMinutes: z.coerce.number().int().min(1).max(180),
 });
+
+export const chatMessageSchema = z.object({
+  body: z.string().trim().min(1).max(1000),
+});

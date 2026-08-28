@@ -18,7 +18,8 @@ import * as Location from "expo-location";
 import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
 import { Image } from "expo-image";
 import MapView, { Marker, Polyline, UrlTile } from "react-native-maps";
-import { createTrip } from "@/services/trips";
+import { createTrip, getActiveTrip } from "@/services/trips";
+import { useRideSession } from "@/context/ride-session";
 
 const vehicleOptions = [
   ["Car", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
@@ -32,6 +33,7 @@ const riderOptions = [
 type ActiveField = "pickup" | "dropoff" | { type: "stop"; index: number };
 
 export default function RequestRideScreen() {
+  const { refreshActive } = useRideSession();
   const params = useLocalSearchParams<{
     pickup?: string;
     dropoff?: string;
@@ -278,8 +280,23 @@ export default function RequestRideScreen() {
         dropoffLng: dropoffPoint.lng,
         vehicleType: selectedVehicle === "Bike" ? "BIKE" : "CAR",
       });
-      router.replace({ pathname: "/ride/searching", params: { tripId: trip.id } });
+      await refreshActive();
+      router.replace("/(tabs)/home");
     } catch (error: any) {
+      if (error.response?.status === 409) {
+        try {
+          const active = await getActiveTrip();
+          await refreshActive();
+          if (active?.status === "ASSIGNED" || active?.status === "ONGOING") {
+            router.replace({ pathname: "/ride/tracking", params: { tripId: active.id } });
+            return;
+          }
+          router.replace("/(tabs)/home");
+          return;
+        } catch {
+          /* fall through */
+        }
+      }
       Alert.alert("Could not request ride", error.response?.data?.message ?? "Please try again.");
     }
   }

@@ -1,7 +1,9 @@
 import type { NextFunction, Request, Response } from "express";
 import type { AuthenticatedRequest } from "@eve/http";
 import * as driverService from "./driver.service.js";
+import { createTripMessage, listTripMessages } from "./trip-chat.js";
 import {
+  chatMessageSchema,
   driverDocumentSchema,
   driverVehicleSchema,
   driverOfferSchema,
@@ -196,4 +198,18 @@ export async function earnings(
   } catch (error) {
     next(error);
   }
+}
+
+export async function listMessages(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({ messages: await listTripMessages(getAuthUser(req).id, String(req.params.id), "DRIVER") });
+  } catch (error) { next(error); }
+}
+
+export async function postMessage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { body } = chatMessageSchema.parse(req.body);
+    const message = await createTripMessage(getAuthUser(req).id, String(req.params.id), "DRIVER", body);
+    res.status(201).json({ message });
+  } catch (error) { next(error); }
 }
