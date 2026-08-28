@@ -66,9 +66,19 @@ export type IncomingTrip = {
   vehicleType: VehicleType;
 };
 
+export type PendingOffer = {
+  id: string;
+  tripId: string;
+  proposedFare: number;
+  etaMinutes: number;
+  riderName: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+};
+
 export async function getIncomingTrips() {
-  const { data } = await api.get<{ trips: IncomingTrip[] }>('/driver/trips/incoming');
-  return data.trips;
+  const { data } = await api.get<{ trips: IncomingTrip[]; pendingOffer: PendingOffer | null }>('/driver/trips/incoming');
+  return data;
 }
 
 export async function createTripOffer(tripId: string, proposedFare: number, etaMinutes: number) {
@@ -113,6 +123,26 @@ export async function completeTrip(tripId: string, input: { rating?: number; fee
 export async function cancelTrip(tripId: string, reason?: string) {
   const { data } = await api.post<{ trip: ActiveTrip }>(`/driver/trips/${tripId}/cancel`, { reason });
   return data.trip;
+}
+
+export type TripMessage = {
+  id: string;
+  tripId: string;
+  authorId: string;
+  body: string;
+  createdAt: string;
+  authorName: string;
+  authorRole: string;
+};
+
+export async function getTripMessages(tripId: string) {
+  const { data } = await api.get<{ messages: TripMessage[] }>(`/driver/trips/${tripId}/messages`);
+  return data.messages;
+}
+
+export async function sendTripMessage(tripId: string, body: string) {
+  const { data } = await api.post<{ message: TripMessage }>(`/driver/trips/${tripId}/messages`, { body });
+  return data.message;
 }
 
 export async function saveVehicle(input: {

@@ -3,20 +3,24 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "react-native-maps";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cancelTrip, getTrip, Trip } from "@/services/trips";
-import { connectSocket, disconnectSocket, subscribeTrip } from "@/services/socket";
+import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived"];
 
 export default function TrackingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
+  const insets = useSafeAreaInsets();
   const [trip, setTrip] = useState<Trip | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const mapRef = useRef<MapView | null>(null);
 
   const applyTrip = useCallback((next: Trip) => {
+    setLoadError(false);
     setTrip(next);
     if (typeof next.driver?.latitude === "number" && typeof next.driver?.longitude === "number") {
       setDriverLocation((current) => current ?? {
@@ -25,23 +29,28 @@ export default function TrackingScreen() {
       });
     }
     if (next.status === "COMPLETED") {
-      router.replace("/ride/completed");
+      router.replace({ pathname: "/ride/completed", params: { tripId: next.id } });
     } else if (next.status === "CANCELLED") {
       router.replace("/(tabs)/home");
+    } else if (next.status === "SEARCHING") {
+      router.replace({ pathname: "/ride/searching", params: { tripId: next.id } });
     }
   }, []);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (isFirst = false) => {
     if (!tripId) return;
     try {
       applyTrip(await getTrip(tripId));
-    } catch { /* keep last known trip */ }
+    } catch {
+      if (isFirst) setLoadError(true);
+    }
   }, [applyTrip, tripId]);
 
   useEffect(() => {
     if (!tripId) return;
     let mounted = true;
-    void connectSocket((event, payload) => {
+    void connectSocket().then(() => subscribeTrip(tripId)).catch(() => { /* HTTP poll still loads the trip */ });
+    const remove = addSocketListener((event, payload) => {
       if (!mounted) return;
       if (event === "driver:location" && payload && typeof payload === "object") {
         const location = payload as { latitude?: number; longitude?: number };
@@ -51,10 +60,10 @@ export default function TrackingScreen() {
         return;
       }
       if (STATUS_EVENTS.includes(event)) void refresh();
-    }).then(() => subscribeTrip(tripId)).catch(() => { /* HTTP poll still loads the trip */ });
-    void refresh();
+    });
+    void refresh(true);
     const timer = setInterval(() => void refresh(), 4000);
-    return () => { mounted = false; clearInterval(timer); disconnectSocket(); };
+    return () => { mounted = false; clearInterval(timer); remove(); };
   }, [refresh, tripId]);
 
   useEffect(() => {
@@ -69,7 +78,7 @@ export default function TrackingScreen() {
       return;
     }
     mapRef.current.fitToCoordinates(points, {
-      edgePadding: { top: 48, right: 48, bottom: 120, left: 48 },
+      edgePadding: { top: 88, right: 48, bottom: 280, left: 48 },
       animated: true,
     });
   }, [driverLocation, trip]);
@@ -98,11 +107,36 @@ export default function TrackingScreen() {
     ]);
   }
 
+  if (!tripId) {
+    return (
+      <View style={styles.loading}>
+        <Text style={styles.loadingText}>This trip is no longer available.</Text>
+        <Pressable style={styles.retry} onPress={() => router.replace("/(tabs)/home")}>
+          <Text style={styles.retryText}>Back home</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
   if (!trip) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#2E4ED5" />
-        <Text style={styles.loadingText}>Loading trip...</Text>
+        {loadError ? (
+          <>
+            <Text style={styles.loadingText}>Could not load this trip.</Text>
+            <Pressable style={styles.retry} onPress={() => { setLoadError(false); void refresh(true); }}>
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+            <Pressable onPress={() => router.replace("/(tabs)/home")}>
+              <Text style={styles.homeLink}>Back home</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <ActivityIndicator size="large" color="#2E4ED5" />
+            <Text style={styles.loadingText}>Loading trip...</Text>
+          </>
+        )}
       </View>
     );
   }
@@ -113,9 +147,10 @@ export default function TrackingScreen() {
     : { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
   const driverName = trip.driver?.user?.name ?? "Your driver";
   const vehicleLabel = trip.vehicle
-    ? `${trip.vehicle.make} ${trip.vehicle.model} · ${trip.vehicle.plateNumber}`
+    ? `${trip.vehicle.make} ${trip.vehicle.model}`
     : "Assigned vehicle";
-  const stageLabel = headingToPickup ? "Heading to you" : "On the way";
+  const plate = trip.vehicle?.plateNumber;
+  const stageLabel = headingToPickup ? "Meet at pickup" : "On the way to dropoff";
   const etaLabel = `${Math.max(1, trip.durationMin)} min`;
   const initialRegion = {
     latitude: driverLocation?.latitude ?? trip.pickupLat,
@@ -132,25 +167,25 @@ export default function TrackingScreen() {
         <Marker coordinate={{ latitude: trip.pickupLat, longitude: trip.pickupLng }} pinColor="#16A34A" title="Pickup" />
         <Marker coordinate={{ latitude: trip.dropoffLat, longitude: trip.dropoffLng }} pinColor="#DC2626" title="Dropoff" />
         {driverLocation ? (
-          <Polyline
-            coordinates={[driverLocation, destination]}
-            strokeColor="#2E4ED5"
-            strokeWidth={4}
-          />
+          <Polyline coordinates={[driverLocation, destination]} strokeColor="#2E4ED5" strokeWidth={4} />
         ) : null}
       </MapView>
-      <View style={styles.sheet}>
+
+      <Pressable
+        style={[styles.fab, { top: insets.top + 8 }]}
+        onPress={() => router.replace("/(tabs)/home")}
+        accessibilityLabel="Back home"
+      >
+        <Feather name="chevron-down" size={22} color="#111827" />
+      </Pressable>
+
+      <View style={[styles.sheet, { paddingBottom: Math.max(24, insets.bottom + 12) }]}>
         <View style={styles.handle} />
         <View style={styles.arrival}>
-          <View>
+          <View style={styles.arrivalCopy}>
             <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
             <Text style={styles.time}>{etaLabel}</Text>
           </View>
-          {trip.driver?.user?.phone ? (
-            <Pressable style={styles.contact} onPress={() => void Linking.openURL(`tel:${trip.driver?.user?.phone}`)}>
-              <Feather name="phone" size={18} color="#15803D" />
-            </Pressable>
-          ) : null}
         </View>
         <View style={styles.driverRow}>
           <View style={styles.driverAvatar}>
@@ -161,9 +196,39 @@ export default function TrackingScreen() {
             <Text style={styles.vehicle}>{vehicleLabel}</Text>
             <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
           </View>
+          {plate ? <Text style={styles.plate}>{plate}</Text> : null}
           {trip.driver?.rating != null ? (
             <Text style={styles.rating}>★ {Number(trip.driver.rating).toFixed(1)}</Text>
           ) : null}
+        </View>
+        <View style={styles.actions}>
+          <Pressable
+            style={[styles.action, !trip.driver?.user?.phone && styles.actionDisabled]}
+            onPress={() => {
+              if (!trip.driver?.user?.phone) {
+                Alert.alert("No phone on file", "This driver has not added a phone number yet.");
+                return;
+              }
+              void Linking.openURL(`tel:${trip.driver.user.phone}`);
+            }}
+          >
+            <Feather name="phone" size={16} color="#15803D" />
+            <Text style={styles.actionText}>Call</Text>
+          </Pressable>
+          <Pressable
+            style={styles.action}
+            onPress={() => router.push({ pathname: "/ride/chat", params: { tripId: trip.id } })}
+          >
+            <Feather name="message-circle" size={16} color="#2E4ED5" />
+            <Text style={styles.actionText}>Chat</Text>
+          </Pressable>
+          <Pressable
+            style={styles.action}
+            onPress={() => router.push({ pathname: "/ride/support", params: { tripId: trip.id } })}
+          >
+            <Feather name="help-circle" size={16} color="#B45309" />
+            <Text style={styles.actionText}>Help</Text>
+          </Pressable>
         </View>
         <View style={styles.addressRow}>
           <View style={[styles.addressDot, { backgroundColor: "#16A34A" }]} />
@@ -174,8 +239,8 @@ export default function TrackingScreen() {
           <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
         </View>
         {trip.status === "ASSIGNED" || trip.status === "ONGOING" ? (
-          <Pressable style={styles.button} onPress={handleCancel} disabled={busy}>
-            <Text style={styles.buttonText}>{busy ? "Cancelling..." : "Cancel trip"}</Text>
+          <Pressable style={styles.cancel} onPress={handleCancel} disabled={busy}>
+            <Text style={styles.cancelText}>{busy ? "Cancelling..." : "Cancel trip"}</Text>
           </Pressable>
         ) : null}
       </View>
@@ -185,26 +250,67 @@ export default function TrackingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F8EF" },
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, backgroundColor: "#F7F8EF" },
-  loadingText: { color: "#6B7280", fontSize: 13 },
-  map: { flex: 1 },
-  sheet: { padding: 20, paddingBottom: 30, borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, backgroundColor: "#FFFFFF" },
-  handle: { alignSelf: "center", width: 38, height: 4, marginBottom: 20, borderRadius: 2, backgroundColor: "#D1D5DB" },
-  arrival: { flexDirection: "row", alignItems: "center", gap: 10 },
+  loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24, backgroundColor: "#F7F8EF" },
+  loadingText: { color: "#6B7280", fontSize: 13, textAlign: "center" },
+  retry: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12, backgroundColor: "#2E4ED5" },
+  retryText: { color: "#FFFFFF", fontWeight: "700" },
+  homeLink: { color: "#2E4ED5", fontWeight: "700", marginTop: 8 },
+  map: { ...StyleSheet.absoluteFill },
+  fab: {
+    position: "absolute",
+    left: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  sheet: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    padding: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: "#FFFFFF",
+  },
+  handle: { alignSelf: "center", width: 38, height: 4, marginBottom: 16, borderRadius: 2, backgroundColor: "#D1D5DB" },
+  arrival: { flexDirection: "row", alignItems: "center" },
+  arrivalCopy: { flex: 1 },
   eyebrow: { color: "#6B7280", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
   time: { marginTop: 3, color: "#111827", fontSize: 24, fontWeight: "800" },
-  contact: { alignItems: "center", justifyContent: "center", width: 42, height: 42, marginLeft: "auto", borderRadius: 21, backgroundColor: "#ECFDF5" },
-  driverRow: { flexDirection: "row", alignItems: "center", marginTop: 22, paddingTop: 18, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
+  actions: { flexDirection: "row", gap: 8, marginTop: 16 },
+  action: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  actionDisabled: { opacity: 0.55 },
+  actionText: { color: "#111827", fontSize: 13, fontWeight: "700" },
+  driverRow: { flexDirection: "row", alignItems: "center", marginTop: 18, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
   driverAvatar: { alignItems: "center", justifyContent: "center", width: 46, height: 46, borderRadius: 23, backgroundColor: "#FDE68A" },
   driverInitial: { color: "#111827", fontSize: 18, fontWeight: "800" },
   driverCopy: { flex: 1, marginLeft: 12 },
   driver: { color: "#111827", fontWeight: "800" },
   vehicle: { marginTop: 4, color: "#6B7280", fontSize: 12 },
   fare: { marginTop: 3, color: "#374151", fontSize: 12 },
+  plate: { marginRight: 8, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, backgroundColor: "#F3F4F6", color: "#111827", fontSize: 12, fontWeight: "800" },
   rating: { color: "#374151", fontSize: 12, fontWeight: "700" },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { flex: 1, color: "#374151", fontSize: 13 },
-  button: { alignItems: "center", marginTop: 22, padding: 16, borderRadius: 12, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#FECACA" },
-  buttonText: { color: "#B91C1C", fontWeight: "700", fontSize: 16 },
+  cancel: { alignItems: "center", marginTop: 18, padding: 8 },
+  cancelText: { color: "#B91C1C", fontWeight: "700", fontSize: 13 },
 });

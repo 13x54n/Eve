@@ -31,7 +31,10 @@ api.interceptors.request.use(async (config) => {
 
 api.interceptors.response.use(
   (res) => res,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      await SecureStore.deleteItemAsync('access_token');
+    }
     if (__DEV__) {
       console.error(
         `[api] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} failed`,

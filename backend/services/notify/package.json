@@ -1,0 +1,22 @@
+{
+  "name": "@eve/notify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "@eve/db": "*",
+    "@eve/http": "*",
+    "@eve/location": "*",
+    "@eve/shared": "*",
+    "express": "^5.1.0",
+    "dotenv": "^17.2.1",
+    "socket.io": "^4.8.3"
+  }
+}

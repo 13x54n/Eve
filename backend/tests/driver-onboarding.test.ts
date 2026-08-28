@@ -1,7 +1,7 @@
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
-import app from "../src/app.js";
-import { prisma } from "../src/config/prisma.js";
+import app from "../gateway/src/app.js";
+import { prisma } from "@eve/db";
 
 const createdEmails: string[] = [];
 
@@ -46,6 +46,20 @@ describe("Driver onboarding", () => {
         }),
       ]),
     );
+  });
+
+  it("logs a registered driver back in", async () => {
+    const response = await registerDriver("CAR").expect(201);
+    const email = response.body.user.email;
+
+    const login = await request(app)
+      .post("/api/auth/driver/login")
+      .send({ email, password: "password123" })
+      .expect(200);
+
+    expect(login.body.accessToken).toEqual(expect.any(String));
+    expect(login.body.user).toMatchObject({ email, role: "DRIVER" });
+    expect(login.body.user.passwordHash).toBeUndefined();
   });
 
   it("rejects an unknown vehicle type", async () => {

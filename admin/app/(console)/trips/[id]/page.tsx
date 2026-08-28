@@ -34,7 +34,7 @@ type Trip = {
   distanceKm: number;
   durationMin: number;
   fareTotal: number;
-  commission: number;
+  suggestedFare: number;
   paymentStatus: string;
   paymentMethod: string;
   cancellationReason: string | null;
@@ -43,6 +43,7 @@ type Trip = {
   rider: { name: string; phone: string | null };
   driver: { name: string; id: string } | null;
   events: { id: string; action: string; createdAt: string }[];
+  offers: { id: string; proposedFare: number; etaMinutes: number; status: string; driverName: string }[];
   ledger: { id: string; type: string; amount: number; status: string }[];
 };
 
@@ -170,20 +171,20 @@ export default function TripDetailPage({
               </Panel>
             </div>
             <div className="space-y-5">
-              <Panel title="Fare">
+              <Panel title="Fare audit">
                 <dl className="space-y-2 text-[13px]">
                   <div className="flex justify-between border-b border-border py-1.5">
-                    <dt className="text-muted-foreground">Rider fare</dt>
+                    <dt className="text-muted-foreground">Suggested fare</dt>
+                    <dd className="font-semibold">{money(data.suggestedFare)}</dd>
+                  </div>
+                  <div className="flex justify-between border-b border-border py-1.5">
+                    <dt className="text-muted-foreground">Matched fare</dt>
                     <dd className="font-semibold">{money(data.fareTotal)}</dd>
                   </div>
                   <div className="flex justify-between border-b border-border py-1.5">
-                    <dt className="text-muted-foreground">Commission</dt>
-                    <dd className="font-semibold text-emerald-700">{money(data.commission)}</dd>
-                  </div>
-                  <div className="flex justify-between border-b border-border py-1.5">
-                    <dt className="text-muted-foreground">Payment</dt>
+                    <dt className="text-muted-foreground">Settlement</dt>
                     <dd>
-                      {data.paymentMethod} · {data.paymentStatus}
+                      Off-platform · {data.paymentMethod} · {data.paymentStatus}
                     </dd>
                   </div>
                   <div className="flex justify-between py-1.5">
@@ -191,6 +192,19 @@ export default function TripDetailPage({
                     <dd>{data.cancellationReason ?? "None"}</dd>
                   </div>
                 </dl>
+              </Panel>
+              <Panel title="Offers" flush>
+                <Table
+                  columns={["Driver", "Offer", "Status"]}
+                  empty="No offers yet."
+                  rows={(data.offers ?? []).map((offer) => [
+                    offer.driverName,
+                    money(offer.proposedFare),
+                    <Badge key={offer.id} tone={statusTone(offer.status)}>
+                      {offer.status}
+                    </Badge>,
+                  ])}
+                />
               </Panel>
               {dispatch ? (
                 <Panel title="Dispatch">

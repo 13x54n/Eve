@@ -1,7 +1,7 @@
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
-import app from "../src/app.js";
-import { prisma } from "../src/config/prisma.js";
+import app from "../gateway/src/app.js";
+import { prisma } from "@eve/db";
 
 const createdEmails: string[] = [];
 
@@ -112,13 +112,23 @@ describe("Rider-driver matchmaking", () => {
       expect.arrayContaining([expect.objectContaining({ id: trip.id, vehicleType: "CAR" })]),
     );
 
+    const proposedFare = Number((Number(trip.fareTotal) + 2).toFixed(2));
+
     const offerRes = await request(app)
       .post(`/api/driver/trips/${trip.id}/offers`)
       .set("Authorization", `Bearer ${driverToken}`)
-      .send({ proposedFare: trip.fareTotal, etaMinutes: 5 })
+      .send({ proposedFare, etaMinutes: 5 })
       .expect(201);
 
     expect(offerRes.body.offer).toMatchObject({ tripId: trip.id, status: "PENDING" });
+
+    const waitingRes = await request(app)
+      .get("/api/driver/trips/incoming")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .expect(200);
+
+    expect(waitingRes.body.trips).toEqual([]);
+    expect(waitingRes.body.pendingOffer).toMatchObject({ tripId: trip.id, proposedFare });
 
     const offersRes = await request(app)
       .get(`/api/rider/trips/${trip.id}/offers`)
@@ -136,7 +146,9 @@ describe("Rider-driver matchmaking", () => {
     expect(acceptRes.body.trip).toMatchObject({
       status: "ASSIGNED",
       driverId: driverProfileId,
+      fareTotal: proposedFare,
     });
+    expect(acceptRes.body.trip.commission).toBeUndefined();
     },
     15000,
   );
@@ -287,5 +299,51 @@ describe("Rider-driver matchmaking", () => {
     expect(incomingRes.body.trips).toEqual(
       expect.arrayContaining([expect.objectContaining({ id: tripRes.body.trip.id })]),
     );
+  });
+
+  it("blocks a second offer while a driver is waiting to be matched", async () => {
+    const riderA = await registerRider().expect(201);
+    const riderB = await registerRider().expect(201);
+    const driverRes = await registerDriver().expect(201);
+    const driverToken = driverRes.body.accessToken;
+    await approveDriver(driverRes.body.driverProfile.id);
+    await goOnline(driverToken, PICKUP);
+
+    const tripPayload = {
+      pickupAddress: "Pickup St",
+      dropoffAddress: "Dropoff Ave",
+      city: "New York",
+      pickupLat: PICKUP.lat,
+      pickupLng: PICKUP.lng,
+      dropoffLat: DROPOFF.lat,
+      dropoffLng: DROPOFF.lng,
+      vehicleType: "CAR",
+    };
+
+    const tripA = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${riderA.body.accessToken}`)
+      .send(tripPayload)
+      .expect(201);
+
+    const tripB = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${riderB.body.accessToken}`)
+      .send(tripPayload)
+      .expect(201);
+
+    await request(app)
+      .post(`/api/driver/trips/${tripA.body.trip.id}/offers`)
+      .set("Authorization", `Bearer ${driverToken}`)
+      .send({ proposedFare: tripA.body.trip.fareTotal, etaMinutes: 5 })
+      .expect(201);
+
+    const second = await request(app)
+      .post(`/api/driver/trips/${tripB.body.trip.id}/offers`)
+      .set("Authorization", `Bearer ${driverToken}`)
+      .send({ proposedFare: tripB.body.trip.fareTotal, etaMinutes: 5 })
+      .expect(409);
+
+    expect(second.body.message).toMatch(/wait for your current offer/i);
   });
 });

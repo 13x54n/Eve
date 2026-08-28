@@ -1,8 +1,9 @@
 import Feather from "@expo/vector-icons/Feather";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getSessionUser } from "@/services/auth";
+import { useAuth } from "@/context/auth-context";
 import { Image } from "expo-image";
 
 const items = [
@@ -12,6 +13,7 @@ const items = [
 ] as const;
 
 export default function ProfileScreen() {
+  const { logout } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [memberSince, setMemberSince] = useState("");
@@ -41,10 +43,21 @@ export default function ProfileScreen() {
         <Pressable style={styles.editButton} accessibilityLabel="Edit profile" onPress={() => Alert.alert("Edit profile", "Profile editing will be available soon.")}><Feather name="edit-2" size={17} color="#2E4ED5" /></Pressable>
       </View>
       <Text style={styles.sectionTitle}>Preferences</Text>
-      <View style={styles.menuCard}>{items.map((item, index) => <Pressable key={item[1]} style={[styles.menuItem, index < items.length - 1 && styles.menuBorder]} onPress={() => Alert.alert(item[1], item[2])}><View style={styles.menuIcon}><Feather name={item[0]} size={18} color="#2E4ED5" /></View><View style={styles.menuCopy}><Text style={styles.menuTitle}>{item[1]}</Text><Text style={styles.menuDetail}>{item[2]}</Text></View><Feather name="chevron-right" size={18} color="#9CA3AF" /></Pressable>)}</View>
+      <View style={styles.menuCard}>{items.map((item, index) => <Pressable key={item[1]} style={[styles.menuItem, index < items.length - 1 && styles.menuBorder]} onPress={() => item[1] === "Help and support" ? router.push("/ride/support") : Alert.alert(item[1], item[2])}><View style={styles.menuIcon}><Feather name={item[0]} size={18} color="#2E4ED5" /></View><View style={styles.menuCopy}><Text style={styles.menuTitle}>{item[1]}</Text><Text style={styles.menuDetail}>{item[2]}</Text></View><Feather name="chevron-right" size={18} color="#9CA3AF" /></Pressable>)}</View>
       <Text style={styles.sectionTitle}>More</Text>
-      <View style={styles.menuCard}><Pressable style={styles.menuItem} onPress={() => Alert.alert("About Eve", "Your everyday ride, made simpler.")}><View style={styles.menuIcon}><Feather name="info" size={18} color="#2E4ED5" /></View><View style={styles.menuCopy}><Text style={styles.menuTitle}>About Eve</Text><Text style={styles.menuDetail}>Version 1.0.0</Text></View><Feather name="chevron-right" size={18} color="#9CA3AF" /></Pressable></View>
-      <Pressable style={styles.logoutButton} onPress={() => router.replace("/(auth)/welcome")}><Feather name="log-out" size={18} color="#ffffff" /><Text style={styles.logoutText}>Log out</Text></Pressable>
+      <View style={styles.menuCard}>
+        <Pressable style={[styles.menuItem, styles.menuBorder]} onPress={() => router.push("/legal" as Href)}>
+          <View style={styles.menuIcon}><Feather name="file-text" size={18} color="#2E4ED5" /></View>
+          <View style={styles.menuCopy}><Text style={styles.menuTitle}>Terms & privacy</Text><Text style={styles.menuDetail}>Terms of Use and Privacy Policy</Text></View>
+          <Feather name="chevron-right" size={18} color="#9CA3AF" />
+        </Pressable>
+        <Pressable style={styles.menuItem} onPress={() => Alert.alert("About Eve", "Your everyday ride, made simpler.")}>
+          <View style={styles.menuIcon}><Feather name="info" size={18} color="#2E4ED5" /></View>
+          <View style={styles.menuCopy}><Text style={styles.menuTitle}>About Eve</Text><Text style={styles.menuDetail}>Version 1.0.0</Text></View>
+          <Feather name="chevron-right" size={18} color="#9CA3AF" />
+        </Pressable>
+      </View>
+      <Pressable style={styles.logoutButton} onPress={() => { void logout().then(() => router.replace("/(auth)/welcome")); }}><Feather name="log-out" size={18} color="#ffffff" /><Text style={styles.logoutText}>Log out</Text></Pressable>
     </ScrollView>
   );
 }

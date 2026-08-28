@@ -1,0 +1,19 @@
+{
+  "name": "@eve/http",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@eve/db": "*",
+    "@eve/shared": "*",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "morgan": "^1.11.0",
+    "zod": "^4.0.0",
+    "dotenv": "^17.2.1"
+  }
+}

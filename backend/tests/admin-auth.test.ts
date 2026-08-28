@@ -6,9 +6,9 @@ import {
   expect,
   it,
 } from "vitest";
-import app from "../src/app.js";
-import { prisma } from "../src/config/prisma.js";
-import { hashPassword } from "../src/utils/password.js";
+import app from "../gateway/src/app.js";
+import { prisma } from "@eve/db";
+import { hashPassword } from "@eve/shared";
 
 const adminEmail = `admin-${Date.now()}@example.com`;
 const riderEmail = `rider-admin-${Date.now()}@example.com`;

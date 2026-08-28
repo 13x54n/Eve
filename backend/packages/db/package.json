@@ -1,0 +1,16 @@
+{
+  "name": "@eve/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@eve/shared": "*",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "pg": "^8.16.3",
+    "dotenv": "^17.2.1"
+  }
+}

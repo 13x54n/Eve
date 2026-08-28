@@ -14,6 +14,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, type Href } from 'expo-router';
 import { getDriverProfile } from '@/services/driver';
+import { useAuth } from '@/context/auth-context';
 
 // npm install @expo/vector-icons expo-image
 // No dev client needed — everything here works in plain Expo Go.
@@ -36,6 +37,7 @@ function iconWrap(bg: string, child: React.ReactNode) {
 }
 
 export default function MenuScreen() {
+  const { logout } = useAuth();
   const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
@@ -58,13 +60,21 @@ export default function MenuScreen() {
       router.push('/onboarding/vehicle' as Href);
     } else if (screen === 'Documents') {
       router.push('/onboarding/documents' as Href);
+    } else if (screen === 'Legal') {
+      router.push('/legal' as Href);
     }
   };
 
   const handleSignOut = () => {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => console.log('sign out') },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: () => {
+          void logout().then(() => router.replace('/(auth)/welcome'));
+        },
+      },
     ]);
   };
 

@@ -1,5 +1,5 @@
-import { prisma } from "../src/config/prisma.js";
-import { hashPassword } from "../src/utils/password.js";
+import { prisma } from "@eve/db";
+import { hashPassword } from "@eve/shared";
 
 async function seed() {
   const passwordHash = await hashPassword("Admin123!");
@@ -10,6 +10,7 @@ async function seed() {
   await prisma.lostItem.deleteMany();
   await prisma.privacyRequest.deleteMany();
   await prisma.tripEvent.deleteMany();
+  await prisma.tripOffer.deleteMany();
   await prisma.ledgerEntry.deleteMany();
   await prisma.alert.deleteMany();
   await prisma.notification.deleteMany();
@@ -106,14 +107,6 @@ async function seed() {
               walletBalance: 24.5,
               loyaltyPoints: 120,
               consentMarketing: true,
-              paymentMethods: {
-                create: {
-                  kind: "CARD",
-                  brand: "Visa",
-                  last4: "4242",
-                  isDefault: true,
-                },
-              },
             },
           },
         },
@@ -216,10 +209,10 @@ async function seed() {
       dropoffLng: -73.7781,
       distanceKm: 24.2,
       durationMin: 48,
+      suggestedFare: 68.4,
       fareTotal: 68.4,
-      commission: 13.68,
       paymentStatus: "PENDING",
-      paymentMethod: "CARD",
+      paymentMethod: "CASH",
       etaMinutes: 18,
       startedAt: new Date(),
     },
@@ -243,10 +236,10 @@ async function seed() {
       dropoffLng: -73.981,
       distanceKm: 14.1,
       durationMin: 32,
+      suggestedFare: 38,
       fareTotal: 42,
-      commission: 8.4,
       paymentStatus: "COMPLETED",
-      paymentMethod: "CARD",
+      paymentMethod: "CASH",
       startedAt: new Date(Date.now() - 3_600_000),
       endedAt: new Date(Date.now() - 1_800_000),
     },
@@ -268,10 +261,10 @@ async function seed() {
       dropoffLng: -80.287,
       distanceKm: 12,
       durationMin: 28,
+      suggestedFare: 36,
       fareTotal: 36,
-      commission: 7.2,
       paymentStatus: "PENDING",
-      paymentMethod: "WALLET",
+      paymentMethod: "CASH",
       scheduledAt: new Date(Date.now() + 86_400_000),
     },
   });
@@ -284,42 +277,27 @@ async function seed() {
     ],
   });
 
+  await prisma.tripOffer.create({
+    data: {
+      tripId: completed.id,
+      driverId: firstDriver.id,
+      proposedFare: 42,
+      etaMinutes: 12,
+      status: "ACCEPTED",
+      respondedAt: new Date(Date.now() - 2_000_000),
+    },
+  });
+
   await prisma.ledgerEntry.createMany({
     data: [
       {
         tripId: completed.id,
-        userId: riders[1]!.id,
+        userId: drivers[0]!.id,
         type: "CHARGE",
         status: "COMPLETED",
-        method: "CARD",
+        method: "CASH",
         amount: 42,
-        brand: "Visa",
-        last4: "4242",
-        providerRef: "pi_seed_1002",
-      },
-      {
-        tripId: completed.id,
-        userId: drivers[0]!.id,
-        type: "COMMISSION",
-        status: "COMPLETED",
-        method: "WALLET",
-        amount: 8.4,
-      },
-      {
-        userId: drivers[0]!.id,
-        type: "PAYOUT",
-        status: "PENDING",
-        method: "WALLET",
-        amount: 320,
-        note: "Weekly payout",
-      },
-      {
-        userId: riders[0]!.id,
-        type: "CHARGE",
-        status: "FAILED",
-        method: "CARD",
-        amount: 19.5,
-        last4: "4242",
+        note: "Matched fare recorded off-platform",
       },
     ],
   });
@@ -337,7 +315,6 @@ async function seed() {
       airportFee: 5,
       cancellationFee: 6,
       waitingFee: 0.4,
-      commissionPercent: 20,
       surgeMultiplier: 1.2,
       status: "ACTIVE",
       effectiveAt: new Date(),
@@ -417,8 +394,8 @@ async function seed() {
       },
       {
         kind: "PAYMENT_FAILURE",
-        title: "Card declined",
-        body: "Visa •4242 failed on a $19.50 charge",
+        title: "Off-platform fare dispute",
+        body: "Rider reported a cash amount that did not match the audited fare",
         severity: "MEDIUM",
         city: "New York",
       },

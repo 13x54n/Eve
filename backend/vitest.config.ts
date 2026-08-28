@@ -8,5 +8,19 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubEnvs: true,
+    server: {
+      deps: {
+        inline: [
+          "@eve/shared",
+          "@eve/db",
+          "@eve/http",
+          "@eve/auth",
+          "@eve/location",
+          "@eve/ride",
+          "@eve/notify",
+          "@eve/gateway",
+        ],
+      },
+    },
   },
 });

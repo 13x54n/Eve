@@ -265,16 +265,10 @@ export default function RiderDetailPage({
                 </Panel>
               ) : null}
 
-              <Panel title="Payment methods" flush>
-                <Table
-                  columns={["Method", "Brand", "Last 4"]}
-                  empty="No payment methods on file."
-                  rows={(data.profile?.paymentMethods ?? []).map((method) => [
-                    method.kind,
-                    method.brand ?? "—",
-                    method.last4 ? `•••• ${method.last4}` : "—",
-                  ])}
-                />
+              <Panel title="Payment">
+                <p className="p-4 text-[13px] text-muted-foreground">
+                  Eve does not collect ride payments. Fares are paid off-platform between rider and driver.
+                </p>
               </Panel>
 
               <Panel title="Internal notes">

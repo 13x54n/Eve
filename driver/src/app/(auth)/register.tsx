@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, type Href } from "expo-router";
 import {
   Pressable,
   Keyboard,
@@ -16,8 +16,10 @@ import { Checkbox } from "expo-checkbox";
 import { useState } from "react";
 import Feather from "@expo/vector-icons/build/Feather";
 import { register } from "@/services/auth";
+import { useAuth } from "@/context/auth-context";
 
 export default function RegisterScreen() {
+  const { setUser } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,14 +56,14 @@ export default function RegisterScreen() {
       return;
     }
     if (!isChecked) {
-      Alert.alert("Terms required", "You must agree to the Terms and Conditions.");
+      Alert.alert("Terms required", "You must agree to the Terms of Use and Privacy Policy.");
       return;
     }
 
     try {
       setLoading(true);
       
-      await register({
+      const session = await register({
         name: normalizedName,
         email: normalizedEmail,
         password: trimmedPassword,
@@ -74,6 +76,7 @@ export default function RegisterScreen() {
         vehicleType,
         vehicleCapacity: vehicleType === "BIKE" ? 1 : 4,
       });
+      setUser(session.user);
 
       router.replace("/(tabs)/home");
     } catch (e: any) {
@@ -177,10 +180,24 @@ export default function RegisterScreen() {
 
       <View style={styles.section}>
         <Checkbox style={styles.checkbox} value={isChecked} onValueChange={setChecked} />
-        <Text style={styles.paragraph}>Agree with</Text>
-        <Pressable accessibilityRole="link">
-          <Text style={[styles.paragraph, { color: "#2563EB" }]}> Terms and Conditions</Text>
-        </Pressable>
+        <Text style={styles.paragraph}>
+          Agree with{" "}
+          <Text
+            accessibilityRole="link"
+            style={styles.legalLink}
+            onPress={() => router.push("/legal/terms" as Href)}
+          >
+            Terms of Use
+          </Text>
+          {" and "}
+          <Text
+            accessibilityRole="link"
+            style={styles.legalLink}
+            onPress={() => router.push("/legal/privacy" as Href)}
+          >
+            Privacy Policy
+          </Text>
+        </Text>
       </View>
 
       <Pressable
@@ -291,6 +308,12 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   paragraph: {
+    flex: 1,
     color: "#111827",
+    lineHeight: 20,
+  },
+  legalLink: {
+    color: "#2563EB",
+    fontWeight: "600",
   },
 });
