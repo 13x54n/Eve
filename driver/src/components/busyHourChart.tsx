@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   chart: {
-    height: 200,
+    height: 100,
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 2,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     width: '100%',
-    height: 168,
+    height: 100,
     justifyContent: 'flex-end',
     borderRadius: 3,
     overflow: 'hidden',

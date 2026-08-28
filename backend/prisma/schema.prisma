@@ -202,6 +202,7 @@ model User {
   assignedTickets   SupportTicket[]     @relation("TicketAssignee")
   assignedIncidents SafetyIncident[]    @relation("IncidentAssignee")
   notifications     Notification[]
+  tripMessages      TripMessage[]
 }
 
 model PasswordResetCode {
@@ -343,9 +344,22 @@ model Trip {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   offers             TripOffer[]
+  chatMessages       TripMessage[]
 
   @@index([status, city, createdAt])
   @@index([bookingCode])
+}
+
+model TripMessage {
+  id        String   @id @default(cuid())
+  tripId    String
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([tripId, createdAt])
 }
 
 model TripOffer {

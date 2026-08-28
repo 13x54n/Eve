@@ -253,7 +253,10 @@ export async function getIncomingTrips(userId: string) {
 export async function createTripOffer(userId: string, tripId: string, input: { proposedFare: number; etaMinutes: number }) {
   const profile = await prisma.driverProfile.findUnique({ where: { userId }, include: { vehicles: true } });
   if (!profile) { const error = new Error("Driver profile not found"); error.name = "NotFoundError"; throw error; }
-  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: { rider: { select: { userId: true } } },
+  });
   if (!trip) { const error = new Error("Trip not found"); error.name = "NotFoundError"; throw error; }
   const distanceToPickup = await distanceToPickupClient(userId, trip.pickupLat, trip.pickupLng);
   if (
@@ -279,7 +282,9 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
   }
   try {
     const offer = await prisma.tripOffer.create({ data: { tripId, driverId: profile.id, proposedFare: input.proposedFare, etaMinutes: input.etaMinutes } });
-    emitTripEvent(tripId, "offer:created", offer);
+    const payload = { ...offer, proposedFare: Number(offer.proposedFare), tripId };
+    emitTripEvent(tripId, "offer:created", payload);
+    emitUserEvent("RIDER", trip.rider.userId, "offer:created", payload);
     return offer;
   } catch (error: any) {
     if (error?.code === "P2002") { error.name = "ConflictError"; error.message = "You already offered on this trip"; }

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { UrlTile, PROVIDER_DEFAULT, Region } from 'react-native-maps';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import BusyHoursChart from '@/components/busyHourChart';
 import { Image } from 'expo-image';
@@ -202,14 +202,14 @@ export default function Home() {
             style={{ width: 60, height: 60, marginRight: 'auto' }}
           />
           <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <Ionicons name="shield-outline" size={20} color="#111827" />
+            <MaterialIcons name="support-agent" size={24} color="black" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.requestSection}>
-          <Text style={styles.presenceLabel}>
+          {/* <Text style={styles.presenceLabel}>
             {presence === 'ONLINE' || presence === 'IDLE' ? 'You are online' : 'You are offline'}
-          </Text>
+          </Text> */}
         </View>
         {pendingOffer ? (
           <View style={styles.requestSection}>
@@ -258,21 +258,21 @@ export default function Home() {
         </View> */}
 
         {/* Map */}
-        
+
 
         {/* Section: Earnings */}
-        <View style={{ borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 12, marginHorizontal: 16, borderRadius: 20, shadowColor: '#0F172A', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 3 }}>
+        <View style={{  backgroundColor: '#FFFFFF', borderColor: '#E5E7EB', marginBottom: 12, marginHorizontal: 16, borderRadius: 20,  }}>
           <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Earnings</Text>
-          <Text style={styles.sectionSubtitle}>
-            Earning trends for drivers in your current area
-          </Text>
-          <Text style={styles.sectionBody}>
-            Explore the best times and places to deliver today.
-          </Text>
-        </View>
+            <Text style={styles.sectionTitle}>Earnings</Text>
+            <Text style={styles.sectionSubtitle}>
+              Earning trends for drivers in your current area
+            </Text>
+            <Text style={styles.sectionBody}>
+              Explore the best times and places to deliver today.
+            </Text>
+          </View>
 
-        <BusyHoursChart />
+          <BusyHoursChart />
         </View>
 
         {/* Spacer so content isn't hidden behind the fixed button */}
@@ -318,15 +318,16 @@ const styles = StyleSheet.create({
   },
   requestSection: {
     paddingHorizontal: 16,
-    paddingTop: 12,
+    // paddingTop: 12,
   },
   presenceLabel: {
     color: '#6B7280',
     fontSize: 13,
     fontWeight: '600',
+    marginBottom: 12,
   },
   requestCard: {
-    marginTop: 10,
+    marginVertical: 10,
     padding: 16,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
