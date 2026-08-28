@@ -34,11 +34,11 @@ export const driverTerms: LegalDocument = {
     },
     {
       heading: "4. Offers, trips, and conduct",
-      body: "When you are online we may send trip offers with proposed fare and ETA. Accepting an offer is a commitment to pick up the rider promptly and complete the trip safely and professionally. You agree not to discriminate, harass, or endanger riders. You must follow traffic laws and not use the app in a way that distracts you while driving.",
+      body: "When you are online we may send nearby ride requests. You may send one offer at a time. After you offer a price you wait while the rider chooses. You cannot offer on another trip until that offer is accepted, declined, or the request is cancelled. Accepting an offer is a commitment to pick up the rider promptly and complete the trip safely and professionally. You agree not to discriminate, harass, or endanger riders. You must follow traffic laws and not use the app in a way that distracts you while driving.",
     },
     {
-      heading: "5. Earnings, commission, and payment",
-      body: "Fares are set or proposed through the app. Eve may deduct commission, fees, or adjustments as described in the app or your commission tier. Earnings, incentives, and payout timing can change with notice in the app. You are responsible for reporting income. Disputes about a specific trip should be raised through support promptly.",
+      heading: "5. Offers, matched price, and payment",
+      body: "Requests include a suggested fare. Your offer is recorded, and if the rider accepts, Eve stores the matched price for audit. Eve does not deduct commission, process ride payments, or pay you out. The rider pays you off-platform. You are responsible for collecting that payment and for tax reporting. Eve does not guarantee you will be paid.",
     },
     {
       heading: "6. Location while online",
@@ -58,11 +58,11 @@ export const driverTerms: LegalDocument = {
     },
     {
       heading: "10. Limitation of liability",
-      body: `To the fullest extent permitted by the laws of ${LEGAL_JURISDICTION}, ${LEGAL_OPERATOR}'s aggregate liability arising out of these Terms or your use of the driver app is limited to the greater of (a) commission we retained on your completed trips in the three months before the claim or (b) CAD $100. Nothing excludes liability that cannot be limited by law.`,
+      body: `To the fullest extent permitted by the laws of ${LEGAL_JURISDICTION}, ${LEGAL_OPERATOR}'s aggregate liability arising out of these Terms or your use of the driver app is limited to CAD $100. Nothing excludes liability that cannot be limited by law.`,
     },
     {
       heading: "11. Changes and termination",
-      body: "We may update these Terms. Continued use after an update constitutes acceptance. You may stop driving and delete or close your account subject to outstanding trips and payouts. We may deactivate you immediately for safety, fraud, or material breach.",
+      body: "We may update these Terms. Continued use after an update constitutes acceptance. You may stop driving and delete or close your account subject to outstanding trips. We may deactivate you immediately for safety, fraud, or material breach.",
     },
     {
       heading: "12. Governing law",
@@ -82,15 +82,15 @@ export const driverPrivacy: LegalDocument = {
   sections: [
     {
       heading: "1. Information we collect",
-      body: "Account: name, email, password (hashed), phone, city. Driver profile: approval status, ratings, acceptance and cancellation rates, online hours, earnings totals, commission tier. Vehicle: make, model, year, colour, plate, type, capacity. Documents: images and files you upload (licence, insurance, and similar), stored with our file host (for example ImageKit), plus review status and expiry. Location: precise GPS while the app is in use, while you are online, and during trips, so we can send nearby offers and share progress. Trips: pickup/drop-off, fares, offers you receive or accept. Device and logs needed to operate the app.",
+      body: "Account: name, email, password (hashed), phone, city. Driver profile: approval status, ratings, acceptance and cancellation rates, online hours, recorded matched fares. Vehicle: make, model, year, colour, plate, type, capacity. Documents: images and files you upload (licence, insurance, and similar), stored with our file host (for example ImageKit), plus review status and expiry. Location: precise GPS while the app is in use, while you are online, and during trips, so we can send nearby offers and share progress. Trips: pickup/drop-off, suggested fare, offers you send, matched price. Device and logs needed to operate the app.",
     },
     {
       heading: "2. How we use information",
-      body: "We use this information to verify you as a driver, match offers, show navigation context, calculate earnings and commission, review documents, improve safety and fraud prevention, provide support, and comply with law.",
+      body: "We use this information to verify you as a driver, match offers, show navigation context, record suggested and matched prices, review documents, improve safety and fraud prevention, provide support, and comply with law.",
     },
     {
       heading: "3. How we share information",
-      body: "Riders on an assigned trip receive the details needed to identify you and the vehicle (typically first name or handle, vehicle description, plate as shown in the app, and live location during the trip). We use processors for hosting, maps, file storage, and payments. We may disclose information if required by law, to protect safety, or in a business transaction. We do not sell your personal information.",
+      body: "Riders on an assigned trip receive the details needed to identify you and the vehicle (typically first name or handle, vehicle description, plate as shown in the app, and live location during the trip). We use processors for hosting, maps, and file storage. We may disclose information if required by law, to protect safety, or in a business transaction. We do not sell your personal information.",
     },
     {
       heading: "4. Retention",

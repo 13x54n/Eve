@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../packages/db/src/generated/prisma"
 }
 
 datasource db {
@@ -106,7 +106,6 @@ enum PaymentMethodKind {
 enum LedgerType {
   CHARGE
   REFUND
-  COMMISSION
   PAYOUT
   WALLET_TOPUP
   WALLET_WITHDRAW
@@ -257,7 +256,6 @@ model DriverProfile {
   cancellationRate Decimal               @default(0) @db.Decimal(5, 2)
   onlineHours      Decimal               @default(0) @db.Decimal(10, 2)
   earningsTotal    Decimal               @default(0) @db.Decimal(12, 2)
-  commissionTier   String                @default("standard")
   city             String?
   latitude         Float?
   longitude        Float?
@@ -328,8 +326,8 @@ model Trip {
   dropoffLng         Float
   distanceKm         Decimal           @db.Decimal(8, 2)
   durationMin        Int
+  suggestedFare      Decimal           @db.Decimal(12, 2)
   fareTotal          Decimal           @db.Decimal(12, 2)
-  commission         Decimal           @db.Decimal(12, 2)
   paymentStatus      LedgerStatus      @default(PENDING)
   paymentMethod      PaymentMethodKind
   cancellationReason String?
@@ -420,7 +418,6 @@ model FareConfig {
   airportFee        Decimal       @db.Decimal(10, 2)
   cancellationFee   Decimal       @db.Decimal(10, 2)
   waitingFee        Decimal       @db.Decimal(10, 2)
-  commissionPercent Decimal       @db.Decimal(5, 2)
   surgeMultiplier   Decimal       @default(1) @db.Decimal(4, 2)
   status            PricingStatus @default(DRAFT)
   effectiveAt       DateTime

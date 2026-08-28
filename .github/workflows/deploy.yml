@@ -3,7 +3,7 @@ name: Deploy Backend
 on:
   push:
     branches: [main]
-    paths: ['backend/**']
+    paths: ["backend/**"]
 
 jobs:
   deploy:
@@ -17,5 +17,9 @@ jobs:
           script: |
             export PATH="/home/ubuntu/.nvm/versions/node/v24.19.0/bin:$PATH"
             cd ~/Eve && git pull origin main
-            cd backend && npm install && npm run build
-            pm2 reload server
+            pm2 delete all
+            cd backend
+            npm install
+            npx prisma generate
+            npx prisma migrate deploy
+            pm2 startOrReload ecosystem.config.cjs --update-env

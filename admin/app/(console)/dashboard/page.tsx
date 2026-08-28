@@ -38,10 +38,7 @@ type Dashboard = {
   };
   finance: {
     dailyBookings: number;
-    revenue: number;
-    commissions: number;
-    refunds: number;
-    pendingPayouts: number;
+    matchedFares: number;
   };
   queues: {
     driverApprovals: number;
@@ -170,9 +167,11 @@ export default function DashboardPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               <StatCard label="Bookings today" value={data.finance.dailyBookings} />
-              <StatCard label="Revenue" value={money(data.finance.revenue)} />
-              <StatCard label="Commission" value={money(data.finance.commissions)} />
-              <StatCard label="Pending payouts" value={money(data.finance.pendingPayouts)} hint={`${money(data.finance.refunds)} refunds`} />
+              <StatCard
+                label="Matched fares today"
+                value={money(data.finance.matchedFares)}
+                hint="Off-platform · no Eve commission"
+              />
             </div>
 
             <div className="grid gap-4 xl:grid-cols-3">

@@ -33,12 +33,12 @@ export const riderTerms: LegalDocument = {
       body: "When you request a ride, you authorize us to match you with an available driver, share pickup and drop-off details, and estimate fare, distance, and time. Estimates are not guarantees. Availability, wait times, and routing depend on drivers, traffic, weather, and other conditions outside our control.",
     },
     {
-      heading: "4. Fares, fees, and payment",
-      body: "You agree to pay the fare and any applicable taxes, tolls, wait-time, cancellation, or other fees shown in the app. Payment may be processed through methods you add to your account. Currency, commission, and settlement details may appear in the app at checkout. If a charge fails, we may retry or restrict further bookings until the balance is resolved.",
+      heading: "4. Fares and off-platform payment",
+      body: "When you request a ride, the app shows a suggested fare. Drivers may send offers. If you accept an offer, Eve records the matched price for audit. Eve does not charge you in the app and does not take a commission. You pay the driver off-platform (for example in cash). Eve does not collect, guarantee, or refund that payment.",
     },
     {
       heading: "5. Cancellations and no-shows",
-      body: "You may cancel a request subject to any cancellation window or fee shown in the app. Repeated cancellations, no-shows, or abuse of the matching system may result in fees or account limits.",
+      body: "You may cancel a request in the app. Repeated cancellations, no-shows, or abuse of matching may result in account limits. Eve does not bill cancellation fees in-app.",
     },
     {
       heading: "6. Conduct and safety",
@@ -54,11 +54,11 @@ export const riderTerms: LegalDocument = {
     },
     {
       heading: "9. Disclaimers",
-      body: "The service is provided \"as is.\" We do not warrant uninterrupted availability, error-free matching, or that a particular driver or vehicle will meet your expectations. To the fullest extent permitted by law, we are not liable for acts or omissions of independent drivers, other riders, or third-party map, payment, or hosting providers.",
+      body: "The service is provided \"as is.\" We do not warrant uninterrupted availability, error-free matching, or that a particular driver or vehicle will meet your expectations. To the fullest extent permitted by law, we are not liable for acts or omissions of independent drivers, other riders, or third-party map or hosting providers.",
     },
     {
       heading: "10. Limitation of liability",
-      body: `To the fullest extent permitted by the laws of ${LEGAL_JURISDICTION}, ${LEGAL_OPERATOR}'s aggregate liability arising out of these Terms or your use of the rider app is limited to the greater of (a) the amounts you paid to us for rides in the three months before the claim or (b) CAD $100. Nothing in these Terms excludes liability that cannot be limited by law, including for fraud or death or personal injury caused by our negligence where such exclusion is prohibited.`,
+      body: `To the fullest extent permitted by the laws of ${LEGAL_JURISDICTION}, ${LEGAL_OPERATOR}'s aggregate liability arising out of these Terms or your use of the rider app is limited to CAD $100. Nothing in these Terms excludes liability that cannot be limited by law, including for fraud or death or personal injury caused by our negligence where such exclusion is prohibited.`,
     },
     {
       heading: "11. Changes and termination",
@@ -82,15 +82,15 @@ export const riderPrivacy: LegalDocument = {
   sections: [
     {
       heading: "1. Information we collect",
-      body: "Account: name, email, password (stored in hashed form), and optional phone number. Trips: pickup and drop-off addresses and coordinates, booking codes, fare, distance, duration, payment status, ratings, and support messages. Location: precise location when you use maps or request a ride, with your device permission. Payments: payment method type, brand, and last four digits; we do not intend to store full card numbers in the rider app. Device: app version and basic technical logs needed to operate the service. Marketing: whether you have opted in to marketing (consentMarketing).",
+      body: "Account: name, email, password (stored in hashed form), and optional phone number. Trips: pickup and drop-off addresses and coordinates, booking codes, suggested fare, matched fare, distance, duration, ratings, and support messages. Location: precise location when you use maps or request a ride, with your device permission. Device: app version and basic technical logs needed to operate the service. Marketing: whether you have opted in to marketing (consentMarketing). We do not collect payment-card details for rides.",
     },
     {
       heading: "2. How we use information",
-      body: "We use this information to create and secure your account, match you with drivers, show maps and ETAs, calculate fares, process payments, prevent fraud, provide support, improve the product, and comply with law. Location is used to set pickup points, show nearby context, and complete the trip.",
+      body: "We use this information to create and secure your account, match you with drivers, show maps and ETAs, calculate suggested fares, record matched prices for audit, prevent fraud, provide support, improve the product, and comply with law. Location is used to set pickup points, show nearby context, and complete the trip.",
     },
     {
       heading: "3. How we share information",
-      body: "Assigned drivers receive the details needed to complete your trip (typically name or handle, pickup/drop-off, and contact as shown in the app). We use service providers for hosting, maps/geocoding, file storage, and payments. We may disclose information if required by law, to protect rights and safety, or in connection with a business transaction. We do not sell your personal information.",
+      body: "Assigned drivers receive the details needed to complete your trip (typically name or handle, pickup/drop-off, and contact as shown in the app). We use service providers for hosting, maps/geocoding, and file storage. We may disclose information if required by law, to protect rights and safety, or in connection with a business transaction. We do not sell your personal information.",
     },
     {
       heading: "4. Retention",

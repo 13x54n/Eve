@@ -24,6 +24,7 @@ import {
   getDriverProfile,
   getIncomingTrips,
   IncomingTrip,
+  PendingOffer,
   updatePresence,
 } from '@/services/driver';
 import { connectDriverSocket, disconnectDriverSocket } from '@/services/socket';
@@ -59,6 +60,7 @@ Notifications.setNotificationHandler({
 
 export default function Home() {
   const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
+  const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
@@ -71,10 +73,19 @@ export default function Home() {
     let mounted = true;
     const refresh = async () => {
       if (presenceRef.current !== 'ONLINE' && presenceRef.current !== 'IDLE') {
-        if (mounted) setIncomingTrips([]);
+        if (mounted) {
+          setIncomingTrips([]);
+          setPendingOffer(null);
+        }
         return;
       }
-      try { if (mounted) setIncomingTrips(await getIncomingTrips()); } catch { /* retry on next poll */ }
+      try {
+        const incoming = await getIncomingTrips();
+        if (mounted) {
+          setIncomingTrips(incoming.trips);
+          setPendingOffer(incoming.pendingOffer);
+        }
+      } catch { /* retry on next poll */ }
     };
     void refresh();
     const timer = setInterval(() => void refresh(), 5000);
@@ -94,6 +105,8 @@ export default function Home() {
       } else if (event === 'trip:assigned') {
         const assignedTrip = payload as { id?: string } | undefined;
         if (assignedTrip?.id) router.push(`/trip/${assignedTrip.id}`);
+      } else if (event === 'offer:rejected') {
+        void refresh();
       }
     }).catch(() => { /* HTTP polling still lists incoming trips */ });
     void getDriverProfile().then((driver) => {
@@ -140,9 +153,12 @@ export default function Home() {
       presenceRef.current = next;
       setPresence(next);
       if (next === 'ONLINE') {
-        setIncomingTrips(await getIncomingTrips());
+        const incoming = await getIncomingTrips();
+        setIncomingTrips(incoming.trips);
+        setPendingOffer(incoming.pendingOffer);
       } else {
         setIncomingTrips([]);
+        setPendingOffer(null);
       }
     } catch (error: any) {
       Alert.alert(
@@ -162,8 +178,12 @@ export default function Home() {
     try {
       setOfferingTripId(trip.id);
       await createTripOffer(trip.id, fare, Math.max(1, Math.ceil(trip.durationMin / 3)));
-      setIncomingTrips((trips) => trips.filter((item) => item.id !== trip.id));
-    } catch { /* request may have expired or been claimed */ }
+      const incoming = await getIncomingTrips();
+      setIncomingTrips(incoming.trips);
+      setPendingOffer(incoming.pendingOffer);
+    } catch (error: any) {
+      Alert.alert('Could not send offer', error?.response?.data?.message ?? 'Please try again.');
+    }
     finally { setOfferingTripId(null); }
   }
 
@@ -191,7 +211,19 @@ export default function Home() {
             {presence === 'ONLINE' || presence === 'IDLE' ? 'You are online' : 'You are offline'}
           </Text>
         </View>
-        {incomingTrips.length > 0 ? (
+        {pendingOffer ? (
+          <View style={styles.requestSection}>
+            <Text style={styles.sectionTitle}>Waiting for match</Text>
+            <View style={styles.requestCard}>
+              <Text style={styles.requestTitle}>{pendingOffer.riderName}</Text>
+              <Text style={styles.requestRoute}>{pendingOffer.pickupAddress}</Text>
+              <Text style={styles.requestRoute}>to {pendingOffer.dropoffAddress}</Text>
+              <Text style={styles.requestMeta}>
+                Offered ${Number(pendingOffer.proposedFare).toFixed(2)} · you can only wait on one match at a time
+              </Text>
+            </View>
+          </View>
+        ) : incomingTrips.length > 0 ? (
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Ride requests nearby</Text>
             {incomingTrips.map((trip) => (

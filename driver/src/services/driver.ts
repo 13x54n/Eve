@@ -66,9 +66,19 @@ export type IncomingTrip = {
   vehicleType: VehicleType;
 };
 
+export type PendingOffer = {
+  id: string;
+  tripId: string;
+  proposedFare: number;
+  etaMinutes: number;
+  riderName: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+};
+
 export async function getIncomingTrips() {
-  const { data } = await api.get<{ trips: IncomingTrip[] }>('/driver/trips/incoming');
-  return data.trips;
+  const { data } = await api.get<{ trips: IncomingTrip[]; pendingOffer: PendingOffer | null }>('/driver/trips/incoming');
+  return data;
 }
 
 export async function createTripOffer(tripId: string, proposedFare: number, etaMinutes: number) {

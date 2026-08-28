@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   hashPassword,
   verifyPassword,
-} from "../src/utils/password.js";
+} from "@eve/shared";
 
 describe("Password utilities", () => {
   it("hashes a password", async () => {

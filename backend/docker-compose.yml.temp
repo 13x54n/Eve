@@ -1,0 +1,98 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+      POSTGRES_DB: eve
+    ports:
+      - "5432:5432"
+    volumes:
+      - eve_pg:/var/lib/postgresql/data
+
+  auth:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/auth/src/server.ts
+    env_file: .env
+    environment:
+      AUTH_PORT: "4001"
+    ports:
+      - "4001:4001"
+    depends_on:
+      - postgres
+
+  location:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/location/src/server.ts
+    env_file: .env
+    environment:
+      LOCATION_PORT: "4002"
+    ports:
+      - "4002:4002"
+    depends_on:
+      - postgres
+
+  ride:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/ride/src/server.ts
+    env_file: .env
+    environment:
+      RIDE_PORT: "4003"
+      LOCATION_URL: http://location:4002
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4003:4003"
+    depends_on:
+      - postgres
+      - location
+      - notify
+
+  notify:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx services/notify/src/server.ts
+    env_file: .env
+    environment:
+      NOTIFY_PORT: "4004"
+      LOCATION_URL: http://location:4002
+    ports:
+      - "4004:4004"
+    depends_on:
+      - postgres
+      - location
+
+  gateway:
+    image: node:22
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: npx tsx gateway/src/server.ts
+    env_file: .env
+    environment:
+      PORT: "4000"
+      GATEWAY_MODE: proxy
+      AUTH_URL: http://auth:4001
+      LOCATION_URL: http://location:4002
+      RIDE_URL: http://ride:4003
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4000:4000"
+    depends_on:
+      - auth
+      - location
+      - ride
+      - notify
+
+volumes:
+  eve_pg:

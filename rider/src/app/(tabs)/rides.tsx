@@ -1,25 +1,47 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { Button, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { getTrips, Trip } from "@/services/trips";
 import { Image } from "expo-image";
 
 function displayStatus(status: string) {
   if (status === "COMPLETED") return "Completed";
   if (status === "CANCELLED") return "Cancelled";
+  if (status === "SEARCHING") return "Finding driver";
+  if (status === "ASSIGNED" || status === "ONGOING") return "In progress";
   return status;
+}
+
+function openTrip(trip: Trip) {
+  if (trip.status === "SEARCHING") {
+    router.push({ pathname: "/ride/searching", params: { tripId: trip.id } });
+    return;
+  }
+  if (trip.status === "ASSIGNED" || trip.status === "ONGOING") {
+    router.push({ pathname: "/ride/tracking", params: { tripId: trip.id } });
+    return;
+  }
+  router.push({ pathname: "/ride/completed", params: { tripId: trip.id } });
 }
 
 export default function RidesScreen() {
   const [filter, setFilter] = useState<"All" | "Completed" | "Cancelled">("All");
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [loadError, setLoadError] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      setTrips(await getTrips());
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-    void getTrips().then((result) => { if (mounted) setTrips(result); }).catch(() => { /* keep empty state on failure */ });
-    return () => { mounted = false; };
-  }, []);
+    void load();
+  }, [load]);
 
   const visibleRides = trips.filter((trip) => filter === "All" || displayStatus(trip.status) === filter);
 
@@ -38,7 +60,9 @@ export default function RidesScreen() {
 
         <View >
           <Text style={styles.sectionTitle}>No upcoming rides.</Text>
-          <Text style={{ color: "#2e4ed2", textDecorationLine: "underline", fontWeight: "bold" }}>Reserve your ride</Text>
+          <Pressable onPress={() => router.push("/(tabs)/home")}>
+            <Text style={{ color: "#2e4ed2", textDecorationLine: "underline", fontWeight: "bold" }}>Reserve your ride</Text>
+          </Pressable>
         </View>
 
         <Image source={{ uri: "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }} style={{ width: "100%", height: 62, borderRadius: 16 }} contentFit="contain" />
@@ -58,7 +82,7 @@ export default function RidesScreen() {
       {visibleRides.map((trip) => {
         const status = displayStatus(trip.status);
         return (
-          <Pressable key={trip.id} style={styles.rideCard} onPress={() => router.push("/ride/completed")}>
+          <Pressable key={trip.id} style={styles.rideCard} onPress={() => openTrip(trip)}>
             <View style={styles.rideHeader}>
               <View style={[styles.statusIcon, { backgroundColor: status === "Cancelled" ? "#FEE2E2" : "#DCFCE7" }]}><Feather name={status === "Cancelled" ? "x" : "check"} size={16} color={status === "Cancelled" ? "#B91C1C" : "#15803D"} /></View>
               <View style={styles.rideMeta}>
@@ -73,7 +97,12 @@ export default function RidesScreen() {
           </Pressable>
         );
       })}
-      {visibleRides.length === 0 && <Text style={styles.empty}>No rides in this filter.</Text>}
+      {loadError ? (
+        <Pressable onPress={() => void load()}>
+          <Text style={styles.empty}>Could not load trips. Tap to retry.</Text>
+        </Pressable>
+      ) : null}
+      {!loadError && visibleRides.length === 0 ? <Text style={styles.empty}>No rides in this filter.</Text> : null}
       <Pressable style={styles.bookButton} onPress={() => router.push("/(tabs)/home")}><Feather name="plus" size={18} color="#FFFFFF" /><Text style={styles.bookText}>Book a new ride</Text></Pressable>
     </ScrollView>
   );

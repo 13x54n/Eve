@@ -33,7 +33,6 @@ type Pricing = {
     airportFee: number;
     cancellationFee: number;
     waitingFee: number;
-    commissionPercent: number;
     surgeMultiplier: number;
     status: string;
     effectiveAt: string;
@@ -64,7 +63,6 @@ export default function PricingPage() {
           airportFee: Number(form.get("airportFee")),
           cancellationFee: Number(form.get("cancellationFee")),
           waitingFee: Number(form.get("waitingFee")),
-          commissionPercent: Number(form.get("commissionPercent")),
           surgeMultiplier: Number(form.get("surgeMultiplier")),
           effectiveAt: form.get("effectiveAt"),
           status: "PENDING_APPROVAL",
@@ -92,7 +90,7 @@ export default function PricingPage() {
 
   return (
     <Guard allowed={can(user, "pricing:read")}>
-      <PageHeader title="Pricing & zones" subtitle="Fare structures, commissions, and service areas." />
+      <PageHeader title="Pricing & zones" subtitle="Suggested fares and service areas. Eve does not take commission." />
       {error ? <ErrorBanner>{error}</ErrorBanner> : null}
       {approve ? (
         <div className="mb-5">
@@ -134,9 +132,6 @@ export default function PricingPage() {
               <Field label="Waiting fee">
                 <Input name="waitingFee" className="w-full" defaultValue="0.4" />
               </Field>
-              <Field label="Commission %">
-                <Input name="commissionPercent" className="w-full" defaultValue="20" />
-              </Field>
               <Field label="Surge">
                 <Input name="surgeMultiplier" className="w-full" defaultValue="1" />
               </Field>
@@ -152,11 +147,11 @@ export default function PricingPage() {
           <Table
             loading={loading && !data}
             empty="No fare configs yet."
-            columns={["Market", "Components", "Commission / surge", "Status", "Actions"]}
+            columns={["Market", "Components", "Surge", "Status", "Actions"]}
             rows={(data?.configs ?? []).map((row) => [
               <span key="m" className="font-semibold">{`${row.city} / ${row.zone ?? "All"} / ${row.vehicleType}`}</span>,
               <span key="c" className="text-[12px] text-muted-foreground">{`Base $${row.baseFare} · $${row.perKm}/km · $${row.perMinute}/min · Min $${row.minFare}`}</span>,
-              `${row.commissionPercent}% · ${row.surgeMultiplier}x`,
+              `${row.surgeMultiplier}x`,
               <Badge key="b" tone={statusTone(row.status)}>
                 {row.status}
               </Badge>,

@@ -6,8 +6,8 @@ import {
   expect,
   it,
 } from "vitest";
-import app from "../src/app.js";
-import { prisma } from "../src/config/prisma.js";
+import app from "../gateway/src/app.js";
+import { prisma } from "@eve/db";
 
 const testEmail = `rider-${Date.now()}@example.com`;
 const testPassword = "password123";

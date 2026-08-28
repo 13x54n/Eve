@@ -1,0 +1,14 @@
+{
+  "name": "@eve/shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "dotenv": "^17.2.1",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

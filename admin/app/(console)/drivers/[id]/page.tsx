@@ -28,7 +28,6 @@ type Driver = {
   cancellationRate: number;
   onlineHours: number;
   earningsTotal: number;
-  commissionTier: string;
   city: string | null;
   notes: string | null;
   user: { name: string; email: string; phone: string | null; accountStatus: string };
@@ -88,7 +87,7 @@ export default function DriverDetailPage({
             <StatCard label="Rating" value={data.rating ? `★ ${data.rating.toFixed(1)}` : "—"} />
             <StatCard label="Acceptance" value={`${data.acceptanceRate}%`} />
             <StatCard label="Cancellations" value={`${data.cancellationRate}%`} />
-            <StatCard label="Earnings" value={money(data.earningsTotal)} />
+            <StatCard label="Matched fares" value={money(data.earningsTotal)} />
           </div>
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
@@ -194,7 +193,7 @@ export default function DriverDetailPage({
                   {data.fleetCompany?.name ?? "Independent"}
                   <br />
                   <span className="text-muted-foreground">
-                    {data.commissionTier} · {data.onlineHours}h online
+                    {data.onlineHours}h online
                   </span>
                 </p>
               </Panel>

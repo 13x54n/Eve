@@ -14,6 +14,7 @@ export type Trip = {
   dropoffLng: number;
   distanceKm: number;
   durationMin: number;
+  etaMinutes?: number | null;
   fareTotal: number;
   vehicleType?: RiderVehicleType;
   driver?: {

@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import {
   createAccessToken,
   verifyAccessToken,
-} from "../src/utils/jwt.js";
+} from "@eve/shared";
 
 function tokenLifetimeSeconds(token: string): number {
   const payload = jwt.decode(token);
