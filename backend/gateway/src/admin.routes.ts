@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   analytics,
   assignVehicle,
@@ -40,9 +41,19 @@ import {
   requirePermission,
 } from "@eve/http";
 
+const skipInVitest = () => Boolean(process.env.VITEST);
+
+const adminApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInVitest,
+});
+
 const router = Router();
 
-router.use(requireAuth, requireAdmin);
+router.use(adminApiLimiter, requireAuth, requireAdmin);
 
 router.get("/dashboard", requirePermission("dashboard:read"), dashboard);
 
