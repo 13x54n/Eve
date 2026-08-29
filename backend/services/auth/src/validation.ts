@@ -12,6 +12,10 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1).max(256),
+});
+
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
@@ -53,4 +57,10 @@ export const updateProfileSchema = z.object({
     const trimmed = value.trim();
     return trimmed.length === 0 ? null : trimmed;
   }, z.union([z.string().min(7).max(25), z.null()]).optional()),
+  pushNotificationsEnabled: z.boolean().optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(128),
+  newPassword: z.string().min(8).max(128),
 });

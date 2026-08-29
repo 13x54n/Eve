@@ -1,6 +1,19 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare } from "@eve/db";
 import { emitUserEvent } from "@eve/notify";
-import { money, startOfDay, distanceKm, durationMinutes } from "@eve/shared";
+import {
+  money,
+  startOfDay,
+  distanceKm,
+  durationMinutes,
+  fail,
+  hashPassword,
+  canCreateStaff,
+  canManageTargetStaff,
+  isDepartmentStaffRole,
+  type AdminStaffRole,
+  type AdminStaffTitle,
+  type StaffActor,
+} from "@eve/shared";
 
 function parseFilters(query: Record<string, unknown>) {
   const city = typeof query.city === "string" && query.city ? query.city : undefined;
@@ -730,6 +743,8 @@ export async function searchTrips(query: Record<string, unknown>) {
             { rider: { user: { phone: { contains: filters.q, mode: "insensitive" } } } },
             { driver: { user: { name: { contains: filters.q, mode: "insensitive" } } } },
             { driver: { user: { phone: { contains: filters.q, mode: "insensitive" } } } },
+            { recipientName: { contains: filters.q, mode: "insensitive" } },
+            { recipientPhone: { contains: filters.q, mode: "insensitive" } },
           ],
         }
       : {}),
@@ -1516,38 +1531,281 @@ export async function listAudit(query: Record<string, unknown>) {
   };
 }
 
-export async function listStaff() {
+function staffActor(actor: {
+  staffRole?: AdminStaffRole | null;
+  staffTitle?: AdminStaffTitle | null;
+}): StaffActor {
+  return {
+    staffRole: actor.staffRole ?? null,
+    staffTitle: actor.staffTitle ?? null,
+  };
+}
+
+function serializeStaff(user: {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  accountStatus: string;
+  isActive: boolean;
+  flagged: boolean;
+  city: string | null;
+  createdAt: Date;
+  adminStaffRole: AdminStaffRole | null;
+  adminStaffTitle: AdminStaffTitle | null;
+  mfaEnabled: boolean;
+  lastLoginAt: Date | null;
+}) {
+  return {
+    ...sanitizePublicUser(user),
+    adminStaffRole: user.adminStaffRole,
+    adminStaffTitle: user.adminStaffTitle,
+    mfaEnabled: user.mfaEnabled,
+    lastLoginAt: user.lastLoginAt,
+  };
+}
+
+function parseStaffName(value: unknown) {
+  if (typeof value !== "string") {
+    fail("Name is required", "ConflictError");
+  }
+  const name = value.trim();
+  if (name.length < 2 || name.length > 80) {
+    fail("Name must be 2–80 characters", "ConflictError");
+  }
+  return name;
+}
+
+function parseStaffEmail(value: unknown) {
+  if (typeof value !== "string") {
+    fail("Email is required", "ConflictError");
+  }
+  const email = value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    fail("A valid email is required", "ConflictError");
+  }
+  return email;
+}
+
+function parseStaffPhone(value: unknown) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (typeof value !== "string") {
+    fail("Phone is invalid", "ConflictError");
+  }
+  const phone = value.trim();
+  if (phone.length < 7 || phone.length > 25) {
+    fail("Phone must be 7–25 characters", "ConflictError");
+  }
+  return phone;
+}
+
+function parseStaffPassword(value: unknown) {
+  if (typeof value !== "string" || value.length < 8 || value.length > 128) {
+    fail("Password must be 8–128 characters", "ConflictError");
+  }
+  return value;
+}
+
+function parseDepartmentRole(value: unknown): AdminStaffRole {
+  if (typeof value !== "string" || !isDepartmentStaffRole(value as AdminStaffRole)) {
+    fail("A department role is required", "ConflictError");
+  }
+  return value as AdminStaffRole;
+}
+
+const ACCOUNT_STATUSES = [
+  "ACTIVE",
+  "SUSPENDED",
+  "BLOCKED",
+  "PENDING",
+  "DEACTIVATED",
+] as const;
+
+function parseAccountStatus(value: unknown) {
+  if (typeof value !== "string" || !ACCOUNT_STATUSES.includes(value as (typeof ACCOUNT_STATUSES)[number])) {
+    fail("Invalid account status", "ConflictError");
+  }
+  return value as (typeof ACCOUNT_STATUSES)[number];
+}
+
+async function requireManageableStaff(
+  id: string,
+  actor: StaffActor,
+) {
+  const target = await prisma.user.findFirst({
+    where: { id, role: "ADMIN" },
+  });
+
+  if (!target) {
+    fail("Staff member not found", "NotFoundError");
+  }
+
+  if (
+    !canManageTargetStaff(actor, {
+      staffRole: target.adminStaffRole,
+      staffTitle: target.adminStaffTitle,
+    })
+  ) {
+    fail("Insufficient permissions", "ForbiddenError");
+  }
+
+  return target;
+}
+
+export async function listStaff(actor: {
+  staffRole?: AdminStaffRole | null;
+}) {
   const users = await prisma.user.findMany({
-    where: { role: "ADMIN" },
+    where: {
+      role: "ADMIN",
+      ...(actor.staffRole === "OWNER" ? {} : { adminStaffRole: actor.staffRole ?? undefined }),
+    },
     include: {
       loginEvents: { orderBy: { createdAt: "desc" }, take: 5 },
       sessions: { where: { revokedAt: null }, orderBy: { createdAt: "desc" } },
     },
+    orderBy: { createdAt: "asc" },
   });
 
   return users.map((user) => ({
-    ...sanitizePublicUser(user),
-    adminStaffRole: user.adminStaffRole,
-    mfaEnabled: user.mfaEnabled,
-    lastLoginAt: user.lastLoginAt,
+    ...serializeStaff(user),
     loginEvents: user.loginEvents,
     sessions: user.sessions,
   }));
 }
 
-export async function updateStaff(
-  id: string,
+export async function createStaff(
   actorId: string,
+  actor: {
+    staffRole?: AdminStaffRole | null;
+    staffTitle?: AdminStaffTitle | null;
+  },
   body: {
-    adminStaffRole?: Prisma.UserUpdateInput["adminStaffRole"];
-    mfaEnabled?: boolean;
-    accountStatus?: Prisma.UserUpdateInput["accountStatus"];
+    name?: unknown;
+    email?: unknown;
+    phone?: unknown;
+    password?: unknown;
+    adminStaffRole?: unknown;
+    adminStaffTitle?: unknown;
   },
   ip?: string,
 ) {
+  const source = staffActor(actor);
+  let targetRole: AdminStaffRole;
+  let targetTitle: AdminStaffTitle;
+
+  if (source.staffRole === "OWNER") {
+    if (body.adminStaffTitle === "MEMBER") {
+      fail("Only department managers can add members", "ForbiddenError");
+    }
+    if (body.adminStaffRole === "OWNER") {
+      fail("Cannot create another owner", "ForbiddenError");
+    }
+    targetRole = parseDepartmentRole(body.adminStaffRole);
+    targetTitle = "MANAGER";
+  } else if (source.staffTitle === "MANAGER" && isDepartmentStaffRole(source.staffRole)) {
+    if (body.adminStaffTitle === "MANAGER") {
+      fail("Only the owner can appoint department managers", "ForbiddenError");
+    }
+    if (
+      body.adminStaffRole !== undefined &&
+      body.adminStaffRole !== null &&
+      body.adminStaffRole !== "" &&
+      body.adminStaffRole !== source.staffRole
+    ) {
+      fail("Managers can only add staff in their department", "ForbiddenError");
+    }
+    targetRole = source.staffRole;
+    targetTitle = "MEMBER";
+  } else {
+    fail("Insufficient permissions", "ForbiddenError");
+  }
+
+  if (!canCreateStaff(source, targetRole, targetTitle)) {
+    fail("Insufficient permissions", "ForbiddenError");
+  }
+
+  const name = parseStaffName(body.name);
+  const email = parseStaffEmail(body.email);
+  const phone = parseStaffPhone(body.phone);
+  const password = parseStaffPassword(body.password);
+
+  const existingEmail = await prisma.user.findUnique({ where: { email } });
+  if (existingEmail) {
+    fail("Unable to create account with these details", "ConflictError");
+  }
+  if (phone) {
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) {
+      fail("Unable to create account with these details", "ConflictError");
+    }
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      phone,
+      passwordHash: await hashPassword(password),
+      role: "ADMIN",
+      adminStaffRole: targetRole,
+      adminStaffTitle: targetTitle,
+    },
+  });
+
+  await writeAudit({
+    actorId,
+    action: "staff.create",
+    entity: "User",
+    entityId: user.id,
+    metadata: { adminStaffRole: targetRole, adminStaffTitle: targetTitle },
+    ip,
+  });
+
+  return serializeStaff(user);
+}
+
+export async function updateStaff(
+  id: string,
+  actorId: string,
+  actor: {
+    staffRole?: AdminStaffRole | null;
+    staffTitle?: AdminStaffTitle | null;
+  },
+  body: {
+    adminStaffRole?: unknown;
+    mfaEnabled?: unknown;
+    accountStatus?: unknown;
+  },
+  ip?: string,
+) {
+  const source = staffActor(actor);
+  await requireManageableStaff(id, source);
+
+  const data: Prisma.UserUpdateInput = {};
+
+  if (body.mfaEnabled !== undefined) {
+    data.mfaEnabled = Boolean(body.mfaEnabled);
+  }
+  if (body.accountStatus !== undefined) {
+    data.accountStatus = parseAccountStatus(body.accountStatus);
+  }
+  if (body.adminStaffRole !== undefined) {
+    if (source.staffRole !== "OWNER") {
+      fail("Only the owner can reassign department managers", "ForbiddenError");
+    }
+    if (body.adminStaffRole === "OWNER") {
+      fail("Cannot promote staff to owner", "ForbiddenError");
+    }
+    data.adminStaffRole = parseDepartmentRole(body.adminStaffRole);
+  }
+
   const user = await prisma.user.update({
     where: { id },
-    data: body as Prisma.UserUpdateInput,
+    data,
   });
 
   await writeAudit({
@@ -1559,11 +1817,190 @@ export async function updateStaff(
     ip,
   });
 
-  return user;
+  return serializeStaff(user);
+}
+
+export async function resetStaffCredentials(
+  id: string,
+  actorId: string,
+  actor: {
+    staffRole?: AdminStaffRole | null;
+    staffTitle?: AdminStaffTitle | null;
+  },
+  body: { password?: unknown },
+  ip?: string,
+) {
+  const source = staffActor(actor);
+  await requireManageableStaff(id, source);
+  const password = parseStaffPassword(body.password);
+
+  const user = await prisma.user.update({
+    where: { id },
+    data: { passwordHash: await hashPassword(password) },
+  });
+
+  await prisma.adminSession.updateMany({
+    where: { userId: id, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+
+  await writeAudit({
+    actorId,
+    action: "staff.credentials",
+    entity: "User",
+    entityId: id,
+    ip,
+  });
+
+  return serializeStaff(user);
 }
 
 export async function listFleets() {
   return prisma.fleetCompany.findMany({
     include: { _count: { select: { drivers: true, vehicles: true } } },
   });
+}
+
+const GREETING_SETTINGS_ID = "default";
+
+function parseGreetingTemplate(value: unknown) {
+  if (typeof value !== "string") {
+    fail("Template is required", "ConflictError");
+  }
+  const template = value.trim();
+  if (template.length < 1 || template.length > 80) {
+    fail("Template must be 1–80 characters", "ConflictError");
+  }
+  return template;
+}
+
+async function greetingSettings() {
+  return prisma.greetingSettings.upsert({
+    where: { id: GREETING_SETTINGS_ID },
+    create: { id: GREETING_SETTINGS_ID },
+    update: {},
+  });
+}
+
+async function enabledGreetingCount(excludeId?: string) {
+  return prisma.greeting.count({
+    where: { enabled: true, ...(excludeId ? { id: { not: excludeId } } : {}) },
+  });
+}
+
+export async function listGreetings() {
+  const [items, settings] = await Promise.all([
+    prisma.greeting.findMany({ orderBy: { createdAt: "asc" } }),
+    greetingSettings(),
+  ]);
+  return { items, settings };
+}
+
+export async function createGreeting(
+  actorId: string,
+  body: { template?: unknown; enabled?: unknown },
+  ip?: string,
+) {
+  const greeting = await prisma.greeting.create({
+    data: {
+      template: parseGreetingTemplate(body.template),
+      enabled: body.enabled === false ? false : true,
+    },
+  });
+  await writeAudit({
+    actorId,
+    action: "greeting.create",
+    entity: "Greeting",
+    entityId: greeting.id,
+    ip,
+  });
+  return greeting;
+}
+
+export async function updateGreeting(
+  id: string,
+  actorId: string,
+  body: { template?: unknown; enabled?: unknown },
+  ip?: string,
+) {
+  const existing = await prisma.greeting.findUnique({ where: { id } });
+  if (!existing) fail("Greeting not found", "NotFoundError");
+
+  const enabled =
+    typeof body.enabled === "boolean" ? body.enabled : existing.enabled;
+  if (!enabled && existing.enabled && (await enabledGreetingCount(id)) === 0) {
+    fail("Keep at least one enabled greeting", "ConflictError");
+  }
+
+  const greeting = await prisma.greeting.update({
+    where: { id },
+    data: {
+      ...(body.template !== undefined
+        ? { template: parseGreetingTemplate(body.template) }
+        : {}),
+      enabled,
+    },
+  });
+  await writeAudit({
+    actorId,
+    action: "greeting.update",
+    entity: "Greeting",
+    entityId: id,
+    metadata: body as Prisma.InputJsonValue,
+    ip,
+  });
+  return greeting;
+}
+
+export async function deleteGreeting(id: string, actorId: string, ip?: string) {
+  const existing = await prisma.greeting.findUnique({ where: { id } });
+  if (!existing) fail("Greeting not found", "NotFoundError");
+  if (existing.enabled && (await enabledGreetingCount(id)) === 0) {
+    fail("Keep at least one enabled greeting", "ConflictError");
+  }
+
+  await prisma.greeting.delete({ where: { id } });
+  await writeAudit({
+    actorId,
+    action: "greeting.delete",
+    entity: "Greeting",
+    entityId: id,
+    ip,
+  });
+  return { ok: true };
+}
+
+export async function updateGreetingSettings(
+  actorId: string,
+  body: { mode?: unknown; pinnedGreetingId?: unknown },
+  ip?: string,
+) {
+  const current = await greetingSettings();
+  const mode =
+    body.mode === "ROTATE" || body.mode === "PINNED" ? body.mode : current.mode;
+
+  let pinnedGreetingId = current.pinnedGreetingId;
+  if (body.pinnedGreetingId === null) {
+    pinnedGreetingId = null;
+  } else if (typeof body.pinnedGreetingId === "string") {
+    const pinned = await prisma.greeting.findUnique({
+      where: { id: body.pinnedGreetingId },
+    });
+    if (!pinned) fail("Greeting not found", "NotFoundError");
+    pinnedGreetingId = pinned.id;
+  }
+
+  const settings = await prisma.greetingSettings.update({
+    where: { id: GREETING_SETTINGS_ID },
+    data: { mode, pinnedGreetingId },
+  });
+  await writeAudit({
+    actorId,
+    action: "greeting.settings",
+    entity: "GreetingSettings",
+    entityId: GREETING_SETTINGS_ID,
+    metadata: body as Prisma.InputJsonValue,
+    ip,
+  });
+  return settings;
 }

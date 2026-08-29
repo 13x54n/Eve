@@ -40,7 +40,7 @@ export type DriverProfile = {
   presence: DriverPresence;
   vehicles: DriverVehicle[];
   documents: DriverDocument[];
-  activeTrip?: { id: string } | null;
+  activeTrip?: ActiveTrip | null;
 };
 
 export async function getDriverProfile() {
@@ -96,6 +96,10 @@ export type IncomingTrip = {
   distanceKm: number;
   durationMin: number;
   vehicleType: VehicleType;
+  rideType?: string;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  packageNote?: string | null;
 };
 
 export type PendingOffer = {
@@ -106,6 +110,8 @@ export type PendingOffer = {
   riderName: string;
   pickupAddress: string;
   dropoffAddress: string;
+  rideType?: string;
+  recipientName?: string | null;
 };
 
 export async function getIncomingTrips() {
@@ -135,6 +141,10 @@ export type ActiveTrip = {
   distanceKm: number;
   durationMin: number;
   rider: { user: { name: string; phone: string | null } };
+  rideType?: string;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  packageNote?: string | null;
 };
 
 export async function arrivedAtPickup(tripId: string) {

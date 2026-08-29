@@ -1,9 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import { prisma } from "@eve/db";
 import {
+  canAccessStaff,
   hasPermission,
   verifyAccessToken,
   type AdminStaffRole,
+  type AdminStaffTitle,
   type Permission,
   type UserRole,
 } from "@eve/shared";
@@ -13,6 +15,7 @@ export type AuthenticatedRequest = Request & {
     id: string;
     role: UserRole;
     staffRole?: AdminStaffRole | null;
+    staffTitle?: AdminStaffTitle | null;
   };
 };
 
@@ -68,6 +71,7 @@ export async function requireAdmin(req: Request, res: Response, next: NextFuncti
     }
 
     authenticatedRequest.user.staffRole = user.adminStaffRole;
+    authenticatedRequest.user.staffTitle = user.adminStaffTitle;
     next();
   } catch (error) {
     next(error);
@@ -83,4 +87,18 @@ export function requirePermission(permission: Permission) {
     }
     next();
   };
+}
+
+export function requireStaffAccess(req: Request, res: Response, next: NextFunction) {
+  const authenticatedRequest = req as AuthenticatedRequest;
+  if (
+    !canAccessStaff(
+      authenticatedRequest.user?.staffRole,
+      authenticatedRequest.user?.staffTitle,
+    )
+  ) {
+    res.status(403).json({ message: "Insufficient permissions" });
+    return;
+  }
+  next();
 }

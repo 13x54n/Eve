@@ -7,10 +7,12 @@ import { router, useFocusEffect, type Href } from 'expo-router';
 import { getDriverProfile } from '@/services/driver';
 import { useAuth } from '@/context/auth-context';
 import { Brand, Spacing } from '@/constants/theme';
+import { useBrand } from '@/context/theme-context';
 import { lightImpact } from '@/lib/haptics';
 import { ActionButton } from '@/components/action-button';
 
 export default function MenuScreen() {
+  const brand = useBrand();
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -58,7 +60,7 @@ export default function MenuScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
       <Text style={styles.topBarTitle}>Menu</Text>
       <Pressable style={styles.profileCard} onPress={() => router.push('/profile/edit' as Href)}>
         <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
@@ -112,11 +114,18 @@ export default function MenuScreen() {
           </FieldGroup.Section>
           <FieldGroup.Section title="Preferences">
             <ListItem
-              supportingText="Ride updates and offers"
+              supportingText="Ride updates and appearance"
               leading={<SymbolView name="bell.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => Alert.alert('Notifications', 'Ride updates and offers')}
+              onPress={() => router.push('/profile/notifications' as Href)}
             >
-              Notifications
+              Notifications & appearance
+            </ListItem>
+            <ListItem
+              supportingText="Password"
+              leading={<SymbolView name="lock.fill" tintColor={Brand.accent} size={18} />}
+              onPress={() => router.push('/profile/security' as Href)}
+            >
+              Security
             </ListItem>
           </FieldGroup.Section>
         </FieldGroup>

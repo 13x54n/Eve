@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "eve-driver",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "ca.sherpafoods.evedriver",
@@ -48,7 +48,13 @@
       "expo-font",
       "expo-status-bar",
       "expo-web-browser",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.23.1"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

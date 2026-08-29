@@ -142,6 +142,16 @@ export type LostItem = Prisma.LostItemModel
  */
 export type PrivacyRequest = Prisma.PrivacyRequestModel
 /**
+ * Model Greeting
+ * 
+ */
+export type Greeting = Prisma.GreetingModel
+/**
+ * Model GreetingSettings
+ * 
+ */
+export type GreetingSettings = Prisma.GreetingSettingsModel
+/**
  * Model Promo
  * 
  */

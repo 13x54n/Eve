@@ -133,6 +133,7 @@ describe("Authentication API", () => {
       email: testEmail,
       role: "RIDER",
     });
+    expect(response.body.user.pushNotificationsEnabled).toBe(true);
   });
 
   it("updates rider name, email, and phone", async () => {
@@ -158,6 +159,45 @@ describe("Authentication API", () => {
       where: { email: updatedEmail },
       data: { email: testEmail },
     });
+  });
+
+  it("changes password while authenticated", async () => {
+    await request(app)
+      .post("/api/auth/change-password")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({ currentPassword: testPassword, newPassword: "newpassword123" })
+      .expect(200);
+
+    await request(app)
+      .post("/api/auth/login")
+      .send({ email: testEmail, password: testPassword })
+      .expect(401);
+
+    const login = await request(app)
+      .post("/api/auth/login")
+      .send({ email: testEmail, password: "newpassword123" })
+      .expect(200);
+    accessToken = login.body.accessToken;
+  });
+
+  it("toggles push notification preference", async () => {
+    const me = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+
+    const response = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: me.body.user.name,
+        email: me.body.user.email,
+        phone: me.body.user.phone,
+        pushNotificationsEnabled: false,
+      })
+      .expect(200);
+
+    expect(response.body.user.pushNotificationsEnabled).toBe(false);
   });
 
   it("rejects /me without an authorization header", async () => {

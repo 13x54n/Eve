@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams, usePathname, router } from 'expo-router';
-import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import {
@@ -26,6 +25,8 @@ import {
 import { addDriverSocketListener, connectDriverSocket, disconnectDriverSocket, sendDriverLocation, subscribeTrip } from '@/services/socket';
 import { useAuth } from '@/context/auth-context';
 import { ActionButton } from '@/components/action-button';
+import { EveMap, EveMarker, EveRoute } from '@/components/map/eve-map';
+import { useDrivingRoute } from '@/components/map/use-driving-route';
 
 export default function ActiveTripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -40,7 +41,6 @@ export default function ActiveTripScreen() {
   const [busy, setBusy] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const mapRef = useRef<MapView | null>(null);
 
   const refresh = useCallback(async (isFirst = false) => {
     try {
@@ -103,29 +103,14 @@ export default function ActiveTripScreen() {
     return () => { removeSocket(); clearInterval(timer); subscription?.remove(); disconnectDriverSocket(); };
   }, [id, refresh, user?.id]);
 
-  useEffect(() => {
-    if (!trip || !mapRef.current) return;
-    const headingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
-    const points = [
-      ...(driverLocation ? [driverLocation] : []),
-      {
+  const headingToPickup = trip?.status === 'ASSIGNED' && !hasArrived;
+  const destination = trip
+    ? {
         latitude: headingToPickup ? trip.pickupLat : trip.dropoffLat,
         longitude: headingToPickup ? trip.pickupLng : trip.dropoffLng,
-      },
-    ];
-    if (points.length === 1) {
-      mapRef.current.animateToRegion({
-        ...points[0],
-        latitudeDelta: 0.02,
-        longitudeDelta: 0.02,
-      }, 400);
-      return;
-    }
-    mapRef.current.fitToCoordinates(points, {
-      edgePadding: { top: 88, right: 48, bottom: 320, left: 48 },
-      animated: true,
-    });
-  }, [driverLocation, trip, hasArrived]);
+      }
+    : null;
+  const routeCoordinates = useDrivingRoute(driverLocation, destination);
 
   function openDirections(lat: number, lng: number) {
     const fallback = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
@@ -237,41 +222,37 @@ export default function ActiveTripScreen() {
     );
   }
 
+  const isCourier = trip.rideType === 'COURIER';
+  const passengerName = !isCourier ? trip.recipientName : null;
   const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
   const destinationLat = isHeadingToPickup ? trip.pickupLat : trip.dropoffLat;
   const destinationLng = isHeadingToPickup ? trip.pickupLng : trip.dropoffLng;
   const stageLabel = isHeadingToPickup
-    ? 'Heading to pickup'
+    ? (isCourier ? 'Pickup package' : 'Heading to pickup')
     : trip.status === 'ASSIGNED'
-      ? 'Arrived — waiting for rider'
-      : 'Heading to destination';
+      ? (isCourier ? 'Package collected — ready to deliver' : passengerName ? `Arrived — waiting for ${passengerName}` : 'Arrived — waiting for rider')
+      : (isCourier ? `Deliver to ${trip.recipientName ?? 'recipient'}` : passengerName ? `Drop off ${passengerName}` : 'Heading to destination');
   const etaLabel = `${Math.max(1, trip.durationMin)} min`;
+  const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
+  const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
+  const you = driverLocation ?? pickup;
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_DEFAULT}
+      <EveMap
         style={styles.map}
-        initialRegion={{
-          latitude: driverLocation?.latitude ?? trip.pickupLat,
-          longitude: driverLocation?.longitude ?? trip.pickupLng,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+        camera={{
+          center: you,
+          zoom: 13,
+          bounds: [pickup, dropoff, ...(driverLocation ? [driverLocation] : [])],
+          padding: { top: 88, right: 48, bottom: 320, left: 48 },
         }}
       >
-        <UrlTile urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" maximumZ={19} flipY={false} />
-        {driverLocation ? <Marker coordinate={driverLocation} pinColor="#2e4ed2" title="You" /> : null}
-        <Marker coordinate={{ latitude: trip.pickupLat, longitude: trip.pickupLng }} pinColor="#16A34A" title="Pickup" />
-        <Marker coordinate={{ latitude: trip.dropoffLat, longitude: trip.dropoffLng }} pinColor="#DC2626" title="Dropoff" />
-        {driverLocation ? (
-          <Polyline
-            coordinates={[driverLocation, { latitude: destinationLat, longitude: destinationLng }]}
-            strokeColor="#2e4ed2"
-            strokeWidth={4}
-          />
-        ) : null}
-      </MapView>
+        {driverLocation ? <EveMarker id="you" coordinate={driverLocation} color="#2e4ed2" title="You" /> : null}
+        <EveMarker id="pickup" coordinate={pickup} color="#16A34A" title="Pickup" />
+        <EveMarker id="dropoff" coordinate={dropoff} color="#DC2626" title="Dropoff" />
+        {routeCoordinates.length >= 2 ? <EveRoute coordinates={routeCoordinates} color="#2e4ed2" /> : null}
+      </EveMap>
 
       <TouchableOpacity
         style={[styles.fab, { top: insets.top + 8 }]}
@@ -293,9 +274,22 @@ export default function ActiveTripScreen() {
           </View>
           <View style={styles.riderCopy}>
             <Text style={styles.riderName}>{trip.rider.user.name}</Text>
+            {trip.recipientName ? (
+              <Text style={styles.riderFare}>
+                {isCourier ? `Deliver to ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}
+              </Text>
+            ) : null}
             <Text style={styles.riderFare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
           </View>
-          {trip.rider.user.phone ? (
+          {trip.recipientPhone ? (
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={() => void Linking.openURL(`tel:${trip.recipientPhone}`)}
+              accessibilityLabel={isCourier ? 'Call recipient' : 'Call passenger'}
+            >
+              <Feather name="phone" size={18} color="#16A34A" />
+            </TouchableOpacity>
+          ) : trip.rider.user.phone ? (
             <TouchableOpacity style={styles.callButton} onPress={() => void Linking.openURL(`tel:${trip.rider.user.phone}`)}>
               <Feather name="phone" size={18} color="#16A34A" />
             </TouchableOpacity>
@@ -334,7 +328,7 @@ export default function ActiveTripScreen() {
         <TouchableOpacity style={styles.navigateButton} onPress={() => openDirections(destinationLat, destinationLng)} activeOpacity={0.85}>
           <MaterialCommunityIcons name="navigation-variant" size={18} color="#FFFFFF" />
           <Text style={styles.navigateText}>
-            {isHeadingToPickup ? 'Navigate to pickup' : 'Navigate to destination'}
+            {isHeadingToPickup ? 'Navigate to pickup' : isCourier ? 'Navigate to recipient' : 'Navigate to destination'}
           </Text>
         </TouchableOpacity>
 
@@ -342,7 +336,7 @@ export default function ActiveTripScreen() {
           <ActionButton
             style={styles.primaryButton}
             textStyle={styles.primaryButtonText}
-            label="I've arrived"
+            label={isCourier ? "I've arrived" : "I've arrived"}
             loadingLabel="Updating..."
             loading={busy}
             onPress={() => void handleArrived()}
@@ -351,7 +345,7 @@ export default function ActiveTripScreen() {
           <ActionButton
             style={styles.primaryButton}
             textStyle={styles.primaryButtonText}
-            label="Start trip"
+            label={isCourier ? 'Start delivery' : 'Start trip'}
             loadingLabel="Starting..."
             loading={busy}
             onPress={() => void handleStart()}
@@ -360,7 +354,7 @@ export default function ActiveTripScreen() {
           <ActionButton
             style={styles.primaryButton}
             textStyle={styles.primaryButtonText}
-            label="Complete trip"
+            label={isCourier ? 'Complete delivery' : 'Complete trip'}
             loadingLabel="Completing..."
             loading={busy}
             onPress={() => void handleComplete()}

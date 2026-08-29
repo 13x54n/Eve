@@ -32,11 +32,13 @@ export type UserMinAggregateOutputType = {
   passwordHash: string | null
   role: $Enums.UserRole | null
   adminStaffRole: $Enums.AdminStaffRole | null
+  adminStaffTitle: $Enums.AdminStaffTitle | null
   accountStatus: $Enums.AccountStatus | null
   isActive: boolean | null
   flagged: boolean | null
   city: string | null
   mfaEnabled: boolean | null
+  pushNotificationsEnabled: boolean | null
   lastLoginAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -50,11 +52,13 @@ export type UserMaxAggregateOutputType = {
   passwordHash: string | null
   role: $Enums.UserRole | null
   adminStaffRole: $Enums.AdminStaffRole | null
+  adminStaffTitle: $Enums.AdminStaffTitle | null
   accountStatus: $Enums.AccountStatus | null
   isActive: boolean | null
   flagged: boolean | null
   city: string | null
   mfaEnabled: boolean | null
+  pushNotificationsEnabled: boolean | null
   lastLoginAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -68,11 +72,13 @@ export type UserCountAggregateOutputType = {
   passwordHash: number
   role: number
   adminStaffRole: number
+  adminStaffTitle: number
   accountStatus: number
   isActive: number
   flagged: number
   city: number
   mfaEnabled: number
+  pushNotificationsEnabled: number
   lastLoginAt: number
   createdAt: number
   updatedAt: number
@@ -88,11 +94,13 @@ export type UserMinAggregateInputType = {
   passwordHash?: true
   role?: true
   adminStaffRole?: true
+  adminStaffTitle?: true
   accountStatus?: true
   isActive?: true
   flagged?: true
   city?: true
   mfaEnabled?: true
+  pushNotificationsEnabled?: true
   lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
@@ -106,11 +114,13 @@ export type UserMaxAggregateInputType = {
   passwordHash?: true
   role?: true
   adminStaffRole?: true
+  adminStaffTitle?: true
   accountStatus?: true
   isActive?: true
   flagged?: true
   city?: true
   mfaEnabled?: true
+  pushNotificationsEnabled?: true
   lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
@@ -124,11 +134,13 @@ export type UserCountAggregateInputType = {
   passwordHash?: true
   role?: true
   adminStaffRole?: true
+  adminStaffTitle?: true
   accountStatus?: true
   isActive?: true
   flagged?: true
   city?: true
   mfaEnabled?: true
+  pushNotificationsEnabled?: true
   lastLoginAt?: true
   createdAt?: true
   updatedAt?: true
@@ -215,11 +227,13 @@ export type UserGroupByOutputType = {
   passwordHash: string
   role: $Enums.UserRole
   adminStaffRole: $Enums.AdminStaffRole | null
+  adminStaffTitle: $Enums.AdminStaffTitle | null
   accountStatus: $Enums.AccountStatus
   isActive: boolean
   flagged: boolean
   city: string | null
   mfaEnabled: boolean
+  pushNotificationsEnabled: boolean
   lastLoginAt: Date | null
   createdAt: Date
   updatedAt: Date
@@ -254,11 +268,13 @@ export type UserWhereInput = {
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableFilter<"User"> | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
   flagged?: Prisma.BoolFilter<"User"> | boolean
   city?: Prisma.StringNullableFilter<"User"> | string | null
   mfaEnabled?: Prisma.BoolFilter<"User"> | boolean
+  pushNotificationsEnabled?: Prisma.BoolFilter<"User"> | boolean
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -272,6 +288,7 @@ export type UserWhereInput = {
   assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
   tripMessages?: Prisma.TripMessageListRelationFilter
+  receivedCouriers?: Prisma.TripListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -282,11 +299,13 @@ export type UserOrderByWithRelationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  adminStaffTitle?: Prisma.SortOrderInput | Prisma.SortOrder
   accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   flagged?: Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   mfaEnabled?: Prisma.SortOrder
+  pushNotificationsEnabled?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -300,6 +319,7 @@ export type UserOrderByWithRelationInput = {
   assignedIncidents?: Prisma.SafetyIncidentOrderByRelationAggregateInput
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   tripMessages?: Prisma.TripMessageOrderByRelationAggregateInput
+  receivedCouriers?: Prisma.TripOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -313,11 +333,13 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   passwordHash?: Prisma.StringFilter<"User"> | string
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableFilter<"User"> | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
   flagged?: Prisma.BoolFilter<"User"> | boolean
   city?: Prisma.StringNullableFilter<"User"> | string | null
   mfaEnabled?: Prisma.BoolFilter<"User"> | boolean
+  pushNotificationsEnabled?: Prisma.BoolFilter<"User"> | boolean
   lastLoginAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
@@ -331,6 +353,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   assignedIncidents?: Prisma.SafetyIncidentListRelationFilter
   notifications?: Prisma.NotificationListRelationFilter
   tripMessages?: Prisma.TripMessageListRelationFilter
+  receivedCouriers?: Prisma.TripListRelationFilter
 }, "id" | "email" | "phone">
 
 export type UserOrderByWithAggregationInput = {
@@ -341,11 +364,13 @@ export type UserOrderByWithAggregationInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
+  adminStaffTitle?: Prisma.SortOrderInput | Prisma.SortOrder
   accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   flagged?: Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   mfaEnabled?: Prisma.SortOrder
+  pushNotificationsEnabled?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -365,11 +390,13 @@ export type UserScalarWhereWithAggregatesInput = {
   passwordHash?: Prisma.StringWithAggregatesFilter<"User"> | string
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableWithAggregatesFilter<"User"> | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableWithAggregatesFilter<"User"> | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusWithAggregatesFilter<"User"> | $Enums.AccountStatus
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   flagged?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   city?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   mfaEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  pushNotificationsEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   lastLoginAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -383,11 +410,13 @@ export type UserCreateInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -401,6 +430,7 @@ export type UserCreateInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -411,11 +441,13 @@ export type UserUncheckedCreateInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -429,6 +461,7 @@ export type UserUncheckedCreateInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUpdateInput = {
@@ -439,11 +472,13 @@ export type UserUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -457,6 +492,7 @@ export type UserUpdateInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -467,11 +503,13 @@ export type UserUncheckedUpdateInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -485,6 +523,7 @@ export type UserUncheckedUpdateInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -495,11 +534,13 @@ export type UserCreateManyInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -513,11 +554,13 @@ export type UserUpdateManyMutationInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -531,11 +574,13 @@ export type UserUncheckedUpdateManyInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -549,11 +594,13 @@ export type UserCountOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
+  adminStaffTitle?: Prisma.SortOrder
   accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   flagged?: Prisma.SortOrder
   city?: Prisma.SortOrder
   mfaEnabled?: Prisma.SortOrder
+  pushNotificationsEnabled?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -567,11 +614,13 @@ export type UserMaxOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
+  adminStaffTitle?: Prisma.SortOrder
   accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   flagged?: Prisma.SortOrder
   city?: Prisma.SortOrder
   mfaEnabled?: Prisma.SortOrder
+  pushNotificationsEnabled?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -585,11 +634,13 @@ export type UserMinOrderByAggregateInput = {
   passwordHash?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
+  adminStaffTitle?: Prisma.SortOrder
   accountStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   flagged?: Prisma.SortOrder
   city?: Prisma.SortOrder
   mfaEnabled?: Prisma.SortOrder
+  pushNotificationsEnabled?: Prisma.SortOrder
   lastLoginAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -619,6 +670,10 @@ export type EnumUserRoleFieldUpdateOperationsInput = {
 
 export type NullableEnumAdminStaffRoleFieldUpdateOperationsInput = {
   set?: $Enums.AdminStaffRole | null
+}
+
+export type NullableEnumAdminStaffTitleFieldUpdateOperationsInput = {
+  set?: $Enums.AdminStaffTitle | null
 }
 
 export type EnumAccountStatusFieldUpdateOperationsInput = {
@@ -677,6 +732,22 @@ export type UserUpdateOneRequiredWithoutDriverProfileNestedInput = {
   upsert?: Prisma.UserUpsertWithoutDriverProfileInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDriverProfileInput, Prisma.UserUpdateWithoutDriverProfileInput>, Prisma.UserUncheckedUpdateWithoutDriverProfileInput>
+}
+
+export type UserCreateNestedOneWithoutReceivedCouriersInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReceivedCouriersInput, Prisma.UserUncheckedCreateWithoutReceivedCouriersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReceivedCouriersInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutReceivedCouriersNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutReceivedCouriersInput, Prisma.UserUncheckedCreateWithoutReceivedCouriersInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutReceivedCouriersInput
+  upsert?: Prisma.UserUpsertWithoutReceivedCouriersInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutReceivedCouriersInput, Prisma.UserUpdateWithoutReceivedCouriersInput>, Prisma.UserUncheckedUpdateWithoutReceivedCouriersInput>
 }
 
 export type UserCreateNestedOneWithoutTripMessagesInput = {
@@ -793,11 +864,13 @@ export type UserCreateWithoutResetCodesInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -810,6 +883,7 @@ export type UserCreateWithoutResetCodesInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutResetCodesInput = {
@@ -820,11 +894,13 @@ export type UserUncheckedCreateWithoutResetCodesInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -837,6 +913,7 @@ export type UserUncheckedCreateWithoutResetCodesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutResetCodesInput = {
@@ -863,11 +940,13 @@ export type UserUpdateWithoutResetCodesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -880,6 +959,7 @@ export type UserUpdateWithoutResetCodesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResetCodesInput = {
@@ -890,11 +970,13 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -907,6 +989,7 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutRiderProfileInput = {
@@ -917,11 +1000,13 @@ export type UserCreateWithoutRiderProfileInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -934,6 +1019,7 @@ export type UserCreateWithoutRiderProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutRiderProfileInput = {
@@ -944,11 +1030,13 @@ export type UserUncheckedCreateWithoutRiderProfileInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -961,6 +1049,7 @@ export type UserUncheckedCreateWithoutRiderProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutRiderProfileInput = {
@@ -987,11 +1076,13 @@ export type UserUpdateWithoutRiderProfileInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1004,6 +1095,7 @@ export type UserUpdateWithoutRiderProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRiderProfileInput = {
@@ -1014,11 +1106,13 @@ export type UserUncheckedUpdateWithoutRiderProfileInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1031,6 +1125,7 @@ export type UserUncheckedUpdateWithoutRiderProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutDriverProfileInput = {
@@ -1041,11 +1136,13 @@ export type UserCreateWithoutDriverProfileInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1058,6 +1155,7 @@ export type UserCreateWithoutDriverProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutDriverProfileInput = {
@@ -1068,11 +1166,13 @@ export type UserUncheckedCreateWithoutDriverProfileInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1085,6 +1185,7 @@ export type UserUncheckedCreateWithoutDriverProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutDriverProfileInput = {
@@ -1111,11 +1212,13 @@ export type UserUpdateWithoutDriverProfileInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1128,6 +1231,7 @@ export type UserUpdateWithoutDriverProfileInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDriverProfileInput = {
@@ -1138,16 +1242,155 @@ export type UserUncheckedUpdateWithoutDriverProfileInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
   riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+}
+
+export type UserCreateWithoutReceivedCouriersInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+}
+
+export type UserUncheckedCreateWithoutReceivedCouriersInput = {
+  id?: string
+  name: string
+  email: string
+  phone?: string | null
+  passwordHash: string
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+}
+
+export type UserCreateOrConnectWithoutReceivedCouriersInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutReceivedCouriersInput, Prisma.UserUncheckedCreateWithoutReceivedCouriersInput>
+}
+
+export type UserUpsertWithoutReceivedCouriersInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutReceivedCouriersInput, Prisma.UserUncheckedUpdateWithoutReceivedCouriersInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutReceivedCouriersInput, Prisma.UserUncheckedCreateWithoutReceivedCouriersInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutReceivedCouriersInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutReceivedCouriersInput, Prisma.UserUncheckedUpdateWithoutReceivedCouriersInput>
+}
+
+export type UserUpdateWithoutReceivedCouriersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutReceivedCouriersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
   loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
   auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
@@ -1165,11 +1408,13 @@ export type UserCreateWithoutTripMessagesInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1182,6 +1427,7 @@ export type UserCreateWithoutTripMessagesInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutTripMessagesInput = {
@@ -1192,11 +1438,13 @@ export type UserUncheckedCreateWithoutTripMessagesInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1209,6 +1457,7 @@ export type UserUncheckedCreateWithoutTripMessagesInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutTripMessagesInput = {
@@ -1235,11 +1484,13 @@ export type UserUpdateWithoutTripMessagesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1252,6 +1503,7 @@ export type UserUpdateWithoutTripMessagesInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTripMessagesInput = {
@@ -1262,11 +1514,13 @@ export type UserUncheckedUpdateWithoutTripMessagesInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1279,6 +1533,7 @@ export type UserUncheckedUpdateWithoutTripMessagesInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutAssignedTicketsInput = {
@@ -1289,11 +1544,13 @@ export type UserCreateWithoutAssignedTicketsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1306,6 +1563,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -1316,11 +1574,13 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1333,6 +1593,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -1359,11 +1620,13 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1376,6 +1639,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -1386,11 +1650,13 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1403,6 +1669,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutAssignedIncidentsInput = {
@@ -1413,11 +1680,13 @@ export type UserCreateWithoutAssignedIncidentsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1430,6 +1699,7 @@ export type UserCreateWithoutAssignedIncidentsInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
@@ -1440,11 +1710,13 @@ export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1457,6 +1729,7 @@ export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedIncidentsInput = {
@@ -1483,11 +1756,13 @@ export type UserUpdateWithoutAssignedIncidentsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1500,6 +1775,7 @@ export type UserUpdateWithoutAssignedIncidentsInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
@@ -1510,11 +1786,13 @@ export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1527,6 +1805,7 @@ export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -1537,11 +1816,13 @@ export type UserCreateWithoutNotificationsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1554,6 +1835,7 @@ export type UserCreateWithoutNotificationsInput = {
   assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -1564,11 +1846,13 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1581,6 +1865,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -1607,11 +1892,13 @@ export type UserUpdateWithoutNotificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1624,6 +1911,7 @@ export type UserUpdateWithoutNotificationsInput = {
   assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -1634,11 +1922,13 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1651,6 +1941,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -1661,11 +1952,13 @@ export type UserCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1678,6 +1971,7 @@ export type UserCreateWithoutAuditLogsInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -1688,11 +1982,13 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1705,6 +2001,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -1731,11 +2028,13 @@ export type UserUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1748,6 +2047,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -1758,11 +2058,13 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1775,6 +2077,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutLoginEventsInput = {
@@ -1785,11 +2088,13 @@ export type UserCreateWithoutLoginEventsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1802,6 +2107,7 @@ export type UserCreateWithoutLoginEventsInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutLoginEventsInput = {
@@ -1812,11 +2118,13 @@ export type UserUncheckedCreateWithoutLoginEventsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1829,6 +2137,7 @@ export type UserUncheckedCreateWithoutLoginEventsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutLoginEventsInput = {
@@ -1855,11 +2164,13 @@ export type UserUpdateWithoutLoginEventsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1872,6 +2183,7 @@ export type UserUpdateWithoutLoginEventsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLoginEventsInput = {
@@ -1882,11 +2194,13 @@ export type UserUncheckedUpdateWithoutLoginEventsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1899,6 +2213,7 @@ export type UserUncheckedUpdateWithoutLoginEventsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -1909,11 +2224,13 @@ export type UserCreateWithoutSessionsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1926,6 +2243,7 @@ export type UserCreateWithoutSessionsInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1936,11 +2254,13 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   passwordHash: string
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
   accountStatus?: $Enums.AccountStatus
   isActive?: boolean
   flagged?: boolean
   city?: string | null
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -1953,6 +2273,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1979,11 +2300,13 @@ export type UserUpdateWithoutSessionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1996,6 +2319,7 @@ export type UserUpdateWithoutSessionsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -2006,11 +2330,13 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
   accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -2023,6 +2349,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 
@@ -2039,6 +2366,7 @@ export type UserCountOutputType = {
   assignedIncidents: number
   notifications: number
   tripMessages: number
+  receivedCouriers: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2050,6 +2378,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   assignedIncidents?: boolean | UserCountOutputTypeCountAssignedIncidentsArgs
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
   tripMessages?: boolean | UserCountOutputTypeCountTripMessagesArgs
+  receivedCouriers?: boolean | UserCountOutputTypeCountReceivedCouriersArgs
 }
 
 /**
@@ -2118,6 +2447,13 @@ export type UserCountOutputTypeCountTripMessagesArgs<ExtArgs extends runtime.Typ
   where?: Prisma.TripMessageWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountReceivedCouriersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TripWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2127,11 +2463,13 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   passwordHash?: boolean
   role?: boolean
   adminStaffRole?: boolean
+  adminStaffTitle?: boolean
   accountStatus?: boolean
   isActive?: boolean
   flagged?: boolean
   city?: boolean
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2145,6 +2483,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
+  receivedCouriers?: boolean | Prisma.User$receivedCouriersArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2156,11 +2495,13 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   adminStaffRole?: boolean
+  adminStaffTitle?: boolean
   accountStatus?: boolean
   isActive?: boolean
   flagged?: boolean
   city?: boolean
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2174,11 +2515,13 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   passwordHash?: boolean
   role?: boolean
   adminStaffRole?: boolean
+  adminStaffTitle?: boolean
   accountStatus?: boolean
   isActive?: boolean
   flagged?: boolean
   city?: boolean
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -2192,17 +2535,19 @@ export type UserSelectScalar = {
   passwordHash?: boolean
   role?: boolean
   adminStaffRole?: boolean
+  adminStaffTitle?: boolean
   accountStatus?: boolean
   isActive?: boolean
   flagged?: boolean
   city?: boolean
   mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
   lastLoginAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "adminStaffRole" | "accountStatus" | "isActive" | "flagged" | "city" | "mfaEnabled" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "role" | "adminStaffRole" | "adminStaffTitle" | "accountStatus" | "isActive" | "flagged" | "city" | "mfaEnabled" | "pushNotificationsEnabled" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   resetCodes?: boolean | Prisma.User$resetCodesArgs<ExtArgs>
   riderProfile?: boolean | Prisma.User$riderProfileArgs<ExtArgs>
@@ -2214,6 +2559,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   assignedIncidents?: boolean | Prisma.User$assignedIncidentsArgs<ExtArgs>
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
+  receivedCouriers?: boolean | Prisma.User$receivedCouriersArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2232,6 +2578,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     assignedIncidents: Prisma.$SafetyIncidentPayload<ExtArgs>[]
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     tripMessages: Prisma.$TripMessagePayload<ExtArgs>[]
+    receivedCouriers: Prisma.$TripPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2241,11 +2588,13 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     passwordHash: string
     role: $Enums.UserRole
     adminStaffRole: $Enums.AdminStaffRole | null
+    adminStaffTitle: $Enums.AdminStaffTitle | null
     accountStatus: $Enums.AccountStatus
     isActive: boolean
     flagged: boolean
     city: string | null
     mfaEnabled: boolean
+    pushNotificationsEnabled: boolean
     lastLoginAt: Date | null
     createdAt: Date
     updatedAt: Date
@@ -2653,6 +3002,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   assignedIncidents<T extends Prisma.User$assignedIncidentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$assignedIncidentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SafetyIncidentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tripMessages<T extends Prisma.User$tripMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tripMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  receivedCouriers<T extends Prisma.User$receivedCouriersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$receivedCouriersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2689,11 +3039,13 @@ export interface UserFieldRefs {
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
   readonly adminStaffRole: Prisma.FieldRef<"User", 'AdminStaffRole'>
+  readonly adminStaffTitle: Prisma.FieldRef<"User", 'AdminStaffTitle'>
   readonly accountStatus: Prisma.FieldRef<"User", 'AccountStatus'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
   readonly flagged: Prisma.FieldRef<"User", 'Boolean'>
   readonly city: Prisma.FieldRef<"User", 'String'>
   readonly mfaEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly pushNotificationsEnabled: Prisma.FieldRef<"User", 'Boolean'>
   readonly lastLoginAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
@@ -3317,6 +3669,30 @@ export type User$tripMessagesArgs<ExtArgs extends runtime.Types.Extensions.Inter
   take?: number
   skip?: number
   distinct?: Prisma.TripMessageScalarFieldEnum | Prisma.TripMessageScalarFieldEnum[]
+}
+
+/**
+ * User.receivedCouriers
+ */
+export type User$receivedCouriersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Trip
+   */
+  select?: Prisma.TripSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Trip
+   */
+  omit?: Prisma.TripOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TripInclude<ExtArgs> | null
+  where?: Prisma.TripWhereInput
+  orderBy?: Prisma.TripOrderByWithRelationInput | Prisma.TripOrderByWithRelationInput[]
+  cursor?: Prisma.TripWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TripScalarFieldEnum | Prisma.TripScalarFieldEnum[]
 }
 
 /**

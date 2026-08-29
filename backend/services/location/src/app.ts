@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { getDriverProfile } from "@eve/db";
-import { applyErrorHandler, createBaseApp, requireAuth, type AuthenticatedRequest } from "@eve/http";
+import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
   distanceToPickup,
   nearbyDrivers,
@@ -97,7 +97,7 @@ internalLocationRouter.get("/distance", async (req, res, next) => {
 
 export function createLocationApp() {
   const app = createBaseApp();
-  app.get("/health", (_req, res) => res.json({ status: "ok", service: "location" }));
+  app.get("/health", (_req, res) => res.json(healthPayload("location")));
   app.use("/api/driver", presenceRouter);
   app.use("/internal", internalLocationRouter);
   applyErrorHandler(app);

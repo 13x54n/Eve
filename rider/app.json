@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "eve",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "ca.sherpafoods.eve",
@@ -45,7 +45,13 @@
         }
       ],
       "expo-secure-store",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.23.1"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

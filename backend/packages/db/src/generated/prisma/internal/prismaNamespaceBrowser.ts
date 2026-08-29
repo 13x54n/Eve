@@ -71,6 +71,8 @@ export const ModelName = {
   SafetyIncident: 'SafetyIncident',
   LostItem: 'LostItem',
   PrivacyRequest: 'PrivacyRequest',
+  Greeting: 'Greeting',
+  GreetingSettings: 'GreetingSettings',
   Promo: 'Promo',
   DriverIncentive: 'DriverIncentive',
   Notification: 'Notification',
@@ -104,11 +106,13 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   adminStaffRole: 'adminStaffRole',
+  adminStaffTitle: 'adminStaffTitle',
   accountStatus: 'accountStatus',
   isActive: 'isActive',
   flagged: 'flagged',
   city: 'city',
   mfaEnabled: 'mfaEnabled',
+  pushNotificationsEnabled: 'pushNotificationsEnabled',
   lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -228,6 +232,11 @@ export const TripScalarFieldEnum = {
   pickupLng: 'pickupLng',
   dropoffLat: 'dropoffLat',
   dropoffLng: 'dropoffLng',
+  recipientName: 'recipientName',
+  recipientPhone: 'recipientPhone',
+  packageNote: 'packageNote',
+  trackingToken: 'trackingToken',
+  recipientUserId: 'recipientUserId',
   distanceKm: 'distanceKm',
   durationMin: 'durationMin',
   suggestedFare: 'suggestedFare',
@@ -429,6 +438,26 @@ export const PrivacyRequestScalarFieldEnum = {
 export type PrivacyRequestScalarFieldEnum = (typeof PrivacyRequestScalarFieldEnum)[keyof typeof PrivacyRequestScalarFieldEnum]
 
 
+export const GreetingScalarFieldEnum = {
+  id: 'id',
+  template: 'template',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GreetingScalarFieldEnum = (typeof GreetingScalarFieldEnum)[keyof typeof GreetingScalarFieldEnum]
+
+
+export const GreetingSettingsScalarFieldEnum = {
+  id: 'id',
+  mode: 'mode',
+  pinnedGreetingId: 'pinnedGreetingId'
+} as const
+
+export type GreetingSettingsScalarFieldEnum = (typeof GreetingSettingsScalarFieldEnum)[keyof typeof GreetingSettingsScalarFieldEnum]
+
+
 export const PromoScalarFieldEnum = {
   id: 'id',
   code: 'code',
@@ -504,9 +533,12 @@ export type AdminLoginEventScalarFieldEnum = (typeof AdminLoginEventScalarFieldE
 export const AdminSessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  tokenHash: 'tokenHash',
   ip: 'ip',
   userAgent: 'userAgent',
   createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
   revokedAt: 'revokedAt'
 } as const
 

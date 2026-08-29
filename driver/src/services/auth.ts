@@ -36,6 +36,7 @@ export interface AuthResponse {
     accountStatus: string;
     isActive: boolean;
     createdAt: string;
+    pushNotificationsEnabled?: boolean;
   };
 }
 
@@ -73,9 +74,17 @@ export async function updateProfile(payload: {
   name: string;
   email: string;
   phone: string | null;
+  pushNotificationsEnabled?: boolean;
 }) {
   const { data } = await api.patch<{ user: AuthResponse['user'] }>('/auth/me', payload);
   return data.user;
+}
+
+export async function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  await api.post('/auth/change-password', payload);
 }
 
 export async function requestPasswordReset(

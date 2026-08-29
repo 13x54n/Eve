@@ -29,6 +29,22 @@ export const AdminStaffRole = {
 export type AdminStaffRole = (typeof AdminStaffRole)[keyof typeof AdminStaffRole]
 
 
+export const AdminStaffTitle = {
+  MANAGER: 'MANAGER',
+  MEMBER: 'MEMBER'
+} as const
+
+export type AdminStaffTitle = (typeof AdminStaffTitle)[keyof typeof AdminStaffTitle]
+
+
+export const GreetingMode = {
+  PINNED: 'PINNED',
+  ROTATE: 'ROTATE'
+} as const
+
+export type GreetingMode = (typeof GreetingMode)[keyof typeof GreetingMode]
+
+
 export const AccountStatus = {
   ACTIVE: 'ACTIVE',
   SUSPENDED: 'SUSPENDED',
@@ -124,7 +140,8 @@ export const RideType = {
   AIRPORT: 'AIRPORT',
   MULTI_STOP: 'MULTI_STOP',
   SCHEDULED: 'SCHEDULED',
-  CORPORATE: 'CORPORATE'
+  CORPORATE: 'CORPORATE',
+  COURIER: 'COURIER'
 } as const
 
 export type RideType = (typeof RideType)[keyof typeof RideType]

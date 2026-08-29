@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { can, type Permission } from "@/lib/permissions";
+import {
+  can,
+  canAccessStaff,
+  type AdminUser,
+  type Permission,
+} from "@/lib/permissions";
 import { useAdminSocket } from "@/lib/socket";
 import { OpsInbox } from "@/components/ops-inbox";
 import {
@@ -17,7 +22,10 @@ import {
   Car,
   LayoutDashboard,
   MapPin,
+  MessageCircle,
+  Package,
   User,
+  UserCog,
   Users,
   Tag,
   Shield,
@@ -27,7 +35,13 @@ import {
 
 const navGroups: {
   label: string;
-  items: { href: string; label: string; permission: Permission; icon: React.ReactNode }[];
+  items: {
+    href: string;
+    label: string;
+    permission?: Permission;
+    visible?: (user: AdminUser) => boolean;
+    icon: React.ReactNode;
+  }[];
 }[] = [
   {
     label: "Overview",
@@ -37,6 +51,18 @@ const navGroups: {
         label: "Dashboard",
         permission: "dashboard:read",
         icon: <LayoutDashboard size={16} strokeWidth={1.75} />,
+      },
+      {
+        href: "/greetings",
+        label: "Greetings",
+        permission: "content:write",
+        icon: <MessageCircle size={16} strokeWidth={1.75} />,
+      },
+      {
+        href: "/staff",
+        label: "Staff",
+        visible: (user) => canAccessStaff(user),
+        icon: <UserCog size={16} strokeWidth={1.75} />,
       },
     ],
   },
@@ -52,6 +78,7 @@ const navGroups: {
     items: [
       { href: "/vehicles", label: "Vehicles", permission: "vehicles:read", icon: <Car size={16} strokeWidth={1.75} /> },
       { href: "/trips", label: "Trips", permission: "trips:read", icon: <MapPin size={16} strokeWidth={1.75} /> },
+      { href: "/couriers", label: "Couriers", permission: "trips:read", icon: <Package size={16} strokeWidth={1.75} /> },
       { href: "/pricing", label: "Pricing & zones", permission: "pricing:read", icon: <Tag size={16} strokeWidth={1.75} /> },
     ],
   },
@@ -73,16 +100,16 @@ function pageTitle(pathname: string) {
 }
 
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, hasSession, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { connected } = useAdminSocket();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !hasSession) {
       router.replace("/login");
     }
-  }, [loading, user, router]);
+  }, [loading, user, hasSession, router]);
 
   if (loading || !user) {
     return (
@@ -95,7 +122,9 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
   const groups = navGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => can(user, item.permission)),
+      items: group.items.filter((item) =>
+        item.visible ? item.visible(user) : Boolean(item.permission && can(user, item.permission)),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -105,12 +134,9 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-14 items-center gap-2.5 px-5">
           <img
             src="https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742"
-            className="h-6 w-auto object-contain brightness-0 invert"
+            className="h-20 w-auto object-contain  invert mt-10"
             alt="Eve"
           />
-          <span className="text-[11px] font-medium uppercase tracking-[0.16em] text-neutral-400">
-            Ops
-          </span>
         </div>
         <nav className="flex-1 overflow-y-auto px-3 pb-4">
           {groups.map((group) => (
@@ -145,6 +171,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
           <p className="truncate text-xs font-medium text-white">{user.name}</p>
           <p className="truncate text-[11px] capitalize text-neutral-500">
             {user.adminStaffRole?.toLowerCase()}
+            {user.adminStaffTitle ? ` · ${user.adminStaffTitle.toLowerCase()}` : ""}
           </p>
         </div>
       </aside>
@@ -183,8 +210,9 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
               </div>
               <button
                 onClick={() => {
-                  logout();
-                  router.replace("/login");
+                  void logout().then(() => {
+                    router.replace("/login");
+                  });
                 }}
                 className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-destructive hover:bg-red-50 transition cursor-pointer"
               >

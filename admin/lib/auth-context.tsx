@@ -2,79 +2,144 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
-import { api, getToken, setToken } from "@/lib/api";
+import {
+  api,
+  ApiError,
+  clearTokens,
+  getRefreshToken,
+  getToken,
+  setAfterTokenRefresh,
+  setSessionTokens,
+} from "@/lib/api";
 import type { AdminUser } from "@/lib/permissions";
-import { connectAdminSocket, disconnectAdminSocket } from "@/lib/socket";
+import {
+  connectAdminSocket,
+  disconnectAdminSocket,
+  reconnectAdminSocket,
+} from "@/lib/socket";
 
 type AuthContextValue = {
   user: AdminUser | null;
   loading: boolean;
+  hasSession: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function hasStoredTokens() {
+  return Boolean(getToken() || getRefreshToken());
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    const token = getToken();
+    setAfterTokenRefresh(() => {
+      reconnectAdminSocket();
+    });
+    return () => setAfterTokenRefresh(null);
+  }, []);
 
-    if (!token) {
-      Promise.resolve().then(() => setLoading(false));
-      return;
+  const logout = useCallback(async () => {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await api("/auth/admin/logout", {
+          method: "POST",
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch {
+        // Local sign-out still proceeds if the revoke call fails.
+      }
     }
 
-    api<{ user: AdminUser }>("/auth/me")
-      .then((result) => {
+    disconnectAdminSocket();
+    clearTokens();
+    setUser(null);
+    setHasSession(false);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function restoreSession() {
+      if (!hasStoredTokens()) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      try {
+        const result = await api<{ user: AdminUser }>("/auth/me");
+        if (cancelled) return;
+
         if (result.user.role !== "ADMIN") {
-          setToken(null);
-          setUser(null);
+          await logout();
           return;
         }
 
         setUser(result.user);
+        setHasSession(true);
         connectAdminSocket();
-      })
-      .catch(() => {
-        disconnectAdminSocket();
-        setToken(null);
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+      } catch (error) {
+        if (cancelled) return;
+
+        const unauthenticated =
+          error instanceof ApiError &&
+          error.status === 401 &&
+          !getRefreshToken();
+
+        if (unauthenticated) {
+          disconnectAdminSocket();
+          clearTokens();
+          setUser(null);
+          setHasSession(false);
+        } else if (hasStoredTokens()) {
+          setHasSession(true);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void restoreSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [logout]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
+      hasSession,
       async login(email, password) {
         const result = await api<{
           accessToken: string;
+          refreshToken: string;
           user: AdminUser;
         }>("/auth/admin/login", {
           method: "POST",
           body: JSON.stringify({ email, password }),
         });
 
-        setToken(result.accessToken);
+        setSessionTokens(result.accessToken, result.refreshToken);
         setUser(result.user);
-        connectAdminSocket();
+        setHasSession(true);
+        reconnectAdminSocket();
       },
-      logout() {
-        disconnectAdminSocket();
-        setToken(null);
-        setUser(null);
-      },
+      logout,
     }),
-    [user, loading],
+    [user, loading, hasSession, logout],
   );
 
   return (

@@ -1,4 +1,4 @@
-import { createHash, randomInt } from "node:crypto";
+import { createHash, randomBytes, randomInt } from "node:crypto";
 import { prisma } from "@eve/db";
 import {
   createAccessToken,
@@ -6,14 +6,30 @@ import {
   listPermissions,
   verifyPassword,
   type AdminStaffRole,
+  type AdminStaffTitle,
   type UserRole,
 } from "@eve/shared";
 import { verificationCodeSender } from "./verification-code.js";
 
 const resetCodeLifetimeMs = 10 * 60 * 1000;
+const adminRefreshTtlMs = 7 * 24 * 60 * 60 * 1000;
 
 function hashResetCode(code: string) {
   return createHash("sha256").update(code).digest("hex");
+}
+
+function createRefreshToken() {
+  return randomBytes(32).toString("hex");
+}
+
+function hashRefreshToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+function unauthorized(message = "Invalid or expired token"): never {
+  const error = new Error(message);
+  error.name = "UnauthorizedError";
+  throw error;
 }
 
 type UserRecord = {
@@ -23,11 +39,13 @@ type UserRecord = {
   phone: string | null;
   role: UserRole;
   adminStaffRole?: AdminStaffRole | null;
+  adminStaffTitle?: AdminStaffTitle | null;
   accountStatus?: string;
   isActive: boolean;
   flagged?: boolean;
   city?: string | null;
   mfaEnabled?: boolean;
+  pushNotificationsEnabled?: boolean;
   lastLoginAt?: Date | null;
   createdAt: Date;
 };
@@ -42,11 +60,13 @@ export function sanitizeUser(user: UserRecord) {
     phone: user.phone,
     role: user.role,
     adminStaffRole: staffRole,
+    adminStaffTitle: user.adminStaffTitle ?? null,
     accountStatus: user.accountStatus ?? "ACTIVE",
     isActive: user.isActive,
     flagged: user.flagged ?? false,
     city: user.city ?? null,
     mfaEnabled: user.mfaEnabled ?? false,
+    pushNotificationsEnabled: user.pushNotificationsEnabled ?? true,
     lastLoginAt: user.lastLoginAt ?? null,
     createdAt: user.createdAt,
     permissions:
@@ -184,6 +204,8 @@ export async function loginAdmin(
     throw error;
   }
 
+  const refreshToken = createRefreshToken();
+
   await prisma.$transaction([
     prisma.user.update({
       where: { id: user.id },
@@ -202,6 +224,8 @@ export async function loginAdmin(
         userId: user.id,
         ip: context.ip,
         userAgent: context.userAgent,
+        tokenHash: hashRefreshToken(refreshToken),
+        expiresAt: new Date(Date.now() + adminRefreshTtlMs),
       },
     }),
     prisma.auditLog.create({
@@ -217,8 +241,69 @@ export async function loginAdmin(
 
   return {
     accessToken: createAccessToken(user),
+    refreshToken,
     user: sanitizeUser(user),
   };
+}
+
+export async function refreshAdminSession(refreshToken: string) {
+  const tokenHash = hashRefreshToken(refreshToken);
+  const session = await prisma.adminSession.findUnique({
+    where: { tokenHash },
+    include: { user: true },
+  });
+
+  const now = new Date();
+
+  if (!session || session.revokedAt != null || session.expiresAt <= now) {
+    if (session && !session.revokedAt) {
+      await prisma.adminSession.update({
+        where: { id: session.id },
+        data: { revokedAt: now },
+      });
+    }
+
+    unauthorized();
+  }
+
+  const { user } = session;
+
+  if (
+    !user.isActive ||
+    user.role !== "ADMIN" ||
+    user.accountStatus === "BLOCKED"
+  ) {
+    await prisma.adminSession.update({
+      where: { id: session.id },
+      data: { revokedAt: now },
+    });
+    unauthorized();
+  }
+
+  const nextRefreshToken = createRefreshToken();
+  await prisma.adminSession.update({
+    where: { id: session.id },
+    data: {
+      tokenHash: hashRefreshToken(nextRefreshToken),
+      lastUsedAt: now,
+    },
+  });
+
+  return {
+    accessToken: createAccessToken(user),
+    refreshToken: nextRefreshToken,
+    user: sanitizeUser(user),
+  };
+}
+
+export async function logoutAdmin(refreshToken: string) {
+  await prisma.adminSession.updateMany({
+    where: {
+      tokenHash: hashRefreshToken(refreshToken),
+      revokedAt: null,
+    },
+    data: { revokedAt: new Date() },
+  });
 }
 
 export async function getUserById(userId: string) {
@@ -240,7 +325,7 @@ export async function getUserById(userId: string) {
 
 export async function updateProfile(
   userId: string,
-  input: { name: string; email: string; phone?: string | null },
+  input: { name: string; email: string; phone?: string | null; pushNotificationsEnabled?: boolean },
 ) {
   const user = await prisma.user.findFirst({
     where: { id: userId, isActive: true },
@@ -271,10 +356,37 @@ export async function updateProfile(
       name: input.name.trim(),
       email,
       phone,
+      ...(input.pushNotificationsEnabled === undefined
+        ? {}
+        : { pushNotificationsEnabled: input.pushNotificationsEnabled }),
     },
   });
 
   return sanitizeUser(updated);
+}
+
+export async function changePassword(
+  userId: string,
+  input: { currentPassword: string; newPassword: string },
+) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, isActive: true },
+  });
+  if (!user) {
+    const error = new Error("User not found");
+    error.name = "NotFoundError";
+    throw error;
+  }
+  const valid = await verifyPassword(user.passwordHash, input.currentPassword);
+  if (!valid) {
+    const error = new Error("Current password is incorrect");
+    error.name = "UnauthorizedError";
+    throw error;
+  }
+  await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: await hashPassword(input.newPassword) },
+  });
 }
 
 export async function requestPasswordReset(email: string) {

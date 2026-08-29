@@ -63,6 +63,13 @@ export function connectAdminSocket() {
   return socket;
 }
 
+export function reconnectAdminSocket() {
+  socket?.disconnect();
+  socket = null;
+  notifyConnection(false);
+  return connectAdminSocket();
+}
+
 export function disconnectAdminSocket() {
   subscribedTripId = null;
   socket?.disconnect();

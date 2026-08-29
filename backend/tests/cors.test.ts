@@ -6,7 +6,7 @@ describe("CORS", () => {
   it("allows requests with no Origin header", async () => {
     const response = await request(app).get("/api/health").expect(200);
 
-    expect(response.body).toEqual({ status: "ok" });
+    expect(response.body.status).toBe("ok");
     expect(response.headers["access-control-allow-origin"]).toBeUndefined();
   });
 

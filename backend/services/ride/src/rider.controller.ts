@@ -89,3 +89,15 @@ export async function postSupportMessage(req: Request, res: Response, next: Next
     res.json({ ticket: await riderService.addSupportMessage(userId(req), String(req.params.id), body) });
   } catch (error) { next(error); }
 }
+
+export async function getGreeting(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await riderService.getGreeting(userId(req)));
+  } catch (error) { next(error); }
+}
+
+export async function getPublicCourier(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({ courier: await riderService.getPublicCourier(String(req.params.token)) });
+  } catch (error) { next(error); }
+}

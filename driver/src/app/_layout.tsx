@@ -1,16 +1,20 @@
+import "@/components/map/mapbox-token";
 import { Stack } from "expo-router/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { DriverNotificationsProvider } from "@/context/driver-notifications";
+import { ThemeProvider } from "@/context/theme-context";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <DriverNotificationsProvider>
-          <RootNavigator />
-        </DriverNotificationsProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <DriverNotificationsProvider>
+            <RootNavigator />
+          </DriverNotificationsProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

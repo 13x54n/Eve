@@ -1,11 +1,10 @@
 import * as Location from "expo-location";
 import { router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -13,18 +12,28 @@ import {
   View,
   FlatList,
 } from "react-native";
-import MapView, { Marker, Region, UrlTile } from "react-native-maps";
 import { Image } from "expo-image";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { searchAddresses, AddressSuggestion } from "@/services/location";
 import { cancelTrip } from "@/services/trips";
 import { useRideSession } from "@/context/ride-session";
+import { useAuth } from "@/context/auth-context";
 import { FindingBanner } from "@/components/finding-banner";
-
+import { MapLocationPicker } from "@/components/map-location-picker";
+import { FALLBACK_CENTER } from "@/components/map/config";
+import { useBrand } from "@/context/theme-context";
+import {
+  DEFAULT_GREETING_TEMPLATE,
+  getGreetingTemplate,
+  interpolateGreeting,
+} from "@/services/greetings";
 
 export default function HomeScreen() {
+  const brand = useBrand();
   const { activeTrip, refreshActive } = useRideSession();
-  const [region, setRegion] = useState<Region>(fallbackRegion);
+  const { user } = useAuth();
+  const [greetingTemplate, setGreetingTemplate] = useState(DEFAULT_GREETING_TEMPLATE);
+  const [region, setRegion] = useState(FALLBACK_CENTER);
   const [loading, setLoading] = useState(true);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [destination, setDestination] = useState("");
@@ -32,15 +41,14 @@ export default function HomeScreen() {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [mapPickerVisible, setMapPickerVisible] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [mapPin, setMapPin] = useState({
-    latitude: fallbackRegion.latitude,
-    longitude: fallbackRegion.longitude,
-  });
-  const mapPickerRef = useRef<MapView | null>(null);
+  const [mapPin, setMapPin] = useState(FALLBACK_CENTER);
 
   useFocusEffect(
     useCallback(() => {
       void refreshActive();
+      void getGreetingTemplate()
+        .then(setGreetingTemplate)
+        .catch(() => {});
     }, [refreshActive]),
   );
 
@@ -62,12 +70,7 @@ export default function HomeScreen() {
           accuracy: Location.Accuracy.Balanced,
         });
         const { latitude, longitude } = location.coords;
-        setRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        });
+        setRegion({ latitude, longitude });
       } catch {
         setLocationMessage("Could not find your location. Showing the default map area.");
       } finally {
@@ -127,13 +130,6 @@ export default function HomeScreen() {
     };
     setMapPin(coordinate);
     setMapPickerVisible(true);
-    requestAnimationFrame(() => {
-      mapPickerRef.current?.animateToRegion({
-        ...nextRegion,
-        latitudeDelta: 0.04,
-        longitudeDelta: 0.04,
-      });
-    });
   }
 
   async function handleCancelSearch() {
@@ -170,8 +166,10 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Animated.Text entering={FadeInDown.duration(420)} style={styles.title}>Nice to see you, Lex</Animated.Text>
+    <View style={[styles.container, { backgroundColor: brand.canvas }]}>
+      <Animated.Text entering={FadeInDown.duration(420)} style={styles.title}>
+        {interpolateGreeting(greetingTemplate, user?.name)}
+      </Animated.Text>
       {activeTrip?.status === "SEARCHING" ? (
         <FindingBanner
           destination={activeTrip.dropoffAddress}
@@ -186,6 +184,7 @@ export default function HomeScreen() {
         <TextInput
           style={styles.searchText}
           placeholder="Enter destination"
+          placeholderTextColor="#9CA3AF"
           value={destination}
           onChangeText={handleDestinationChange}
           onFocus={() => setSearchFocused(true)}
@@ -254,61 +253,27 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      <Modal
+      <MapLocationPicker
         visible={mapPickerVisible}
-        animationType="slide"
-        onRequestClose={() => setMapPickerVisible(false)}
-      >
-        <View style={styles.mapPicker}>
-          <View style={styles.mapPickerHeader}>
-            <Pressable
-              onPress={() => setMapPickerVisible(false)}
-              accessibilityLabel="Close map picker"
-            >
-              <Feather name="x" size={22} color="#111827" />
-            </Pressable>
-            <Text style={styles.mapPickerTitle}>Choose on map</Text>
-            <View style={{ width: 22 }} />
-          </View>
-          <MapView
-            ref={mapPickerRef}
-            style={styles.mapPickerView}
-            initialRegion={{ ...region, latitudeDelta: 0.04, longitudeDelta: 0.04 }}
-            onPress={(event) => setMapPin(event.nativeEvent.coordinate)}
-          >
-            <UrlTile
-              urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maximumZ={19}
-              tileSize={256}
-            />
-            <Marker coordinate={mapPin} />
-          </MapView>
-          <Text style={styles.mapAttribution}>© OpenStreetMap contributors</Text>
-          <View style={styles.mapPickerFooter}>
-            <Text style={styles.mapPickerHint}>Tap the map to place your destination pin.</Text>
-            <Pressable
-              style={styles.confirmMapButton}
-              onPress={() => {
-                setDestination("Pinned map location");
-                setSearchFocused(false);
-                setMapPickerVisible(false);
-                router.push({
-                  pathname: "/ride/request",
-                  params: {
-                    pickup: "Current location",
-                    dropoff: "Pinned map location",
-                    dropoff_lat: String(mapPin.latitude),
-                    dropoff_lng: String(mapPin.longitude),
-                  },
-                });
-              }}
-            >
-              <Text style={styles.confirmMapText}>Use this location</Text>
-              <Feather name="arrow-right" size={18} color="#FFFFFF" />
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+        initial={mapPin}
+        title="Choose on map"
+        hint="Search or tap the map to place your destination pin."
+        onClose={() => setMapPickerVisible(false)}
+        onConfirm={(location) => {
+          setDestination(location.label);
+          setSearchFocused(false);
+          setMapPickerVisible(false);
+          router.push({
+            pathname: "/ride/request",
+            params: {
+              pickup: "Current location",
+              dropoff: location.label,
+              dropoff_lat: String(location.latitude),
+              dropoff_lng: String(location.longitude),
+            },
+          });
+        }}
+      />
       <Animated.View
         entering={FadeInDown.delay(160).duration(420)}
         style={{
@@ -318,17 +283,25 @@ export default function HomeScreen() {
           gap: 10,
         }}
       >
-        <Pressable style={styles.featuresButton}>
+        <Pressable
+          style={styles.featuresButton}
+          onPress={() =>
+            router.push({
+              pathname: "/ride/request",
+              params: { pickup: "Current location", forOthers: "1" },
+            })
+          }
+        >
           <Image
             source={{
-              uri: "https://images.unsplash.com/vector-1768383602208-c45d3af52271?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+              uri: "https://images.unsplash.com/photo-1778230060412-5703970b7aea?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
             }}
             style={{ width: 60, height: 60, marginBottom: 5 }}
           />
-          <Text style={styles.featureText}>Schedule</Text>
-          <Text>Book Ahead</Text>
+          <Text style={styles.featureText}>Book for others</Text>
+          <Text>Help family around</Text>
         </Pressable>
-        <Pressable style={styles.featuresButton}>
+        <Pressable style={styles.featuresButton} onPress={() => router.push("/courier/request")}>
           <Image
             source={{
               uri: "https://images.unsplash.com/vector-1763972891818-fbae102da51e?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
@@ -345,37 +318,31 @@ export default function HomeScreen() {
   );
 }
 
-const fallbackRegion: Region = {
-  latitude: 27.7172,
-  longitude: 85.324,
-  latitudeDelta: 0.08,
-  longitudeDelta: 0.08,
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: 24,
     paddingHorizontal: 16,
     backgroundColor: "#f7f8ef",
-    
+    // justifyContent: "flex-end",
   },
-  searchText: { fontSize: 14, color: "gray", width: "80%" },
-  title: { fontSize: 24, fontWeight: "700", marginTop: 45, marginBottom: 15 },
+  searchText: { fontSize: 16, color: "black", width: "100%", paddingVertical: 5 },
+  title: { fontSize: 28, fontWeight: "700", marginTop: 45, marginBottom: 15 },
   searchContainer: {
     flexDirection: "row",
     borderColor: "#2e4ed2",
     borderWidth: 2,
     alignItems: "center",
-    padding: 10,
-    borderRadius: 8,
+    padding: 14,
+    borderRadius: 18,
     marginBottom: 20,
     gap: 10,
+    backgroundColor: "#FFFFFF",
   },
   destinationText: { fontSize: 14, fontWeight: "700" },
   featuresButton: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#ffffff",
     flexDirection: "column",
     alignItems: "center",
     alignSelf: "center",

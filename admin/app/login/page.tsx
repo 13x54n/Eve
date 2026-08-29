@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
@@ -8,12 +8,18 @@ import { useAuth } from "@/lib/auth-context";
 import { Button, Input } from "@/components/ui";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace("/dashboard");
+    }
+  }, [loading, user, router]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -31,8 +37,7 @@ export default function LoginPage() {
     } finally {
       setPending(false);
     }
-  }
-
+  } 
   return (
     <div className="grid min-h-screen bg-sidebar lg:grid-cols-2">
       <div className="hidden flex-col justify-between p-10 text-white lg:flex">
@@ -40,18 +45,18 @@ export default function LoginPage() {
           <img
             src="https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742"
             alt="Eve"
-            className="h-8 w-auto object-contain brightness-0 invert"
+            className="h-8 w-auto object-contain invert"
           />
           <span className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-            Operations
+            Eve Operations
           </span>
         </div>
         <div>
-          <p className="max-w-sm text-3xl font-semibold tracking-tight">
-            Dispatch, safety, and support in one console.
+          <p className="max-w-sm text-7xl font-semibold tracking-tight">
+            Dispatch, Safety, and Support.
           </p>
           <p className="mt-3 max-w-sm text-sm text-neutral-400">
-            Role-based access for live ride-hailing operations.
+            {/* Role-based access for live ride-hailing operations. */}
           </p>
         </div>
         <p className="text-xs text-neutral-600">Eve · Internal use only</p>

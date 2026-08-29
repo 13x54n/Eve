@@ -1,4 +1,5 @@
-import { calculateFare, prisma } from "@eve/db";
+import { randomBytes } from "node:crypto";
+import { calculateFare, prisma, selectGreetingTemplate } from "@eve/db";
 import { distanceKm, durationMinutes, fail, money } from "@eve/shared";
 import { nearbyDriversClient } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
@@ -34,12 +35,20 @@ async function notifyOpsTicket(
   });
 }
 
-function serializeTrip(trip: any) {
+type Viewer = { userId: string; riderId: string };
+
+function serializeTrip(trip: any, viewer?: Viewer) {
+  const isRecipient = Boolean(
+    viewer && trip.recipientUserId === viewer.userId && trip.riderId !== viewer.riderId,
+  );
   return {
     ...trip,
     distanceKm: money(trip.distanceKm),
     suggestedFare: money(trip.suggestedFare),
     fareTotal: money(trip.fareTotal),
+    viewerRole: isRecipient ? "recipient" : "sender",
+    canManage: !isRecipient,
+    direction: isRecipient ? "receiving" : "sent",
     driver: trip.driver
       ? {
           ...trip.driver,
@@ -47,20 +56,50 @@ function serializeTrip(trip: any) {
           user: publicUser(trip.driver.user),
         }
       : trip.driver,
-    offers: trip.offers?.map((offer: any) => ({
-      ...offer,
-      proposedFare: money(offer.proposedFare),
-      driver: offer.driver
-        ? { id: offer.driver.id, rating: money(offer.driver.rating), user: publicUser(offer.driver.user) }
-        : undefined,
-    })),
+    offers: isRecipient
+      ? undefined
+      : trip.offers?.map((offer: any) => ({
+          ...offer,
+          proposedFare: money(offer.proposedFare),
+          driver: offer.driver
+            ? { id: offer.driver.id, rating: money(offer.driver.rating), user: publicUser(offer.driver.user) }
+            : undefined,
+        })),
   };
 }
+
+async function matchRecipientUser(phone: string, excludeUserId: string) {
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/\D/g, "");
+  const or: { phone: string }[] = [{ phone: trimmed }];
+  if (digits && digits !== trimmed) or.push({ phone: digits });
+  const user = await prisma.user.findFirst({
+    where: {
+      role: "RIDER",
+      isActive: true,
+      id: { not: excludeUserId },
+      phone: { not: null },
+      OR: or,
+    },
+    select: { id: true },
+  });
+  return user?.id ?? null;
+}
+
+const tripDetailInclude = {
+  offers: { include: { driver: { include: { user: true } } } },
+  driver: { include: { user: true } },
+  vehicle: true,
+} as const;
 
 export async function createTrip(userId: string, input: {
   pickupAddress: string; dropoffAddress: string; city: string;
   pickupLat: number; pickupLng: number; dropoffLat: number; dropoffLng: number;
-  vehicleType: "BIKE" | "CAR"; rideType: "STANDARD" | "AIRPORT" | "MULTI_STOP" | "SCHEDULED" | "CORPORATE";
+  vehicleType: "BIKE" | "CAR";
+  rideType: "STANDARD" | "AIRPORT" | "MULTI_STOP" | "SCHEDULED" | "CORPORATE" | "COURIER";
+  recipientName?: string;
+  recipientPhone?: string;
+  packageNote?: string;
 }) {
   const rider = await getRider(userId);
   const existing = await prisma.trip.findFirst({
@@ -72,6 +111,11 @@ export async function createTrip(userId: string, input: {
   if (distance < 0.05) fail("Pickup and drop-off must be different locations", "ConflictError");
   const duration = durationMinutes(distance);
   const fare = await calculateFare(input.city, input.vehicleType, distance, duration);
+  const isCourier = input.rideType === "COURIER";
+  const forSomeoneElse = Boolean(input.recipientName && input.recipientPhone);
+  const recipientUserId = forSomeoneElse && input.recipientPhone
+    ? await matchRecipientUser(input.recipientPhone, userId)
+    : null;
   const trip = await prisma.trip.create({
     data: {
       bookingCode: `EVE-${Date.now().toString(36).toUpperCase()}`,
@@ -91,9 +135,14 @@ export async function createTrip(userId: string, input: {
       suggestedFare: fare,
       fareTotal: fare,
       paymentMethod: "CASH",
+      recipientName: forSomeoneElse ? input.recipientName ?? null : null,
+      recipientPhone: forSomeoneElse ? input.recipientPhone ?? null : null,
+      packageNote: isCourier ? input.packageNote ?? null : null,
+      trackingToken: forSomeoneElse ? randomBytes(16).toString("hex") : null,
+      recipientUserId,
     },
   });
-  const result = serializeTrip(trip);
+  const result = serializeTrip(trip, { userId, riderId: rider.id });
   const drivers = await nearbyDriversClient({
     pickupLat: input.pickupLat,
     pickupLng: input.pickupLng,
@@ -103,41 +152,74 @@ export async function createTrip(userId: string, input: {
     drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", result)),
   );
   await emitTripEvent(trip.id, "trip:requested", result);
+  if (recipientUserId) {
+    emitUserEvent("RIDER", recipientUserId, isCourier ? "courier:incoming" : "trip:incoming", result);
+  }
   return result;
 }
 
 export async function getTrip(userId: string, tripId: string) {
   const rider = await getRider(userId);
   const trip = await prisma.trip.findFirst({
-    where: { id: tripId, riderId: rider.id },
-    include: { offers: { include: { driver: { include: { user: true } } } }, driver: { include: { user: true } }, vehicle: true },
+    where: { id: tripId, OR: [{ riderId: rider.id }, { recipientUserId: userId }] },
+    include: tripDetailInclude,
   });
   if (!trip) fail("Trip not found", "NotFoundError");
-  return serializeTrip(trip);
+  return serializeTrip(trip, { userId, riderId: rider.id });
 }
 
 export async function listTrips(userId: string) {
   const rider = await getRider(userId);
   const trips = await prisma.trip.findMany({
-    where: { riderId: rider.id },
+    where: { OR: [{ riderId: rider.id }, { recipientUserId: userId }] },
     orderBy: { createdAt: "desc" },
     take: 20,
   });
-  return trips.map(serializeTrip);
+  return trips.map((trip) => serializeTrip(trip, { userId, riderId: rider.id }));
 }
 
 export async function getActiveTrip(userId: string) {
   const rider = await getRider(userId);
   const trip = await prisma.trip.findFirst({
     where: { riderId: rider.id, status: { in: [...ACTIVE_STATUSES] } },
-    include: {
-      offers: { include: { driver: { include: { user: true } } } },
-      driver: { include: { user: true } },
-      vehicle: true,
-    },
+    include: tripDetailInclude,
     orderBy: { createdAt: "desc" },
   });
-  return trip ? serializeTrip(trip) : null;
+  return trip ? serializeTrip(trip, { userId, riderId: rider.id }) : null;
+}
+
+export async function getPublicCourier(token: string) {
+  const trip = await prisma.trip.findFirst({
+    where: { trackingToken: token },
+    include: { driver: true, vehicle: true },
+  });
+  if (!trip) fail("Tracking link not found", "NotFoundError");
+  return {
+    bookingCode: trip.bookingCode,
+    status: trip.status,
+    rideType: trip.rideType,
+    pickupAddress: trip.pickupAddress,
+    dropoffAddress: trip.dropoffAddress,
+    pickupLat: trip.pickupLat,
+    pickupLng: trip.pickupLng,
+    dropoffLat: trip.dropoffLat,
+    dropoffLng: trip.dropoffLng,
+    etaMinutes: trip.etaMinutes,
+    recipientName: trip.recipientName,
+    packageNote: trip.packageNote,
+    vehicle: trip.vehicle
+      ? {
+          make: trip.vehicle.make,
+          model: trip.vehicle.model,
+          color: trip.vehicle.color,
+          plateNumber: trip.vehicle.plateNumber,
+        }
+      : null,
+    driverLocation:
+      trip.driver && trip.driver.latitude != null && trip.driver.longitude != null
+        ? { latitude: trip.driver.latitude, longitude: trip.driver.longitude }
+        : null,
+  };
 }
 
 function serializeSupportTicket(ticket: {
@@ -299,4 +381,8 @@ export async function cancelTrip(userId: string, tripId: string) {
     emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId });
   }
   return result;
+}
+
+export async function getGreeting(userId: string) {
+  return { template: await selectGreetingTemplate(userId) };
 }

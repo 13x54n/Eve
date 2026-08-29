@@ -1,22 +1,31 @@
 import { router } from "expo-router";
 import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import * as Location from "expo-location";
+import { EveMap, EveMarker } from "@/components/map/eve-map";
+import { FALLBACK_CENTER } from "@/components/map/config";
 
 export default function HomeScreen() {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [pickup, setPickup] = useState("Current location");
   const [dropoff, setDropoff] = useState("");
   const [dropoffFocused, setDropoffFocused] = useState(false);
+  const [center, setCenter] = useState(FALLBACK_CENTER);
+
+  useEffect(() => {
+    void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
+      if (status !== "granted") return;
+      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      setCenter({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+    }).catch(() => { /* keep fallback */ });
+  }, []);
 
   return (
     <View style={styles.container}>
-      <View style={styles.mapPlaceholder}>
-        <View style={styles.mapGrid} />
-        <View style={styles.mapPin}>
-          <Feather name="navigation" size={18} color="#FFFFFF" />
-        </View>
-      </View>
+      <EveMap style={styles.map} camera={{ center, zoom: 13 }} interactive={false}>
+        <EveMarker id="you" coordinate={center} color="#2E4ED5" />
+      </EveMap>
 
       <View style={styles.topBar}>
         <View>
@@ -134,18 +143,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F3F4F6",
   },
-  mapPlaceholder: {
+  map: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    overflow: "hidden",
-    backgroundColor: "#DCE8E6",
   },
-  mapGrid: {
-    position: "absolute", width: "140%", height: "140%", transform: [{ rotate: "-18deg" }],
-    backgroundColor: "#E8F0E8", borderWidth: 32, borderColor: "#C8DCD4",
-  },
-  mapPin: { alignItems: "center", justifyContent: "center", width: 42, height: 42, borderRadius: 21, backgroundColor: "#2E4ED5", borderWidth: 5, borderColor: "#FFFFFF" },
   topBar: { position: "absolute", top: 28, left: 20, right: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   eyebrow: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   title: { color: "#111827", fontSize: 28, fontWeight: "800", marginTop: 4 },

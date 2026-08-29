@@ -9,6 +9,11 @@ import {
   driver,
   drivers,
   fleets,
+  greetings,
+  createGreeting,
+  updateGreeting,
+  removeGreeting,
+  saveGreetingSettings,
   interveneTrip,
   ledger,
   notifications,
@@ -24,6 +29,8 @@ import {
   savePromo,
   sendNotification,
   staff,
+  createStaff,
+  resetStaffCredentials,
   tickets,
   ticket,
   transitionPricing,
@@ -39,6 +46,7 @@ import {
   requireAdmin,
   requireAuth,
   requirePermission,
+  requireStaffAccess,
 } from "@eve/http";
 
 const skipInVitest = () => Boolean(process.env.VITEST);
@@ -120,6 +128,24 @@ router.patch(
 router.get("/promos", requirePermission("promotions:write"), promos);
 router.post("/promos", requirePermission("promotions:write"), savePromo);
 
+router.get("/greetings", requirePermission("content:write"), greetings);
+router.post("/greetings", requirePermission("content:write"), createGreeting);
+router.patch(
+  "/greetings/settings",
+  requirePermission("content:write"),
+  saveGreetingSettings,
+);
+router.patch(
+  "/greetings/:id",
+  requirePermission("content:write"),
+  updateGreeting,
+);
+router.delete(
+  "/greetings/:id",
+  requirePermission("content:write"),
+  removeGreeting,
+);
+
 router.get(
   "/notifications",
   requirePermission("notifications:send"),
@@ -133,7 +159,9 @@ router.post(
 
 router.get("/analytics", requirePermission("analytics:read"), analytics);
 router.get("/audit", requirePermission("audit:read"), audit);
-router.get("/staff", requirePermission("admin:manage"), staff);
-router.patch("/staff/:id", requirePermission("admin:manage"), updateStaff);
+router.get("/staff", requireStaffAccess, staff);
+router.post("/staff", requireStaffAccess, createStaff);
+router.patch("/staff/:id", requireStaffAccess, updateStaff);
+router.post("/staff/:id/credentials", requireStaffAccess, resetStaffCredentials);
 
 export default router;

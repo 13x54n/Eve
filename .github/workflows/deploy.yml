@@ -22,6 +22,6 @@ jobs:
             pm2 delete all
             cd backend
             npm install
-            npx prisma generate
+            npm run build
             npx prisma migrate deploy
             pm2 startOrReload ecosystem.config.cjs --update-env

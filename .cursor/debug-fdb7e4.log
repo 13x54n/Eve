@@ -1,0 +1,1 @@
+{"sessionId":"fdb7e4","runId":"pre-fix","hypothesisId":"A","location":"backend/packages/db/src/prisma.ts:adapter","message":"PrismaPg connection sslmode","data":{"sslmode":"require","host":"db.prisma.io","hasUseLibpqCompat":false},"timestamp":1787974114834}
