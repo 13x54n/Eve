@@ -36,7 +36,7 @@ export function nycTripPayload(overrides: Record<string, unknown> = {}) {
   };
 }
 
-export function registerRider(name = "Regression Rider") {
+export function registerRider(name = "Regression Rider", phone?: string) {
   const email = uniqueEmail("rider");
   return {
     email,
@@ -44,6 +44,7 @@ export function registerRider(name = "Regression Rider") {
       name,
       email,
       password: TEST_PASSWORD,
+      ...(phone ? { phone } : {}),
     }) as Test,
   };
 }
@@ -116,8 +117,8 @@ export function goOnline(token: string, location: { lat: number; lng: number } =
     .send({ presence: "ONLINE", latitude: location.lat, longitude: location.lng });
 }
 
-export async function spawnRider() {
-  const { email, request: req } = registerRider();
+export async function spawnRider(options: { name?: string; phone?: string } = {}) {
+  const { email, request: req } = registerRider(options.name, options.phone);
   const res = await req.expect(201);
   return { email, token: res.body.accessToken as string, user: res.body.user };
 }

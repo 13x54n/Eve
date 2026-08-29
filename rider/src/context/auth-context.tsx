@@ -14,6 +14,7 @@ import {
   logout as clearStoredSession,
   type AuthResponse,
 } from "@/services/auth";
+import { setPushNotificationsEnabled } from "@/services/notifications";
 
 type SessionUser = AuthResponse["user"];
 
@@ -75,6 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [logout]);
+
+  useEffect(() => {
+    setPushNotificationsEnabled(user?.pushNotificationsEnabled !== false);
+  }, [user?.pushNotificationsEnabled]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

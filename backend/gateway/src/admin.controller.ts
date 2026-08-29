@@ -219,8 +219,16 @@ export const audit = handle(async (req, res) => {
   res.json(await admin.listAudit(req.query as Record<string, unknown>));
 });
 
-export const staff = handle(async (_req, res) => {
-  res.json(await admin.listStaff());
+export const staff = handle(async (req, res) => {
+  const auth = actor(req);
+  res.json(await admin.listStaff(auth.user));
+});
+
+export const createStaff = handle(async (req, res) => {
+  const auth = actor(req);
+  res.status(201).json(
+    await admin.createStaff(auth.user.id, auth.user, req.body, req.ip),
+  );
 });
 
 export const updateStaff = handle(async (req, res) => {
@@ -229,8 +237,55 @@ export const updateStaff = handle(async (req, res) => {
     await admin.updateStaff(
       String(req.params.id),
       auth.user.id,
+      auth.user,
       req.body,
       req.ip,
     ),
   );
+});
+
+export const resetStaffCredentials = handle(async (req, res) => {
+  const auth = actor(req);
+  res.json(
+    await admin.resetStaffCredentials(
+      String(req.params.id),
+      auth.user.id,
+      auth.user,
+      req.body,
+      req.ip,
+    ),
+  );
+});
+
+export const greetings = handle(async (_req, res) => {
+  res.json(await admin.listGreetings());
+});
+
+export const createGreeting = handle(async (req, res) => {
+  const auth = actor(req);
+  res.status(201).json(await admin.createGreeting(auth.user.id, req.body, req.ip));
+});
+
+export const updateGreeting = handle(async (req, res) => {
+  const auth = actor(req);
+  res.json(
+    await admin.updateGreeting(
+      String(req.params.id),
+      auth.user.id,
+      req.body,
+      req.ip,
+    ),
+  );
+});
+
+export const removeGreeting = handle(async (req, res) => {
+  const auth = actor(req);
+  res.json(
+    await admin.deleteGreeting(String(req.params.id), auth.user.id, req.ip),
+  );
+});
+
+export const saveGreetingSettings = handle(async (req, res) => {
+  const auth = actor(req);
+  res.json(await admin.updateGreetingSettings(auth.user.id, req.body, req.ip));
 });

@@ -5,7 +5,6 @@ import {
   Linking,
   Platform,
   Pressable,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,9 +13,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
-import { searchAddresses, AddressSuggestion } from "@/services/location"; // adjust path if needed
+import { searchAddresses, AddressSuggestion } from "@/services/location";
 import { Image } from "expo-image";
-import MapView, { Marker, Polyline, UrlTile } from "react-native-maps";
+import { MapLocationPicker } from "@/components/map-location-picker";
+import { EveMap, EveMarker, EveRoute } from "@/components/map/eve-map";
+import { useDrivingRoute } from "@/components/map/use-driving-route";
 
 const vehicleOptions = [
   ["Car", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
@@ -172,8 +173,8 @@ export default function RequestRideScreen() {
     setMapPickerVisible(true);
   }
 
-  function applyMapLocation() {
-    const label = `Pinned location (${mapCoordinate.latitude.toFixed(5)}, ${mapCoordinate.longitude.toFixed(5)})`;
+  function applyMapLocation(location: { latitude: number; longitude: number; label: string }) {
+    const label = location.label;
 
     if (activeField === "pickup") {
       setPickup(label);
@@ -192,6 +193,7 @@ export default function RequestRideScreen() {
       );
     }
 
+    setMapCoordinate({ latitude: location.latitude, longitude: location.longitude });
     setActiveField(null);
     setMapPickerVisible(false);
   }
@@ -215,12 +217,9 @@ export default function RequestRideScreen() {
     lat: mapCoordinate.latitude - 0.01,
     lng: mapCoordinate.longitude - 0.01,
   };
-  const routeRegion = {
-    latitude: (pickupCoordinate.lat + mapCoordinate.latitude) / 2,
-    longitude: (pickupCoordinate.lng + mapCoordinate.longitude) / 2,
-    latitudeDelta: Math.max(Math.abs(pickupCoordinate.lat - mapCoordinate.latitude) * 2.5, 0.03),
-    longitudeDelta: Math.max(Math.abs(pickupCoordinate.lng - mapCoordinate.longitude) * 2.5, 0.03),
-  };
+  const pickupPoint = { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng };
+  const dropoffPoint = { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude };
+  const routeCoordinates = useDrivingRoute(pickupPoint, dropoffPoint);
 
   const riderDetailsValid =
     selectedRider === "For me" || (riderName.trim().length > 1 && riderPhone.trim().length >= 7);
@@ -403,24 +402,25 @@ export default function RequestRideScreen() {
           </View>
           <Feather name="navigation" size={20} color="#2E4ED5" />
         </View>
-        <MapView style={styles.routePreviewMap} initialRegion={routeRegion} scrollEnabled={false}>
-          <UrlTile
-            urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            maximumZ={19}
-            tileSize={256}
-          />
-          <Marker coordinate={{ latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng }} pinColor="#2E4ED5" />
-          <Marker coordinate={mapCoordinate} pinColor="#111827" />
-          <Polyline
-            coordinates={[
-              { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng },
-              { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude },
-            ]}
-            strokeColor="#2E4ED5"
-            strokeWidth={4}
-            lineDashPattern={[10, 7]}
-          />
-        </MapView>
+        <EveMap
+          style={styles.routePreviewMap}
+          interactive={false}
+          camera={{
+            center: {
+              latitude: (pickupPoint.latitude + dropoffPoint.latitude) / 2,
+              longitude: (pickupPoint.longitude + dropoffPoint.longitude) / 2,
+            },
+            zoom: 12,
+            bounds: [pickupPoint, dropoffPoint],
+            padding: { top: 28, right: 28, bottom: 28, left: 28 },
+          }}
+        >
+          <EveMarker id="pickup" coordinate={pickupPoint} color="#2E4ED5" />
+          <EveMarker id="dropoff" coordinate={dropoffPoint} color="#111827" />
+          {routeCoordinates.length >= 2 ? (
+            <EveRoute coordinates={routeCoordinates} color="#2E4ED5" />
+          ) : null}
+        </EveMap>
 
         <View style={styles.mapLinks}>
           <Pressable style={styles.mapLink} onPress={() => openExternalMap("google")}>
@@ -470,46 +470,14 @@ export default function RequestRideScreen() {
       </View>
 
 
-      <Modal
+      <MapLocationPicker
         visible={mapPickerVisible}
-        animationType="slide"
-        onRequestClose={() => setMapPickerVisible(false)}
-      >
-        <View style={styles.mapPicker}>
-          <View style={styles.mapPickerHeader}>
-            <Pressable onPress={() => setMapPickerVisible(false)} accessibilityLabel="Close map picker">
-              <Feather name="x" size={22} color="#111827" />
-            </Pressable>
-            <Text style={styles.mapPickerTitle}>Choose on map</Text>
-            <View style={{ width: 22 }} />
-          </View>
-          <MapView
-            style={styles.mapPickerView}
-            initialRegion={{
-              latitude: mapCoordinate.latitude,
-              longitude: mapCoordinate.longitude,
-              latitudeDelta: 0.04,
-              longitudeDelta: 0.04,
-            }}
-            onPress={(event) => setMapCoordinate(event.nativeEvent.coordinate)}
-          >
-            <UrlTile
-              urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              maximumZ={19}
-              tileSize={256}
-            />
-            <Marker coordinate={mapCoordinate} />
-          </MapView>
-
-          <View style={styles.mapPickerFooter}>
-            <Text style={styles.mapPickerHint}>Tap the map to place this address.</Text>
-            <Pressable style={styles.confirmMapButton} onPress={applyMapLocation}>
-              <Text style={styles.confirmMapText}>Use this location</Text>
-              <Feather name="arrow-right" size={18} color="#FFFFFF" />
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+        initial={mapCoordinate}
+        title="Choose on map"
+        hint="Search or tap the map to place this address."
+        onClose={() => setMapPickerVisible(false)}
+        onConfirm={applyMapLocation}
+      />
 
       <Pressable
         disabled={!dropoff.trim() || !riderDetailsValid}

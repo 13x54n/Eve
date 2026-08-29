@@ -3,8 +3,7 @@ module.exports = {
     {
       name: "server",
       cwd: __dirname,
-      script: "./node_modules/.bin/tsx",
-      args: "gateway/src/server.ts",
+      script: "gateway/dist/server.js",
     },
   ],
 };

@@ -44,6 +44,10 @@ type Trip = {
   routeDeviation: boolean;
   rider: { id: string; name: string; phone: string | null };
   driver: { id: string; name: string; profileId: string } | null;
+  recipientName: string | null;
+  recipientPhone: string | null;
+  packageNote: string | null;
+  trackingToken: string | null;
   events: { id: string; action: string; createdAt: string }[];
   offers: { id: string; proposedFare: number; etaMinutes: number; status: string; driverId: string; driverName: string }[];
   ledger: { id: string; type: string; amount: number; status: string }[];
@@ -144,7 +148,7 @@ export default function TripDetailPage({
                 ) : (
                   "Unassigned"
                 )}
-                {` · ${data.city}`}
+                {` · ${data.city}${data.rideType === "COURIER" ? " · Courier" : ""}`}
               </span>
             }
             actions={<Badge tone={statusTone(data.status)}>{data.status}</Badge>}
@@ -185,6 +189,28 @@ export default function TripDetailPage({
                   />
                 </div>
               </Panel>
+              {data.rideType === "COURIER" ? (
+                <Panel title="Courier">
+                  <p className="font-medium">{data.recipientName ?? "Recipient"}</p>
+                  <p className="text-muted-foreground">{data.recipientPhone ?? "No phone"}</p>
+                  {data.packageNote ? <p className="mt-2 text-[13px]">{data.packageNote}</p> : null}
+                  {data.trackingToken ? (
+                    <p className="mt-2 break-all text-[12px] text-muted-foreground">
+                      Tracking token: {data.trackingToken}
+                    </p>
+                  ) : null}
+                </Panel>
+              ) : data.recipientName || data.recipientPhone ? (
+                <Panel title="Passenger">
+                  <p className="font-medium">{data.recipientName ?? "Passenger"}</p>
+                  <p className="text-muted-foreground">{data.recipientPhone ?? "No phone"}</p>
+                  {data.trackingToken ? (
+                    <p className="mt-2 break-all text-[12px] text-muted-foreground">
+                      Tracking token: {data.trackingToken}
+                    </p>
+                  ) : null}
+                </Panel>
+              ) : null}
               <Panel
                 title="Trip history"
                 actions={

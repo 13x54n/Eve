@@ -16,11 +16,12 @@ function displayStatus(status: string) {
 }
 
 function openTrip(trip: Trip) {
-  if (trip.status === "SEARCHING") {
+  const asRecipient = trip.viewerRole === "recipient" || trip.direction === "receiving";
+  if (trip.status === "SEARCHING" && !asRecipient) {
     router.push({ pathname: "/ride/searching", params: { tripId: trip.id } });
     return;
   }
-  if (trip.status === "ASSIGNED" || trip.status === "ONGOING") {
+  if (trip.status === "ASSIGNED" || trip.status === "ONGOING" || (trip.status === "SEARCHING" && asRecipient)) {
     router.push({ pathname: "/ride/tracking", params: { tripId: trip.id } });
     return;
   }
@@ -62,22 +63,9 @@ export default function RidesScreen() {
           <Text style={styles.title}>Your trips</Text>
         </View>
         {/* <Pressable style={styles.iconButton} accessibilityLabel="Settings"><Feather name="settings" size={20} color="#111827" /></Pressable> */}
-      </View>
-
-      <View style={styles.monthRow}><Text style={styles.sectionTitle}>Upcoming</Text></View>
-
-      <View style={{ marginBottom: 28, flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 16, paddingHorizontal: 16, paddingBottom: 8 }}>
-
-        <View >
-          <Text style={styles.sectionTitle}>No upcoming rides.</Text>
-          <Pressable onPress={() => router.push("/(tabs)/home")}>
-            <Text style={{ color: "#2e4ed2", textDecorationLine: "underline", fontWeight: "bold" }}>Reserve your ride</Text>
-          </Pressable>
-        </View>
-
         <Image source={{ uri: "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }} style={{ width: "100%", height: 62, borderRadius: 16 }} contentFit="contain" />
+
       </View>
-      <View style={styles.monthRow}><Text style={styles.sectionTitle}>Recent activity</Text><Text style={styles.count}>{visibleRides.length} rides</Text></View>
 
       <View style={styles.filterRow}>
         {(["All", "Completed", "Cancelled"] as const).map((item) => (
@@ -99,10 +87,13 @@ export default function RidesScreen() {
                 <Text style={styles.date}>
                   {trip.dropoffAddress}
                 </Text>
-                <Text style={styles.status}>{status}</Text>
+                <Text style={styles.status}>
+                  {trip.rideType === "COURIER" ? (trip.direction === "receiving" ? "Receiving · " : "Sent · ") : ""}
+                  {status}
+                </Text>
             <Text style={styles.place}>{new Date(trip.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</Text>
               </View>
-              <Text style={styles.price}>${trip.fareTotal.toFixed(2)}</Text>
+              {trip.direction === "receiving" ? null : <Text style={styles.price}>${trip.fareTotal.toFixed(2)}</Text>}
             </View>
           </Pressable>
         );

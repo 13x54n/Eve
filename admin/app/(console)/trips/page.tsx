@@ -112,6 +112,7 @@ export default function TripsPage() {
                   <option>MULTI_STOP</option>
                   <option>SCHEDULED</option>
                   <option>CORPORATE</option>
+                  <option>COURIER</option>
                 </Select>
               </Field>
               <Field label="Vehicle">

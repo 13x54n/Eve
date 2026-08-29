@@ -1,16 +1,17 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "react-native-maps";
+import { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, Alert, Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as ExpoLinking from "expo-linking";
 import { cancelTrip, getTrip, getTripMessages, Trip } from "@/services/trips";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useAuth } from "@/context/auth-context";
 import { Brand } from "@/constants/theme";
 import { ActionButton } from "@/components/action-button";
+import { EveMap, EveMarker, EveRoute } from "@/components/map/eve-map";
+import { useDrivingRoute } from "@/components/map/use-driving-route";
 
-const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived"];
 const MAP_BOTTOM_INSET = 340;
 
@@ -23,7 +24,6 @@ export default function TrackingScreen() {
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const mapRef = useRef<MapView | null>(null);
 
   const applyTrip = useCallback((next: Trip) => {
     setLoadError(false);
@@ -38,7 +38,7 @@ export default function TrackingScreen() {
       router.replace({ pathname: "/ride/completed", params: { tripId: next.id } });
     } else if (next.status === "CANCELLED") {
       router.replace("/(tabs)/home");
-    } else if (next.status === "SEARCHING") {
+    } else if (next.status === "SEARCHING" && next.viewerRole !== "recipient") {
       router.replace({ pathname: "/ride/searching", params: { tripId: next.id } });
     }
   }, []);
@@ -54,13 +54,14 @@ export default function TrackingScreen() {
 
   const refreshUnread = useCallback(async () => {
     if (!tripId || !user?.id) return;
+    if (trip?.viewerRole === "recipient") return;
     try {
       const messages = await getTripMessages(tripId);
       setUnreadCount(messages.filter((row) => row.authorId !== user.id && !row.readAt).length);
     } catch {
       /* keep last count */
     }
-  }, [tripId, user?.id]);
+  }, [tripId, user?.id, trip?.viewerRole]);
 
   useFocusEffect(
     useCallback(() => {
@@ -95,22 +96,12 @@ export default function TrackingScreen() {
     return () => { mounted = false; clearInterval(timer); remove(); };
   }, [refresh, tripId, user?.id]);
 
-  useEffect(() => {
-    if (!trip || !mapRef.current) return;
-    const headingToPickup = trip.status === "ASSIGNED";
-    const dest = headingToPickup
+  const destination = trip
+    ? trip.status === "ASSIGNED"
       ? { latitude: trip.pickupLat, longitude: trip.pickupLng }
-      : { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
-    const points = [...(driverLocation ? [driverLocation] : []), dest];
-    if (points.length === 1) {
-      mapRef.current.animateToRegion({ ...points[0], latitudeDelta: 0.02, longitudeDelta: 0.02 }, 400);
-      return;
-    }
-    mapRef.current.fitToCoordinates(points, {
-      edgePadding: { top: 88, right: 48, bottom: MAP_BOTTOM_INSET, left: 48 },
-      animated: true,
-    });
-  }, [driverLocation, trip]);
+      : { latitude: trip.dropoffLat, longitude: trip.dropoffLng }
+    : null;
+  const routeCoordinates = useDrivingRoute(driverLocation, destination);
 
   function handleCancel() {
     if (!tripId) return;
@@ -170,36 +161,63 @@ export default function TrackingScreen() {
     );
   }
 
+  const isCourier = trip.rideType === "COURIER";
+  const isRecipient = trip.viewerRole === "recipient";
+  const canManage = trip.canManage !== false;
   const headingToPickup = trip.status === "ASSIGNED";
-  const destination = headingToPickup
-    ? { latitude: trip.pickupLat, longitude: trip.pickupLng }
-    : { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
-  const driverName = trip.driver?.user?.name ?? "Your driver";
+  const driverName = trip.driver?.user?.name ?? (trip.status === "SEARCHING" ? "Finding a driver" : "Your driver");
   const vehicleLabel = trip.vehicle
     ? `${trip.vehicle.make} ${trip.vehicle.model}`
-    : "Assigned vehicle";
+    : isCourier
+      ? "Courier delivery"
+      : "Assigned vehicle";
   const plate = trip.vehicle?.plateNumber;
-  const stageLabel = headingToPickup ? "Meet at pickup" : "On the way to dropoff";
+  const stageLabel = trip.status === "SEARCHING"
+    ? (isCourier ? "Finding a courier driver" : "Finding your driver")
+    : headingToPickup
+      ? (isCourier ? "Pickup package" : "Meet at pickup")
+      : (isCourier ? `Delivering to ${trip.recipientName ?? "recipient"}` : "On the way to dropoff");
   const etaLabel = `${Math.max(1, trip.durationMin)} min`;
   const ratingLabel = trip.driver?.rating != null ? Number(trip.driver.rating).toFixed(1) : null;
-  const initialRegion = {
-    latitude: driverLocation?.latitude ?? trip.pickupLat,
-    longitude: driverLocation?.longitude ?? trip.pickupLng,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  };
+  const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
+  const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
+  const cameraPoints = [
+    ...(driverLocation ? [driverLocation] : []),
+    pickup,
+    dropoff,
+  ];
+
+  async function shareTracking() {
+    const token = trip?.trackingToken;
+    const code = trip?.bookingCode;
+    if (!token || !code) return;
+    const url = ExpoLinking.createURL(`/courier/track/${token}`);
+    await Share.share({
+      message: isCourier
+        ? `Track this Eve courier (${code}): ${url}`
+        : `Track this Eve ride (${code}): ${url}`,
+      url,
+    });
+  }
 
   return (
     <View style={styles.container}>
-      <MapView ref={mapRef} provider={PROVIDER_DEFAULT} style={styles.map} initialRegion={initialRegion}>
-        <UrlTile urlTemplate={OSM_TILES} maximumZ={19} flipY={false} />
-        {driverLocation ? <Marker coordinate={driverLocation} pinColor={Brand.accent} title="Driver" /> : null}
-        <Marker coordinate={{ latitude: trip.pickupLat, longitude: trip.pickupLng }} pinColor="#16A34A" title="Pickup" />
-        <Marker coordinate={{ latitude: trip.dropoffLat, longitude: trip.dropoffLng }} pinColor="#DC2626" title="Dropoff" />
-        {driverLocation ? (
-          <Polyline coordinates={[driverLocation, destination]} strokeColor={Brand.accent} strokeWidth={4} />
+      <EveMap
+        style={styles.map}
+        camera={{
+          center: driverLocation ?? pickup,
+          zoom: 13,
+          bounds: cameraPoints,
+          padding: { top: 88, right: 48, bottom: MAP_BOTTOM_INSET, left: 48 },
+        }}
+      >
+        {driverLocation ? <EveMarker id="driver" coordinate={driverLocation} color={Brand.accent} title="Driver" /> : null}
+        <EveMarker id="pickup" coordinate={pickup} color="#16A34A" title="Pickup" />
+        <EveMarker id="dropoff" coordinate={dropoff} color="#DC2626" title="Dropoff" />
+        {routeCoordinates.length >= 2 ? (
+          <EveRoute coordinates={routeCoordinates} color={Brand.accent} />
         ) : null}
-      </MapView>
+      </EveMap>
 
       <View style={styles.overlay} pointerEvents="box-none">
         <View style={[styles.card, { paddingBottom: Math.max(20, insets.bottom + 10) }]} pointerEvents="auto">
@@ -219,11 +237,17 @@ export default function TrackingScreen() {
                 {ratingLabel ? <Text style={styles.rating}>★ {ratingLabel}</Text> : null}
               </View>
               <Text style={styles.vehicle} numberOfLines={1}>{vehicleLabel}</Text>
-              <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
+              {isRecipient ? null : <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>}
+              {trip.recipientName ? (
+                <Text style={styles.fare}>
+                  {isCourier ? `To ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}
+                </Text>
+              ) : null}
             </View>
             {plate ? <Text style={styles.plate}>{plate}</Text> : null}
           </View>
 
+          {isRecipient ? null : (
           <View style={styles.actions}>
             <Pressable
               style={[styles.action, !trip.driver?.user?.phone && styles.actionDisabled]}
@@ -268,6 +292,14 @@ export default function TrackingScreen() {
               <Text style={styles.actionText}>Help</Text>
             </Pressable>
           </View>
+          )}
+
+          {trip.trackingToken && canManage ? (
+            <Pressable style={styles.share} onPress={() => void shareTracking()}>
+              <Feather name="share-2" size={16} color={Brand.accent} />
+              <Text style={styles.shareText}>{isCourier ? "Share tracking with recipient" : "Share with rider"}</Text>
+            </Pressable>
+          ) : null}
 
           <View style={styles.route}>
             <View style={styles.routeRail}>
@@ -281,7 +313,7 @@ export default function TrackingScreen() {
             </View>
           </View>
 
-          {trip.status === "ASSIGNED" || trip.status === "ONGOING" ? (
+          {canManage && (trip.status === "ASSIGNED" || trip.status === "ONGOING") ? (
             <ActionButton
               style={styles.cancel}
               textStyle={styles.cancelText}
@@ -430,5 +462,7 @@ const styles = StyleSheet.create({
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { color: Brand.text, fontSize: 13 },
   cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8 },
+  share: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10, paddingVertical: 10 },
+  shareText: { color: Brand.accent, fontWeight: "700", fontSize: 13 },
   cancelText: { color: Brand.danger, fontWeight: "700", fontSize: 14 },
 });

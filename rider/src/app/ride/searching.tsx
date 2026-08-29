@@ -111,9 +111,15 @@ export default function SearchingScreen() {
         </View>
       </View>
       <Text style={styles.eyebrow}>{offers.length ? "DRIVERS AVAILABLE" : "JUST A MOMENT"}</Text>
-      <Text style={styles.title}>{offers.length ? "Choose your offer" : "Finding your driver"}</Text>
+      <Text style={styles.title}>
+        {trip?.rideType === "COURIER"
+          ? (offers.length ? "Choose a courier driver" : "Finding a courier driver")
+          : (offers.length ? "Choose your offer" : "Finding your driver")}
+      </Text>
       <Text style={styles.subtitle}>
-        {offers.length ? "Compare prices and arrival times." : "Matching you with a nearby driver."}
+        {trip?.rideType === "COURIER"
+          ? (offers.length ? "Pick who will pick up and deliver the package." : `Sending to ${trip.recipientName ?? "the recipient"}.`)
+          : (offers.length ? "Compare prices and arrival times." : "Matching you with a nearby driver.")}
       </Text>
       {loading ? <ActivityIndicator color="#2E4ED5" style={styles.loader} /> : null}
       {loadError && !trip ? (

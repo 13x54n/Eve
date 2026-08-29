@@ -9,6 +9,7 @@ Eve/
   rider/     Expo 57 rider app — auth, request, offers, tracking, history
   driver/    Expo 57 driver app — onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
+  monitor/   Next.js 16 liveness board — API/frontend ping, memory, host performance
   backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
 ```
 
@@ -158,6 +159,14 @@ cd admin && npm install && npm run dev
 ```
 
 Admin console: [http://localhost:3000](http://localhost:3000).
+
+Monitor (separate from admin):
+
+```bash
+cd monitor && npm install && npm run dev
+```
+
+Liveness board: [http://localhost:3010](http://localhost:3010). Probes gateway `/api/health`, optional split-service ports, and frontend origins. See `monitor/.env.example`.
 
 Restart Expo after changing `EXPO_PUBLIC_*` env vars.
 

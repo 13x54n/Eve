@@ -33,6 +33,11 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     return;
   }
 
+  if (error?.name === "ForbiddenError") {
+    res.status(403).json({ message: error.message });
+    return;
+  }
+
   if (error?.name === "NotFoundError") {
     res.status(404).json({ message: error.message });
     return;

@@ -67,6 +67,11 @@ export type TripMinAggregateOutputType = {
   pickupLng: number | null
   dropoffLat: number | null
   dropoffLng: number | null
+  recipientName: string | null
+  recipientPhone: string | null
+  packageNote: string | null
+  trackingToken: string | null
+  recipientUserId: string | null
   distanceKm: runtime.Decimal | null
   durationMin: number | null
   suggestedFare: runtime.Decimal | null
@@ -100,6 +105,11 @@ export type TripMaxAggregateOutputType = {
   pickupLng: number | null
   dropoffLat: number | null
   dropoffLng: number | null
+  recipientName: string | null
+  recipientPhone: string | null
+  packageNote: string | null
+  trackingToken: string | null
+  recipientUserId: string | null
   distanceKm: runtime.Decimal | null
   durationMin: number | null
   suggestedFare: runtime.Decimal | null
@@ -133,6 +143,11 @@ export type TripCountAggregateOutputType = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName: number
+  recipientPhone: number
+  packageNote: number
+  trackingToken: number
+  recipientUserId: number
   distanceKm: number
   durationMin: number
   suggestedFare: number
@@ -192,6 +207,11 @@ export type TripMinAggregateInputType = {
   pickupLng?: true
   dropoffLat?: true
   dropoffLng?: true
+  recipientName?: true
+  recipientPhone?: true
+  packageNote?: true
+  trackingToken?: true
+  recipientUserId?: true
   distanceKm?: true
   durationMin?: true
   suggestedFare?: true
@@ -225,6 +245,11 @@ export type TripMaxAggregateInputType = {
   pickupLng?: true
   dropoffLat?: true
   dropoffLng?: true
+  recipientName?: true
+  recipientPhone?: true
+  packageNote?: true
+  trackingToken?: true
+  recipientUserId?: true
   distanceKm?: true
   durationMin?: true
   suggestedFare?: true
@@ -258,6 +283,11 @@ export type TripCountAggregateInputType = {
   pickupLng?: true
   dropoffLat?: true
   dropoffLng?: true
+  recipientName?: true
+  recipientPhone?: true
+  packageNote?: true
+  trackingToken?: true
+  recipientUserId?: true
   distanceKm?: true
   durationMin?: true
   suggestedFare?: true
@@ -378,6 +408,11 @@ export type TripGroupByOutputType = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName: string | null
+  recipientPhone: string | null
+  packageNote: string | null
+  trackingToken: string | null
+  recipientUserId: string | null
   distanceKm: runtime.Decimal
   durationMin: number
   suggestedFare: runtime.Decimal
@@ -434,6 +469,11 @@ export type TripWhereInput = {
   pickupLng?: Prisma.FloatFilter<"Trip"> | number
   dropoffLat?: Prisma.FloatFilter<"Trip"> | number
   dropoffLng?: Prisma.FloatFilter<"Trip"> | number
+  recipientName?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientPhone?: Prisma.StringNullableFilter<"Trip"> | string | null
+  packageNote?: Prisma.StringNullableFilter<"Trip"> | string | null
+  trackingToken?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientUserId?: Prisma.StringNullableFilter<"Trip"> | string | null
   distanceKm?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFilter<"Trip"> | number
   suggestedFare?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -451,6 +491,7 @@ export type TripWhereInput = {
   rider?: Prisma.XOR<Prisma.RiderProfileScalarRelationFilter, Prisma.RiderProfileWhereInput>
   driver?: Prisma.XOR<Prisma.DriverProfileNullableScalarRelationFilter, Prisma.DriverProfileWhereInput> | null
   vehicle?: Prisma.XOR<Prisma.VehicleNullableScalarRelationFilter, Prisma.VehicleWhereInput> | null
+  recipientUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   events?: Prisma.TripEventListRelationFilter
   ledger?: Prisma.LedgerEntryListRelationFilter
   tickets?: Prisma.SupportTicketListRelationFilter
@@ -476,6 +517,11 @@ export type TripOrderByWithRelationInput = {
   pickupLng?: Prisma.SortOrder
   dropoffLat?: Prisma.SortOrder
   dropoffLng?: Prisma.SortOrder
+  recipientName?: Prisma.SortOrderInput | Prisma.SortOrder
+  recipientPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  packageNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  trackingToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  recipientUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   distanceKm?: Prisma.SortOrder
   durationMin?: Prisma.SortOrder
   suggestedFare?: Prisma.SortOrder
@@ -493,6 +539,7 @@ export type TripOrderByWithRelationInput = {
   rider?: Prisma.RiderProfileOrderByWithRelationInput
   driver?: Prisma.DriverProfileOrderByWithRelationInput
   vehicle?: Prisma.VehicleOrderByWithRelationInput
+  recipientUser?: Prisma.UserOrderByWithRelationInput
   events?: Prisma.TripEventOrderByRelationAggregateInput
   ledger?: Prisma.LedgerEntryOrderByRelationAggregateInput
   tickets?: Prisma.SupportTicketOrderByRelationAggregateInput
@@ -504,6 +551,7 @@ export type TripOrderByWithRelationInput = {
 export type TripWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   bookingCode?: string
+  trackingToken?: string
   AND?: Prisma.TripWhereInput | Prisma.TripWhereInput[]
   OR?: Prisma.TripWhereInput[]
   NOT?: Prisma.TripWhereInput | Prisma.TripWhereInput[]
@@ -521,6 +569,10 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   pickupLng?: Prisma.FloatFilter<"Trip"> | number
   dropoffLat?: Prisma.FloatFilter<"Trip"> | number
   dropoffLng?: Prisma.FloatFilter<"Trip"> | number
+  recipientName?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientPhone?: Prisma.StringNullableFilter<"Trip"> | string | null
+  packageNote?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientUserId?: Prisma.StringNullableFilter<"Trip"> | string | null
   distanceKm?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFilter<"Trip"> | number
   suggestedFare?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -538,13 +590,14 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   rider?: Prisma.XOR<Prisma.RiderProfileScalarRelationFilter, Prisma.RiderProfileWhereInput>
   driver?: Prisma.XOR<Prisma.DriverProfileNullableScalarRelationFilter, Prisma.DriverProfileWhereInput> | null
   vehicle?: Prisma.XOR<Prisma.VehicleNullableScalarRelationFilter, Prisma.VehicleWhereInput> | null
+  recipientUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   events?: Prisma.TripEventListRelationFilter
   ledger?: Prisma.LedgerEntryListRelationFilter
   tickets?: Prisma.SupportTicketListRelationFilter
   incidents?: Prisma.SafetyIncidentListRelationFilter
   offers?: Prisma.TripOfferListRelationFilter
   chatMessages?: Prisma.TripMessageListRelationFilter
-}, "id" | "bookingCode">
+}, "id" | "bookingCode" | "trackingToken">
 
 export type TripOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -563,6 +616,11 @@ export type TripOrderByWithAggregationInput = {
   pickupLng?: Prisma.SortOrder
   dropoffLat?: Prisma.SortOrder
   dropoffLng?: Prisma.SortOrder
+  recipientName?: Prisma.SortOrderInput | Prisma.SortOrder
+  recipientPhone?: Prisma.SortOrderInput | Prisma.SortOrder
+  packageNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  trackingToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  recipientUserId?: Prisma.SortOrderInput | Prisma.SortOrder
   distanceKm?: Prisma.SortOrder
   durationMin?: Prisma.SortOrder
   suggestedFare?: Prisma.SortOrder
@@ -604,6 +662,11 @@ export type TripScalarWhereWithAggregatesInput = {
   pickupLng?: Prisma.FloatWithAggregatesFilter<"Trip"> | number
   dropoffLat?: Prisma.FloatWithAggregatesFilter<"Trip"> | number
   dropoffLng?: Prisma.FloatWithAggregatesFilter<"Trip"> | number
+  recipientName?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  recipientPhone?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  packageNote?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  trackingToken?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  recipientUserId?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   distanceKm?: Prisma.DecimalWithAggregatesFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntWithAggregatesFilter<"Trip"> | number
   suggestedFare?: Prisma.DecimalWithAggregatesFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -634,6 +697,10 @@ export type TripCreateInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -651,6 +718,7 @@ export type TripCreateInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -676,6 +744,11 @@ export type TripUncheckedCreateInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -712,6 +785,10 @@ export type TripUpdateInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -729,6 +806,7 @@ export type TripUpdateInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -754,6 +832,11 @@ export type TripUncheckedUpdateInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -793,6 +876,11 @@ export type TripCreateManyInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -823,6 +911,10 @@ export type TripUpdateManyMutationInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -856,6 +948,11 @@ export type TripUncheckedUpdateManyInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -899,6 +996,11 @@ export type TripCountOrderByAggregateInput = {
   pickupLng?: Prisma.SortOrder
   dropoffLat?: Prisma.SortOrder
   dropoffLng?: Prisma.SortOrder
+  recipientName?: Prisma.SortOrder
+  recipientPhone?: Prisma.SortOrder
+  packageNote?: Prisma.SortOrder
+  trackingToken?: Prisma.SortOrder
+  recipientUserId?: Prisma.SortOrder
   distanceKm?: Prisma.SortOrder
   durationMin?: Prisma.SortOrder
   suggestedFare?: Prisma.SortOrder
@@ -944,6 +1046,11 @@ export type TripMaxOrderByAggregateInput = {
   pickupLng?: Prisma.SortOrder
   dropoffLat?: Prisma.SortOrder
   dropoffLng?: Prisma.SortOrder
+  recipientName?: Prisma.SortOrder
+  recipientPhone?: Prisma.SortOrder
+  packageNote?: Prisma.SortOrder
+  trackingToken?: Prisma.SortOrder
+  recipientUserId?: Prisma.SortOrder
   distanceKm?: Prisma.SortOrder
   durationMin?: Prisma.SortOrder
   suggestedFare?: Prisma.SortOrder
@@ -977,6 +1084,11 @@ export type TripMinOrderByAggregateInput = {
   pickupLng?: Prisma.SortOrder
   dropoffLat?: Prisma.SortOrder
   dropoffLng?: Prisma.SortOrder
+  recipientName?: Prisma.SortOrder
+  recipientPhone?: Prisma.SortOrder
+  packageNote?: Prisma.SortOrder
+  trackingToken?: Prisma.SortOrder
+  recipientUserId?: Prisma.SortOrder
   distanceKm?: Prisma.SortOrder
   durationMin?: Prisma.SortOrder
   suggestedFare?: Prisma.SortOrder
@@ -1013,6 +1125,48 @@ export type TripScalarRelationFilter = {
 export type TripNullableScalarRelationFilter = {
   is?: Prisma.TripWhereInput | null
   isNot?: Prisma.TripWhereInput | null
+}
+
+export type TripCreateNestedManyWithoutRecipientUserInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput> | Prisma.TripCreateWithoutRecipientUserInput[] | Prisma.TripUncheckedCreateWithoutRecipientUserInput[]
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutRecipientUserInput | Prisma.TripCreateOrConnectWithoutRecipientUserInput[]
+  createMany?: Prisma.TripCreateManyRecipientUserInputEnvelope
+  connect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+}
+
+export type TripUncheckedCreateNestedManyWithoutRecipientUserInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput> | Prisma.TripCreateWithoutRecipientUserInput[] | Prisma.TripUncheckedCreateWithoutRecipientUserInput[]
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutRecipientUserInput | Prisma.TripCreateOrConnectWithoutRecipientUserInput[]
+  createMany?: Prisma.TripCreateManyRecipientUserInputEnvelope
+  connect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+}
+
+export type TripUpdateManyWithoutRecipientUserNestedInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput> | Prisma.TripCreateWithoutRecipientUserInput[] | Prisma.TripUncheckedCreateWithoutRecipientUserInput[]
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutRecipientUserInput | Prisma.TripCreateOrConnectWithoutRecipientUserInput[]
+  upsert?: Prisma.TripUpsertWithWhereUniqueWithoutRecipientUserInput | Prisma.TripUpsertWithWhereUniqueWithoutRecipientUserInput[]
+  createMany?: Prisma.TripCreateManyRecipientUserInputEnvelope
+  set?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  disconnect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  delete?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  connect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  update?: Prisma.TripUpdateWithWhereUniqueWithoutRecipientUserInput | Prisma.TripUpdateWithWhereUniqueWithoutRecipientUserInput[]
+  updateMany?: Prisma.TripUpdateManyWithWhereWithoutRecipientUserInput | Prisma.TripUpdateManyWithWhereWithoutRecipientUserInput[]
+  deleteMany?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
+}
+
+export type TripUncheckedUpdateManyWithoutRecipientUserNestedInput = {
+  create?: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput> | Prisma.TripCreateWithoutRecipientUserInput[] | Prisma.TripUncheckedCreateWithoutRecipientUserInput[]
+  connectOrCreate?: Prisma.TripCreateOrConnectWithoutRecipientUserInput | Prisma.TripCreateOrConnectWithoutRecipientUserInput[]
+  upsert?: Prisma.TripUpsertWithWhereUniqueWithoutRecipientUserInput | Prisma.TripUpsertWithWhereUniqueWithoutRecipientUserInput[]
+  createMany?: Prisma.TripCreateManyRecipientUserInputEnvelope
+  set?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  disconnect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  delete?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  connect?: Prisma.TripWhereUniqueInput | Prisma.TripWhereUniqueInput[]
+  update?: Prisma.TripUpdateWithWhereUniqueWithoutRecipientUserInput | Prisma.TripUpdateWithWhereUniqueWithoutRecipientUserInput[]
+  updateMany?: Prisma.TripUpdateManyWithWhereWithoutRecipientUserInput | Prisma.TripUpdateManyWithWhereWithoutRecipientUserInput[]
+  deleteMany?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
 }
 
 export type TripCreateNestedManyWithoutRiderInput = {
@@ -1255,6 +1409,159 @@ export type TripUpdateOneWithoutIncidentsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TripUpdateToOneWithWhereWithoutIncidentsInput, Prisma.TripUpdateWithoutIncidentsInput>, Prisma.TripUncheckedUpdateWithoutIncidentsInput>
 }
 
+export type TripCreateWithoutRecipientUserInput = {
+  id?: string
+  bookingCode: string
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
+  driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
+  vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  events?: Prisma.TripEventCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageCreateNestedManyWithoutTripInput
+}
+
+export type TripUncheckedCreateWithoutRecipientUserInput = {
+  id?: string
+  bookingCode: string
+  riderId: string
+  driverId?: string | null
+  vehicleId?: string | null
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  events?: Prisma.TripEventUncheckedCreateNestedManyWithoutTripInput
+  ledger?: Prisma.LedgerEntryUncheckedCreateNestedManyWithoutTripInput
+  tickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutTripInput
+  incidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutTripInput
+  offers?: Prisma.TripOfferUncheckedCreateNestedManyWithoutTripInput
+  chatMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutTripInput
+}
+
+export type TripCreateOrConnectWithoutRecipientUserInput = {
+  where: Prisma.TripWhereUniqueInput
+  create: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput>
+}
+
+export type TripCreateManyRecipientUserInputEnvelope = {
+  data: Prisma.TripCreateManyRecipientUserInput | Prisma.TripCreateManyRecipientUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type TripUpsertWithWhereUniqueWithoutRecipientUserInput = {
+  where: Prisma.TripWhereUniqueInput
+  update: Prisma.XOR<Prisma.TripUpdateWithoutRecipientUserInput, Prisma.TripUncheckedUpdateWithoutRecipientUserInput>
+  create: Prisma.XOR<Prisma.TripCreateWithoutRecipientUserInput, Prisma.TripUncheckedCreateWithoutRecipientUserInput>
+}
+
+export type TripUpdateWithWhereUniqueWithoutRecipientUserInput = {
+  where: Prisma.TripWhereUniqueInput
+  data: Prisma.XOR<Prisma.TripUpdateWithoutRecipientUserInput, Prisma.TripUncheckedUpdateWithoutRecipientUserInput>
+}
+
+export type TripUpdateManyWithWhereWithoutRecipientUserInput = {
+  where: Prisma.TripScalarWhereInput
+  data: Prisma.XOR<Prisma.TripUpdateManyMutationInput, Prisma.TripUncheckedUpdateManyWithoutRecipientUserInput>
+}
+
+export type TripScalarWhereInput = {
+  AND?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
+  OR?: Prisma.TripScalarWhereInput[]
+  NOT?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
+  id?: Prisma.StringFilter<"Trip"> | string
+  bookingCode?: Prisma.StringFilter<"Trip"> | string
+  riderId?: Prisma.StringFilter<"Trip"> | string
+  driverId?: Prisma.StringNullableFilter<"Trip"> | string | null
+  vehicleId?: Prisma.StringNullableFilter<"Trip"> | string | null
+  status?: Prisma.EnumTripStatusFilter<"Trip"> | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFilter<"Trip"> | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFilter<"Trip"> | $Enums.VehicleType
+  city?: Prisma.StringFilter<"Trip"> | string
+  zone?: Prisma.StringNullableFilter<"Trip"> | string | null
+  pickupAddress?: Prisma.StringFilter<"Trip"> | string
+  dropoffAddress?: Prisma.StringFilter<"Trip"> | string
+  pickupLat?: Prisma.FloatFilter<"Trip"> | number
+  pickupLng?: Prisma.FloatFilter<"Trip"> | number
+  dropoffLat?: Prisma.FloatFilter<"Trip"> | number
+  dropoffLng?: Prisma.FloatFilter<"Trip"> | number
+  recipientName?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientPhone?: Prisma.StringNullableFilter<"Trip"> | string | null
+  packageNote?: Prisma.StringNullableFilter<"Trip"> | string | null
+  trackingToken?: Prisma.StringNullableFilter<"Trip"> | string | null
+  recipientUserId?: Prisma.StringNullableFilter<"Trip"> | string | null
+  distanceKm?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFilter<"Trip"> | number
+  suggestedFare?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
+  scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  endedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  etaMinutes?: Prisma.IntNullableFilter<"Trip"> | number | null
+  routeDeviation?: Prisma.BoolFilter<"Trip"> | boolean
+  createdAt?: Prisma.DateTimeFilter<"Trip"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Trip"> | Date | string
+}
+
 export type TripCreateWithoutRiderInput = {
   id?: string
   bookingCode: string
@@ -1269,6 +1576,10 @@ export type TripCreateWithoutRiderInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1285,6 +1596,7 @@ export type TripCreateWithoutRiderInput = {
   updatedAt?: Date | string
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -1309,6 +1621,11 @@ export type TripUncheckedCreateWithoutRiderInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1357,42 +1674,6 @@ export type TripUpdateManyWithWhereWithoutRiderInput = {
   data: Prisma.XOR<Prisma.TripUpdateManyMutationInput, Prisma.TripUncheckedUpdateManyWithoutRiderInput>
 }
 
-export type TripScalarWhereInput = {
-  AND?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
-  OR?: Prisma.TripScalarWhereInput[]
-  NOT?: Prisma.TripScalarWhereInput | Prisma.TripScalarWhereInput[]
-  id?: Prisma.StringFilter<"Trip"> | string
-  bookingCode?: Prisma.StringFilter<"Trip"> | string
-  riderId?: Prisma.StringFilter<"Trip"> | string
-  driverId?: Prisma.StringNullableFilter<"Trip"> | string | null
-  vehicleId?: Prisma.StringNullableFilter<"Trip"> | string | null
-  status?: Prisma.EnumTripStatusFilter<"Trip"> | $Enums.TripStatus
-  rideType?: Prisma.EnumRideTypeFilter<"Trip"> | $Enums.RideType
-  vehicleType?: Prisma.EnumVehicleTypeFilter<"Trip"> | $Enums.VehicleType
-  city?: Prisma.StringFilter<"Trip"> | string
-  zone?: Prisma.StringNullableFilter<"Trip"> | string | null
-  pickupAddress?: Prisma.StringFilter<"Trip"> | string
-  dropoffAddress?: Prisma.StringFilter<"Trip"> | string
-  pickupLat?: Prisma.FloatFilter<"Trip"> | number
-  pickupLng?: Prisma.FloatFilter<"Trip"> | number
-  dropoffLat?: Prisma.FloatFilter<"Trip"> | number
-  dropoffLng?: Prisma.FloatFilter<"Trip"> | number
-  distanceKm?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  durationMin?: Prisma.IntFilter<"Trip"> | number
-  suggestedFare?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  fareTotal?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
-  paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
-  paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
-  cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
-  scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
-  startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
-  endedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
-  etaMinutes?: Prisma.IntNullableFilter<"Trip"> | number | null
-  routeDeviation?: Prisma.BoolFilter<"Trip"> | boolean
-  createdAt?: Prisma.DateTimeFilter<"Trip"> | Date | string
-  updatedAt?: Prisma.DateTimeFilter<"Trip"> | Date | string
-}
-
 export type TripCreateWithoutDriverInput = {
   id?: string
   bookingCode: string
@@ -1407,6 +1688,10 @@ export type TripCreateWithoutDriverInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1423,6 +1708,7 @@ export type TripCreateWithoutDriverInput = {
   updatedAt?: Date | string
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -1447,6 +1733,11 @@ export type TripUncheckedCreateWithoutDriverInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1509,6 +1800,10 @@ export type TripCreateWithoutVehicleInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1525,6 +1820,7 @@ export type TripCreateWithoutVehicleInput = {
   updatedAt?: Date | string
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -1549,6 +1845,11 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1611,6 +1912,10 @@ export type TripCreateWithoutChatMessagesInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1628,6 +1933,7 @@ export type TripCreateWithoutChatMessagesInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -1652,6 +1958,11 @@ export type TripUncheckedCreateWithoutChatMessagesInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1703,6 +2014,10 @@ export type TripUpdateWithoutChatMessagesInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1720,6 +2035,7 @@ export type TripUpdateWithoutChatMessagesInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -1744,6 +2060,11 @@ export type TripUncheckedUpdateWithoutChatMessagesInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1779,6 +2100,10 @@ export type TripCreateWithoutOffersInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1796,6 +2121,7 @@ export type TripCreateWithoutOffersInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -1820,6 +2146,11 @@ export type TripUncheckedCreateWithoutOffersInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1871,6 +2202,10 @@ export type TripUpdateWithoutOffersInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1888,6 +2223,7 @@ export type TripUpdateWithoutOffersInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -1912,6 +2248,11 @@ export type TripUncheckedUpdateWithoutOffersInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1947,6 +2288,10 @@ export type TripCreateWithoutEventsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -1964,6 +2309,7 @@ export type TripCreateWithoutEventsInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
@@ -1988,6 +2334,11 @@ export type TripUncheckedCreateWithoutEventsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2039,6 +2390,10 @@ export type TripUpdateWithoutEventsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2056,6 +2411,7 @@ export type TripUpdateWithoutEventsInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
@@ -2080,6 +2436,11 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2115,6 +2476,10 @@ export type TripCreateWithoutLedgerInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2132,6 +2497,7 @@ export type TripCreateWithoutLedgerInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
@@ -2156,6 +2522,11 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2207,6 +2578,10 @@ export type TripUpdateWithoutLedgerInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2224,6 +2599,7 @@ export type TripUpdateWithoutLedgerInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
@@ -2248,6 +2624,11 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2283,6 +2664,10 @@ export type TripCreateWithoutTicketsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2300,6 +2685,7 @@ export type TripCreateWithoutTicketsInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   incidents?: Prisma.SafetyIncidentCreateNestedManyWithoutTripInput
@@ -2324,6 +2710,11 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2375,6 +2766,10 @@ export type TripUpdateWithoutTicketsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2392,6 +2787,7 @@ export type TripUpdateWithoutTicketsInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
@@ -2416,6 +2812,11 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2451,6 +2852,10 @@ export type TripCreateWithoutIncidentsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2468,6 +2873,7 @@ export type TripCreateWithoutIncidentsInput = {
   rider: Prisma.RiderProfileCreateNestedOneWithoutTripsInput
   driver?: Prisma.DriverProfileCreateNestedOneWithoutTripsInput
   vehicle?: Prisma.VehicleCreateNestedOneWithoutTripsInput
+  recipientUser?: Prisma.UserCreateNestedOneWithoutReceivedCouriersInput
   events?: Prisma.TripEventCreateNestedManyWithoutTripInput
   ledger?: Prisma.LedgerEntryCreateNestedManyWithoutTripInput
   tickets?: Prisma.SupportTicketCreateNestedManyWithoutTripInput
@@ -2492,6 +2898,11 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2543,6 +2954,10 @@ export type TripUpdateWithoutIncidentsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2560,6 +2975,7 @@ export type TripUpdateWithoutIncidentsInput = {
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -2584,6 +3000,11 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2605,6 +3026,166 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
 }
 
+export type TripCreateManyRecipientUserInput = {
+  id?: string
+  bookingCode: string
+  riderId: string
+  driverId?: string | null
+  vehicleId?: string | null
+  status: $Enums.TripStatus
+  rideType?: $Enums.RideType
+  vehicleType?: $Enums.VehicleType
+  city: string
+  zone?: string | null
+  pickupAddress: string
+  dropoffAddress: string
+  pickupLat: number
+  pickupLng: number
+  dropoffLat: number
+  dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin: number
+  suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: $Enums.LedgerStatus
+  paymentMethod: $Enums.PaymentMethodKind
+  cancellationReason?: string | null
+  scheduledAt?: Date | string | null
+  startedAt?: Date | string | null
+  endedAt?: Date | string | null
+  etaMinutes?: number | null
+  routeDeviation?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type TripUpdateWithoutRecipientUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
+  driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
+  vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUpdateManyWithoutTripNestedInput
+}
+
+export type TripUncheckedUpdateWithoutRecipientUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  riderId?: Prisma.StringFieldUpdateOperationsInput | string
+  driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.TripEventUncheckedUpdateManyWithoutTripNestedInput
+  ledger?: Prisma.LedgerEntryUncheckedUpdateManyWithoutTripNestedInput
+  tickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutTripNestedInput
+  incidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutTripNestedInput
+  offers?: Prisma.TripOfferUncheckedUpdateManyWithoutTripNestedInput
+  chatMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutTripNestedInput
+}
+
+export type TripUncheckedUpdateManyWithoutRecipientUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  bookingCode?: Prisma.StringFieldUpdateOperationsInput | string
+  riderId?: Prisma.StringFieldUpdateOperationsInput | string
+  driverId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vehicleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumTripStatusFieldUpdateOperationsInput | $Enums.TripStatus
+  rideType?: Prisma.EnumRideTypeFieldUpdateOperationsInput | $Enums.RideType
+  vehicleType?: Prisma.EnumVehicleTypeFieldUpdateOperationsInput | $Enums.VehicleType
+  city?: Prisma.StringFieldUpdateOperationsInput | string
+  zone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pickupAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  dropoffAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  pickupLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
+  dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  durationMin?: Prisma.IntFieldUpdateOperationsInput | number
+  suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
+  paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  routeDeviation?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type TripCreateManyRiderInput = {
   id?: string
   bookingCode: string
@@ -2621,6 +3202,11 @@ export type TripCreateManyRiderInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2651,6 +3237,10 @@ export type TripUpdateWithoutRiderInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2667,6 +3257,7 @@ export type TripUpdateWithoutRiderInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -2691,6 +3282,11 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2729,6 +3325,11 @@ export type TripUncheckedUpdateManyWithoutRiderInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2761,6 +3362,11 @@ export type TripCreateManyDriverInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2791,6 +3397,10 @@ export type TripUpdateWithoutDriverInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2807,6 +3417,7 @@ export type TripUpdateWithoutDriverInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   vehicle?: Prisma.VehicleUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -2831,6 +3442,11 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2869,6 +3485,11 @@ export type TripUncheckedUpdateManyWithoutDriverInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2901,6 +3522,11 @@ export type TripCreateManyVehicleInput = {
   pickupLng: number
   dropoffLat: number
   dropoffLng: number
+  recipientName?: string | null
+  recipientPhone?: string | null
+  packageNote?: string | null
+  trackingToken?: string | null
+  recipientUserId?: string | null
   distanceKm: runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin: number
   suggestedFare: runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2931,6 +3557,10 @@ export type TripUpdateWithoutVehicleInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -2947,6 +3577,7 @@ export type TripUpdateWithoutVehicleInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   rider?: Prisma.RiderProfileUpdateOneRequiredWithoutTripsNestedInput
   driver?: Prisma.DriverProfileUpdateOneWithoutTripsNestedInput
+  recipientUser?: Prisma.UserUpdateOneWithoutReceivedCouriersNestedInput
   events?: Prisma.TripEventUpdateManyWithoutTripNestedInput
   ledger?: Prisma.LedgerEntryUpdateManyWithoutTripNestedInput
   tickets?: Prisma.SupportTicketUpdateManyWithoutTripNestedInput
@@ -2971,6 +3602,11 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -3009,6 +3645,11 @@ export type TripUncheckedUpdateManyWithoutVehicleInput = {
   pickupLng?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLat?: Prisma.FloatFieldUpdateOperationsInput | number
   dropoffLng?: Prisma.FloatFieldUpdateOperationsInput | number
+  recipientName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientPhone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trackingToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recipientUserId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   distanceKm?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   durationMin?: Prisma.IntFieldUpdateOperationsInput | number
   suggestedFare?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
@@ -3118,6 +3759,11 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   pickupLng?: boolean
   dropoffLat?: boolean
   dropoffLng?: boolean
+  recipientName?: boolean
+  recipientPhone?: boolean
+  packageNote?: boolean
+  trackingToken?: boolean
+  recipientUserId?: boolean
   distanceKm?: boolean
   durationMin?: boolean
   suggestedFare?: boolean
@@ -3135,6 +3781,7 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
   events?: boolean | Prisma.Trip$eventsArgs<ExtArgs>
   ledger?: boolean | Prisma.Trip$ledgerArgs<ExtArgs>
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
@@ -3161,6 +3808,11 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   pickupLng?: boolean
   dropoffLat?: boolean
   dropoffLng?: boolean
+  recipientName?: boolean
+  recipientPhone?: boolean
+  packageNote?: boolean
+  trackingToken?: boolean
+  recipientUserId?: boolean
   distanceKm?: boolean
   durationMin?: boolean
   suggestedFare?: boolean
@@ -3178,6 +3830,7 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
 }, ExtArgs["result"]["trip"]>
 
 export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -3197,6 +3850,11 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   pickupLng?: boolean
   dropoffLat?: boolean
   dropoffLng?: boolean
+  recipientName?: boolean
+  recipientPhone?: boolean
+  packageNote?: boolean
+  trackingToken?: boolean
+  recipientUserId?: boolean
   distanceKm?: boolean
   durationMin?: boolean
   suggestedFare?: boolean
@@ -3214,6 +3872,7 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
 }, ExtArgs["result"]["trip"]>
 
 export type TripSelectScalar = {
@@ -3233,6 +3892,11 @@ export type TripSelectScalar = {
   pickupLng?: boolean
   dropoffLat?: boolean
   dropoffLng?: boolean
+  recipientName?: boolean
+  recipientPhone?: boolean
+  packageNote?: boolean
+  trackingToken?: boolean
+  recipientUserId?: boolean
   distanceKm?: boolean
   durationMin?: boolean
   suggestedFare?: boolean
@@ -3249,11 +3913,12 @@ export type TripSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
+export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
 export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
   events?: boolean | Prisma.Trip$eventsArgs<ExtArgs>
   ledger?: boolean | Prisma.Trip$ledgerArgs<ExtArgs>
   tickets?: boolean | Prisma.Trip$ticketsArgs<ExtArgs>
@@ -3266,11 +3931,13 @@ export type TripIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
 }
 export type TripIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
   vehicle?: boolean | Prisma.Trip$vehicleArgs<ExtArgs>
+  recipientUser?: boolean | Prisma.Trip$recipientUserArgs<ExtArgs>
 }
 
 export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -3279,6 +3946,7 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     rider: Prisma.$RiderProfilePayload<ExtArgs>
     driver: Prisma.$DriverProfilePayload<ExtArgs> | null
     vehicle: Prisma.$VehiclePayload<ExtArgs> | null
+    recipientUser: Prisma.$UserPayload<ExtArgs> | null
     events: Prisma.$TripEventPayload<ExtArgs>[]
     ledger: Prisma.$LedgerEntryPayload<ExtArgs>[]
     tickets: Prisma.$SupportTicketPayload<ExtArgs>[]
@@ -3303,6 +3971,11 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     pickupLng: number
     dropoffLat: number
     dropoffLng: number
+    recipientName: string | null
+    recipientPhone: string | null
+    packageNote: string | null
+    trackingToken: string | null
+    recipientUserId: string | null
     distanceKm: runtime.Decimal
     durationMin: number
     suggestedFare: runtime.Decimal
@@ -3714,6 +4387,7 @@ export interface Prisma__TripClient<T, Null = never, ExtArgs extends runtime.Typ
   rider<T extends Prisma.RiderProfileDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.RiderProfileDefaultArgs<ExtArgs>>): Prisma.Prisma__RiderProfileClient<runtime.Types.Result.GetResult<Prisma.$RiderProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   driver<T extends Prisma.Trip$driverArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$driverArgs<ExtArgs>>): Prisma.Prisma__DriverProfileClient<runtime.Types.Result.GetResult<Prisma.$DriverProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   vehicle<T extends Prisma.Trip$vehicleArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$vehicleArgs<ExtArgs>>): Prisma.Prisma__VehicleClient<runtime.Types.Result.GetResult<Prisma.$VehiclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  recipientUser<T extends Prisma.Trip$recipientUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$recipientUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   events<T extends Prisma.Trip$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ledger<T extends Prisma.Trip$ledgerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$ledgerArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LedgerEntryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tickets<T extends Prisma.Trip$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Trip$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportTicketPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -3765,6 +4439,11 @@ export interface TripFieldRefs {
   readonly pickupLng: Prisma.FieldRef<"Trip", 'Float'>
   readonly dropoffLat: Prisma.FieldRef<"Trip", 'Float'>
   readonly dropoffLng: Prisma.FieldRef<"Trip", 'Float'>
+  readonly recipientName: Prisma.FieldRef<"Trip", 'String'>
+  readonly recipientPhone: Prisma.FieldRef<"Trip", 'String'>
+  readonly packageNote: Prisma.FieldRef<"Trip", 'String'>
+  readonly trackingToken: Prisma.FieldRef<"Trip", 'String'>
+  readonly recipientUserId: Prisma.FieldRef<"Trip", 'String'>
   readonly distanceKm: Prisma.FieldRef<"Trip", 'Decimal'>
   readonly durationMin: Prisma.FieldRef<"Trip", 'Int'>
   readonly suggestedFare: Prisma.FieldRef<"Trip", 'Decimal'>
@@ -4215,6 +4894,25 @@ export type Trip$vehicleArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
    */
   include?: Prisma.VehicleInclude<ExtArgs> | null
   where?: Prisma.VehicleWhereInput
+}
+
+/**
+ * Trip.recipientUser
+ */
+export type Trip$recipientUserArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

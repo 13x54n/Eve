@@ -112,6 +112,16 @@ export function RideSessionProvider({ children }: { children: ReactNode }) {
           tripId,
           screen: 'chat',
         });
+      } else if (event === 'courier:incoming') {
+        void notifyRideEvent('Incoming courier', 'Someone is sending a package to you.', {
+          tripId,
+          screen: 'tracking',
+        });
+      } else if (event === 'trip:incoming') {
+        void notifyRideEvent('Ride booked for you', 'Someone booked an Eve ride for you.', {
+          tripId,
+          screen: 'tracking',
+        });
       } else if (event === 'support:message') {
         void notifyRideEvent('Support replied', 'You have a new message from Eve support.', {
           tripId,

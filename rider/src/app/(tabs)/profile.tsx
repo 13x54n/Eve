@@ -7,10 +7,12 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { getSessionUser } from "@/services/auth";
 import { useAuth } from "@/context/auth-context";
 import { Brand, Spacing } from "@/constants/theme";
+import { useBrand } from "@/context/theme-context";
 import { lightImpact } from "@/lib/haptics";
 import { ActionButton } from "@/components/action-button";
 
 export default function ProfileScreen() {
+  const brand = useBrand();
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const [name, setName] = useState("");
@@ -60,7 +62,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: brand.canvas }]} edges={["top"]}>
       <Text style={styles.title}>Profile</Text>
       <View style={styles.profileCard}>
         <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
@@ -79,18 +81,25 @@ export default function ProfileScreen() {
         <FieldGroup>
           <FieldGroup.Section title="Preferences">
             <ListItem
-              supportingText="Home, Work and more"
-              leading={<SymbolView name="mappin" tintColor={Brand.accent} size={18} />}
-              onPress={() => Alert.alert("Saved places", "Home, Work and more")}
+              supportingText="Name, email, phone"
+              leading={<SymbolView name="person.fill" tintColor={Brand.accent} size={18} />}
+              onPress={() => router.push("/profile/edit" as Href)}
             >
-              Saved places
+              Personal information
             </ListItem>
             <ListItem
-              supportingText="Ride updates and offers"
-              leading={<SymbolView name="bell.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => Alert.alert("Notifications", "Ride updates and offers")}
+              supportingText="Password"
+              leading={<SymbolView name="lock.fill" tintColor={Brand.accent} size={18} />}
+              onPress={() => router.push("/profile/security" as Href)}
             >
-              Notifications
+              Security
+            </ListItem>
+            <ListItem
+              supportingText="Alerts and appearance"
+              leading={<SymbolView name="bell.fill" tintColor={Brand.accent} size={18} />}
+              onPress={() => router.push("/profile/notifications" as Href)}
+            >
+              Notifications & appearance
             </ListItem>
             <ListItem
               supportingText="FAQs and contact us"

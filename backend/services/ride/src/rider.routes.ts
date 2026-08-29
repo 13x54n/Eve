@@ -7,6 +7,7 @@ import {
   createSupport,
   createTrip,
   getActiveTrip,
+  getGreeting,
   getOffers,
   getSupport,
   getTrip,
@@ -28,6 +29,7 @@ const riderApiLimiter = rateLimit({
 });
 
 router.use(riderApiLimiter, requireAuth, requireRole("RIDER"));
+router.get("/greeting", getGreeting);
 router.post("/trips", createTrip);
 router.get("/trips", listTrips);
 router.get("/trips/active", getActiveTrip);

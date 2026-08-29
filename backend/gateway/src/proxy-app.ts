@@ -1,5 +1,5 @@
 import { createProxyMiddleware } from "http-proxy-middleware";
-import { applyErrorHandler, createBaseApp } from "@eve/http";
+import { applyErrorHandler, createBaseApp, healthPayload } from "@eve/http";
 import adminRoutes from "./admin.routes.js";
 
 function requiredUrl(name: string) {
@@ -15,7 +15,7 @@ export function createProxyApp() {
   const notifyUrl = requiredUrl("NOTIFY_URL");
 
   const app = createBaseApp();
-  app.get("/api/health", (_req, res) => res.json({ status: "ok" }));
+  app.get("/api/health", (_req, res) => res.json(healthPayload("gateway")));
   app.use("/api/admin", adminRoutes);
 
   app.use(
@@ -40,6 +40,10 @@ export function createProxyApp() {
   );
   app.use(
     "/api/rider",
+    createProxyMiddleware({ target: rideUrl, changeOrigin: true }),
+  );
+  app.use(
+    "/api/public",
     createProxyMiddleware({ target: rideUrl, changeOrigin: true }),
   );
   app.use(

@@ -100,8 +100,8 @@ export async function submitDriverDocument(
     imageKitFileId?: string;
     fileUrl?: string;
     fileName?: string;
-    mimeType?: string;
-    fileSize?: number;
+    mimeType?: string | null;
+    fileSize?: number | null;
   },
 ) {
   const profile = await prisma.driverProfile.findUnique({
@@ -209,6 +209,8 @@ export async function getIncomingTrips(userId: string) {
         riderName: pendingOffer.trip.rider?.user?.name || "Rider",
         pickupAddress: pendingOffer.trip.pickupAddress,
         dropoffAddress: pendingOffer.trip.dropoffAddress,
+        rideType: pendingOffer.trip.rideType,
+        recipientName: pendingOffer.trip.recipientName,
         createdAt: pendingOffer.createdAt,
       },
     };
@@ -242,6 +244,9 @@ export async function getIncomingTrips(userId: string) {
       fareTotal: money(trip.fareTotal),
       estimatedEarnings: money(trip.fareTotal),
       rideType: trip.rideType,
+      recipientName: trip.recipientName,
+      recipientPhone: trip.recipientPhone,
+      packageNote: trip.packageNote,
       vehicleType: trip.vehicleType,
       createdAt: trip.createdAt,
       distanceToPickup: distanceById.get(trip.id) ?? null,

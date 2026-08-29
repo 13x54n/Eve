@@ -5,6 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  color-scheme: light;
   --background: #f3f3f3;
   --foreground: #0c0c0c;
   --card: #ffffff;
@@ -97,12 +98,12 @@ body {
   html {
     @apply font-sans;
   }
-  .leaflet-container {
-    z-index: 0;
+  .mapboxgl-map {
     font: inherit;
   }
-  .eve-map-dot {
-    background: transparent;
-    border: none;
+  .mapboxgl-popup-content {
+    color: var(--foreground);
+    font: inherit;
+    padding: 10px 12px;
   }
 }

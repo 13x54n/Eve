@@ -17,6 +17,8 @@ async function seed() {
   await prisma.auditLog.deleteMany();
   await prisma.adminLoginEvent.deleteMany();
   await prisma.adminSession.deleteMany();
+  await prisma.greetingSettings.deleteMany();
+  await prisma.greeting.deleteMany();
   await prisma.promo.deleteMany();
   await prisma.driverIncentive.deleteMany();
   await prisma.driverDocument.deleteMany();
@@ -53,6 +55,7 @@ async function seed() {
         passwordHash,
         role: "ADMIN",
         adminStaffRole: "OPERATIONS",
+        adminStaffTitle: "MANAGER",
         city: "New York",
       },
       {
@@ -62,6 +65,7 @@ async function seed() {
         passwordHash,
         role: "ADMIN",
         adminStaffRole: "FINANCE",
+        adminStaffTitle: "MANAGER",
         city: "New York",
       },
       {
@@ -71,6 +75,7 @@ async function seed() {
         passwordHash,
         role: "ADMIN",
         adminStaffRole: "SUPPORT",
+        adminStaffTitle: "MANAGER",
         city: "Miami",
       },
       {
@@ -80,6 +85,7 @@ async function seed() {
         passwordHash,
         role: "ADMIN",
         adminStaffRole: "SAFETY",
+        adminStaffTitle: "MANAGER",
         city: "New York",
       },
     ],
@@ -419,6 +425,23 @@ async function seed() {
       startsAt: new Date(),
       expiresAt: new Date(Date.now() + 30 * 86400000),
       city: "New York",
+    },
+  });
+
+  const defaultGreeting = await prisma.greeting.create({
+    data: { template: "Nice to see you, {name}", enabled: true },
+  });
+  await prisma.greeting.createMany({
+    data: [
+      { template: "Good to have you back, {name}", enabled: true },
+      { template: "Where to, {name}?", enabled: true },
+    ],
+  });
+  await prisma.greetingSettings.create({
+    data: {
+      id: "default",
+      mode: "PINNED",
+      pinnedGreetingId: defaultGreeting.id,
     },
   });
 

@@ -58,6 +58,13 @@ export type EnumAdminStaffRoleNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel> | $Enums.AdminStaffRole | null
 }
 
+export type EnumAdminStaffTitleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.AdminStaffTitle | Prisma.EnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel> | $Enums.AdminStaffTitle | null
+}
+
 export type EnumAccountStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.AccountStatus | Prisma.EnumAccountStatusFieldRefInput<$PrismaModel>
   in?: $Enums.AccountStatus[] | Prisma.ListEnumAccountStatusFieldRefInput<$PrismaModel>
@@ -151,6 +158,16 @@ export type EnumAdminStaffRoleNullableWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel>
+}
+
+export type EnumAdminStaffTitleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AdminStaffTitle | Prisma.EnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAdminStaffTitleNullableWithAggregatesFilter<$PrismaModel> | $Enums.AdminStaffTitle | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel>
 }
 
 export type EnumAccountStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -725,6 +742,23 @@ export type EnumIncidentSeverityWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
 }
 
+export type EnumGreetingModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.GreetingMode | Prisma.EnumGreetingModeFieldRefInput<$PrismaModel>
+  in?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel> | $Enums.GreetingMode
+}
+
+export type EnumGreetingModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GreetingMode | Prisma.EnumGreetingModeFieldRefInput<$PrismaModel>
+  in?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGreetingModeWithAggregatesFilter<$PrismaModel> | $Enums.GreetingMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel>
+}
+
 export type DecimalNullableFilter<$PrismaModel = never> = {
   equals?: runtime.Decimal | runtime.DecimalJsLike | number | string | Prisma.DecimalFieldRefInput<$PrismaModel> | null
   in?: runtime.Decimal[] | runtime.DecimalJsLike[] | number[] | string[] | Prisma.ListDecimalFieldRefInput<$PrismaModel> | null
@@ -809,6 +843,13 @@ export type NestedEnumAdminStaffRoleNullableFilter<$PrismaModel = never> = {
   in?: $Enums.AdminStaffRole[] | Prisma.ListEnumAdminStaffRoleFieldRefInput<$PrismaModel> | null
   notIn?: $Enums.AdminStaffRole[] | Prisma.ListEnumAdminStaffRoleFieldRefInput<$PrismaModel> | null
   not?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel> | $Enums.AdminStaffRole | null
+}
+
+export type NestedEnumAdminStaffTitleNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.AdminStaffTitle | Prisma.EnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel> | $Enums.AdminStaffTitle | null
 }
 
 export type NestedEnumAccountStatusFilter<$PrismaModel = never> = {
@@ -919,6 +960,16 @@ export type NestedEnumAdminStaffRoleNullableWithAggregatesFilter<$PrismaModel = 
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel>
   _max?: Prisma.NestedEnumAdminStaffRoleNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumAdminStaffTitleNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.AdminStaffTitle | Prisma.EnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  in?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.AdminStaffTitle[] | Prisma.ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumAdminStaffTitleNullableWithAggregatesFilter<$PrismaModel> | $Enums.AdminStaffTitle | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumAdminStaffTitleNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumAccountStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -1415,6 +1466,23 @@ export type NestedEnumIncidentSeverityWithAggregatesFilter<$PrismaModel = never>
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
   _max?: Prisma.NestedEnumIncidentSeverityFilter<$PrismaModel>
+}
+
+export type NestedEnumGreetingModeFilter<$PrismaModel = never> = {
+  equals?: $Enums.GreetingMode | Prisma.EnumGreetingModeFieldRefInput<$PrismaModel>
+  in?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel> | $Enums.GreetingMode
+}
+
+export type NestedEnumGreetingModeWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.GreetingMode | Prisma.EnumGreetingModeFieldRefInput<$PrismaModel>
+  in?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  notIn?: $Enums.GreetingMode[] | Prisma.ListEnumGreetingModeFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumGreetingModeWithAggregatesFilter<$PrismaModel> | $Enums.GreetingMode
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumGreetingModeFilter<$PrismaModel>
 }
 
 export type NestedDecimalNullableFilter<$PrismaModel = never> = {

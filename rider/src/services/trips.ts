@@ -1,11 +1,13 @@
 import { api } from './api';
 
 export type RiderVehicleType = 'BIKE' | 'CAR';
+export type RideType = 'STANDARD' | 'AIRPORT' | 'MULTI_STOP' | 'SCHEDULED' | 'CORPORATE' | 'COURIER';
 
 export type Trip = {
   id: string;
   bookingCode: string;
   status: string;
+  rideType?: RideType;
   pickupAddress: string;
   dropoffAddress: string;
   pickupLat: number;
@@ -17,6 +19,14 @@ export type Trip = {
   etaMinutes?: number | null;
   fareTotal: number;
   vehicleType?: RiderVehicleType;
+  recipientName?: string | null;
+  recipientPhone?: string | null;
+  packageNote?: string | null;
+  trackingToken?: string | null;
+  recipientUserId?: string | null;
+  viewerRole?: 'sender' | 'recipient';
+  canManage?: boolean;
+  direction?: 'sent' | 'receiving';
   driver?: {
     rating?: number;
     latitude?: number | null;
@@ -45,6 +55,10 @@ export async function createTrip(input: {
   dropoffLat: number;
   dropoffLng: number;
   vehicleType: RiderVehicleType;
+  rideType?: RideType;
+  recipientName?: string;
+  recipientPhone?: string;
+  packageNote?: string;
 }) {
   const { data } = await api.post<{ trip: Trip }>('/rider/trips', input);
   return data.trip;

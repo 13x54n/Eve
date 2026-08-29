@@ -2,9 +2,12 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
+  changePassword,
   getUserById,
   loginAdmin,
   loginRider,
+  logoutAdmin,
+  refreshAdminSession,
   registerRider,
   requestPasswordReset,
   resetPassword,
@@ -12,10 +15,12 @@ import {
 } from "./auth.service.js";
 import { loginDriver, registerDriver } from "./driver-auth.js";
 import {
+  changePasswordSchema,
   driverLoginSchema,
   driverRegisterSchema,
   forgotPasswordSchema,
   loginSchema,
+  refreshTokenSchema,
   registerSchema,
   resetPasswordSchema,
   updateProfileSchema,
@@ -84,6 +89,28 @@ authRouter.post("/admin/login", limiter, async (req, res, next) => {
   }
 });
 
+authRouter.post("/admin/refresh", limiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await refreshAdminSession(refreshTokenSchema.parse(req.body).refreshToken),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post("/admin/logout", async (req, res, next) => {
+  try {
+    const parsed = refreshTokenSchema.safeParse(req.body);
+    if (parsed.success) {
+      await logoutAdmin(parsed.data.refreshToken);
+    }
+    res.status(200).json({ message: "Signed out" });
+  } catch (error) {
+    next(error);
+  }
+});
+
 authRouter.post("/forgot-password", limiter, async (req, res, next) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
@@ -106,7 +133,7 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
+authRouter.get("/me", requireAuth, async (req, res, next) => {
   try {
     const user = await getUserById((req as AuthenticatedRequest).user.id);
     res.status(200).json({ user });
@@ -122,6 +149,18 @@ authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
       updateProfileSchema.parse(req.body),
     );
     res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post("/change-password", limiter, requireAuth, async (req, res, next) => {
+  try {
+    await changePassword(
+      (req as AuthenticatedRequest).user.id,
+      changePasswordSchema.parse(req.body),
+    );
+    res.status(200).json({ message: "Password updated" });
   } catch (error) {
     next(error);
   }

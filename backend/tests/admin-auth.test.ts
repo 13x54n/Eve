@@ -56,6 +56,8 @@ describe("Admin authentication", () => {
     expect(response.body.user.permissions).toEqual(
       expect.arrayContaining(["dashboard:read", "admin:manage"]),
     );
+    expect(response.body.accessToken).toEqual(expect.any(String));
+    expect(response.body.refreshToken).toEqual(expect.any(String));
 
     const dashboard = await request(app)
       .get("/api/admin/dashboard")
@@ -63,6 +65,80 @@ describe("Admin authentication", () => {
       .expect(200);
 
     expect(dashboard.body.totals).toBeDefined();
+  });
+
+  it("refreshes an admin session and rejects the previous refresh token", async () => {
+    const login = await request(app)
+      .post("/api/auth/admin/login")
+      .send({ email: adminEmail, password })
+      .expect(200);
+
+    const refreshed = await request(app)
+      .post("/api/auth/admin/refresh")
+      .send({ refreshToken: login.body.refreshToken })
+      .expect(200);
+
+    expect(refreshed.body.accessToken).toEqual(expect.any(String));
+    expect(refreshed.body.refreshToken).toEqual(expect.any(String));
+    expect(refreshed.body.refreshToken).not.toBe(login.body.refreshToken);
+    expect(refreshed.body.user).toMatchObject({
+      email: adminEmail,
+      role: "ADMIN",
+    });
+
+    await request(app)
+      .get("/api/admin/dashboard")
+      .set("Authorization", `Bearer ${refreshed.body.accessToken}`)
+      .expect(200);
+
+    await request(app)
+      .post("/api/auth/admin/refresh")
+      .send({ refreshToken: login.body.refreshToken })
+      .expect(401);
+  });
+
+  it("rejects an unknown refresh token", async () => {
+    await request(app)
+      .post("/api/auth/admin/refresh")
+      .send({ refreshToken: "a".repeat(64) })
+      .expect(401);
+  });
+
+  it("rejects an expired admin refresh token", async () => {
+    const login = await request(app)
+      .post("/api/auth/admin/login")
+      .send({ email: adminEmail, password })
+      .expect(200);
+
+    await prisma.adminSession.updateMany({
+      where: {
+        user: { email: adminEmail },
+        revokedAt: null,
+      },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+
+    await request(app)
+      .post("/api/auth/admin/refresh")
+      .send({ refreshToken: login.body.refreshToken })
+      .expect(401);
+  });
+
+  it("revokes the refresh token on logout", async () => {
+    const login = await request(app)
+      .post("/api/auth/admin/login")
+      .send({ email: adminEmail, password })
+      .expect(200);
+
+    await request(app)
+      .post("/api/auth/admin/logout")
+      .send({ refreshToken: login.body.refreshToken })
+      .expect(200);
+
+    await request(app)
+      .post("/api/auth/admin/refresh")
+      .send({ refreshToken: login.body.refreshToken })
+      .expect(401);
   });
 
   it("rejects a rider from the admin login", async () => {

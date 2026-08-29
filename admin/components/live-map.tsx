@@ -2,63 +2,44 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import L from "leaflet";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
+import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox";
+import "mapbox-gl/dist/mapbox-gl.css";
 import { addAdminSocketListener } from "@/lib/socket";
 import type { LiveDriver, LiveSos, LiveTrip } from "@/lib/ops-types";
 
-const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-const DEFAULT_CENTER: [number, number] = [40.758, -73.985];
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? "";
+const MAP_STYLE = "mapbox://styles/mapbox/streets-v12";
+const FALLBACK = { longitude: 85.324, latitude: 27.7172, zoom: 12 };
 
-function dotIcon(color: string) {
-  return L.divIcon({
-    className: "eve-map-dot",
-    html: `<span style="display:block;width:12px;height:12px;border-radius:999px;background:${color};border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)"></span>`,
-    iconSize: [12, 12],
-    iconAnchor: [6, 6],
-    popupAnchor: [0, -8],
-  });
-}
-
-const ICONS = {
-  online: dotIcon("#06c167"),
-  idle: dotIcon("#16a34a"),
-  onTrip: dotIcon("#2563eb"),
-  searching: dotIcon("#d97706"),
-  sos: dotIcon("#de1135"),
+const COLORS = {
+  online: "#06c167",
+  idle: "#16a34a",
+  onTrip: "#2563eb",
+  searching: "#d97706",
+  sos: "#de1135",
 };
 
 function driverColor(presence: string) {
-  if (presence === "ON_TRIP") return ICONS.onTrip;
-  if (presence === "IDLE") return ICONS.idle;
-  return ICONS.online;
+  if (presence === "ON_TRIP") return COLORS.onTrip;
+  if (presence === "IDLE") return COLORS.idle;
+  return COLORS.online;
 }
 
-function FitBounds({ points, fitKey }: { points: { lat: number; lng: number }[]; fitKey: string }) {
-  const map = useMap();
-  const fittedKey = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (points.length === 0) {
-      if (fittedKey.current !== fitKey) {
-        map.setView(DEFAULT_CENTER, 12);
-      }
-      return;
-    }
-    if (fittedKey.current === fitKey) {
-      return;
-    }
-    fittedKey.current = fitKey;
-    if (points.length === 1) {
-      map.setView([points[0]!.lat, points[0]!.lng], 14);
-      return;
-    }
-    const bounds = L.latLngBounds(points.map((point) => [point.lat, point.lng] as [number, number]));
-    map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 });
-  }, [map, fitKey, points]);
-
-  return null;
+function Dot({ color }: { color: string }) {
+  return (
+    <span
+      style={{
+        display: "block",
+        width: 12,
+        height: 12,
+        borderRadius: 999,
+        background: color,
+        border: "2px solid #fff",
+        boxShadow: "0 0 0 1px rgba(0,0,0,.25)",
+        cursor: "pointer",
+      }}
+    />
+  );
 }
 
 export default function LiveMap({
@@ -73,7 +54,15 @@ export default function LiveMap({
   fitKey?: string;
 }) {
   const router = useRouter();
+  const mapRef = useRef<MapRef>(null);
+  const fittedKey = useRef<string | null>(null);
   const [overrides, setOverrides] = useState<Record<string, { lat: number; lng: number }>>({});
+  const [popup, setPopup] = useState<{
+    lat: number;
+    lng: number;
+    title: string;
+    body: string;
+  } | null>(null);
 
   useEffect(() => {
     return addAdminSocketListener((event, payload) => {
@@ -133,42 +122,84 @@ export default function LiveMap({
     return next;
   }, [positionedDrivers, searchingTrips, sos]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || fittedKey.current === fitKey) return;
+    fittedKey.current = fitKey;
+    if (points.length === 0) {
+      map.flyTo({ center: [FALLBACK.longitude, FALLBACK.latitude], zoom: 12, duration: 400 });
+      return;
+    }
+    if (points.length === 1) {
+      map.flyTo({ center: [points[0]!.lng, points[0]!.lat], zoom: 14, duration: 400 });
+      return;
+    }
+    const lngs = points.map((point) => point.lng);
+    const lats = points.map((point) => point.lat);
+    map.fitBounds(
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
+      { padding: 28, maxZoom: 14, duration: 600 },
+    );
+  }, [fitKey, points]);
+
+  if (!MAPBOX_TOKEN) {
+    return (
+      <div className="grid h-full place-items-center px-6 text-center text-[12px] text-muted-foreground">
+        Set NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN to load the live map.
+      </div>
+    );
+  }
+
   return (
-    <MapContainer
-      center={DEFAULT_CENTER}
-      zoom={12}
-      className="h-full w-full"
-      scrollWheelZoom
+    <Map
+      ref={mapRef}
+      mapboxAccessToken={MAPBOX_TOKEN}
+      mapStyle={MAP_STYLE}
+      initialViewState={FALLBACK}
+      style={{ width: "100%", height: "100%" }}
+      attributionControl
     >
-      <TileLayer attribution="&copy; OpenStreetMap" url={OSM_TILES} />
-      <FitBounds points={points} fitKey={fitKey} />
       {positionedDrivers.map((driver) => (
         <Marker
           key={driver.id}
-          position={[driver.lat as number, driver.lng as number]}
-          icon={driverColor(driver.presence)}
-          eventHandlers={{ click: () => router.push(`/drivers/${driver.id}`) }}
+          longitude={driver.lng as number}
+          latitude={driver.lat as number}
+          anchor="center"
+          onClick={(event) => {
+            event.originalEvent.stopPropagation();
+            setPopup({
+              lat: driver.lat as number,
+              lng: driver.lng as number,
+              title: driver.name,
+              body: driver.presence,
+            });
+            router.push(`/drivers/${driver.id}`);
+          }}
         >
-          <Popup>
-            <p className="font-semibold">{driver.name}</p>
-            <p className="text-[12px] text-muted-foreground">{driver.presence}</p>
-          </Popup>
+          <Dot color={driverColor(driver.presence)} />
         </Marker>
       ))}
       {searchingTrips.map((trip) => (
         <Marker
           key={trip.id}
-          position={[trip.pickupLat, trip.pickupLng]}
-          icon={ICONS.searching}
-          eventHandlers={{ click: () => router.push(`/trips/${trip.id}`) }}
+          longitude={trip.pickupLng}
+          latitude={trip.pickupLat}
+          anchor="center"
+          onClick={(event) => {
+            event.originalEvent.stopPropagation();
+            setPopup({
+              lat: trip.pickupLat,
+              lng: trip.pickupLng,
+              title: trip.bookingCode,
+              body: `Searching · ${trip.rider}${trip.etaMinutes != null ? ` · ${trip.etaMinutes} min ETA` : ""}`,
+            });
+            router.push(`/trips/${trip.id}`);
+          }}
         >
-          <Popup>
-            <p className="font-semibold">{trip.bookingCode}</p>
-            <p className="text-[12px] text-muted-foreground">
-              Searching · {trip.rider}
-              {trip.etaMinutes != null ? ` · ${trip.etaMinutes} min ETA` : ""}
-            </p>
-          </Popup>
+          <Dot color={COLORS.searching} />
         </Marker>
       ))}
       {trips
@@ -179,17 +210,21 @@ export default function LiveMap({
           return (
             <Marker
               key={`trip-${trip.id}`}
-              position={[lat, lng]}
-              icon={ICONS.onTrip}
-              eventHandlers={{ click: () => router.push(`/trips/${trip.id}`) }}
+              longitude={lng}
+              latitude={lat}
+              anchor="center"
+              onClick={(event) => {
+                event.originalEvent.stopPropagation();
+                setPopup({
+                  lat,
+                  lng,
+                  title: trip.bookingCode,
+                  body: `${trip.status} · ${trip.rider}${trip.driver ? ` · ${trip.driver}` : ""}`,
+                });
+                router.push(`/trips/${trip.id}`);
+              }}
             >
-              <Popup>
-                <p className="font-semibold">{trip.bookingCode}</p>
-                <p className="text-[12px] text-muted-foreground">
-                  {trip.status} · {trip.rider}
-                  {trip.driver ? ` · ${trip.driver}` : ""}
-                </p>
-              </Popup>
+              <Dot color={COLORS.onTrip} />
             </Marker>
           );
         })}
@@ -198,18 +233,36 @@ export default function LiveMap({
         .map((incident) => (
           <Marker
             key={incident.id}
-            position={[incident.lat as number, incident.lng as number]}
-            icon={ICONS.sos}
-            eventHandlers={{
-              click: () => router.push(incident.tripId ? `/trips/${incident.tripId}` : "/safety"),
+            longitude={incident.lng as number}
+            latitude={incident.lat as number}
+            anchor="center"
+            onClick={(event) => {
+              event.originalEvent.stopPropagation();
+              setPopup({
+                lat: incident.lat as number,
+                lng: incident.lng as number,
+                title: `SOS · ${incident.bookingCode ?? "No trip"}`,
+                body: incident.severity,
+              });
+              router.push(incident.tripId ? `/trips/${incident.tripId}` : "/safety");
             }}
           >
-            <Popup>
-              <p className="font-semibold">SOS · {incident.bookingCode ?? "No trip"}</p>
-              <p className="text-[12px] text-muted-foreground">{incident.severity}</p>
-            </Popup>
+            <Dot color={COLORS.sos} />
           </Marker>
         ))}
-    </MapContainer>
+      {popup ? (
+        <Popup
+          longitude={popup.lng}
+          latitude={popup.lat}
+          anchor="bottom"
+          offset={12}
+          onClose={() => setPopup(null)}
+          closeOnClick={false}
+        >
+          <p className="font-semibold">{popup.title}</p>
+          <p className="text-[12px] text-muted-foreground">{popup.body}</p>
+        </Popup>
+      ) : null}
+    </Map>
   );
 }

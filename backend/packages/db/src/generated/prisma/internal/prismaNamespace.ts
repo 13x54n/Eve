@@ -417,6 +417,8 @@ export const ModelName = {
   SafetyIncident: 'SafetyIncident',
   LostItem: 'LostItem',
   PrivacyRequest: 'PrivacyRequest',
+  Greeting: 'Greeting',
+  GreetingSettings: 'GreetingSettings',
   Promo: 'Promo',
   DriverIncentive: 'DriverIncentive',
   Notification: 'Notification',
@@ -439,7 +441,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
+    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "greeting" | "greetingSettings" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1923,6 +1925,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Greeting: {
+      payload: Prisma.$GreetingPayload<ExtArgs>
+      fields: Prisma.GreetingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GreetingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GreetingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        findFirst: {
+          args: Prisma.GreetingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GreetingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        findMany: {
+          args: Prisma.GreetingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>[]
+        }
+        create: {
+          args: Prisma.GreetingCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        createMany: {
+          args: Prisma.GreetingCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GreetingCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>[]
+        }
+        delete: {
+          args: Prisma.GreetingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        update: {
+          args: Prisma.GreetingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        deleteMany: {
+          args: Prisma.GreetingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GreetingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GreetingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>[]
+        }
+        upsert: {
+          args: Prisma.GreetingUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingPayload>
+        }
+        aggregate: {
+          args: Prisma.GreetingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGreeting>
+        }
+        groupBy: {
+          args: Prisma.GreetingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GreetingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GreetingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GreetingCountAggregateOutputType> | number
+        }
+      }
+    }
+    GreetingSettings: {
+      payload: Prisma.$GreetingSettingsPayload<ExtArgs>
+      fields: Prisma.GreetingSettingsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GreetingSettingsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GreetingSettingsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        findFirst: {
+          args: Prisma.GreetingSettingsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GreetingSettingsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        findMany: {
+          args: Prisma.GreetingSettingsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>[]
+        }
+        create: {
+          args: Prisma.GreetingSettingsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        createMany: {
+          args: Prisma.GreetingSettingsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GreetingSettingsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>[]
+        }
+        delete: {
+          args: Prisma.GreetingSettingsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        update: {
+          args: Prisma.GreetingSettingsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        deleteMany: {
+          args: Prisma.GreetingSettingsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GreetingSettingsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GreetingSettingsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>[]
+        }
+        upsert: {
+          args: Prisma.GreetingSettingsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GreetingSettingsPayload>
+        }
+        aggregate: {
+          args: Prisma.GreetingSettingsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGreetingSettings>
+        }
+        groupBy: {
+          args: Prisma.GreetingSettingsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GreetingSettingsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GreetingSettingsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GreetingSettingsCountAggregateOutputType> | number
+        }
+      }
+    }
     Promo: {
       payload: Prisma.$PromoPayload<ExtArgs>
       fields: Prisma.PromoFieldRefs
@@ -2488,11 +2638,13 @@ export const UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   role: 'role',
   adminStaffRole: 'adminStaffRole',
+  adminStaffTitle: 'adminStaffTitle',
   accountStatus: 'accountStatus',
   isActive: 'isActive',
   flagged: 'flagged',
   city: 'city',
   mfaEnabled: 'mfaEnabled',
+  pushNotificationsEnabled: 'pushNotificationsEnabled',
   lastLoginAt: 'lastLoginAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -2612,6 +2764,11 @@ export const TripScalarFieldEnum = {
   pickupLng: 'pickupLng',
   dropoffLat: 'dropoffLat',
   dropoffLng: 'dropoffLng',
+  recipientName: 'recipientName',
+  recipientPhone: 'recipientPhone',
+  packageNote: 'packageNote',
+  trackingToken: 'trackingToken',
+  recipientUserId: 'recipientUserId',
   distanceKm: 'distanceKm',
   durationMin: 'durationMin',
   suggestedFare: 'suggestedFare',
@@ -2813,6 +2970,26 @@ export const PrivacyRequestScalarFieldEnum = {
 export type PrivacyRequestScalarFieldEnum = (typeof PrivacyRequestScalarFieldEnum)[keyof typeof PrivacyRequestScalarFieldEnum]
 
 
+export const GreetingScalarFieldEnum = {
+  id: 'id',
+  template: 'template',
+  enabled: 'enabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GreetingScalarFieldEnum = (typeof GreetingScalarFieldEnum)[keyof typeof GreetingScalarFieldEnum]
+
+
+export const GreetingSettingsScalarFieldEnum = {
+  id: 'id',
+  mode: 'mode',
+  pinnedGreetingId: 'pinnedGreetingId'
+} as const
+
+export type GreetingSettingsScalarFieldEnum = (typeof GreetingSettingsScalarFieldEnum)[keyof typeof GreetingSettingsScalarFieldEnum]
+
+
 export const PromoScalarFieldEnum = {
   id: 'id',
   code: 'code',
@@ -2888,9 +3065,12 @@ export type AdminLoginEventScalarFieldEnum = (typeof AdminLoginEventScalarFieldE
 export const AdminSessionScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  tokenHash: 'tokenHash',
   ip: 'ip',
   userAgent: 'userAgent',
   createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  lastUsedAt: 'lastUsedAt',
   revokedAt: 'revokedAt'
 } as const
 
@@ -3005,6 +3185,20 @@ export type EnumAdminStaffRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$P
  * Reference to a field of type 'AdminStaffRole[]'
  */
 export type ListEnumAdminStaffRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AdminStaffRole[]'>
+    
+
+
+/**
+ * Reference to a field of type 'AdminStaffTitle'
+ */
+export type EnumAdminStaffTitleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AdminStaffTitle'>
+    
+
+
+/**
+ * Reference to a field of type 'AdminStaffTitle[]'
+ */
+export type ListEnumAdminStaffTitleFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AdminStaffTitle[]'>
     
 
 
@@ -3338,6 +3532,20 @@ export type ListEnumIncidentSeverityFieldRefInput<$PrismaModel> = FieldRefInputT
 
 
 /**
+ * Reference to a field of type 'GreetingMode'
+ */
+export type EnumGreetingModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GreetingMode'>
+    
+
+
+/**
+ * Reference to a field of type 'GreetingMode[]'
+ */
+export type ListEnumGreetingModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'GreetingMode[]'>
+    
+
+
+/**
  * Reference to a field of type 'AlertKind'
  */
 export type EnumAlertKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AlertKind'>
@@ -3521,6 +3729,8 @@ export type GlobalOmitConfig = {
   safetyIncident?: Prisma.SafetyIncidentOmit
   lostItem?: Prisma.LostItemOmit
   privacyRequest?: Prisma.PrivacyRequestOmit
+  greeting?: Prisma.GreetingOmit
+  greetingSettings?: Prisma.GreetingSettingsOmit
   promo?: Prisma.PromoOmit
   driverIncentive?: Prisma.DriverIncentiveOmit
   notification?: Prisma.NotificationOmit

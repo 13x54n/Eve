@@ -11,7 +11,6 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import MapView, { UrlTile, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect, usePathname, type Href } from 'expo-router';
 import BusyHoursChart from '@/components/busyHourChart';
@@ -34,16 +33,10 @@ import * as Location from 'expo-location';
 import { notifyRideEvent, requestRideNotificationPermission } from '@/services/notifications';
 import { lightImpact, notifyImpact } from '@/lib/haptics';
 import { Brand } from '@/constants/theme';
-
-// Fallback region only used until the device's real location is available.
-const DEFAULT_REGION: Region = {
-  latitude: 60.1699,
-  longitude: 24.9384,
-  latitudeDelta: 0.02,
-  longitudeDelta: 0.02,
-};
+import { useAppTheme } from '@/context/theme-context';
 
 export default function Home() {
+  const { brand } = useAppTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const pathnameRef = useRef(pathname);
@@ -55,8 +48,6 @@ export default function Home() {
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
   const [presenceBusy, setPresenceBusy] = useState(false);
   const [profile, setProfile] = useState<DriverProfile | null>(null);
-  const [region, setRegion] = useState<Region>(DEFAULT_REGION);
-  const mapRef = useRef<MapView | null>(null);
   const presenceRef = useRef<DriverPresence>('OFFLINE');
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
   const onboarding = getOnboardingProgress(profile);
@@ -103,10 +94,6 @@ export default function Home() {
     void requestRideNotificationPermission();
     void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
       if (!mounted || status !== 'granted') return;
-      const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      if (mounted) {
-        setRegion({ latitude: current.coords.latitude, longitude: current.coords.longitude, latitudeDelta: 0.02, longitudeDelta: 0.02 });
-      }
       locationSubscriptionRef.current = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.Balanced, timeInterval: 5000, distanceInterval: 25 },
         (location) => {
@@ -189,10 +176,6 @@ export default function Home() {
     }
   }
 
-  function recenter() {
-    mapRef.current?.animateToRegion(region, 300);
-  }
-
   async function submitOffer(trip: IncomingTrip) {
     if (offeringTripId) return;
     const fare = Number(offerFare[trip.id] ?? trip.fareTotal);
@@ -211,7 +194,7 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
       <StatusBar barStyle="dark-content" />
 
       <ScrollView
@@ -238,7 +221,17 @@ export default function Home() {
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Waiting for match</Text>
             <View style={styles.requestCard}>
-              <Text style={styles.requestTitle}>{pendingOffer.riderName}</Text>
+              <Text style={styles.requestTitle}>
+                {pendingOffer.rideType === 'COURIER' ? 'Courier · ' : ''}
+                {pendingOffer.riderName}
+              </Text>
+              {pendingOffer.recipientName ? (
+                <Text style={styles.requestRoute}>
+                  {pendingOffer.rideType === 'COURIER'
+                    ? `Deliver to ${pendingOffer.recipientName}`
+                    : `Passenger: ${pendingOffer.recipientName}`}
+                </Text>
+              ) : null}
               <Text style={styles.requestRoute}>{pendingOffer.pickupAddress}</Text>
               <Text style={styles.requestRoute}>to {pendingOffer.dropoffAddress}</Text>
               <Text style={styles.requestMeta}>
@@ -252,9 +245,19 @@ export default function Home() {
             {incomingTrips.map((trip) => (
               <View style={styles.requestCard} key={trip.id}>
                 <View style={styles.requestHeader}>
-                  <Text style={styles.requestTitle}>{trip.riderName}</Text>
+                  <Text style={styles.requestTitle}>
+                    {trip.rideType === 'COURIER' ? 'Courier · ' : ''}
+                    {trip.riderName}
+                  </Text>
                   <Text style={styles.requestType}>{trip.vehicleType === 'BIKE' ? 'Bike' : 'Car'}</Text>
                 </View>
+                {trip.recipientName ? (
+                  <Text style={styles.requestRoute}>
+                    {trip.rideType === 'COURIER'
+                      ? `Deliver to ${trip.recipientName}`
+                      : `Passenger: ${trip.recipientName}`}
+                  </Text>
+                ) : null}
                 <Text style={styles.requestRoute}>{trip.pickupAddress}</Text>
                 <Text style={styles.requestRoute}>to {trip.dropoffAddress}</Text>
                 <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · base fare ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
@@ -388,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.canvas,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 2,
   },
   requestSection: {
     paddingHorizontal: 16,
@@ -555,74 +558,6 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     marginTop: 2,
     lineHeight: 18,
-  },
-
-  // --- Map ---
-  mapCard: {
-    marginHorizontal: 16,
-    borderRadius: 20,
-    overflow: 'hidden',
-    backgroundColor: '#ECEFF1',
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  mapContainer: {
-    height: 360,
-    overflow: 'hidden',
-  },
-  heatCircle: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 300,
-    height: 300,
-    marginLeft: -150,
-    marginTop: -150,
-    borderRadius: 150,
-    backgroundColor: 'rgba(180,180,190,0.35)',
-  },
-  locationDotOuter: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    marginLeft: -18,
-    marginTop: -18,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 4,
-  },
-  locationDotInner: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#3B82F6',
-  },
-  recenterButton: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0F172A',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 5,
   },
 
   // --- Fixed Go Online button ---

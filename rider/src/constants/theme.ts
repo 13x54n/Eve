@@ -2,7 +2,7 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-export const Brand = {
+export const BrandLight = {
   canvas: '#F7F8EF',
   surface: '#FFFFFF',
   text: '#111827',
@@ -14,23 +14,32 @@ export const Brand = {
   border: '#F3F4F6',
 } as const;
 
+export const Brand = BrandLight;
+
+export type BrandTokens = {
+  canvas: string;
+  surface: string;
+  text: string;
+  textSecondary: string;
+  accent: string;
+  splash: string;
+  danger: string;
+  muted: string;
+  border: string;
+};
+
+const palette = {
+  text: BrandLight.text,
+  background: BrandLight.canvas,
+  backgroundElement: BrandLight.surface,
+  backgroundSelected: '#E0E1E6',
+  textSecondary: BrandLight.textSecondary,
+  accent: BrandLight.accent,
+} as const;
+
 export const Colors = {
-  light: {
-    text: Brand.text,
-    background: Brand.canvas,
-    backgroundElement: Brand.surface,
-    backgroundSelected: '#E0E1E6',
-    textSecondary: Brand.textSecondary,
-    accent: Brand.accent,
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    accent: Brand.accent,
-  },
+  light: palette,
+  dark: palette,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
