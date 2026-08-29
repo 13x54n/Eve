@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import {
@@ -14,10 +14,12 @@ import {
   money,
   statusTone,
 } from "@/components/ui";
+import { EntityLink } from "@/components/entity-link";
 import { downloadText, toCsv } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import { addAdminSocketListener, subscribeTrip, unsubscribeTrip } from "@/lib/socket";
 
 type Trip = {
   id: string;
@@ -40,11 +42,20 @@ type Trip = {
   cancellationReason: string | null;
   etaMinutes: number | null;
   routeDeviation: boolean;
-  rider: { name: string; phone: string | null };
-  driver: { name: string; id: string } | null;
+  rider: { id: string; name: string; phone: string | null };
+  driver: { id: string; name: string; profileId: string } | null;
   events: { id: string; action: string; createdAt: string }[];
-  offers: { id: string; proposedFare: number; etaMinutes: number; status: string; driverName: string }[];
+  offers: { id: string; proposedFare: number; etaMinutes: number; status: string; driverId: string; driverName: string }[];
   ledger: { id: string; type: string; amount: number; status: string }[];
+  tickets: { id: string; subject: string; status: string }[];
+  chatMessages: {
+    id: string;
+    authorId: string;
+    body: string;
+    createdAt: string;
+    authorName: string;
+    authorRole: string;
+  }[];
 };
 
 type DriverList = { items: { id: string; user: { name: string } }[] };
@@ -69,9 +80,34 @@ export default function TripDetailPage({
 }) {
   const { id } = use(params);
   const { user } = useAuth();
-  const { data, reload, error, loading } = useApi<Trip>(`/admin/trips/${id}`);
+  const { data, reload, error, loading, setData } = useApi<Trip>(`/admin/trips/${id}`);
   const { data: drivers } = useApi<DriverList>("/admin/drivers?status=APPROVED");
   const dispatch = can(user, "trips:dispatch");
+
+  useEffect(() => {
+    subscribeTrip(id);
+    return () => {
+      unsubscribeTrip();
+    };
+  }, [id]);
+
+  useEffect(() => {
+    return addAdminSocketListener((event, payload) => {
+      if (event !== "trip:message" || !payload || typeof payload !== "object") {
+        return;
+      }
+      const message = payload as Trip["chatMessages"][number] & { tripId?: string };
+      if (message.tripId && message.tripId !== id) {
+        return;
+      }
+      setData((current) => {
+        if (!current || current.chatMessages.some((row) => row.id === message.id)) {
+          return current;
+        }
+        return { ...current, chatMessages: [...current.chatMessages, message] };
+      });
+    });
+  }, [id, setData]);
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     try {
@@ -99,7 +135,18 @@ export default function TripDetailPage({
             backHref="/trips"
             backLabel="Trips"
             title={data.bookingCode}
-            subtitle={`Rider ${data.rider.name} · Driver ${data.driver?.name ?? "Unassigned"} · ${data.city}`}
+            subtitle={
+              <span>
+                Rider <EntityLink href={`/riders/${data.rider.id}`}>{data.rider.name}</EntityLink>
+                {" · Driver "}
+                {data.driver?.profileId ? (
+                  <EntityLink href={`/drivers/${data.driver.profileId}`}>{data.driver.name}</EntityLink>
+                ) : (
+                  "Unassigned"
+                )}
+                {` · ${data.city}`}
+              </span>
+            }
             actions={<Badge tone={statusTone(data.status)}>{data.status}</Badge>}
           />
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -169,6 +216,40 @@ export default function TripDetailPage({
                   ])}
                 />
               </Panel>
+              <Panel title="In-trip chat">
+                {(data.chatMessages ?? []).length === 0 ? (
+                  <p className="text-[13px] text-muted-foreground">No rider–driver messages on this trip.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {data.chatMessages.map((row) => (
+                      <div key={row.id} className="rounded-md bg-muted px-3 py-2 text-[13px]">
+                        <p className="text-[11px] text-muted-foreground">
+                          {row.authorName} · {row.authorRole.toLowerCase()} ·{" "}
+                          {new Date(row.createdAt).toLocaleString()}
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap">{row.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-3 text-[12px] text-muted-foreground">
+                  Read-only. Reply to riders or drivers from a support ticket.
+                </p>
+              </Panel>
+              <Panel title="Support tickets" flush>
+                <Table
+                  columns={["Subject", "Status"]}
+                  empty="No tickets on this trip."
+                  rows={(data.tickets ?? []).map((ticket) => [
+                    <EntityLink key={ticket.id} href={`/support/${ticket.id}`}>
+                      {ticket.subject}
+                    </EntityLink>,
+                    <Badge key={`${ticket.id}-s`} tone={statusTone(ticket.status)}>
+                      {ticket.status}
+                    </Badge>,
+                  ])}
+                />
+              </Panel>
             </div>
             <div className="space-y-5">
               <Panel title="Fare audit">
@@ -198,7 +279,9 @@ export default function TripDetailPage({
                   columns={["Driver", "Offer", "Status"]}
                   empty="No offers yet."
                   rows={(data.offers ?? []).map((offer) => [
-                    offer.driverName,
+                    <EntityLink key={offer.id} href={`/drivers/${offer.driverId}`}>
+                      {offer.driverName}
+                    </EntityLink>,
                     money(offer.proposedFare),
                     <Badge key={offer.id} tone={statusTone(offer.status)}>
                       {offer.status}

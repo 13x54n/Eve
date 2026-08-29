@@ -24,6 +24,7 @@ import {
   sendNotification,
   staff,
   tickets,
+  ticket,
   transitionPricing,
   trip,
   trips,
@@ -98,6 +99,7 @@ router.patch(
 );
 
 router.get("/tickets", requirePermission("support:read"), tickets);
+router.get("/tickets/:id", requirePermission("support:read"), ticket);
 router.patch(
   "/tickets/:id",
   requirePermission("support:write"),

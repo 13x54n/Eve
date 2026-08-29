@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import type { AuthenticatedRequest } from "@eve/http";
 import * as riderService from "./rider.service.js";
-import { createTripMessage, listTripMessages } from "./trip-chat.js";
+import { createTripMessage, listTripMessages, markTripMessagesRead } from "./trip-chat.js";
 import { chatMessageSchema, riderTripSchema, supportTicketSchema } from "./rider.validation.js";
 
 function userId(req: Request) { return (req as AuthenticatedRequest).user.id; }
@@ -55,6 +55,12 @@ export async function postMessage(req: Request, res: Response, next: NextFunctio
     const { body } = chatMessageSchema.parse(req.body);
     const message = await createTripMessage(userId(req), String(req.params.id), "RIDER", body);
     res.status(201).json({ message });
+  } catch (error) { next(error); }
+}
+
+export async function markMessagesRead(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await markTripMessagesRead(userId(req), String(req.params.id), "RIDER"));
   } catch (error) { next(error); }
 }
 

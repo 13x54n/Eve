@@ -9,6 +9,7 @@ function serializeMessage(row: {
   tripId: string;
   authorId: string;
   body: string;
+  readAt: Date | null;
   createdAt: Date;
   author: { id: string; name: string; role: string };
 }) {
@@ -17,6 +18,7 @@ function serializeMessage(row: {
     tripId: row.tripId,
     authorId: row.authorId,
     body: row.body,
+    readAt: row.readAt?.toISOString() ?? null,
     createdAt: row.createdAt,
     authorName: row.author.name,
     authorRole: row.author.role,
@@ -65,4 +67,25 @@ export async function createTripMessage(
   const message = serializeMessage(row);
   emitTripEvent(tripId, "trip:message", message);
   return message;
+}
+
+export async function markTripMessagesRead(
+  userId: string,
+  tripId: string,
+  role: "RIDER" | "DRIVER",
+) {
+  await assertLiveTripAccess(userId, tripId, role);
+  const readAt = new Date();
+  const result = await prisma.tripMessage.updateMany({
+    where: { tripId, authorId: { not: userId }, readAt: null },
+    data: { readAt },
+  });
+  if (result.count > 0) {
+    emitTripEvent(tripId, "trip:messages:read", {
+      tripId,
+      readerId: userId,
+      readAt: readAt.toISOString(),
+    });
+  }
+  return { tripId, readAt: readAt.toISOString(), count: result.count };
 }

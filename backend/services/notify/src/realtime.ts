@@ -1,7 +1,7 @@
 import type { Server as SocketServer } from "socket.io";
 import { verifyAccessToken } from "@eve/shared";
 import { recordDriverLocationClient as recordDriverLocation } from "@eve/location";
-import { setSocketServer, emitTripEventLocal } from "./emit.js";
+import { setSocketServer, emitAdminEventLocal, emitTripEventLocal } from "./emit.js";
 
 export function attachRealtime(server: SocketServer) {
   setSocketServer(server);
@@ -19,6 +19,9 @@ export function attachRealtime(server: SocketServer) {
   server.on("connection", (socket) => {
     const user = socket.data.user as { sub: string; role: string };
     socket.join(`${user.role.toLowerCase()}:${user.sub}`);
+    if (user.role === "ADMIN") {
+      socket.join("admin:ops");
+    }
     socket.on("trip:subscribe", (tripId: string) => {
       if (typeof tripId === "string" && tripId.length > 0) socket.join(`trip:${tripId}`);
     });
@@ -32,10 +35,12 @@ export function attachRealtime(server: SocketServer) {
       ) return;
       const tripIds = await recordDriverLocation(user.sub, payload.latitude, payload.longitude);
       const body = {
+        userId: user.sub,
         latitude: payload.latitude,
         longitude: payload.longitude,
         timestamp: new Date().toISOString(),
       };
+      emitAdminEventLocal("driver:location", body);
       for (const tripId of tripIds) {
         emitTripEventLocal(tripId, "driver:location", body);
       }

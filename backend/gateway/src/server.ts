@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import { corsOptions } from "@eve/http";
 import { attachRealtime } from "@eve/notify";
 import { createComposeApp } from "./compose-app.js";
 import { createProxyApp } from "./proxy-app.js";
@@ -11,7 +12,7 @@ const app = mode === "proxy" ? createProxyApp() : createComposeApp();
 const httpServer = createServer(app);
 
 if (mode !== "proxy") {
-  const socketServer = new Server(httpServer, { cors: { origin: true, credentials: true } });
+  const socketServer = new Server(httpServer, { cors: corsOptions() });
   attachRealtime(socketServer);
 }
 

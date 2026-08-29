@@ -1,7 +1,7 @@
 import { calculateFare, prisma } from "@eve/db";
 import { distanceKm, durationMinutes, fail, money } from "@eve/shared";
 import { nearbyDriversClient } from "@eve/location";
-import { emitTripEvent, emitUserEvent } from "@eve/notify";
+import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
 
 async function getRider(userId: string) {
   const rider = await prisma.riderProfile.findUnique({ where: { userId } });
@@ -14,6 +14,24 @@ const ACTIVE_STATUSES = ["SEARCHING", "ASSIGNED", "ONGOING"] as const;
 function publicUser(user: { name: string; phone?: string | null } | null | undefined) {
   if (!user) return undefined;
   return { name: user.name, phone: user.phone ?? null };
+}
+
+async function notifyOpsTicket(
+  ticketId: string,
+  subject: string,
+  userId: string,
+  kind: "created" | "reply",
+) {
+  const requester = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+  emitAdminEvent("admin:ticket", {
+    ticketId,
+    subject,
+    kind,
+    requesterName: requester?.name ?? "Unknown",
+  });
 }
 
 function serializeTrip(trip: any) {
@@ -183,6 +201,7 @@ export async function createSupportTicket(
     },
     include: { messages: { where: { internal: false }, orderBy: { createdAt: "asc" } } },
   });
+  notifyOpsTicket(ticket.id, ticket.subject, userId, "created");
   return serializeSupportTicket(ticket);
 }
 
@@ -202,7 +221,7 @@ export async function addSupportMessage(userId: string, ticketId: string, body: 
   const rider = await getRider(userId);
   const ticket = await prisma.supportTicket.findFirst({
     where: { id: ticketId, riderId: rider.id },
-    select: { id: true, status: true },
+    select: { id: true, status: true, subject: true },
   });
   if (!ticket) fail("Ticket not found", "NotFoundError");
   if (ticket.status === "CLOSED" || ticket.status === "RESOLVED") {
@@ -211,6 +230,7 @@ export async function addSupportMessage(userId: string, ticketId: string, body: 
   await prisma.ticketMessage.create({
     data: { ticketId: ticket.id, authorId: userId, body: text, internal: false },
   });
+  notifyOpsTicket(ticket.id, ticket.subject, userId, "reply");
   return getSupportTicket(userId, ticketId);
 }
 
@@ -239,8 +259,7 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
   });
   // Re-read outside the transaction so this reflects the committed state.
   const result = await getTrip(userId, tripId);
-  emitTripEvent(tripId, "trip:assigned", result);
-  emitUserEvent("DRIVER", acceptedDriverUserId, "trip:assigned", result);
+  emitTripAndUserEvent(tripId, "DRIVER", acceptedDriverUserId, "trip:assigned", result);
   for (const driverUserId of rejectedDriverUserIds) {
     emitUserEvent("DRIVER", driverUserId, "offer:rejected", { tripId });
   }
@@ -271,11 +290,11 @@ export async function cancelTrip(userId: string, tripId: string) {
     }
   });
   const result = await getTrip(userId, tripId);
-  emitTripEvent(tripId, "trip:cancelled", result);
-  if (trip.driverId) {
-    const assigned = await prisma.driverProfile.findUnique({ where: { id: trip.driverId }, select: { userId: true } });
-    if (assigned) emitUserEvent("DRIVER", assigned.userId, "trip:cancelled", result);
-  }
+  const assigned = trip.driverId
+    ? await prisma.driverProfile.findUnique({ where: { id: trip.driverId }, select: { userId: true } })
+    : null;
+  if (assigned) emitTripAndUserEvent(tripId, "DRIVER", assigned.userId, "trip:cancelled", result);
+  else emitTripEvent(tripId, "trip:cancelled", result);
   for (const row of pendingDrivers) {
     emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId });
   }

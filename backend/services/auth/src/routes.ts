@@ -8,6 +8,7 @@ import {
   registerRider,
   requestPasswordReset,
   resetPassword,
+  updateProfile,
 } from "./auth.service.js";
 import { loginDriver, registerDriver } from "./driver-auth.js";
 import {
@@ -17,6 +18,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  updateProfileSchema,
 } from "./validation.js";
 
 const skipInVitest = () => Boolean(process.env.VITEST);
@@ -107,6 +109,18 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
 authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
   try {
     const user = await getUserById((req as AuthenticatedRequest).user.id);
+    res.status(200).json({ user });
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
+  try {
+    const user = await updateProfile(
+      (req as AuthenticatedRequest).user.id,
+      updateProfileSchema.parse(req.body),
+    );
     res.status(200).json({ user });
   } catch (error) {
     next(error);

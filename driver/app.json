@@ -12,8 +12,7 @@
       "bundleIdentifier": "ca.sherpafoods.evedriver",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
       }
     },
     "android": {
@@ -31,7 +30,12 @@
     },
     "plugins": [
       "expo-router",
-      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
+        }
+      ],
       [
         "expo-splash-screen",
         {
@@ -43,7 +47,8 @@
       "expo-secure-store",
       "expo-font",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

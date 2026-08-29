@@ -13,6 +13,7 @@ import {
   listMessages,
   listSupport,
   listTrips,
+  markMessagesRead,
   postMessage,
   postSupportMessage,
 } from "./rider.controller.js";
@@ -34,6 +35,7 @@ router.get("/trips/:id", getTrip);
 router.get("/trips/:id/offers", getOffers);
 router.get("/trips/:id/messages", listMessages);
 router.post("/trips/:id/messages", postMessage);
+router.post("/trips/:id/messages/read", markMessagesRead);
 router.post("/trips/:id/offers/:offerId/accept", acceptOffer);
 router.post("/trips/:id/cancel", cancelTrip);
 router.get("/support", listSupport);

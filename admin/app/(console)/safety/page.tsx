@@ -13,6 +13,7 @@ import {
   Table,
   statusTone,
 } from "@/components/ui";
+import { EntityLink } from "@/components/entity-link";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
@@ -25,9 +26,9 @@ type Safety = {
     severity: string;
     latitude: number | null;
     longitude: number | null;
-    rider: { user: { name: string } } | null;
-    driver: { user: { name: string } } | null;
-    trip: { bookingCode: string } | null;
+    rider: { user: { id: string; name: string } } | null;
+    driver: { id: string; user: { name: string } } | null;
+    trip: { id: string; bookingCode: string } | null;
   }[];
   incidents: {
     id: string;
@@ -35,8 +36,9 @@ type Safety = {
     severity: string;
     status: string;
     notes: string | null;
-    rider: { user: { name: string } } | null;
-    driver: { user: { name: string } } | null;
+    rider: { user: { id: string; name: string } } | null;
+    driver: { id: string; user: { name: string } } | null;
+    trip: { id: string; bookingCode: string } | null;
   }[];
 };
 
@@ -70,10 +72,25 @@ export default function SafetyPage() {
                 <span className="font-semibold text-red-700">{item.type}</span>
                 <Badge tone="rose">{item.severity}</Badge>
               </div>
-              <p>
-                Rider: <span className="font-semibold">{item.rider?.user.name ?? "—"}</span> · Driver:{" "}
-                <span className="font-semibold">{item.driver?.user.name ?? "—"}</span>
+              <p className="text-[13px]">
+                Rider:{" "}
+                {item.rider?.user.id ? (
+                  <EntityLink href={`/riders/${item.rider.user.id}`}>{item.rider.user.name}</EntityLink>
+                ) : (
+                  "—"
+                )}{" "}
+                · Driver:{" "}
+                {item.driver?.id ? (
+                  <EntityLink href={`/drivers/${item.driver.id}`}>{item.driver.user.name}</EntityLink>
+                ) : (
+                  "—"
+                )}
               </p>
+              {item.trip ? (
+                <p className="text-[13px]">
+                  Trip: <EntityLink href={`/trips/${item.trip.id}`} className="font-mono">{item.trip.bookingCode}</EntityLink>
+                </p>
+              ) : null}
               <p className="font-mono text-[12px] text-muted-foreground">
                 {item.latitude ?? "—"}, {item.longitude ?? "—"}
               </p>
@@ -100,7 +117,26 @@ export default function SafetyPage() {
             <span key="t" className="font-medium">
               {item.type}
             </span>,
-            `${item.rider?.user.name ?? "—"} / ${item.driver?.user.name ?? "—"}`,
+            <div key="p" className="text-[13px]">
+              {item.rider?.user.id ? (
+                <EntityLink href={`/riders/${item.rider.user.id}`}>{item.rider.user.name}</EntityLink>
+              ) : (
+                "—"
+              )}
+              {" / "}
+              {item.driver?.id ? (
+                <EntityLink href={`/drivers/${item.driver.id}`}>{item.driver.user.name}</EntityLink>
+              ) : (
+                "—"
+              )}
+              {item.trip ? (
+                <p className="text-[12px] text-muted-foreground">
+                  <EntityLink href={`/trips/${item.trip.id}`} className="font-mono text-[12px]">
+                    {item.trip.bookingCode}
+                  </EntityLink>
+                </p>
+              ) : null}
+            </div>,
             <Badge key="s" tone={statusTone(item.severity)}>
               {item.severity}
             </Badge>,

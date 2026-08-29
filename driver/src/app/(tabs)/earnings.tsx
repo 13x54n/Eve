@@ -131,19 +131,13 @@ export default function Earnings() {
               <View style={styles.walletCardTopRow}>
                 <View style={styles.walletChip}>
                   <MaterialCommunityIcons name="wallet" size={14} color="#FFFFFF" />
-                  <Text style={styles.walletChipText}>Available balance</Text>
+                  <Text style={styles.walletChipText}>Total Earnings</Text>
                 </View>
                 <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
               </View>
 
               <Text style={styles.balanceText}>${balance.toFixed(2)}</Text>
 
-              <View style={styles.walletCardFooter}>
-                <TouchableOpacity style={styles.cashOutButton} activeOpacity={0.85}>
-                  <Text style={styles.cashOutText}>Cash out</Text>
-                </TouchableOpacity>
-                <Text style={styles.walletFooterHint}>Instant transfer available</Text>
-              </View>
 
               {/* Decorative card texture */}
               <View pointerEvents="none" style={styles.cardGlowOne} />
@@ -169,14 +163,14 @@ export default function Earnings() {
             <Text style={styles.historyTitle}>Transaction history</Text>
           </>
         }
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeaderText}>{section.title}</Text>
-            <Text style={styles.sectionHeaderTotal}>
-              +${section.total.toFixed(2)}
-            </Text>
-          </View>
-        )}
+        // renderSectionHeader={({ section }) => (
+        //   <View style={styles.sectionHeaderRow}>
+        //     <Text style={styles.sectionHeaderText}>{section.title}</Text>
+        //     <Text style={styles.sectionHeaderTotal}>
+        //       +${section.total.toFixed(2)}
+        //     </Text>
+        //   </View>
+        // )}
         renderItem={({ item }) => (
           <TouchableOpacity style={styles.txRow} activeOpacity={0.6}>
             <TxIcon type={item.type} />
@@ -379,7 +373,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    // borderRadius: 16,
     padding: 12,
   },
   txIcon: {

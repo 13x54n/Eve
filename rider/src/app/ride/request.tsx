@@ -20,6 +20,8 @@ import { Image } from "expo-image";
 import MapView, { Marker, Polyline, UrlTile } from "react-native-maps";
 import { createTrip, getActiveTrip } from "@/services/trips";
 import { useRideSession } from "@/context/ride-session";
+import { lightImpact } from "@/lib/haptics";
+import { ActionButton } from "@/components/action-button";
 
 const vehicleOptions = [
   ["Car", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
@@ -68,6 +70,7 @@ export default function RequestRideScreen() {
   );
   const [pickupCity, setPickupCity] = useState("");
   const [dropoffCity, setDropoffCity] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -260,6 +263,7 @@ export default function RequestRideScreen() {
     selectedRider === "For me" || (riderName.trim().length > 1 && riderPhone.trim().length >= 7);
 
   async function submitRideRequest() {
+    if (submitting) return;
     const pickupPoint = pickupCoord ?? currentLoc;
     const dropoffPoint = dropoffCoord ?? (params.dropoff_lat && params.dropoff_lng
       ? { lat: Number(params.dropoff_lat), lng: Number(params.dropoff_lng) }
@@ -270,7 +274,8 @@ export default function RequestRideScreen() {
     }
 
     try {
-      const trip = await createTrip({
+      setSubmitting(true);
+      await createTrip({
         pickupAddress: pickup.trim(),
         dropoffAddress: dropoff.trim(),
         city: pickupCity || dropoffCity || "Kathmandu",
@@ -281,6 +286,7 @@ export default function RequestRideScreen() {
         vehicleType: selectedVehicle === "Bike" ? "BIKE" : "CAR",
       });
       await refreshActive();
+      lightImpact();
       router.replace("/(tabs)/home");
     } catch (error: any) {
       if (error.response?.status === 409) {
@@ -298,6 +304,8 @@ export default function RequestRideScreen() {
         }
       }
       Alert.alert("Could not request ride", error.response?.data?.message ?? "Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -587,14 +595,17 @@ export default function RequestRideScreen() {
         </View>
       </Modal>
 
-      <Pressable
+      <ActionButton
         disabled={!dropoff.trim() || !riderDetailsValid}
+        loading={submitting}
         style={[styles.button, (!dropoff.trim() || !riderDetailsValid) && styles.disabled]}
+        textStyle={styles.buttonText}
+        loadingLabel="Finding a driver..."
         onPress={() => void submitRideRequest()}
       >
         <Text style={styles.buttonText}>Find a driver</Text>
         <Feather name="arrow-right" size={18} color="#FFFFFF" />
-      </Pressable>
+      </ActionButton>
     </ScrollView>
   );
 }

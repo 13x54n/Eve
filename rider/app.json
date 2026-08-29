@@ -11,12 +11,18 @@
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "ca.sherpafoods.eve",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby pickup and drop-off points and to share your position with your driver during a trip."
       }
     },
     "android": {
       "icon": "./assets/images/icon.png",
-      "predictiveBackGestureEnabled": false
+      "package": "ca.sherpafoods.eve",
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -24,7 +30,12 @@
     },
     "plugins": [
       "expo-router",
-      "@maplibre/maplibre-react-native",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Eve uses your location to show nearby pickup and drop-off points and to share your position with your driver during a trip."
+        }
+      ],
       [
         "expo-splash-screen",
         {

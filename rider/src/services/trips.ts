@@ -71,6 +71,7 @@ export type TripMessage = {
   authorId: string;
   body: string;
   createdAt: string;
+  readAt: string | null;
   authorName: string;
   authorRole: string;
 };
@@ -83,6 +84,10 @@ export async function getTripMessages(tripId: string) {
 export async function sendTripMessage(tripId: string, body: string) {
   const { data } = await api.post<{ message: TripMessage }>(`/rider/trips/${tripId}/messages`, { body });
   return data.message;
+}
+
+export async function markTripMessagesRead(tripId: string) {
+  await api.post(`/rider/trips/${tripId}/messages/read`);
 }
 
 export async function acceptOffer(tripId: string, offerId: string) {

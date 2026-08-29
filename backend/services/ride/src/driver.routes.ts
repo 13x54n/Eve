@@ -10,8 +10,13 @@ import {
   earnings,
   incomingTrips,
   listMessages,
+  listSupport,
+  markMessagesRead,
   me,
   postMessage,
+  postSupportMessage,
+  createSupport,
+  getSupport,
   saveDocument,
   saveVehicle,
   startTrip,
@@ -39,11 +44,16 @@ router.get("/trips", requireAuth, trips);
 router.get("/trips/incoming", requireAuth, incomingTrips);
 router.get("/trips/:id/messages", requireAuth, listMessages);
 router.post("/trips/:id/messages", requireAuth, postMessage);
+router.post("/trips/:id/messages/read", requireAuth, markMessagesRead);
 router.post("/trips/:id/accept", requireAuth, acceptTrip);
 router.post("/trips/:id/arrived", requireAuth, arrivedAtPickup);
 router.post("/trips/:id/start", requireAuth, startTrip);
 router.post("/trips/:id/complete", requireAuth, completeTrip);
 router.post("/trips/:id/cancel", requireAuth, cancelTrip);
 router.get("/earnings", requireAuth, earnings);
+router.get("/support", requireAuth, listSupport);
+router.post("/support", requireAuth, createSupport);
+router.get("/support/:id", requireAuth, getSupport);
+router.post("/support/:id/messages", requireAuth, postSupportMessage);
 
 export default router;

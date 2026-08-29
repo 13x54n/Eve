@@ -11,6 +11,7 @@ import {
 import Feather from "@expo/vector-icons/Feather";
 import { login } from "@/services/auth";
 import { useAuth } from "@/context/auth-context";
+import { ActionButton } from "@/components/action-button";
 import * as React from "react";
 
 export default function LoginScreen() {
@@ -80,9 +81,14 @@ export default function LoginScreen() {
         <Text style={{ textAlign: "center", color: "#eb2525", marginBottom: 10 }}>Forgot password? Click here.</Text>
       </Pressable>
 
-      <Pressable style={[styles.button, loading && { opacity: 0.6 }]} onPress={handleLogin} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Logging in..." : "Log in"}</Text>
-      </Pressable>
+      <ActionButton
+        style={styles.button}
+        textStyle={styles.buttonText}
+        label="Log in"
+        loadingLabel="Logging in..."
+        loading={loading}
+        onPress={handleLogin}
+      />
 
       <Pressable onPress={() => router.push("/(auth)/register")}>
         <Text style={styles.link}>Don't have an account? Register</Text>

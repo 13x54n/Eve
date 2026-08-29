@@ -28,6 +28,16 @@ export async function registerDriver(input: {
     throw error;
   }
 
+  const phone = input.phone?.trim() || null;
+  if (phone) {
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) {
+      const error = new Error("An account with this phone number already exists");
+      error.name = "ConflictError";
+      throw error;
+    }
+  }
+
   const existingPlate = await prisma.vehicle.findUnique({
     where: { plateNumber: input.vehiclePlateNumber.trim().toUpperCase() },
   });
@@ -45,7 +55,7 @@ export async function registerDriver(input: {
       data: {
         name: input.name.trim(),
         email: normalizedEmail,
-        phone: input.phone?.trim() || null,
+        phone,
         city: input.city.trim(),
         passwordHash,
         role: "DRIVER",

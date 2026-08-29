@@ -1,8 +1,7 @@
 import Feather from "@expo/vector-icons/Feather";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -14,9 +13,11 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTripMessages, sendTripMessage, TripMessage } from "@/services/trips";
+import { getTripMessages, markTripMessagesRead, sendTripMessage, TripMessage } from "@/services/trips";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
+import { setActiveChatTripId } from "@/services/active-chat";
 import { useAuth } from "@/context/auth-context";
+import { ActionButton } from "@/components/action-button";
 
 export default function TripChatScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -35,19 +36,41 @@ export default function TripChatScreen() {
     }
   }, [tripId]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!tripId) return;
+      setActiveChatTripId(tripId);
+      void markTripMessagesRead(tripId);
+      return () => setActiveChatTripId(null);
+    }, [tripId]),
+  );
+
   useEffect(() => {
     if (!tripId) return;
     void connectSocket().then(() => subscribeTrip(tripId)).catch(() => {});
     void load();
     const remove = addSocketListener((event, payload) => {
-      if (event !== "trip:message" || !payload || typeof payload !== "object") return;
-      const message = payload as TripMessage;
-      if (message.tripId !== tripId) return;
-      setMessages((current) => (current.some((row) => row.id === message.id) ? current : [...current, message]));
+      if (!payload || typeof payload !== "object") return;
+      if (event === "trip:message") {
+        const message = payload as TripMessage;
+        if (message.tripId !== tripId) return;
+        setMessages((current) => (current.some((row) => row.id === message.id) ? current : [...current, message]));
+        if (message.authorId !== user?.id) void markTripMessagesRead(tripId);
+        return;
+      }
+      if (event === "trip:messages:read") {
+        const body = payload as { tripId?: string; readerId?: string; readAt?: string };
+        if (body.tripId !== tripId || !body.readAt || body.readerId === user?.id) return;
+        setMessages((current) =>
+          current.map((row) =>
+            row.authorId === user?.id && !row.readAt ? { ...row, readAt: body.readAt as string } : row,
+          ),
+        );
+      }
     });
     const timer = setInterval(() => void load(), 4000);
     return () => { remove(); clearInterval(timer); };
-  }, [load, tripId]);
+  }, [load, tripId, user?.id]);
 
   async function send() {
     if (!tripId || !draft.trim()) return;
@@ -82,6 +105,9 @@ export default function TripChatScreen() {
           return (
             <View style={[styles.bubble, mine ? styles.mine : styles.theirs]}>
               <Text style={[styles.body, mine && styles.mineText]}>{item.body}</Text>
+              {mine ? (
+                <Text style={styles.status}>{item.readAt ? "Seen" : "Sent"}</Text>
+              ) : null}
             </View>
           );
         }}
@@ -95,9 +121,15 @@ export default function TripChatScreen() {
           placeholder="Message your driver"
           maxLength={1000}
         />
-        <Pressable style={styles.send} onPress={() => void send()} disabled={sending}>
-          {sending ? <ActivityIndicator color="#FFFFFF" /> : <Feather name="send" size={16} color="#FFFFFF" />}
-        </Pressable>
+        <ActionButton
+          style={styles.send}
+          compact
+          loading={sending}
+          accessibilityLabel="Send message"
+          onPress={() => void send()}
+        >
+          <Feather name="send" size={16} color="#FFFFFF" />
+        </ActionButton>
       </View>
     </KeyboardAvoidingView>
   );
@@ -121,6 +153,7 @@ const styles = StyleSheet.create({
   theirs: { alignSelf: "flex-start", backgroundColor: "#FFFFFF" },
   body: { color: "#111827", fontSize: 14 },
   mineText: { color: "#FFFFFF" },
+  status: { marginTop: 4, fontSize: 11, color: "rgba(255,255,255,0.8)", textAlign: "right" },
   composer: { flexDirection: "row", gap: 8, padding: 12, backgroundColor: "#FFFFFF" },
   input: { flex: 1, padding: 12, borderRadius: 12, backgroundColor: "#F3F4F6", color: "#111827" },
   send: { alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: 12, backgroundColor: "#2E4ED5" },

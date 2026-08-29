@@ -53,8 +53,15 @@ export const driverDocumentSchema = z.object({
   imageKitFileId: z.string().trim().min(1).max(200).optional(),
   fileUrl: z.string().url().max(2000).optional(),
   fileName: z.string().trim().min(1).max(255).optional(),
-  mimeType: z.enum(["application/pdf", "image/jpeg", "image/png"]).optional(),
-  fileSize: z.coerce.number().int().positive().max(10_000_000).optional(),
+  mimeType: z.string().trim().max(100).optional().nullable(),
+  fileSize: z.coerce.number().int().min(0).max(10_000_000).optional().nullable(),
+});
+
+export const supportTicketSchema = z.object({
+  subject: z.string().trim().min(2).max(120),
+  category: z.string().trim().min(2).max(40).default("TRIP"),
+  body: z.string().trim().min(1).max(2000),
+  tripId: z.string().trim().min(1).optional(),
 });
 
 export const tripActionSchema = z.object({

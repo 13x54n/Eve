@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack } from "expo-router/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/context/auth-context";
 import { RideSessionProvider } from "@/context/ride-session";
@@ -19,6 +19,7 @@ export default function RootLayout() {
             <Stack.Screen name="ride/chat" options={{ headerShown: false }} />
             <Stack.Screen name="ride/support" options={{ headerShown: false }} />
             <Stack.Screen name="ride/support/[id]" options={{ headerShown: false }} />
+            <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen name="legal" options={{ headerShown: false }} />
           </Stack>
         </RideSessionProvider>

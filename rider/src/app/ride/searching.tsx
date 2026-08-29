@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "rea
 import { acceptOffer, cancelTrip, getTrip, Trip } from "@/services/trips";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useRideSession } from "@/context/ride-session";
+import { ActionButton } from "@/components/action-button";
 
 export default function SearchingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -12,7 +13,7 @@ export default function SearchingScreen() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [accepting, setAccepting] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
@@ -48,16 +49,16 @@ export default function SearchingScreen() {
   const offers = trip?.offers?.filter((offer) => offer.status === "PENDING") ?? [];
 
   async function chooseOffer(offerId: string) {
-    if (!tripId) return;
+    if (!tripId || acceptingId) return;
     try {
-      setAccepting(true);
+      setAcceptingId(offerId);
       await acceptOffer(tripId, offerId);
       router.replace({ pathname: "/ride/tracking", params: { tripId } });
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       Alert.alert("Offer unavailable", message ?? "Please choose another offer.");
     } finally {
-      setAccepting(false);
+      setAcceptingId(null);
     }
   }
 
@@ -128,15 +129,27 @@ export default function SearchingScreen() {
               </Text>
             </View>
             <Text style={styles.fare}>${offer.proposedFare.toFixed(2)}</Text>
-            <Pressable style={styles.accept} onPress={() => void chooseOffer(offer.id)} disabled={accepting}>
-              <Text style={styles.acceptText}>Choose</Text>
-            </Pressable>
+            <ActionButton
+              style={styles.accept}
+              textStyle={styles.acceptText}
+              label="Choose"
+              compact
+              loading={acceptingId === offer.id}
+              disabled={acceptingId !== null}
+              onPress={() => void chooseOffer(offer.id)}
+            />
           </View>
         ))}
       </View>
-      <Pressable style={styles.cancel} onPress={handleCancel} disabled={cancelling}>
-        <Text style={styles.cancelText}>{cancelling ? "Cancelling..." : "Cancel request"}</Text>
-      </Pressable>
+      <ActionButton
+        style={styles.cancel}
+        textStyle={styles.cancelText}
+        label="Cancel request"
+        loadingLabel="Cancelling..."
+        loading={cancelling}
+        spinnerColor="#B91C1C"
+        onPress={handleCancel}
+      />
     </View>
   );
 }

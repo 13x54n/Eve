@@ -135,6 +135,31 @@ describe("Authentication API", () => {
     });
   });
 
+  it("updates rider name, email, and phone", async () => {
+    const updatedEmail = `rider-updated-${Date.now()}@example.com`;
+    const response = await request(app)
+      .patch("/api/auth/me")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        name: "Updated Rider",
+        email: updatedEmail,
+        phone: "+15551234567",
+      })
+      .expect(200);
+
+    expect(response.body.user).toMatchObject({
+      name: "Updated Rider",
+      email: updatedEmail,
+      phone: "+15551234567",
+      role: "RIDER",
+    });
+
+    await prisma.user.update({
+      where: { email: updatedEmail },
+      data: { email: testEmail },
+    });
+  });
+
   it("rejects /me without an authorization header", async () => {
     const response = await request(app)
       .get("/api/auth/me")

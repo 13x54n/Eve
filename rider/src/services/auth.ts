@@ -12,6 +12,7 @@ export interface LoginPayload {
 export interface RegisterPayload {
   name: string;
   email: string;
+  phone?: string;
   password: string;
 }
 
@@ -55,6 +56,15 @@ export async function logout() {
 
 export async function getSessionUser() {
   const { data } = await api.get<{ user: AuthResponse['user'] }>('/auth/me');
+  return data.user;
+}
+
+export async function updateProfile(payload: {
+  name: string;
+  email: string;
+  phone: string | null;
+}) {
+  const { data } = await api.patch<{ user: AuthResponse['user'] }>('/auth/me', payload);
   return data.user;
 }
 

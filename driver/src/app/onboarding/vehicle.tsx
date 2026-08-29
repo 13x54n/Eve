@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActionButton } from '@/components/action-button';
 import { saveVehicle, VehicleType } from '@/services/driver';
 
 export default function VehicleScreen() {
@@ -55,9 +56,14 @@ export default function VehicleScreen() {
       ].map(([label, value, setter]) => (
         <TextInput key={label as string} style={styles.input} placeholder={label as string} value={value as string} onChangeText={setter as (value: string) => void} />
       ))}
-      <Pressable style={styles.button} onPress={() => void submit()} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Saving...' : 'Save vehicle'}</Text>
-      </Pressable>
+      <ActionButton
+        style={styles.button}
+        textStyle={styles.buttonText}
+        label="Save vehicle"
+        loadingLabel="Saving..."
+        loading={loading}
+        onPress={() => void submit()}
+      />
     </View>
   );
 }

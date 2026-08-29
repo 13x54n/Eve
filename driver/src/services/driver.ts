@@ -9,12 +9,44 @@ export type DriverDocumentType =
   | 'VEHICLE_REGISTRATION'
   | 'VEHICLE_INSPECTION';
 
-export async function getDriverProfile() {
-  const { data } = await api.get<{ driver: any }>('/driver/me');
-  return data.driver;
-}
+export type DriverApprovalStatus =
+  | 'PENDING'
+  | 'NEEDS_INFO'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'SUSPENDED'
+  | 'DEACTIVATED';
+
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
 export type DriverPresence = 'ONLINE' | 'OFFLINE' | 'IDLE' | 'ON_TRIP';
+
+export type DriverVehicle = {
+  make: string;
+  model: string;
+  year: number;
+  plateNumber: string;
+  color?: string;
+};
+
+export type DriverDocument = {
+  type: DriverDocumentType;
+  status: ReviewStatus;
+  fileUrl?: string | null;
+};
+
+export type DriverProfile = {
+  approvalStatus: DriverApprovalStatus;
+  presence: DriverPresence;
+  vehicles: DriverVehicle[];
+  documents: DriverDocument[];
+  activeTrip?: { id: string } | null;
+};
+
+export async function getDriverProfile() {
+  const { data } = await api.get<{ driver: DriverProfile }>('/driver/me');
+  return data.driver;
+}
 
 export async function updatePresence(input: {
   presence: DriverPresence;
@@ -131,6 +163,7 @@ export type TripMessage = {
   authorId: string;
   body: string;
   createdAt: string;
+  readAt: string | null;
   authorName: string;
   authorRole: string;
 };
@@ -143,6 +176,10 @@ export async function getTripMessages(tripId: string) {
 export async function sendTripMessage(tripId: string, body: string) {
   const { data } = await api.post<{ message: TripMessage }>(`/driver/trips/${tripId}/messages`, { body });
   return data.message;
+}
+
+export async function markTripMessagesRead(tripId: string) {
+  await api.post(`/driver/trips/${tripId}/messages/read`);
 }
 
 export async function saveVehicle(input: {

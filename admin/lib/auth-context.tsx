@@ -9,6 +9,7 @@ import {
 } from "react";
 import { api, getToken, setToken } from "@/lib/api";
 import type { AdminUser } from "@/lib/permissions";
+import { connectAdminSocket, disconnectAdminSocket } from "@/lib/socket";
 
 type AuthContextValue = {
   user: AdminUser | null;
@@ -40,8 +41,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setUser(result.user);
+        connectAdminSocket();
       })
       .catch(() => {
+        disconnectAdminSocket();
         setToken(null);
         setUser(null);
       })
@@ -63,8 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setToken(result.accessToken);
         setUser(result.user);
+        connectAdminSocket();
       },
       logout() {
+        disconnectAdminSocket();
         setToken(null);
         setUser(null);
       },

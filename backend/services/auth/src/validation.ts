@@ -3,6 +3,7 @@ import { z } from "zod";
 export const registerSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email(),
+  phone: z.string().trim().min(7).max(25).optional(),
   password: z.string().min(8).max(128),
 });
 
@@ -40,4 +41,16 @@ export const driverRegisterSchema = z.object({
 export const driverLoginSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
   password: z.string().min(1),
+});
+
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(2).max(80),
+  email: z.string().trim().toLowerCase().email(),
+  phone: z.preprocess((value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length === 0 ? null : trimmed;
+  }, z.union([z.string().min(7).max(25), z.null()]).optional()),
 });
