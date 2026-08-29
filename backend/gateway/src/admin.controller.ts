@@ -175,6 +175,10 @@ export const tickets = handle(async (req, res) => {
   res.json(await admin.listTickets(req.query as Record<string, unknown>));
 });
 
+export const ticket = handle(async (req, res) => {
+  res.json(await admin.getTicket(String(req.params.id)));
+});
+
 export const updateTicket = handle(async (req, res) => {
   const auth = actor(req);
   res.json(

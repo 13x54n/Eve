@@ -69,6 +69,15 @@ export async function getSessionUser() {
   return data.user;
 }
 
+export async function updateProfile(payload: {
+  name: string;
+  email: string;
+  phone: string | null;
+}) {
+  const { data } = await api.patch<{ user: AuthResponse['user'] }>('/auth/me', payload);
+  return data.user;
+}
+
 export async function requestPasswordReset(
   email: string,
 ): Promise<PasswordResetRequestResponse> {

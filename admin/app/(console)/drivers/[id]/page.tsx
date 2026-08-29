@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import { EntityLink } from "@/components/entity-link";
 
 type Driver = {
   id: string;
@@ -39,8 +40,9 @@ type Driver = {
     status: string;
     expiresAt: string | null;
   }[];
-  trips: { bookingCode: string; status: string }[];
-  incidents: { type: string; severity: string }[];
+  trips: { id: string; bookingCode: string; status: string }[];
+  tickets: { id: string; subject: string; status: string }[];
+  incidents: { id: string; type: string; severity: string; tripId: string | null }[];
   incentives: { kind: string; amount: number; note: string | null }[];
 };
 
@@ -138,35 +140,55 @@ export default function DriverDetailPage({
                   <Table
                     columns={["Booking", "Status"]}
                     rows={data.trips.map((trip) => [
-                      <span key="b" className="font-mono">
+                      <EntityLink key={trip.id} href={`/trips/${trip.id}`} className="font-mono">
                         {trip.bookingCode}
-                      </span>,
-                      <Badge key="s" tone={statusTone(trip.status)}>
+                      </EntityLink>,
+                      <Badge key={`${trip.id}-s`} tone={statusTone(trip.status)}>
                         {trip.status}
                       </Badge>,
                     ])}
                   />
                 </Panel>
-                <Panel title="Safety & incentives" flush>
+                <Panel title="Tickets" flush>
                   <Table
-                    columns={["Record", "Detail"]}
-                    rows={[
-                      ...data.incidents.map((item) => [
-                        item.type,
-                        <Badge key="s" tone={statusTone(item.severity)}>
-                          {item.severity}
-                        </Badge>,
-                      ]),
-                      ...data.incentives.map((item) => [
-                        item.kind,
-                        <span key="a" className="font-semibold text-emerald-700">
-                          {money(item.amount)}
-                        </span>,
-                      ]),
-                    ]}
+                    columns={["Subject", "Status"]}
+                    empty="No tickets from this driver."
+                    rows={(data.tickets ?? []).map((ticket) => [
+                      <EntityLink key={ticket.id} href={`/support/${ticket.id}`}>
+                        {ticket.subject}
+                      </EntityLink>,
+                      <Badge key={`${ticket.id}-s`} tone={statusTone(ticket.status)}>
+                        {ticket.status}
+                      </Badge>,
+                    ])}
                   />
                 </Panel>
               </div>
+              <Panel title="Safety & incentives" flush>
+                <Table
+                  columns={["Record", "Detail"]}
+                  rows={[
+                    ...data.incidents.map((item) => [
+                      item.tripId ? (
+                        <EntityLink key={item.id} href={`/trips/${item.tripId}`}>
+                          {item.type}
+                        </EntityLink>
+                      ) : (
+                        item.type
+                      ),
+                      <Badge key={`${item.id}-s`} tone={statusTone(item.severity)}>
+                        {item.severity}
+                      </Badge>,
+                    ]),
+                    ...data.incentives.map((item) => [
+                      item.kind,
+                      <span key="a" className="font-semibold text-emerald-700">
+                        {money(item.amount)}
+                      </span>,
+                    ]),
+                  ]}
+                />
+              </Panel>
             </div>
             <div className="space-y-5">
               {write ? (

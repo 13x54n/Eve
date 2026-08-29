@@ -54,9 +54,21 @@ export function sanitizeUser(user: UserRecord) {
   };
 }
 
+function conflict(message: string): never {
+  const error = new Error(message);
+  error.name = "ConflictError";
+  throw error;
+}
+
+function normalizePhone(phone: string | null | undefined) {
+  const trimmed = phone?.trim() ?? "";
+  return trimmed.length === 0 ? null : trimmed;
+}
+
 export async function registerRider(input: {
   name: string;
   email: string;
+  phone?: string;
   password: string;
 }) {
   const existingUser = await prisma.user.findUnique({
@@ -66,12 +78,15 @@ export async function registerRider(input: {
   });
 
   if (existingUser) {
-    const error = new Error(
-      "Unable to create account with these details",
-    );
+    conflict("Unable to create account with these details");
+  }
 
-    error.name = "ConflictError";
-    throw error;
+  const phone = normalizePhone(input.phone);
+  if (phone) {
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) {
+      conflict("Unable to create account with these details");
+    }
   }
 
   const passwordHash = await hashPassword(input.password);
@@ -80,6 +95,7 @@ export async function registerRider(input: {
     data: {
       name: input.name,
       email: input.email,
+      phone,
       passwordHash,
       role: "RIDER",
       riderProfile: { create: {} },
@@ -220,6 +236,45 @@ export async function getUserById(userId: string) {
   }
 
   return sanitizeUser(user);
+}
+
+export async function updateProfile(
+  userId: string,
+  input: { name: string; email: string; phone?: string | null },
+) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, isActive: true },
+  });
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.name = "NotFoundError";
+    throw error;
+  }
+
+  const email = input.email.trim().toLowerCase();
+  const phone = input.phone === undefined ? user.phone : input.phone;
+
+  if (email !== user.email) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) conflict("An account with this email already exists");
+  }
+
+  if (phone && phone !== user.phone) {
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) conflict("An account with this phone number already exists");
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: input.name.trim(),
+      email,
+      phone,
+    },
+  });
+
+  return sanitizeUser(updated);
 }
 
 export async function requestPasswordReset(email: string) {

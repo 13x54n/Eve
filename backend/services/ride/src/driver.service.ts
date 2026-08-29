@@ -1,11 +1,11 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { getDriverProfile, prisma, recordTripEvent } from "@eve/db";
-import { MATCH_RADIUS_KM, money, startOfDay } from "@eve/shared";
+import { MATCH_RADIUS_KM, fail, money, startOfDay } from "@eve/shared";
 import {
   distanceToPickupClient,
   nearbySearchingTripsClient,
 } from "@eve/location";
-import { emitTripEvent, emitUserEvent } from "@eve/notify";
+import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
 
 export { getDriverProfile };
 
@@ -283,8 +283,7 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
   try {
     const offer = await prisma.tripOffer.create({ data: { tripId, driverId: profile.id, proposedFare: input.proposedFare, etaMinutes: input.etaMinutes } });
     const payload = { ...offer, proposedFare: Number(offer.proposedFare), tripId };
-    emitTripEvent(tripId, "offer:created", payload);
-    emitUserEvent("RIDER", trip.rider.userId, "offer:created", payload);
+    emitTripAndUserEvent(tripId, "RIDER", trip.rider.userId, "offer:created", payload);
     return offer;
   } catch (error: any) {
     if (error?.code === "P2002") { error.name = "ConflictError"; error.message = "You already offered on this trip"; }
@@ -388,8 +387,7 @@ export async function arrivedAtPickup(userId: string, tripId: string) {
     },
   });
 
-  emitTripEvent(tripId, "driver:arrived", trip);
-  emitUserEvent("RIDER", trip.rider.userId, "driver:arrived", trip);
+  emitTripAndUserEvent(tripId, "RIDER", trip.rider.userId, "driver:arrived", trip);
 
   return trip;
 }
@@ -437,8 +435,7 @@ export async function startTrip(userId: string, tripId: string) {
     },
   });
 
-  emitTripEvent(tripId, "trip:started", updated);
-  emitUserEvent("RIDER", updated.rider.userId, "trip:started", updated);
+  emitTripAndUserEvent(tripId, "RIDER", updated.rider.userId, "trip:started", updated);
 
   return updated;
 }
@@ -521,8 +518,7 @@ export async function completeTrip(
     },
   });
 
-  emitTripEvent(tripId, "trip:completed", updatedTrip);
-  emitUserEvent("RIDER", updatedTrip.rider.userId, "trip:completed", updatedTrip);
+  emitTripAndUserEvent(tripId, "RIDER", updatedTrip.rider.userId, "trip:completed", updatedTrip);
 
   return {
     trip: updatedTrip,
@@ -591,8 +587,7 @@ export async function cancelTrip(
     },
   });
 
-  emitTripEvent(tripId, "trip:cancelled", cancelledTrip);
-  emitUserEvent("RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
+  emitTripAndUserEvent(tripId, "RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
 
   return cancelledTrip;
 }
@@ -717,4 +712,145 @@ export async function getDriverEarningsOverview(userId: string) {
       createdAt: t.createdAt,
     })),
   };
+}
+
+const supportTicketInclude = {
+  messages: { where: { internal: false }, orderBy: { createdAt: "asc" as const } },
+};
+
+function serializeSupportTicket(ticket: {
+  id: string;
+  subject: string;
+  category: string;
+  status: string;
+  tripId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  messages?: { id: string; authorId: string; body: string; internal: boolean; createdAt: Date }[];
+}) {
+  return {
+    id: ticket.id,
+    subject: ticket.subject,
+    category: ticket.category,
+    status: ticket.status,
+    tripId: ticket.tripId,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+    messages: (ticket.messages ?? [])
+      .filter((message) => !message.internal)
+      .map((message) => ({
+        id: message.id,
+        authorId: message.authorId,
+        body: message.body,
+        createdAt: message.createdAt,
+      })),
+  };
+}
+
+async function getDriver(userId: string) {
+  const profile = await prisma.driverProfile.findUnique({ where: { userId } });
+  if (!profile) fail("Driver profile not found", "NotFoundError");
+  return profile;
+}
+
+async function notifyOpsTicket(
+  ticketId: string,
+  subject: string,
+  userId: string,
+  kind: "created" | "reply",
+) {
+  const requester = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+  emitAdminEvent("admin:ticket", {
+    ticketId,
+    subject,
+    kind,
+    requesterName: requester?.name ?? "Unknown",
+  });
+}
+
+export async function listSupportTickets(userId: string) {
+  await getDriver(userId);
+  const tickets = await prisma.supportTicket.findMany({
+    where: { requesterId: userId },
+    include: supportTicketInclude,
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+  return tickets.map(serializeSupportTicket);
+}
+
+export async function createSupportTicket(
+  userId: string,
+  input: { subject: string; category: string; body: string; tripId?: string },
+) {
+  await getDriver(userId);
+  if (input.tripId) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: input.tripId, driver: { userId } },
+      select: { id: true },
+    });
+    if (!trip) fail("Trip not found", "NotFoundError");
+
+    const existing = await prisma.supportTicket.findFirst({
+      where: {
+        requesterId: userId,
+        tripId: input.tripId,
+        status: { in: ["OPEN", "IN_PROGRESS"] },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    if (existing) {
+      await prisma.ticketMessage.create({
+        data: { ticketId: existing.id, authorId: userId, body: input.body.trim(), internal: false },
+      });
+      notifyOpsTicket(existing.id, existing.subject, userId, "reply");
+      return getSupportTicket(userId, existing.id);
+    }
+  }
+
+  const ticket = await prisma.supportTicket.create({
+    data: {
+      subject: input.subject,
+      category: input.category,
+      channel: "IN_APP",
+      requesterId: userId,
+      tripId: input.tripId,
+      messages: { create: { authorId: userId, body: input.body, internal: false } },
+    },
+    include: supportTicketInclude,
+  });
+  notifyOpsTicket(ticket.id, ticket.subject, userId, "created");
+  return serializeSupportTicket(ticket);
+}
+
+export async function getSupportTicket(userId: string, ticketId: string) {
+  await getDriver(userId);
+  const ticket = await prisma.supportTicket.findFirst({
+    where: { id: ticketId, requesterId: userId },
+    include: supportTicketInclude,
+  });
+  if (!ticket) fail("Ticket not found", "NotFoundError");
+  return serializeSupportTicket(ticket);
+}
+
+export async function addSupportMessage(userId: string, ticketId: string, body: string) {
+  const text = body.trim();
+  if (text.length < 1) fail("Message cannot be empty", "ConflictError");
+  await getDriver(userId);
+  const ticket = await prisma.supportTicket.findFirst({
+    where: { id: ticketId, requesterId: userId },
+    select: { id: true, status: true, subject: true },
+  });
+  if (!ticket) fail("Ticket not found", "NotFoundError");
+  if (ticket.status === "CLOSED" || ticket.status === "RESOLVED") {
+    fail("This ticket is closed", "ConflictError");
+  }
+  await prisma.ticketMessage.create({
+    data: { ticketId: ticket.id, authorId: userId, body: text, internal: false },
+  });
+  notifyOpsTicket(ticket.id, ticket.subject, userId, "reply");
+  return getSupportTicket(userId, ticketId);
 }

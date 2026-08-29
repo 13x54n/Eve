@@ -97,4 +97,12 @@ body {
   html {
     @apply font-sans;
   }
+  .leaflet-container {
+    z-index: 0;
+    font: inherit;
+  }
+  .eve-map-dot {
+    background: transparent;
+    border: none;
+  }
 }

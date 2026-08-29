@@ -3,11 +3,12 @@ import express, { type ErrorRequestHandler, type Express } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import { ZodError } from "zod";
+import { corsOptions } from "./cors.js";
 
 export function createBaseApp(): Express {
   const app = express();
   app.use(helmet());
-  app.use(cors({ origin: true, credentials: true }));
+  app.use(cors(corsOptions()));
   app.use(morgan("dev"));
   app.use(express.json({ limit: "10kb" }));
   return app;

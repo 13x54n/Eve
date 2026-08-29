@@ -2,7 +2,6 @@ import Feather from "@expo/vector-icons/Feather";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   KeyboardAvoidingView,
@@ -17,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getSupportTicket, sendSupportMessage, SupportMessage, SupportTicket } from "@/services/support";
 import { addSocketListener } from "@/services/socket";
 import { useAuth } from "@/context/auth-context";
+import { ActionButton } from "@/components/action-button";
 
 export default function SupportThreadScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -83,9 +83,15 @@ export default function SupportThreadScreen() {
       />
       <View style={[styles.composer, { paddingBottom: Math.max(12, insets.bottom) }]}>
         <TextInput style={styles.input} value={draft} onChangeText={setDraft} placeholder="Reply to support" />
-        <Pressable style={styles.send} onPress={() => void send()} disabled={sending}>
-          {sending ? <ActivityIndicator color="#FFFFFF" /> : <Feather name="send" size={16} color="#FFFFFF" />}
-        </Pressable>
+        <ActionButton
+          style={styles.send}
+          compact
+          loading={sending}
+          accessibilityLabel="Send message"
+          onPress={() => void send()}
+        >
+          <Feather name="send" size={16} color="#FFFFFF" />
+        </ActionButton>
       </View>
     </KeyboardAvoidingView>
   );

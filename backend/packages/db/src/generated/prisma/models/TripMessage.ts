@@ -29,6 +29,7 @@ export type TripMessageMinAggregateOutputType = {
   tripId: string | null
   authorId: string | null
   body: string | null
+  readAt: Date | null
   createdAt: Date | null
 }
 
@@ -37,6 +38,7 @@ export type TripMessageMaxAggregateOutputType = {
   tripId: string | null
   authorId: string | null
   body: string | null
+  readAt: Date | null
   createdAt: Date | null
 }
 
@@ -45,6 +47,7 @@ export type TripMessageCountAggregateOutputType = {
   tripId: number
   authorId: number
   body: number
+  readAt: number
   createdAt: number
   _all: number
 }
@@ -55,6 +58,7 @@ export type TripMessageMinAggregateInputType = {
   tripId?: true
   authorId?: true
   body?: true
+  readAt?: true
   createdAt?: true
 }
 
@@ -63,6 +67,7 @@ export type TripMessageMaxAggregateInputType = {
   tripId?: true
   authorId?: true
   body?: true
+  readAt?: true
   createdAt?: true
 }
 
@@ -71,6 +76,7 @@ export type TripMessageCountAggregateInputType = {
   tripId?: true
   authorId?: true
   body?: true
+  readAt?: true
   createdAt?: true
   _all?: true
 }
@@ -152,6 +158,7 @@ export type TripMessageGroupByOutputType = {
   tripId: string
   authorId: string
   body: string
+  readAt: Date | null
   createdAt: Date
   _count: TripMessageCountAggregateOutputType | null
   _min: TripMessageMinAggregateOutputType | null
@@ -181,6 +188,7 @@ export type TripMessageWhereInput = {
   tripId?: Prisma.StringFilter<"TripMessage"> | string
   authorId?: Prisma.StringFilter<"TripMessage"> | string
   body?: Prisma.StringFilter<"TripMessage"> | string
+  readAt?: Prisma.DateTimeNullableFilter<"TripMessage"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"TripMessage"> | Date | string
   trip?: Prisma.XOR<Prisma.TripScalarRelationFilter, Prisma.TripWhereInput>
   author?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -191,6 +199,7 @@ export type TripMessageOrderByWithRelationInput = {
   tripId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  readAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   trip?: Prisma.TripOrderByWithRelationInput
   author?: Prisma.UserOrderByWithRelationInput
@@ -204,6 +213,7 @@ export type TripMessageWhereUniqueInput = Prisma.AtLeast<{
   tripId?: Prisma.StringFilter<"TripMessage"> | string
   authorId?: Prisma.StringFilter<"TripMessage"> | string
   body?: Prisma.StringFilter<"TripMessage"> | string
+  readAt?: Prisma.DateTimeNullableFilter<"TripMessage"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"TripMessage"> | Date | string
   trip?: Prisma.XOR<Prisma.TripScalarRelationFilter, Prisma.TripWhereInput>
   author?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -214,6 +224,7 @@ export type TripMessageOrderByWithAggregationInput = {
   tripId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  readAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TripMessageCountOrderByAggregateInput
   _max?: Prisma.TripMessageMaxOrderByAggregateInput
@@ -228,12 +239,14 @@ export type TripMessageScalarWhereWithAggregatesInput = {
   tripId?: Prisma.StringWithAggregatesFilter<"TripMessage"> | string
   authorId?: Prisma.StringWithAggregatesFilter<"TripMessage"> | string
   body?: Prisma.StringWithAggregatesFilter<"TripMessage"> | string
+  readAt?: Prisma.DateTimeNullableWithAggregatesFilter<"TripMessage"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"TripMessage"> | Date | string
 }
 
 export type TripMessageCreateInput = {
   id?: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
   trip: Prisma.TripCreateNestedOneWithoutChatMessagesInput
   author: Prisma.UserCreateNestedOneWithoutTripMessagesInput
@@ -244,12 +257,14 @@ export type TripMessageUncheckedCreateInput = {
   tripId: string
   authorId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type TripMessageUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trip?: Prisma.TripUpdateOneRequiredWithoutChatMessagesNestedInput
   author?: Prisma.UserUpdateOneRequiredWithoutTripMessagesNestedInput
@@ -260,6 +275,7 @@ export type TripMessageUncheckedUpdateInput = {
   tripId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -268,12 +284,14 @@ export type TripMessageCreateManyInput = {
   tripId: string
   authorId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type TripMessageUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -282,6 +300,7 @@ export type TripMessageUncheckedUpdateManyInput = {
   tripId?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -300,6 +319,7 @@ export type TripMessageCountOrderByAggregateInput = {
   tripId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  readAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -308,6 +328,7 @@ export type TripMessageMaxOrderByAggregateInput = {
   tripId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  readAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -316,6 +337,7 @@ export type TripMessageMinOrderByAggregateInput = {
   tripId?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  readAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -406,6 +428,7 @@ export type TripMessageUncheckedUpdateManyWithoutTripNestedInput = {
 export type TripMessageCreateWithoutAuthorInput = {
   id?: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
   trip: Prisma.TripCreateNestedOneWithoutChatMessagesInput
 }
@@ -414,6 +437,7 @@ export type TripMessageUncheckedCreateWithoutAuthorInput = {
   id?: string
   tripId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -451,12 +475,14 @@ export type TripMessageScalarWhereInput = {
   tripId?: Prisma.StringFilter<"TripMessage"> | string
   authorId?: Prisma.StringFilter<"TripMessage"> | string
   body?: Prisma.StringFilter<"TripMessage"> | string
+  readAt?: Prisma.DateTimeNullableFilter<"TripMessage"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"TripMessage"> | Date | string
 }
 
 export type TripMessageCreateWithoutTripInput = {
   id?: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
   author: Prisma.UserCreateNestedOneWithoutTripMessagesInput
 }
@@ -465,6 +491,7 @@ export type TripMessageUncheckedCreateWithoutTripInput = {
   id?: string
   authorId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -498,12 +525,14 @@ export type TripMessageCreateManyAuthorInput = {
   id?: string
   tripId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type TripMessageUpdateWithoutAuthorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trip?: Prisma.TripUpdateOneRequiredWithoutChatMessagesNestedInput
 }
@@ -512,6 +541,7 @@ export type TripMessageUncheckedUpdateWithoutAuthorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tripId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -519,6 +549,7 @@ export type TripMessageUncheckedUpdateManyWithoutAuthorInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   tripId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -526,12 +557,14 @@ export type TripMessageCreateManyTripInput = {
   id?: string
   authorId: string
   body: string
+  readAt?: Date | string | null
   createdAt?: Date | string
 }
 
 export type TripMessageUpdateWithoutTripInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   author?: Prisma.UserUpdateOneRequiredWithoutTripMessagesNestedInput
 }
@@ -540,6 +573,7 @@ export type TripMessageUncheckedUpdateWithoutTripInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -547,6 +581,7 @@ export type TripMessageUncheckedUpdateManyWithoutTripInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   authorId?: Prisma.StringFieldUpdateOperationsInput | string
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  readAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -557,6 +592,7 @@ export type TripMessageSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   tripId?: boolean
   authorId?: boolean
   body?: boolean
+  readAt?: boolean
   createdAt?: boolean
   trip?: boolean | Prisma.TripDefaultArgs<ExtArgs>
   author?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -567,6 +603,7 @@ export type TripMessageSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   tripId?: boolean
   authorId?: boolean
   body?: boolean
+  readAt?: boolean
   createdAt?: boolean
   trip?: boolean | Prisma.TripDefaultArgs<ExtArgs>
   author?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -577,6 +614,7 @@ export type TripMessageSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   tripId?: boolean
   authorId?: boolean
   body?: boolean
+  readAt?: boolean
   createdAt?: boolean
   trip?: boolean | Prisma.TripDefaultArgs<ExtArgs>
   author?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -587,10 +625,11 @@ export type TripMessageSelectScalar = {
   tripId?: boolean
   authorId?: boolean
   body?: boolean
+  readAt?: boolean
   createdAt?: boolean
 }
 
-export type TripMessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tripId" | "authorId" | "body" | "createdAt", ExtArgs["result"]["tripMessage"]>
+export type TripMessageOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "tripId" | "authorId" | "body" | "readAt" | "createdAt", ExtArgs["result"]["tripMessage"]>
 export type TripMessageInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   trip?: boolean | Prisma.TripDefaultArgs<ExtArgs>
   author?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -615,6 +654,7 @@ export type $TripMessagePayload<ExtArgs extends runtime.Types.Extensions.Interna
     tripId: string
     authorId: string
     body: string
+    readAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["tripMessage"]>
   composites: {}
@@ -1045,6 +1085,7 @@ export interface TripMessageFieldRefs {
   readonly tripId: Prisma.FieldRef<"TripMessage", 'String'>
   readonly authorId: Prisma.FieldRef<"TripMessage", 'String'>
   readonly body: Prisma.FieldRef<"TripMessage", 'String'>
+  readonly readAt: Prisma.FieldRef<"TripMessage", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"TripMessage", 'DateTime'>
 }
     

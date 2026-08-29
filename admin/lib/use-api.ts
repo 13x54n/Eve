@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
-export function useApi<T>(path: string | null) {
+export function useApi<T>(path: string | null, options?: { intervalMs?: number }) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(path));
+  const intervalMs = options?.intervalMs;
 
-  async function reload() {
+  const reload = useCallback(async () => {
     if (!path) {
       return;
     }
@@ -23,7 +24,7 @@ export function useApi<T>(path: string | null) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [path]);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,10 +59,32 @@ export function useApi<T>(path: string | null) {
         }
       });
 
+    if (!intervalMs) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const timer = window.setInterval(() => {
+      api<T>(path)
+        .then((result) => {
+          if (!cancelled) {
+            setData(result);
+            setError("");
+          }
+        })
+        .catch((caught) => {
+          if (!cancelled) {
+            setError(caught instanceof Error ? caught.message : "Request failed");
+          }
+        });
+    }, intervalMs);
+
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
-  }, [path]);
+  }, [path, intervalMs]);
 
   return { data, error, loading, reload, setData };
 }

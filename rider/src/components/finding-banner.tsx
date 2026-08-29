@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { ActionButton } from '@/components/action-button';
 
 export function FindingBanner({
   destination,
@@ -55,9 +56,15 @@ export function FindingBanner({
         </View>
         <Feather name="chevron-right" size={18} color="#9CA3AF" />
       </View>
-      <Pressable style={styles.cancel} onPress={onCancel} disabled={cancelling}>
-        <Text style={styles.cancelText}>{cancelling ? 'Cancelling...' : 'Cancel request'}</Text>
-      </Pressable>
+      <ActionButton
+        style={styles.cancel}
+        textStyle={styles.cancelText}
+        label="Cancel request"
+        loadingLabel="Cancelling..."
+        loading={cancelling}
+        spinnerColor="#B91C1C"
+        onPress={onCancel}
+      />
     </Pressable>
   );
 }

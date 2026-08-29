@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { can, type Permission } from "@/lib/permissions";
+import { useAdminSocket } from "@/lib/socket";
+import { OpsInbox } from "@/components/ops-inbox";
 import {
   Popover,
   PopoverContent,
@@ -74,6 +76,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { connected } = useAdminSocket();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -152,11 +155,13 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
             <h1 className="text-sm font-semibold tracking-tight">{pageTitle(pathname)}</h1>
             <span className="hidden h-4 w-px bg-border sm:block" />
             <div className="hidden items-center gap-1.5 sm:flex">
-              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-success" />
-              <span className="text-[11px] font-medium text-muted-foreground">Live</span>
+              <span className={`inline-flex h-1.5 w-1.5 rounded-full ${connected ? "bg-success" : "bg-neutral-300"}`} />
+              <span className="text-[11px] font-medium text-muted-foreground">{connected ? "Live" : "Polling"}</span>
             </div>
           </div>
-          <Popover>
+          <div className="flex items-center gap-2">
+            <OpsInbox />
+            <Popover>
             <PopoverTrigger
               render={
                 <button className="flex items-center gap-2 rounded-md border border-border bg-white px-2 py-1 transition hover:bg-muted cursor-pointer">
@@ -188,6 +193,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
               </button>
             </PopoverContent>
           </Popover>
+          </div>
         </header>
         <main className="p-6 max-w-[1400px] w-full mx-auto">{children}</main>
       </div>

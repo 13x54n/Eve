@@ -98,6 +98,7 @@ Optional:
 | `AUTH_URL`, `LOCATION_URL`, `RIDE_URL`, `NOTIFY_URL` | Proxy mode service bases |
 | `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT` | Split-process listen ports |
 | `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_DRIVER_FOLDER` | Driver document upload auth |
+| `CORS_ORIGINS` | Comma-separated browser origins allowed to call the API (default `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:8081`, `http://127.0.0.1:8081`). Native apps omit `Origin` and are allowed through. Production example: `CORS_ORIGINS=https://admin.example.com` |
 
 ### 3. Install, migrate, seed
 

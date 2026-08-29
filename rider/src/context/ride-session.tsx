@@ -15,6 +15,7 @@ import { useAuth } from '@/context/auth-context';
 import { getActiveTrip, Trip } from '@/services/trips';
 import { addSocketListener, connectSocket, disconnectSocket, subscribeTrip } from '@/services/socket';
 import { notifyRideEvent, requestRideNotificationPermission } from '@/services/notifications';
+import { getActiveChatTripId } from '@/services/active-chat';
 
 type RideSessionValue = {
   activeTrip: Trip | null;
@@ -35,11 +36,19 @@ function openTripFromNotification(data: Record<string, unknown> | undefined) {
     router.push('/ride/support');
     return;
   }
+  if (screen === 'chat') {
+    router.push({ pathname: '/ride/chat', params: { tripId } });
+    return;
+  }
+  if (screen === 'completed') {
+    router.push({ pathname: '/ride/completed', params: { tripId } });
+    return;
+  }
   router.push({ pathname: '/ride/searching', params: { tripId } });
 }
 
 export function RideSessionProvider({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
   const tripIdRef = useRef<string | null>(null);
 
@@ -73,7 +82,7 @@ export function RideSessionProvider({ children }: { children: ReactNode }) {
     void refreshActive();
     const remove = addSocketListener((event, payload) => {
       if (!mounted) return;
-      const body = payload && typeof payload === 'object' ? (payload as { tripId?: string; id?: string }) : {};
+      const body = payload && typeof payload === 'object' ? (payload as { tripId?: string; id?: string; authorId?: string; body?: string }) : {};
       const tripId = String(body.tripId ?? body.id ?? tripIdRef.current ?? '');
       if (event === 'offer:created') {
         void refreshActive();
@@ -87,8 +96,22 @@ export function RideSessionProvider({ children }: { children: ReactNode }) {
           tripId,
           screen: 'tracking',
         });
-      } else if (event === 'trip:cancelled' || event === 'trip:completed') {
+      } else if (event === 'trip:cancelled') {
         void refreshActive();
+      } else if (event === 'trip:completed') {
+        void refreshActive();
+        if (tripId) {
+          void notifyRideEvent('Ride complete', 'Your trip has ended. Tap to view the summary.', {
+            tripId,
+            screen: 'completed',
+          });
+        }
+      } else if (event === 'trip:message') {
+        if (!tripId || body.authorId === user?.id || getActiveChatTripId() === tripId) return;
+        void notifyRideEvent('Driver messaged you:', body.body?.trim() || 'You have a new chat message.', {
+          tripId,
+          screen: 'chat',
+        });
       } else if (event === 'support:message') {
         void notifyRideEvent('Support replied', 'You have a new message from Eve support.', {
           tripId,
@@ -108,7 +131,7 @@ export function RideSessionProvider({ children }: { children: ReactNode }) {
       appSub.remove();
       notifSub.remove();
     };
-  }, [isAuthenticated, refreshActive]);
+  }, [isAuthenticated, refreshActive, user?.id]);
 
   const value = useMemo(() => ({ activeTrip, refreshActive }), [activeTrip, refreshActive]);
   return <RideSessionContext.Provider value={value}>{children}</RideSessionContext.Provider>;

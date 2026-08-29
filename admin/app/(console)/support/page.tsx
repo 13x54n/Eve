@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { apiErrorMessage } from "@/lib/api";
@@ -15,6 +16,7 @@ import {
   Table,
   statusTone,
 } from "@/components/ui";
+import { EntityLink } from "@/components/entity-link";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
@@ -31,8 +33,9 @@ type Tickets = {
     priority: string;
     channel: string;
     csatScore: number | null;
-    rider: { user: { name: string } } | null;
-    trip: { bookingCode: string } | null;
+    rider: { user: { id: string; name: string } } | null;
+    requester?: { id: string; name: string; role: string } | null;
+    trip: { id: string; bookingCode: string } | null;
     messages: { id: string; body: string; internal: boolean }[];
   }[];
 };
@@ -93,16 +96,31 @@ export default function SupportPage() {
           <Table
             loading={loading && !data}
             empty="No tickets match the current filters."
-            columns={["Ticket", "Rider", "Priority", "Status", "Actions"]}
+            columns={["Ticket", "Requester", "Priority", "Status", "Actions"]}
             rows={(data?.items ?? []).map((ticket) => [
               <div key="t">
-                <p className="font-medium">{ticket.subject}</p>
+                <Link href={`/support/${ticket.id}`} className="font-medium hover:underline">
+                  {ticket.subject}
+                </Link>
                 <p className="text-xs text-muted-foreground">
                   {ticket.category} · {ticket.channel}
-                  {ticket.trip?.bookingCode ? ` · ${ticket.trip.bookingCode}` : ""}
+                  {ticket.trip ? (
+                    <>
+                      {" · "}
+                      <EntityLink href={`/trips/${ticket.trip.id}`} className="font-mono text-xs">
+                        {ticket.trip.bookingCode}
+                      </EntityLink>
+                    </>
+                  ) : null}
                 </p>
               </div>,
-              ticket.rider?.user.name ?? "—",
+              ticket.requester?.role === "RIDER" && ticket.requester.id ? (
+                <EntityLink key="r" href={`/riders/${ticket.requester.id}`}>
+                  {ticket.requester.name}
+                </EntityLink>
+              ) : (
+                ticket.requester?.name ?? ticket.rider?.user.name ?? "—"
+              ),
               <Badge key="p" tone={statusTone(ticket.priority)}>{ticket.priority}</Badge>,
               ticket.status,
               write ? (

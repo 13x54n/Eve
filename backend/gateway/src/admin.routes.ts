@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import {
   analytics,
   assignVehicle,
@@ -24,6 +25,7 @@ import {
   sendNotification,
   staff,
   tickets,
+  ticket,
   transitionPricing,
   trip,
   trips,
@@ -39,9 +41,19 @@ import {
   requirePermission,
 } from "@eve/http";
 
+const skipInVitest = () => Boolean(process.env.VITEST);
+
+const adminApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 600,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInVitest,
+});
+
 const router = Router();
 
-router.use(requireAuth, requireAdmin);
+router.use(adminApiLimiter, requireAuth, requireAdmin);
 
 router.get("/dashboard", requirePermission("dashboard:read"), dashboard);
 
@@ -98,6 +110,7 @@ router.patch(
 );
 
 router.get("/tickets", requirePermission("support:read"), tickets);
+router.get("/tickets/:id", requirePermission("support:read"), ticket);
 router.patch(
   "/tickets/:id",
   requirePermission("support:write"),

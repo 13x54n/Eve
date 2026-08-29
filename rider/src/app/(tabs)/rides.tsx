@@ -1,9 +1,11 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { getTrips, Trip } from "@/services/trips";
 import { Image } from "expo-image";
+import { ActionButton } from "@/components/action-button";
 
 function displayStatus(status: string) {
   if (status === "COMPLETED") return "Completed";
@@ -26,6 +28,7 @@ function openTrip(trip: Trip) {
 }
 
 export default function RidesScreen() {
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<"All" | "Completed" | "Cancelled">("All");
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loadError, setLoadError] = useState(false);
@@ -46,7 +49,14 @@ export default function RidesScreen() {
   const visibleRides = trips.filter((trip) => filter === "All" || displayStatus(trip.status) === filter);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        { paddingBottom: insets.bottom + (Platform.OS === "ios" ? 88 : 36) },
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Your trips</Text>
@@ -103,13 +113,21 @@ export default function RidesScreen() {
         </Pressable>
       ) : null}
       {!loadError && visibleRides.length === 0 ? <Text style={styles.empty}>No rides in this filter.</Text> : null}
-      <Pressable style={styles.bookButton} onPress={() => router.push("/(tabs)/home")}><Feather name="plus" size={18} color="#FFFFFF" /><Text style={styles.bookText}>Book a new ride</Text></Pressable>
+      <ActionButton
+        style={styles.bookButton}
+        textStyle={styles.bookText}
+        label="Book a new ride"
+        icon={<Feather name="plus" size={18} color="#FFFFFF" />}
+        onPress={() => router.push("/(tabs)/home")}
+      />
     </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, paddingTop: 56, backgroundColor: "#F7F8EF" },
+  safeArea: { flex: 1, backgroundColor: "#F7F8EF" },
+  container: { flexGrow: 1, padding: 20, backgroundColor: "#F7F8EF" },
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
   eyebrow: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   title: { marginTop: 4, color: "#111827", fontSize: 30, fontWeight: "800" },

@@ -8,38 +8,32 @@ import {
   Platform,
   ScrollView,
   TextInput,
-  Vibration,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { UrlTile, PROVIDER_DEFAULT, Region } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect, usePathname, type Href } from 'expo-router';
 import BusyHoursChart from '@/components/busyHourChart';
+import { ActionButton } from '@/components/action-button';
 import { Image } from 'expo-image';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createTripOffer,
   DriverPresence,
+  DriverProfile,
   getDriverProfile,
   getIncomingTrips,
   IncomingTrip,
   PendingOffer,
   updatePresence,
 } from '@/services/driver';
-import { connectDriverSocket, disconnectDriverSocket } from '@/services/socket';
+import { getOnboardingProgress } from '@/lib/onboarding-steps';
+import { addDriverSocketListener, connectDriverSocket, disconnectDriverSocket, sendDriverLocation } from '@/services/socket';
 import * as Location from 'expo-location';
-import * as Notifications from 'expo-notifications';
-import { sendDriverLocation } from '@/services/socket';
-
-// npm install react-native-maps @expo/vector-icons expo-image
-// Native map — requires a custom dev client (won't run in plain Expo Go):
-//   npx expo install react-native-maps
-//   npx expo prebuild
-//   npx expo run:ios      (or: npx expo run:android)
-// Tiles are OpenStreetMap via UrlTile, no API key needed.
-// OSM's free tile server has usage limits — swap the urlTemplate for a paid
-// provider (MapTiler, Stadia Maps, etc.) before shipping to production.
+import { notifyRideEvent, requestRideNotificationPermission } from '@/services/notifications';
+import { lightImpact, notifyImpact } from '@/lib/haptics';
+import { Brand } from '@/constants/theme';
 
 // Fallback region only used until the device's real location is available.
 const DEFAULT_REGION: Region = {
@@ -49,25 +43,23 @@ const DEFAULT_REGION: Region = {
   longitudeDelta: 0.02,
 };
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
-
 export default function Home() {
+  const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
+  const [presenceBusy, setPresenceBusy] = useState(false);
+  const [profile, setProfile] = useState<DriverProfile | null>(null);
   const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const mapRef = useRef<MapView | null>(null);
   const presenceRef = useRef<DriverPresence>('OFFLINE');
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const onboarding = getOnboardingProgress(profile);
 
   useEffect(() => {
     let mounted = true;
@@ -89,40 +81,26 @@ export default function Home() {
     };
     void refresh();
     const timer = setInterval(() => void refresh(), 5000);
-    void connectDriverSocket((event, payload) => {
+    const removeSocket = addDriverSocketListener((event, payload) => {
       if (!mounted) return;
       if (event === 'trip:requested') {
         void refresh();
-        Vibration.vibrate();
+        notifyImpact();
         const trip = payload as { pickupAddress?: string; fareTotal?: number } | undefined;
-        void Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'New ride request',
-            body: trip?.pickupAddress ? `Pickup at ${trip.pickupAddress} · est. $${Number(trip.fareTotal ?? 0).toFixed(2)}` : 'A rider nearby is requesting a trip.',
-          },
-          trigger: null,
-        });
+        void notifyRideEvent(
+          'New ride request',
+          trip?.pickupAddress ? `Pickup at ${trip.pickupAddress} · est. $${Number(trip.fareTotal ?? 0).toFixed(2)}` : 'A rider nearby is requesting a trip.',
+          {},
+        );
       } else if (event === 'trip:assigned') {
         const assignedTrip = payload as { id?: string } | undefined;
         if (assignedTrip?.id) router.push(`/trip/${assignedTrip.id}`);
       } else if (event === 'offer:rejected') {
         void refresh();
       }
-    }).catch(() => { /* HTTP polling still lists incoming trips */ });
-    void getDriverProfile().then((driver) => {
-      if (!mounted) return;
-      if (driver?.presence) {
-        presenceRef.current = driver.presence;
-        setPresence(driver.presence);
-      }
-      if (driver?.activeTrip?.id) {
-        router.push(`/trip/${driver.activeTrip.id}`);
-      }
-      if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
-        void refresh();
-      }
-    }).catch(() => { /* keep default OFFLINE state */ });
-    void Notifications.requestPermissionsAsync();
+    });
+    void connectDriverSocket().catch(() => { /* HTTP polling still lists incoming trips */ });
+    void requestRideNotificationPermission();
     void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
       if (!mounted || status !== 'granted') return;
       const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -138,12 +116,52 @@ export default function Home() {
         },
       );
     });
-    return () => { mounted = false; clearInterval(timer); locationSubscriptionRef.current?.remove(); disconnectDriverSocket(); };
+    return () => { mounted = false; removeSocket(); clearInterval(timer); locationSubscriptionRef.current?.remove(); disconnectDriverSocket(); };
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      void getDriverProfile()
+        .then((driver) => {
+          if (!active) return;
+          setProfile(driver);
+          if (driver?.presence) {
+            presenceRef.current = driver.presence;
+            setPresence(driver.presence);
+          }
+          if (driver?.activeTrip?.id && pathnameRef.current === '/home') {
+            router.push(`/trip/${driver.activeTrip.id}`);
+          }
+          if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
+            void getIncomingTrips()
+              .then((incoming) => {
+                if (!active) return;
+                setIncomingTrips(incoming.trips);
+                setPendingOffer(incoming.pendingOffer);
+              })
+              .catch(() => { /* poller will retry */ });
+          }
+        })
+        .catch(() => { /* keep default OFFLINE state */ });
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
   async function togglePresence() {
+    if (presenceBusy) return;
+    if (presence !== 'ONLINE' && profile && !onboarding.approved) {
+      Alert.alert(
+        onboarding.title || 'Finish setup to go online',
+        onboarding.subtitle || 'Complete the remaining steps on this screen before going online.',
+      );
+      return;
+    }
     const next: DriverPresence = presence === 'ONLINE' ? 'OFFLINE' : 'ONLINE';
     try {
+      setPresenceBusy(true);
       if (next === 'ONLINE') {
         const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         await updatePresence({ presence: next, latitude: current.coords.latitude, longitude: current.coords.longitude });
@@ -152,6 +170,7 @@ export default function Home() {
       }
       presenceRef.current = next;
       setPresence(next);
+      lightImpact();
       if (next === 'ONLINE') {
         const incoming = await getIncomingTrips();
         setIncomingTrips(incoming.trips);
@@ -165,6 +184,8 @@ export default function Home() {
         next === 'ONLINE' ? 'Could not go online' : 'Could not go offline',
         error?.response?.data?.message ?? 'Please try again.',
       );
+    } finally {
+      setPresenceBusy(false);
     }
   }
 
@@ -173,11 +194,13 @@ export default function Home() {
   }
 
   async function submitOffer(trip: IncomingTrip) {
+    if (offeringTripId) return;
     const fare = Number(offerFare[trip.id] ?? trip.fareTotal);
     if (!Number.isFinite(fare) || fare < trip.fareTotal) return;
     try {
       setOfferingTripId(trip.id);
       await createTripOffer(trip.id, fare, Math.max(1, Math.ceil(trip.durationMin / 3)));
+      lightImpact();
       const incoming = await getIncomingTrips();
       setIncomingTrips(incoming.trips);
       setPendingOffer(incoming.pendingOffer);
@@ -188,7 +211,7 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
 
       <ScrollView
@@ -243,22 +266,64 @@ export default function Home() {
                     value={offerFare[trip.id] ?? String(trip.fareTotal.toFixed(2))}
                     onChangeText={(value) => setOfferFare((current) => ({ ...current, [trip.id]: value }))}
                   />
-                  <TouchableOpacity style={styles.offerButton} onPress={() => void submitOffer(trip)} disabled={offeringTripId === trip.id}>
-                    <Text style={styles.offerButtonText}>{offeringTripId === trip.id ? 'Sending...' : 'Offer price'}</Text>
-                  </TouchableOpacity>
+                  <ActionButton
+                    style={styles.offerButton}
+                    textStyle={styles.offerButtonText}
+                    label="Offer price"
+                    loadingLabel="Sending..."
+                    loading={offeringTripId === trip.id}
+                    onPress={() => void submitOffer(trip)}
+                  />
                 </View>
               </View>
             ))}
           </View>
         ) : null}
 
-        {/* Section: Your Progress */}
-        {/* <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Ready to go?</Text>
-        </View> */}
-
-        {/* Map */}
-
+        {onboarding.showCard ? (
+          <View style={styles.setupCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{onboarding.title}</Text>
+              <Text style={styles.sectionBody}>{onboarding.subtitle}</Text>
+            </View>
+            {onboarding.blocked ? null : (
+              <View style={styles.setupList}>
+                {onboarding.steps.map((step) => {
+                  const row = (
+                    <View style={styles.setupRow}>
+                      <View style={[styles.setupCheck, step.complete && styles.setupCheckDone, step.rejected && styles.setupCheckRejected]}>
+                        {step.complete ? (
+                          <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                        ) : (
+                          <Ionicons name={step.rejected ? 'alert' : 'ellipse-outline'} size={14} color={step.rejected ? '#FFFFFF' : '#9CA3AF'} />
+                        )}
+                      </View>
+                      <Text style={[styles.setupLabel, step.complete && styles.setupLabelDone]}>
+                        {step.label}
+                        {step.rejected ? ' — re-upload required' : ''}
+                      </Text>
+                      {!step.complete && step.href ? (
+                        <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                      ) : null}
+                    </View>
+                  );
+                  if (!step.complete && step.href) {
+                    return (
+                      <TouchableOpacity
+                        key={step.id}
+                        activeOpacity={0.7}
+                        onPress={() => router.push(step.href as Href)}
+                      >
+                        {row}
+                      </TouchableOpacity>
+                    );
+                  }
+                  return <View key={step.id}>{row}</View>;
+                })}
+              </View>
+            )}
+          </View>
+        ) : null}
 
         {/* Section: Earnings */}
         <View style={{  backgroundColor: '#FFFFFF', borderColor: '#E5E7EB', marginBottom: 12, marginHorizontal: 16, borderRadius: 20,  }}>
@@ -276,7 +341,7 @@ export default function Home() {
         </View>
 
         {/* Spacer so content isn't hidden behind the fixed button */}
-        <View style={{ height: 96 }} />
+        <View style={{ height: insets.bottom + 140 }} />
       </ScrollView>
 
       {/* Fixed "Go Online" button — pinned above the bottom tab bar.
@@ -284,24 +349,33 @@ export default function Home() {
           Because this screen's content area is already sized to end where
           the tab navigator's tab bar begins, position: 'absolute' + bottom: 0
           here places it directly above the tabs without covering them. */}
-      <View style={styles.goOnlineWrapper} pointerEvents="box-none">
+      <View
+        pointerEvents="box-none"
+        style={[
+          styles.goOnlineWrapper,
+          { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) },
+        ]}
+      >
         {presence === 'ONLINE' ? (
-          <TouchableOpacity
+          <ActionButton
             style={styles.goOfflineButton}
-            activeOpacity={0.85}
+            compact
+            loading={presenceBusy}
+            accessibilityLabel="Go offline"
             onPress={() => void togglePresence()}
           >
             <MaterialCommunityIcons name="stop" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
+          </ActionButton>
         ) : (
-          <TouchableOpacity
+          <ActionButton
             style={styles.goOnlineButton}
-            activeOpacity={0.85}
+            textStyle={styles.goOnlineText}
+            label="Go Online"
+            loadingLabel="Going online"
+            loading={presenceBusy}
+            icon={<MaterialCommunityIcons name="car" size={20} color="#FFFFFF" />}
             onPress={() => void togglePresence()}
-          >
-            <MaterialCommunityIcons name="car" size={20} color="#FFFFFF" />
-            <Text style={styles.goOnlineText}>Go Online</Text>
-          </TouchableOpacity>
+          />
         )}
       </View>
     </SafeAreaView>
@@ -311,7 +385,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f7f8ef',
+    backgroundColor: Brand.canvas,
   },
   scrollContent: {
     paddingBottom: 32,
@@ -410,6 +484,53 @@ const styles = StyleSheet.create({
   },
 
   // --- Section headers / text ---
+  setupCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
+    marginHorizontal: 16,
+    borderRadius: 20,
+  },
+  setupList: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 4,
+  },
+  setupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    gap: 12,
+  },
+  setupCheck: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  setupCheckDone: {
+    borderColor: '#16A34A',
+    backgroundColor: '#16A34A',
+  },
+  setupCheckRejected: {
+    borderColor: '#DC2626',
+    backgroundColor: '#DC2626',
+  },
+  setupLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  setupLabelDone: {
+    color: '#6B7280',
+    fontWeight: '500',
+  },
   sectionHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
@@ -512,12 +633,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 12 : 16,
     // backgroundColor: 'rgba(255,255,255,0.96)',
     // borderTopWidth: 1,
     // borderTopColor: '#F0F0F0',
   },
   goOnlineButton: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

@@ -13,12 +13,14 @@ import { useState } from "react";
 import Feather from "@expo/vector-icons/build/Feather";
 import { register } from "@/services/auth";
 import { useAuth } from "@/context/auth-context";
+import { ActionButton } from "@/components/action-button";
 
 export default function RegisterScreen() {
   const { setUser } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [isChecked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -46,6 +48,7 @@ export default function RegisterScreen() {
       const session = await register({
         name: normalizedName,
         email: normalizedEmail,
+        phone: phone.trim() || undefined,
         password: trimmedPassword,
       });
       setUser(session.user);
@@ -92,6 +95,18 @@ export default function RegisterScreen() {
       </View>
 
       <View style={styles.inputContainer}>
+        <Feather name="phone" size={20} color="black" />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone number"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
+          returnKeyType="next"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
         <Feather name="lock" size={20} color="black" />
         <TextInput
           style={styles.input}
@@ -126,15 +141,14 @@ export default function RegisterScreen() {
         </Text>
       </View>
 
-      <Pressable
-        style={[styles.button, loading && { opacity: 0.6 }]}
+      <ActionButton
+        style={styles.button}
+        textStyle={styles.buttonText}
+        label="Create account"
+        loadingLabel="Creating account..."
+        loading={loading}
         onPress={handleRegister}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? "Creating account..." : "Create account"}
-        </Text>
-      </Pressable>
+      />
 
       <Pressable onPress={() => router.push("/(auth)/login")}>
         <Text style={styles.link}>Already have an account? Log in</Text>

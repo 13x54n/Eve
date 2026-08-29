@@ -16,6 +16,7 @@ import {
   money,
   statusTone,
 } from "@/components/ui";
+import { EntityLink } from "@/components/entity-link";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
@@ -150,8 +151,10 @@ export default function RiderDetailPage({
                 <Table
                   columns={["Booking", "Status"]}
                   rows={(data.profile?.trips ?? []).map((trip) => [
-                    trip.bookingCode,
-                    <Badge key={trip.id} tone={statusTone(trip.status)}>
+                    <EntityLink key={trip.id} href={`/trips/${trip.id}`} className="font-mono">
+                      {trip.bookingCode}
+                    </EntityLink>,
+                    <Badge key={`${trip.id}-s`} tone={statusTone(trip.status)}>
                       {trip.status}
                     </Badge>,
                   ])}
@@ -163,8 +166,10 @@ export default function RiderDetailPage({
                   <Table
                     columns={["Subject", "Status"]}
                     rows={(data.profile?.tickets ?? []).map((ticket) => [
-                      ticket.subject,
-                      <Badge key={ticket.id} tone={statusTone(ticket.status)}>
+                      <EntityLink key={ticket.id} href={`/support/${ticket.id}`}>
+                        {ticket.subject}
+                      </EntityLink>,
+                      <Badge key={`${ticket.id}-s`} tone={statusTone(ticket.status)}>
                         {ticket.status}
                       </Badge>,
                     ])}

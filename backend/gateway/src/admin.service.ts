@@ -40,6 +40,7 @@ export async function getDashboard(query: Record<string, unknown>) {
   const filters = parseFilters(query);
   const today = startOfDay();
   const tripFilter = tripWhere(filters);
+  const now = new Date();
 
   const [
     riders,
@@ -52,9 +53,15 @@ export async function getDashboard(query: Record<string, unknown>) {
     todayMatched,
     pendingDrivers,
     openTickets,
+    slaBreachedTickets,
+    openSos,
+    openIncidents,
     alerts,
     liveDrivers,
     liveTrips,
+    searchingTrips,
+    matchedOffers,
+    liveSos,
   ] = await Promise.all([
     prisma.user.count({ where: { role: "RIDER" } }),
     prisma.user.count({ where: { role: "DRIVER" } }),
@@ -82,23 +89,74 @@ export async function getDashboard(query: Record<string, unknown>) {
     prisma.supportTicket.count({
       where: { status: { in: ["OPEN", "IN_PROGRESS", "WAITING"] } },
     }),
+    prisma.supportTicket.count({
+      where: {
+        status: { in: ["OPEN", "IN_PROGRESS", "WAITING"] },
+        slaDueAt: { lt: now },
+      },
+    }),
+    prisma.safetyIncident.count({
+      where: { type: "SOS", status: "OPEN" },
+    }),
+    prisma.safetyIncident.count({
+      where: { status: "OPEN" },
+    }),
     prisma.alert.findMany({
       where: { resolved: false },
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
     prisma.driverProfile.findMany({
-      where: { presence: { in: ["ONLINE", "IDLE", "ON_TRIP"] } },
+      where: {
+        presence: { in: ["ONLINE", "IDLE", "ON_TRIP"] },
+        ...(filters.city ? { city: filters.city } : {}),
+      },
       include: { user: true },
       take: 200,
     }),
     prisma.trip.findMany({
-      where: { status: { in: ["SEARCHING", "ASSIGNED", "ONGOING"] } },
+      where: {
+        ...tripFilter,
+        status: { in: ["SEARCHING", "ASSIGNED", "ONGOING"] },
+      },
       include: {
         rider: { include: { user: true } },
         driver: { include: { user: true } },
       },
       take: 200,
+    }),
+    prisma.trip.findMany({
+      where: { ...tripFilter, status: "SEARCHING" },
+      select: { createdAt: true },
+      take: 200,
+    }),
+    prisma.tripOffer.findMany({
+      where: {
+        status: "ACCEPTED",
+        respondedAt: { gte: today },
+        trip: tripFilter,
+      },
+      select: {
+        respondedAt: true,
+        trip: { select: { createdAt: true } },
+      },
+      take: 200,
+    }),
+    prisma.safetyIncident.findMany({
+      where: {
+        type: "SOS",
+        status: "OPEN",
+        latitude: { not: null },
+        longitude: { not: null },
+      },
+      select: {
+        id: true,
+        latitude: true,
+        longitude: true,
+        severity: true,
+        trip: { select: { id: true, bookingCode: true } },
+      },
+      take: 50,
     }),
   ]);
 
@@ -109,6 +167,18 @@ export async function getDashboard(query: Record<string, unknown>) {
     tripGroups.map((row) => [row.status, row._count._all]),
   );
   const matchedFares = money(todayMatched._sum.fareTotal);
+  const searchingCount = trips.SEARCHING ?? 0;
+  const assignedCount = trips.ASSIGNED ?? 0;
+  const ongoingCount = trips.ONGOING ?? 0;
+
+  const searchingWaitMinutes = averageMinutes(
+    searchingTrips.map((trip) => now.getTime() - trip.createdAt.getTime()),
+  );
+  const matchMinutes = averageMinutes(
+    matchedOffers
+      .filter((offer) => offer.respondedAt)
+      .map((offer) => offer.respondedAt!.getTime() - offer.trip.createdAt.getTime()),
+  );
 
   return {
     totals: { riders, drivers, vehicles, activeUsers },
@@ -119,10 +189,17 @@ export async function getDashboard(query: Record<string, unknown>) {
       onTrip: presence.ON_TRIP ?? 0,
     },
     rides: {
-      ongoing: (trips.ONGOING ?? 0) + (trips.ASSIGNED ?? 0) + (trips.SEARCHING ?? 0),
+      searching: searchingCount,
+      assigned: assignedCount,
+      ongoing: ongoingCount,
+      live: searchingCount + assignedCount + ongoingCount,
       completed: trips.COMPLETED ?? 0,
       cancelled: trips.CANCELLED ?? 0,
       scheduled: trips.SCHEDULED ?? 0,
+    },
+    waits: {
+      searchingMinutes: searchingWaitMinutes,
+      matchMinutes,
     },
     finance: {
       dailyBookings: todayTrips,
@@ -131,11 +208,15 @@ export async function getDashboard(query: Record<string, unknown>) {
     queues: {
       driverApprovals: pendingDrivers,
       openTickets,
+      slaBreachedTickets,
+      openSos,
+      openIncidents,
     },
     alerts,
     liveMap: {
       drivers: liveDrivers.map((driver) => ({
         id: driver.id,
+        userId: driver.userId,
         name: driver.user.name,
         presence: driver.presence,
         city: driver.city,
@@ -150,11 +231,31 @@ export async function getDashboard(query: Record<string, unknown>) {
         pickupLng: trip.pickupLng,
         dropoffLat: trip.dropoffLat,
         dropoffLng: trip.dropoffLng,
+        etaMinutes: trip.etaMinutes,
         rider: trip.rider.user.name,
         driver: trip.driver?.user.name ?? null,
+        driverId: trip.driverId,
+        driverLat: trip.driver?.latitude ?? null,
+        driverLng: trip.driver?.longitude ?? null,
+      })),
+      sos: liveSos.map((incident) => ({
+        id: incident.id,
+        lat: incident.latitude,
+        lng: incident.longitude,
+        severity: incident.severity,
+        tripId: incident.trip?.id ?? null,
+        bookingCode: incident.trip?.bookingCode ?? null,
       })),
     },
   };
+}
+
+function averageMinutes(durationsMs: number[]) {
+  if (durationsMs.length === 0) {
+    return 0;
+  }
+  const avgMs = durationsMs.reduce((sum, value) => sum + value, 0) / durationsMs.length;
+  return Math.round((avgMs / 60_000) * 10) / 10;
 }
 
 export async function searchRiders(query: Record<string, unknown>) {
@@ -470,11 +571,19 @@ export async function getDriver(id: string) {
     throw error;
   }
 
+  const tickets = await prisma.supportTicket.findMany({
+    where: { requesterId: driver.userId },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+    select: { id: true, subject: true, status: true, tripId: true },
+  });
+
   return {
     ...serializeDriver({
       ...driver,
     }),
     trips: driver.trips,
+    tickets,
     incidents: driver.incidents,
     incentives: driver.incentives.map((row) => ({
       ...row,
@@ -661,8 +770,10 @@ function serializeTrip(
     distanceKm: money(trip.distanceKm),
     suggestedFare: money(trip.suggestedFare),
     fareTotal: money(trip.fareTotal),
-    rider: sanitizePublicUser(trip.rider.user),
-    driver: trip.driver ? sanitizePublicUser(trip.driver.user) : null,
+    rider: { ...sanitizePublicUser(trip.rider.user), profileId: trip.rider.id },
+    driver: trip.driver
+      ? { ...sanitizePublicUser(trip.driver.user), profileId: trip.driver.id }
+      : null,
   };
 }
 
@@ -676,6 +787,12 @@ export async function getTrip(id: string) {
       events: { orderBy: { createdAt: "asc" } },
       ledger: true,
       offers: { include: { driver: { include: { user: true } } }, orderBy: { createdAt: "asc" } },
+      tickets: { orderBy: { createdAt: "desc" }, take: 10 },
+      chatMessages: {
+        include: { author: { select: { id: true, name: true, role: true } } },
+        orderBy: { createdAt: "asc" },
+        take: 200,
+      },
     },
   });
 
@@ -688,12 +805,22 @@ export async function getTrip(id: string) {
   return {
     ...serializeTrip(trip),
     events: trip.events,
+    tickets: trip.tickets,
+    chatMessages: trip.chatMessages.map((row) => ({
+      id: row.id,
+      authorId: row.authorId,
+      body: row.body,
+      createdAt: row.createdAt,
+      authorName: row.author.name,
+      authorRole: row.author.role,
+    })),
     offers: trip.offers.map((offer) => ({
       id: offer.id,
       proposedFare: money(offer.proposedFare),
       etaMinutes: offer.etaMinutes,
       status: offer.status,
       createdAt: offer.createdAt,
+      driverId: offer.driver.id,
       driverName: offer.driver.user.name,
     })),
     ledger: trip.ledger.map((entry) => ({
@@ -1087,6 +1214,48 @@ export async function updateIncident(
   return incident;
 }
 
+type TicketAuthor = { id: string; name: string; role: string };
+
+async function attachTicketAuthors<
+  T extends { requesterId: string; messages: { authorId: string }[] },
+>(tickets: T[]) {
+  const ids = [
+    ...new Set([
+      ...tickets.map((ticket) => ticket.requesterId),
+      ...tickets.flatMap((ticket) => ticket.messages.map((row) => row.authorId)),
+    ]),
+  ];
+  const users =
+    ids.length === 0
+      ? []
+      : await prisma.user.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, name: true, role: true },
+        });
+  const byId = new Map<string, TicketAuthor>(users.map((user) => [user.id, user]));
+  return tickets.map((ticket) => ({
+    ...ticket,
+    requester: byId.get(ticket.requesterId) ?? null,
+    messages: ticket.messages.map((row) => ({
+      ...row,
+      author: byId.get(row.authorId) ?? { id: row.authorId, name: "Unknown", role: "ADMIN" },
+    })),
+  }));
+}
+
+const ticketDetailInclude = {
+  rider: { include: { user: true } },
+  trip: {
+    include: {
+      rider: { include: { user: true } },
+      driver: { include: { user: true } },
+      vehicle: true,
+    },
+  },
+  assignee: true,
+  messages: { orderBy: { createdAt: "asc" as const } },
+};
+
 export async function listTickets(query: Record<string, unknown>) {
   const { q, skip, take, status } = parseFilters(query);
   const where: Prisma.SupportTicketWhereInput = {
@@ -1106,12 +1275,7 @@ export async function listTickets(query: Record<string, unknown>) {
   const [items, total] = await Promise.all([
     prisma.supportTicket.findMany({
       where,
-      include: {
-        rider: { include: { user: true } },
-        trip: true,
-        assignee: true,
-        messages: { orderBy: { createdAt: "asc" } },
-      },
+      include: ticketDetailInclude,
       orderBy: { createdAt: "desc" },
       skip,
       take,
@@ -1119,7 +1283,21 @@ export async function listTickets(query: Record<string, unknown>) {
     prisma.supportTicket.count({ where }),
   ]);
 
-  return { total, items };
+  return { total, items: await attachTicketAuthors(items) };
+}
+
+export async function getTicket(id: string) {
+  const ticket = await prisma.supportTicket.findUnique({
+    where: { id },
+    include: ticketDetailInclude,
+  });
+  if (!ticket) {
+    const error = new Error("Ticket not found");
+    error.name = "NotFoundError";
+    throw error;
+  }
+  const [hydrated] = await attachTicketAuthors([ticket]);
+  return hydrated;
 }
 
 export async function updateTicket(
@@ -1166,17 +1344,24 @@ export async function updateTicket(
 
   const ticket = await prisma.supportTicket.findUnique({
     where: { id },
-    include: { messages: true, rider: { include: { user: true } } },
+    include: ticketDetailInclude,
   });
 
   if (body.message && !body.internal && ticket?.requesterId) {
-    emitUserEvent("RIDER", ticket.requesterId, "support:message", {
+    const requester = await prisma.user.findUnique({
+      where: { id: ticket.requesterId },
+      select: { role: true },
+    });
+    const role = requester?.role === "DRIVER" ? "DRIVER" : "RIDER";
+    emitUserEvent(role, ticket.requesterId, "support:message", {
       ticketId: id,
       body: body.message,
     });
   }
 
-  return ticket;
+  if (!ticket) return ticket;
+  const [hydrated] = await attachTicketAuthors([ticket]);
+  return hydrated;
 }
 
 export async function listPromos() {

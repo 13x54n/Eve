@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createSupportTicket, listSupportTickets, SupportTicket } from "@/services/support";
+import { ActionButton } from "@/components/action-button";
 
 export default function SupportListScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -66,9 +67,14 @@ export default function SupportListScreen() {
         placeholder="Describe what happened"
         multiline
       />
-      <Pressable style={styles.button} onPress={() => void startTicket()} disabled={sending}>
-        <Text style={styles.buttonText}>{sending ? "Sending..." : "Start support chat"}</Text>
-      </Pressable>
+      <ActionButton
+        style={styles.button}
+        textStyle={styles.buttonText}
+        label="Start support chat"
+        loadingLabel="Sending..."
+        loading={sending}
+        onPress={() => void startTicket()}
+      />
       <Text style={styles.section}>Your tickets</Text>
       {tickets.length === 0 ? <Text style={styles.empty}>No support chats yet.</Text> : null}
       {tickets.map((ticket) => (

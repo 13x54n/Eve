@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { emitTripEventLocal, emitUserEventLocal } from "./emit.js";
+import { emitAdminEventLocal, emitTripAndUserEventLocal, emitTripEventLocal, emitUserEventLocal } from "./emit.js";
 
 export const internalNotifyRouter = Router();
 
@@ -16,6 +16,21 @@ internalNotifyRouter.post("/emit", (req, res) => {
   }
   if (target === "user" && (role === "RIDER" || role === "DRIVER") && typeof userId === "string") {
     emitUserEventLocal(role, userId, event, payload);
+    res.json({ ok: true });
+    return;
+  }
+  if (
+    target === "trip+user" &&
+    typeof tripId === "string" &&
+    (role === "RIDER" || role === "DRIVER") &&
+    typeof userId === "string"
+  ) {
+    emitTripAndUserEventLocal(tripId, role, userId, event, payload);
+    res.json({ ok: true });
+    return;
+  }
+  if (target === "admin") {
+    emitAdminEventLocal(event, payload);
     res.json({ ok: true });
     return;
   }

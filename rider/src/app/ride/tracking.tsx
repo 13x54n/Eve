@@ -1,22 +1,28 @@
 import Feather from "@expo/vector-icons/Feather";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_DEFAULT, UrlTile } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { cancelTrip, getTrip, Trip } from "@/services/trips";
+import { cancelTrip, getTrip, getTripMessages, Trip } from "@/services/trips";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
+import { useAuth } from "@/context/auth-context";
+import { Brand } from "@/constants/theme";
+import { ActionButton } from "@/components/action-button";
 
 const OSM_TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived"];
+const MAP_BOTTOM_INSET = 340;
 
 export default function TrackingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const mapRef = useRef<MapView | null>(null);
 
   const applyTrip = useCallback((next: Trip) => {
@@ -46,6 +52,22 @@ export default function TrackingScreen() {
     }
   }, [applyTrip, tripId]);
 
+  const refreshUnread = useCallback(async () => {
+    if (!tripId || !user?.id) return;
+    try {
+      const messages = await getTripMessages(tripId);
+      setUnreadCount(messages.filter((row) => row.authorId !== user.id && !row.readAt).length);
+    } catch {
+      /* keep last count */
+    }
+  }, [tripId, user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshUnread();
+    }, [refreshUnread]),
+  );
+
   useEffect(() => {
     if (!tripId) return;
     let mounted = true;
@@ -59,12 +81,19 @@ export default function TrackingScreen() {
         }
         return;
       }
+      if (event === "trip:message" && payload && typeof payload === "object") {
+        const message = payload as { tripId?: string; authorId?: string };
+        if (message.tripId === tripId && message.authorId && message.authorId !== user?.id) {
+          setUnreadCount((current) => current + 1);
+        }
+        return;
+      }
       if (STATUS_EVENTS.includes(event)) void refresh();
     });
     void refresh(true);
     const timer = setInterval(() => void refresh(), 4000);
     return () => { mounted = false; clearInterval(timer); remove(); };
-  }, [refresh, tripId]);
+  }, [refresh, tripId, user?.id]);
 
   useEffect(() => {
     if (!trip || !mapRef.current) return;
@@ -78,7 +107,7 @@ export default function TrackingScreen() {
       return;
     }
     mapRef.current.fitToCoordinates(points, {
-      edgePadding: { top: 88, right: 48, bottom: 280, left: 48 },
+      edgePadding: { top: 88, right: 48, bottom: MAP_BOTTOM_INSET, left: 48 },
       animated: true,
     });
   }, [driverLocation, trip]);
@@ -133,7 +162,7 @@ export default function TrackingScreen() {
           </>
         ) : (
           <>
-            <ActivityIndicator size="large" color="#2E4ED5" />
+            <ActivityIndicator size="large" color={Brand.accent} />
             <Text style={styles.loadingText}>Loading trip...</Text>
           </>
         )}
@@ -152,6 +181,7 @@ export default function TrackingScreen() {
   const plate = trip.vehicle?.plateNumber;
   const stageLabel = headingToPickup ? "Meet at pickup" : "On the way to dropoff";
   const etaLabel = `${Math.max(1, trip.durationMin)} min`;
+  const ratingLabel = trip.driver?.rating != null ? Number(trip.driver.rating).toFixed(1) : null;
   const initialRegion = {
     latitude: driverLocation?.latitude ?? trip.pickupLat,
     longitude: driverLocation?.longitude ?? trip.pickupLng,
@@ -163,154 +193,242 @@ export default function TrackingScreen() {
     <View style={styles.container}>
       <MapView ref={mapRef} provider={PROVIDER_DEFAULT} style={styles.map} initialRegion={initialRegion}>
         <UrlTile urlTemplate={OSM_TILES} maximumZ={19} flipY={false} />
-        {driverLocation ? <Marker coordinate={driverLocation} pinColor="#2E4ED5" title="Driver" /> : null}
+        {driverLocation ? <Marker coordinate={driverLocation} pinColor={Brand.accent} title="Driver" /> : null}
         <Marker coordinate={{ latitude: trip.pickupLat, longitude: trip.pickupLng }} pinColor="#16A34A" title="Pickup" />
         <Marker coordinate={{ latitude: trip.dropoffLat, longitude: trip.dropoffLng }} pinColor="#DC2626" title="Dropoff" />
         {driverLocation ? (
-          <Polyline coordinates={[driverLocation, destination]} strokeColor="#2E4ED5" strokeWidth={4} />
+          <Polyline coordinates={[driverLocation, destination]} strokeColor={Brand.accent} strokeWidth={4} />
         ) : null}
       </MapView>
+
+      <View style={styles.overlay} pointerEvents="box-none">
+        <View style={[styles.card, { paddingBottom: Math.max(20, insets.bottom + 10) }]} pointerEvents="auto">
+          <View style={styles.handle} />
+          <View style={styles.statusRow}>
+            <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
+            <Text style={styles.time}>{etaLabel}</Text>
+          </View>
+
+          <View style={styles.driverRow}>
+            <View style={styles.driverAvatar}>
+              <Text style={styles.driverInitial}>{driverName[0]?.toUpperCase() ?? "?"}</Text>
+            </View>
+            <View style={styles.driverCopy}>
+              <View style={styles.driverNameRow}>
+                <Text style={styles.driver} numberOfLines={1}>{driverName}</Text>
+                {ratingLabel ? <Text style={styles.rating}>★ {ratingLabel}</Text> : null}
+              </View>
+              <Text style={styles.vehicle} numberOfLines={1}>{vehicleLabel}</Text>
+              <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
+            </View>
+            {plate ? <Text style={styles.plate}>{plate}</Text> : null}
+          </View>
+
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.action, !trip.driver?.user?.phone && styles.actionDisabled]}
+              accessibilityRole="button"
+              accessibilityLabel="Call driver"
+              onPress={() => {
+                if (!trip.driver?.user?.phone) {
+                  Alert.alert("No phone on file", "This driver has not added a phone number yet.");
+                  return;
+                }
+                void Linking.openURL(`tel:${trip.driver.user.phone}`);
+              }}
+            >
+              <Feather name="phone" size={18} color="#15803D" />
+              <Text style={styles.actionText}>Call</Text>
+            </Pressable>
+            <Pressable
+              style={styles.action}
+              accessibilityRole="button"
+              accessibilityLabel={unreadCount > 0 ? `Chat, ${unreadCount} unread` : "Chat"}
+              onPress={() => router.push({ pathname: "/ride/chat", params: { tripId: trip.id } })}
+            >
+              <View style={styles.actionIcon}>
+                <Feather name="message-circle" size={18} color={Brand.accent} />
+                {unreadCount > 0 ? (
+                  <View style={styles.badge}>
+                    {unreadCount > 1 ? (
+                      <Text style={styles.badgeText}>{unreadCount > 9 ? "9+" : String(unreadCount)}</Text>
+                    ) : null}
+                  </View>
+                ) : null}
+              </View>
+              <Text style={styles.actionText}>Chat</Text>
+            </Pressable>
+            <Pressable
+              style={styles.action}
+              accessibilityRole="button"
+              accessibilityLabel="Help"
+              onPress={() => router.push({ pathname: "/ride/support", params: { tripId: trip.id } })}
+            >
+              <Feather name="help-circle" size={18} color="#B45309" />
+              <Text style={styles.actionText}>Help</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.route}>
+            <View style={styles.routeRail}>
+              <View style={[styles.addressDot, { backgroundColor: "#16A34A" }]} />
+              <View style={styles.routeLine} />
+              <View style={[styles.addressDot, { backgroundColor: "#DC2626" }]} />
+            </View>
+            <View style={styles.routeCopy}>
+              <Text style={styles.addressText} numberOfLines={1}>{trip.pickupAddress}</Text>
+              <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
+            </View>
+          </View>
+
+          {trip.status === "ASSIGNED" || trip.status === "ONGOING" ? (
+            <ActionButton
+              style={styles.cancel}
+              textStyle={styles.cancelText}
+              label="Cancel trip"
+              loadingLabel="Cancelling..."
+              loading={busy}
+              spinnerColor={Brand.danger}
+              onPress={handleCancel}
+            />
+          ) : null}
+        </View>
+      </View>
 
       <Pressable
         style={[styles.fab, { top: insets.top + 8 }]}
         onPress={() => router.replace("/(tabs)/home")}
+        accessibilityRole="button"
         accessibilityLabel="Back home"
       >
-        <Feather name="chevron-down" size={22} color="#111827" />
+        <Feather name="chevron-down" size={22} color={Brand.text} />
       </Pressable>
-
-      <View style={[styles.sheet, { paddingBottom: Math.max(24, insets.bottom + 12) }]}>
-        <View style={styles.handle} />
-        <View style={styles.arrival}>
-          <View style={styles.arrivalCopy}>
-            <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
-            <Text style={styles.time}>{etaLabel}</Text>
-          </View>
-        </View>
-        <View style={styles.driverRow}>
-          <View style={styles.driverAvatar}>
-            <Text style={styles.driverInitial}>{driverName[0]?.toUpperCase() ?? "?"}</Text>
-          </View>
-          <View style={styles.driverCopy}>
-            <Text style={styles.driver}>{driverName}</Text>
-            <Text style={styles.vehicle}>{vehicleLabel}</Text>
-            <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
-          </View>
-          {plate ? <Text style={styles.plate}>{plate}</Text> : null}
-          {trip.driver?.rating != null ? (
-            <Text style={styles.rating}>★ {Number(trip.driver.rating).toFixed(1)}</Text>
-          ) : null}
-        </View>
-        <View style={styles.actions}>
-          <Pressable
-            style={[styles.action, !trip.driver?.user?.phone && styles.actionDisabled]}
-            onPress={() => {
-              if (!trip.driver?.user?.phone) {
-                Alert.alert("No phone on file", "This driver has not added a phone number yet.");
-                return;
-              }
-              void Linking.openURL(`tel:${trip.driver.user.phone}`);
-            }}
-          >
-            <Feather name="phone" size={16} color="#15803D" />
-            <Text style={styles.actionText}>Call</Text>
-          </Pressable>
-          <Pressable
-            style={styles.action}
-            onPress={() => router.push({ pathname: "/ride/chat", params: { tripId: trip.id } })}
-          >
-            <Feather name="message-circle" size={16} color="#2E4ED5" />
-            <Text style={styles.actionText}>Chat</Text>
-          </Pressable>
-          <Pressable
-            style={styles.action}
-            onPress={() => router.push({ pathname: "/ride/support", params: { tripId: trip.id } })}
-          >
-            <Feather name="help-circle" size={16} color="#B45309" />
-            <Text style={styles.actionText}>Help</Text>
-          </Pressable>
-        </View>
-        <View style={styles.addressRow}>
-          <View style={[styles.addressDot, { backgroundColor: "#16A34A" }]} />
-          <Text style={styles.addressText} numberOfLines={1}>{trip.pickupAddress}</Text>
-        </View>
-        <View style={styles.addressRow}>
-          <View style={[styles.addressDot, { backgroundColor: "#DC2626" }]} />
-          <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
-        </View>
-        {trip.status === "ASSIGNED" || trip.status === "ONGOING" ? (
-          <Pressable style={styles.cancel} onPress={handleCancel} disabled={busy}>
-            <Text style={styles.cancelText}>{busy ? "Cancelling..." : "Cancel trip"}</Text>
-          </Pressable>
-        ) : null}
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F8EF" },
-  loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24, backgroundColor: "#F7F8EF" },
-  loadingText: { color: "#6B7280", fontSize: 13, textAlign: "center" },
-  retry: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12, backgroundColor: "#2E4ED5" },
+  container: { flex: 1, backgroundColor: Brand.canvas },
+  loading: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 24, backgroundColor: Brand.canvas },
+  loadingText: { color: Brand.textSecondary, fontSize: 13, textAlign: "center" },
+  retry: { marginTop: 8, paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12, backgroundColor: Brand.accent },
   retryText: { color: "#FFFFFF", fontWeight: "700" },
-  homeLink: { color: "#2E4ED5", fontWeight: "700", marginTop: 8 },
+  homeLink: { color: Brand.accent, fontWeight: "700", marginTop: 8 },
   map: { ...StyleSheet.absoluteFill },
   fab: {
     position: "absolute",
     left: 16,
+    zIndex: 2,
     width: 40,
     height: 40,
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Brand.surface,
     shadowColor: "#0F172A",
     shadowOpacity: 0.15,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 4,
   },
-  sheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    padding: 20,
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    justifyContent: "flex-end",
+  },
+  card: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    backgroundColor: Brand.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: "#FFFFFF",
+    shadowColor: "#0F172A",
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 12,
   },
-  handle: { alignSelf: "center", width: 38, height: 4, marginBottom: 16, borderRadius: 2, backgroundColor: "#D1D5DB" },
-  arrival: { flexDirection: "row", alignItems: "center" },
-  arrivalCopy: { flex: 1 },
-  eyebrow: { color: "#6B7280", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
-  time: { marginTop: 3, color: "#111827", fontSize: 24, fontWeight: "800" },
+  handle: {
+    alignSelf: "center",
+    width: 38,
+    height: 4,
+    marginBottom: 14,
+    borderRadius: 2,
+    backgroundColor: Brand.border,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  eyebrow: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1, flex: 1 },
+  time: { color: Brand.text, fontSize: 28, fontWeight: "800" },
+  driverRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: Brand.border,
+  },
+  driverAvatar: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#FDE68A",
+  },
+  driverInitial: { color: Brand.text, fontSize: 18, fontWeight: "800" },
+  driverCopy: { flex: 1, marginLeft: 12, marginRight: 8, minWidth: 0 },
+  driverNameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  driver: { color: Brand.text, fontWeight: "800", flexShrink: 1 },
+  vehicle: { marginTop: 4, color: Brand.textSecondary, fontSize: 12 },
+  fare: { marginTop: 3, color: Brand.text, fontSize: 12 },
+  plate: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: Brand.border,
+    color: Brand.text,
+    fontSize: 12,
+    fontWeight: "800",
+    overflow: "hidden",
+  },
+  rating: { color: Brand.textSecondary, fontSize: 12, fontWeight: "700" },
   actions: { flexDirection: "row", gap: 8, marginTop: 16 },
   action: {
     flex: 1,
-    flexDirection: "row",
+    minHeight: 44,
     alignItems: "center",
     justifyContent: "center",
-    gap: 6,
+    gap: 4,
     paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    backgroundColor: Brand.border,
   },
   actionDisabled: { opacity: 0.55 },
-  actionText: { color: "#111827", fontSize: 13, fontWeight: "700" },
-  driverRow: { flexDirection: "row", alignItems: "center", marginTop: 18, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#F3F4F6" },
-  driverAvatar: { alignItems: "center", justifyContent: "center", width: 46, height: 46, borderRadius: 23, backgroundColor: "#FDE68A" },
-  driverInitial: { color: "#111827", fontSize: 18, fontWeight: "800" },
-  driverCopy: { flex: 1, marginLeft: 12 },
-  driver: { color: "#111827", fontWeight: "800" },
-  vehicle: { marginTop: 4, color: "#6B7280", fontSize: 12 },
-  fare: { marginTop: 3, color: "#374151", fontSize: 12 },
-  plate: { marginRight: 8, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 6, backgroundColor: "#F3F4F6", color: "#111827", fontSize: 12, fontWeight: "800" },
-  rating: { color: "#374151", fontSize: 12, fontWeight: "700" },
-  addressRow: { flexDirection: "row", alignItems: "center", gap: 10, marginTop: 12 },
+  actionIcon: { position: "relative" },
+  actionText: { color: Brand.text, fontSize: 12, fontWeight: "700" },
+  badge: {
+    position: "absolute",
+    top: -4,
+    right: -8,
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#DC2626",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  badgeText: { color: "#FFFFFF", fontSize: 9, fontWeight: "800" },
+  route: { flexDirection: "row", marginTop: 16, gap: 12 },
+  routeRail: { alignItems: "center", paddingTop: 5, paddingBottom: 5 },
+  routeLine: { width: 2, flex: 1, marginVertical: 4, backgroundColor: Brand.border },
+  routeCopy: { flex: 1, minWidth: 0, justifyContent: "space-between", gap: 14 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
-  addressText: { flex: 1, color: "#374151", fontSize: 13 },
-  cancel: { alignItems: "center", marginTop: 18, padding: 8 },
-  cancelText: { color: "#B91C1C", fontWeight: "700", fontSize: 13 },
+  addressText: { color: Brand.text, fontSize: 13 },
+  cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8 },
+  cancelText: { color: Brand.danger, fontWeight: "700", fontSize: 14 },
 });

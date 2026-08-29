@@ -11,6 +11,7 @@ import {
 import Feather from "@expo/vector-icons/Feather";
 import { useState, type ComponentProps } from "react";
 import { requestPasswordReset, resetPassword } from "@/services/auth";
+import { ActionButton } from "@/components/action-button";
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
@@ -81,9 +82,14 @@ export default function ForgotPasswordScreen() {
       <Input icon="mail" placeholder="Email" value={email} onChangeText={setEmail} />
 
       {!codeRequested ? (
-        <Pressable style={styles.button} onPress={handleRequestCode} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Sending..." : "Send code"}</Text>
-        </Pressable>
+        <ActionButton
+          style={styles.button}
+          textStyle={styles.buttonText}
+          label="Send code"
+          loadingLabel="Sending..."
+          loading={loading}
+          onPress={handleRequestCode}
+        />
       ) : (
         <>
           <View style={styles.codeBox}>
@@ -105,9 +111,14 @@ export default function ForgotPasswordScreen() {
             onChangeText={setPassword}
             secureTextEntry
           />
-          <Pressable style={styles.button} onPress={handleResetPassword} disabled={loading}>
-            <Text style={styles.buttonText}>{loading ? "Resetting..." : "Reset password"}</Text>
-          </Pressable>
+          <ActionButton
+            style={styles.button}
+            textStyle={styles.buttonText}
+            label="Reset password"
+            loadingLabel="Resetting..."
+            loading={loading}
+            onPress={handleResetPassword}
+          />
         </>
       )}
 

@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, usePathname, router } from 'expo-router';
 import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -20,17 +20,25 @@ import {
   cancelTrip,
   completeTrip,
   getDriverProfile,
+  getTripMessages,
   startTrip,
 } from '@/services/driver';
-import { connectDriverSocket, disconnectDriverSocket, sendDriverLocation, subscribeTrip } from '@/services/socket';
+import { addDriverSocketListener, connectDriverSocket, disconnectDriverSocket, sendDriverLocation, subscribeTrip } from '@/services/socket';
+import { useAuth } from '@/context/auth-context';
+import { ActionButton } from '@/components/action-button';
 
 export default function ActiveTripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+  pathnameRef.current = pathname;
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [trip, setTrip] = useState<ActiveTrip | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [hasArrived, setHasArrived] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const mapRef = useRef<MapView | null>(null);
 
@@ -41,7 +49,9 @@ export default function ActiveTripScreen() {
         setLoadError(false);
         setTrip(driver.activeTrip);
       } else if (!driver?.activeTrip) {
-        router.replace('/(tabs)/home');
+        if (pathnameRef.current.startsWith('/trip/')) {
+          router.replace('/(tabs)/home');
+        }
       } else if (isFirst) {
         setLoadError(true);
       }
@@ -50,13 +60,36 @@ export default function ActiveTripScreen() {
     }
   }, [id]);
 
+  const refreshUnread = useCallback(async () => {
+    if (!id || !user?.id) return;
+    try {
+      const messages = await getTripMessages(id);
+      setUnreadCount(messages.filter((row) => row.authorId !== user.id && !row.readAt).length);
+    } catch {
+      /* keep last count */
+    }
+  }, [id, user?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshUnread();
+    }, [refreshUnread]),
+  );
+
   useEffect(() => {
     void refresh(true);
     const timer = setInterval(() => void refresh(), 5000);
     let subscription: Location.LocationSubscription | null = null;
-    void connectDriverSocket(() => { /* location is sent from this screen; status is polled */ })
+    void connectDriverSocket()
       .then(() => { if (id) subscribeTrip(id); })
       .catch(() => { /* GPS still updates locally; rider may lag until reconnect */ });
+    const removeSocket = addDriverSocketListener((event, payload) => {
+      if (event !== 'trip:message' || !payload || typeof payload !== 'object') return;
+      const message = payload as { tripId?: string; authorId?: string };
+      if (message.tripId === id && message.authorId && message.authorId !== user?.id) {
+        setUnreadCount((current) => current + 1);
+      }
+    });
     void Location.requestForegroundPermissionsAsync().then(async ({ status }) => {
       if (status !== 'granted') return;
       subscription = await Location.watchPositionAsync(
@@ -67,8 +100,8 @@ export default function ActiveTripScreen() {
         },
       );
     });
-    return () => { clearInterval(timer); subscription?.remove(); disconnectDriverSocket(); };
-  }, [id, refresh]);
+    return () => { removeSocket(); clearInterval(timer); subscription?.remove(); disconnectDriverSocket(); };
+  }, [id, refresh, user?.id]);
 
   useEffect(() => {
     if (!trip || !mapRef.current) return;
@@ -272,6 +305,20 @@ export default function ActiveTripScreen() {
             onPress={() => router.push({ pathname: '/trip/chat', params: { id: trip.id } })}
           >
             <Feather name="message-circle" size={18} color="#2E4ED5" />
+            {unreadCount > 0 ? (
+              <View style={styles.badge}>
+                {unreadCount > 1 ? (
+                  <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : String(unreadCount)}</Text>
+                ) : null}
+              </View>
+            ) : null}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.callButton}
+            onPress={() => router.push({ pathname: '/trip/support', params: { tripId: trip.id } })}
+            accessibilityLabel="Chat with support"
+          >
+            <Feather name="headphones" size={18} color="#2E4ED5" />
           </TouchableOpacity>
         </View>
 
@@ -292,22 +339,42 @@ export default function ActiveTripScreen() {
         </TouchableOpacity>
 
         {isHeadingToPickup ? (
-          <TouchableOpacity style={styles.primaryButton} onPress={() => void handleArrived()} disabled={busy} activeOpacity={0.85}>
-            <Text style={styles.primaryButtonText}>{busy ? 'Updating...' : "I've arrived"}</Text>
-          </TouchableOpacity>
+          <ActionButton
+            style={styles.primaryButton}
+            textStyle={styles.primaryButtonText}
+            label="I've arrived"
+            loadingLabel="Updating..."
+            loading={busy}
+            onPress={() => void handleArrived()}
+          />
         ) : trip.status === 'ASSIGNED' ? (
-          <TouchableOpacity style={styles.primaryButton} onPress={() => void handleStart()} disabled={busy} activeOpacity={0.85}>
-            <Text style={styles.primaryButtonText}>{busy ? 'Starting...' : 'Start trip'}</Text>
-          </TouchableOpacity>
+          <ActionButton
+            style={styles.primaryButton}
+            textStyle={styles.primaryButtonText}
+            label="Start trip"
+            loadingLabel="Starting..."
+            loading={busy}
+            onPress={() => void handleStart()}
+          />
         ) : (
-          <TouchableOpacity style={styles.primaryButton} onPress={() => void handleComplete()} disabled={busy} activeOpacity={0.85}>
-            <Text style={styles.primaryButtonText}>{busy ? 'Completing...' : 'Complete trip'}</Text>
-          </TouchableOpacity>
+          <ActionButton
+            style={styles.primaryButton}
+            textStyle={styles.primaryButtonText}
+            label="Complete trip"
+            loadingLabel="Completing..."
+            loading={busy}
+            onPress={() => void handleComplete()}
+          />
         )}
 
-        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={busy}>
-          <Text style={styles.cancelText}>Cancel trip</Text>
-        </TouchableOpacity>
+        <ActionButton
+          style={styles.cancelButton}
+          textStyle={styles.cancelText}
+          label="Cancel trip"
+          disabled={busy}
+          spinnerColor="#B91C1C"
+          onPress={handleCancel}
+        />
       </View>
     </View>
   );
@@ -356,6 +423,19 @@ const styles = StyleSheet.create({
   riderName: { color: '#111827', fontSize: 15, fontWeight: '700' },
   riderFare: { marginTop: 3, color: '#6B7280', fontSize: 12 },
   callButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5', marginLeft: 8 },
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+  badgeText: { color: '#FFFFFF', fontSize: 9, fontWeight: '800' },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { flex: 1, color: '#374151', fontSize: 13 },

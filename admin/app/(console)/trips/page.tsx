@@ -19,6 +19,7 @@ import {
   money,
   statusTone,
 } from "@/components/ui";
+import { EntityLink } from "@/components/entity-link";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
@@ -35,8 +36,8 @@ type TripList = {
     pickupAddress: string;
     dropoffAddress: string;
     fareTotal: number;
-    rider: { name: string };
-    driver: { name: string } | null;
+    rider: { id: string; name: string };
+    driver: { id: string; name: string; profileId: string } | null;
   }[];
 };
 
@@ -184,9 +185,18 @@ export default function TripsPage() {
               {trip.bookingCode}
             </Link>,
             <div key="p">
-              <p className="font-medium">{trip.rider.name}</p>
+              <p>
+                <EntityLink href={`/riders/${trip.rider.id}`}>{trip.rider.name}</EntityLink>
+              </p>
               <p className="text-[12px] text-muted-foreground">
-                {trip.driver?.name ? `Driver: ${trip.driver.name}` : "Unassigned"}
+                {trip.driver?.profileId ? (
+                  <>
+                    Driver:{" "}
+                    <EntityLink href={`/drivers/${trip.driver.profileId}`}>{trip.driver.name}</EntityLink>
+                  </>
+                ) : (
+                  "Unassigned"
+                )}
               </p>
             </div>,
             <div key="r" className="max-w-xs">

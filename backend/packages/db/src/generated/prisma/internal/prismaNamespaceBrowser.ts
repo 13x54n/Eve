@@ -252,6 +252,7 @@ export const TripMessageScalarFieldEnum = {
   tripId: 'tripId',
   authorId: 'authorId',
   body: 'body',
+  readAt: 'readAt',
   createdAt: 'createdAt'
 } as const
 

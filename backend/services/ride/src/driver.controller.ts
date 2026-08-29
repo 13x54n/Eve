@@ -1,12 +1,13 @@
 import type { NextFunction, Request, Response } from "express";
 import type { AuthenticatedRequest } from "@eve/http";
 import * as driverService from "./driver.service.js";
-import { createTripMessage, listTripMessages } from "./trip-chat.js";
+import { createTripMessage, listTripMessages, markTripMessagesRead } from "./trip-chat.js";
 import {
   chatMessageSchema,
   driverDocumentSchema,
   driverVehicleSchema,
   driverOfferSchema,
+  supportTicketSchema,
   tripActionSchema,
 } from "./driver.validation.js";
 
@@ -211,5 +212,40 @@ export async function postMessage(req: Request, res: Response, next: NextFunctio
     const { body } = chatMessageSchema.parse(req.body);
     const message = await createTripMessage(getAuthUser(req).id, String(req.params.id), "DRIVER", body);
     res.status(201).json({ message });
+  } catch (error) { next(error); }
+}
+
+export async function markMessagesRead(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(await markTripMessagesRead(getAuthUser(req).id, String(req.params.id), "DRIVER"));
+  } catch (error) { next(error); }
+}
+
+export async function listSupport(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({ tickets: await driverService.listSupportTickets(getAuthUser(req).id) });
+  } catch (error) { next(error); }
+}
+
+export async function createSupport(req: Request, res: Response, next: NextFunction) {
+  try {
+    const ticket = await driverService.createSupportTicket(
+      getAuthUser(req).id,
+      supportTicketSchema.parse(req.body),
+    );
+    res.status(201).json({ ticket });
+  } catch (error) { next(error); }
+}
+
+export async function getSupport(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({ ticket: await driverService.getSupportTicket(getAuthUser(req).id, String(req.params.id)) });
+  } catch (error) { next(error); }
+}
+
+export async function postSupportMessage(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { body } = chatMessageSchema.parse(req.body);
+    res.json({ ticket: await driverService.addSupportMessage(getAuthUser(req).id, String(req.params.id), body) });
   } catch (error) { next(error); }
 }

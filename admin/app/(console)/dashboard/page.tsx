@@ -1,5 +1,7 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   Badge,
@@ -13,98 +15,32 @@ import {
   statusTone,
   money,
 } from "@/components/ui";
+import { BarList } from "@/components/bar-list";
 import { useAuth } from "@/lib/auth-context";
 import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
+import type { Analytics, Dashboard } from "@/lib/ops-types";
 
-type Dashboard = {
-  totals: {
-    riders: number;
-    drivers: number;
-    vehicles: number;
-    activeUsers: number;
-  };
-  drivers: {
-    online: number;
-    offline: number;
-    idle: number;
-    onTrip: number;
-  };
-  rides: {
-    ongoing: number;
-    completed: number;
-    cancelled: number;
-    scheduled: number;
-  };
-  finance: {
-    dailyBookings: number;
-    matchedFares: number;
-  };
-  queues: {
-    driverApprovals: number;
-    openTickets: number;
-  };
-  alerts: {
-    id: string;
-    kind: string;
-    title: string;
-    body: string;
-    severity: string;
-    city: string | null;
-  }[];
-  liveMap: {
-    drivers: {
-      id: string;
-      name: string;
-      presence: string;
-      lat: number | null;
-      lng: number | null;
-    }[];
-    trips: {
-      id: string;
-      bookingCode: string;
-      status: string;
-      pickupLat: number;
-      pickupLng: number;
-      rider: string;
-    }[];
-  };
-};
+const LiveMap = dynamic(() => import("@/components/live-map"), {
+  ssr: false,
+  loading: () => <div className="grid h-full place-items-center text-[12px] text-muted-foreground">Loading map…</div>,
+});
 
-function mapPoints(data: Dashboard["liveMap"]) {
-  return [
-    ...data.drivers
-      .filter((driver) => driver.lat != null && driver.lng != null)
-      .map((driver) => ({ lat: driver.lat as number, lng: driver.lng as number })),
-    ...data.trips.map((trip) => ({ lat: trip.pickupLat, lng: trip.pickupLng })),
-  ];
-}
-
-function position(lat: number, lng: number, points: { lat: number; lng: number }[], index: number) {
-  if (!points.length) {
-    return { left: `${20 + (index * 17) % 70}%`, top: `${18 + (index * 23) % 60}%` };
+function formatWait(minutes: number) {
+  if (!minutes) {
+    return "—";
   }
-
-  const lats = points.map((point) => point.lat);
-  const lngs = points.map((point) => point.lng);
-  const minLat = Math.min(...lats);
-  const maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs);
-  const maxLng = Math.max(...lngs);
-  const latSpan = maxLat - minLat || 1;
-  const lngSpan = maxLng - minLng || 1;
-  const pad = 12;
-
-  return {
-    left: `${pad + ((lng - minLng) / lngSpan) * (100 - pad * 2)}%`,
-    top: `${pad + ((maxLat - lat) / latSpan) * (100 - pad * 2)}%`,
-  };
+  if (minutes < 1) {
+    return "<1m";
+  }
+  return `${minutes.toFixed(1)}m`;
 }
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [city, setCity] = useState("");
   const [rideType, setRideType] = useState("");
+  const canAnalytics = can(user, "analytics:read");
 
   const query = useMemo(() => {
     const params = new URLSearchParams();
@@ -114,8 +50,18 @@ export default function DashboardPage() {
     return `/admin/dashboard${suffix ? `?${suffix}` : ""}`;
   }, [city, rideType]);
 
-  const { data, error, loading } = useApi<Dashboard>(query);
-  const points = data ? mapPoints(data.liveMap) : [];
+  const analyticsQuery = useMemo(() => {
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    if (rideType) params.set("rideType", rideType);
+    const suffix = params.toString();
+    return `/admin/analytics${suffix ? `?${suffix}` : ""}`;
+  }, [city, rideType]);
+
+  const { data, error, loading } = useApi<Dashboard>(query, { intervalMs: 8000 });
+  const { data: analytics } = useApi<Analytics>(canAnalytics ? analyticsQuery : null, {
+    intervalMs: 30_000,
+  });
 
   return (
     <Guard allowed={can(user, "dashboard:read")}>
@@ -149,22 +95,16 @@ export default function DashboardPage() {
           </div>
         ) : data ? (
           <div className="space-y-5">
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-              <StatCard label="Riders" value={data.totals.riders} />
-              <StatCard label="Drivers" value={data.totals.drivers} />
-              <StatCard label="Vehicles" value={data.totals.vehicles} />
-              <StatCard label="Active users" value={data.totals.activeUsers} />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-              <StatCard label="Online" value={data.drivers.online} hint={`${data.drivers.onTrip} on trip`} />
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
+              <StatCard label="Online" value={data.drivers.online} hint={`${data.drivers.offline} offline`} />
               <StatCard label="Idle" value={data.drivers.idle} />
-              <StatCard label="Trips live" value={data.rides.ongoing} hint={`${data.rides.scheduled} scheduled`} />
-              <StatCard
-                label="Completed"
-                value={data.rides.completed}
-                hint={`${data.rides.cancelled} cancelled`}
-              />
+              <StatCard label="On trip" value={data.drivers.onTrip} />
+              <StatCard label="Searching" value={data.rides.searching} hint={`${data.rides.live} live`} />
+              <StatCard label="Avg wait" value={formatWait(data.waits.searchingMinutes)} hint={`${formatWait(data.waits.matchMinutes)} to match`} />
+              <StatCard label="Open SOS" value={data.queues.openSos} hint={`${data.queues.openIncidents} incidents`} />
+              <StatCard label="Open tickets" value={data.queues.openTickets} hint={`${data.queues.slaBreachedTickets} past SLA`} />
             </div>
+
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
               <StatCard label="Bookings today" value={data.finance.dailyBookings} />
               <StatCard
@@ -172,49 +112,48 @@ export default function DashboardPage() {
                 value={money(data.finance.matchedFares)}
                 hint="Off-platform · no Eve commission"
               />
+              <StatCard label="Completed" value={data.rides.completed} hint={`${data.rides.cancelled} cancelled`} />
+              <StatCard label="Assigned / ongoing" value={`${data.rides.assigned} / ${data.rides.ongoing}`} />
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-3">
-              <Panel title="Live map">
-                <div className="relative h-72 overflow-hidden rounded-md bg-[#111]">
-                  <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#3a3a3a_1px,transparent_1px),linear-gradient(90deg,#3a3a3a_1px,transparent_1px)] [background-size:28px_28px]" />
-                  {data.liveMap.drivers.map((driver, index) => (
-                    <span
-                      key={driver.id}
-                      className="absolute z-10 h-2.5 w-2.5 rounded-full border border-black bg-live"
-                      style={
-                        driver.lat != null && driver.lng != null
-                          ? position(driver.lat, driver.lng, points, index)
-                          : position(0, 0, [], index)
-                      }
-                      title={`${driver.name} · ${driver.presence}`}
-                    />
-                  ))}
-                  {data.liveMap.trips.map((trip, index) => (
-                    <span
-                      key={trip.id}
-                      className="absolute z-10 h-2.5 w-2.5 rounded-full border border-black bg-amber-400"
-                      style={position(trip.pickupLat, trip.pickupLng, points, index)}
-                      title={`${trip.bookingCode} · ${trip.rider}`}
-                    />
-                  ))}
-                </div>
-                <p className="mt-2.5 text-[12px] text-muted-foreground">
-                  <span className="font-medium text-emerald-700">Green</span> drivers ·{" "}
-                  <span className="font-medium text-amber-700">Amber</span> live trips
-                </p>
-              </Panel>
+            <Panel title="Live map">
+              <div className="relative h-[480px] overflow-hidden rounded-md">
+                <LiveMap
+                  drivers={data.liveMap.drivers}
+                  trips={data.liveMap.trips}
+                  sos={data.liveMap.sos ?? []}
+                  fitKey={`${city}-${rideType}`}
+                />
+              </div>
+              <p className="mt-2.5 text-[12px] text-muted-foreground">
+                <span className="font-medium text-emerald-700">Green</span> available drivers ·{" "}
+                <span className="font-medium text-blue-700">Blue</span> on trip ·{" "}
+                <span className="font-medium text-amber-700">Amber</span> searching ·{" "}
+                <span className="font-medium text-red-700">Red</span> SOS
+              </p>
+            </Panel>
 
+            <div className="grid gap-4 xl:grid-cols-3">
               <Panel title="Queues">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-md bg-muted px-3.5 py-3">
-                    <span className="text-[13px] text-muted-foreground">Driver approvals</span>
-                    <span className="text-lg font-semibold">{data.queues.driverApprovals}</span>
-                  </div>
-                  <div className="flex items-center justify-between rounded-md bg-muted px-3.5 py-3">
-                    <span className="text-[13px] text-muted-foreground">Open tickets</span>
-                    <span className="text-lg font-semibold">{data.queues.openTickets}</span>
-                  </div>
+                  <QueueRow href="/drivers" label="Driver approvals" value={data.queues.driverApprovals} />
+                  <QueueRow href="/support" label="Open tickets" value={data.queues.openTickets} />
+                  <QueueRow href="/support" label="SLA breached" value={data.queues.slaBreachedTickets} />
+                  <QueueRow href="/safety" label="Open incidents" value={data.queues.openIncidents} />
+                </div>
+              </Panel>
+
+              <Panel title="Trip mix" flush>
+                <div className="p-4">
+                  <BarList
+                    items={[
+                      { label: "Searching", value: data.rides.searching },
+                      { label: "Assigned", value: data.rides.assigned },
+                      { label: "Ongoing", value: data.rides.ongoing },
+                      { label: "Completed", value: data.rides.completed },
+                      { label: "Cancelled", value: data.rides.cancelled },
+                    ]}
+                  />
                 </div>
               </Panel>
 
@@ -239,9 +178,41 @@ export default function DashboardPage() {
                 </div>
               </Panel>
             </div>
+
+            {canAnalytics && analytics ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                <Panel title="Bookings by city">
+                  <BarList
+                    items={analytics.cities.map((row) => ({ label: row.city || "Unknown", value: row.count }))}
+                    empty="No city volume yet."
+                  />
+                </Panel>
+                <Panel title="Incidents by type">
+                  <BarList
+                    items={analytics.incidents.map((row) => ({
+                      label: row.type,
+                      value: row._count._all,
+                    }))}
+                    empty="No incidents recorded."
+                  />
+                </Panel>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
     </Guard>
+  );
+}
+
+function QueueRow({ href, label, value }: { href: string; label: string; value: number }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center justify-between rounded-md bg-muted px-3.5 py-3 transition hover:bg-neutral-200"
+    >
+      <span className="text-[13px] text-muted-foreground">{label}</span>
+      <span className="text-lg font-semibold">{value}</span>
+    </Link>
   );
 }

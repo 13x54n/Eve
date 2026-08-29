@@ -51,7 +51,6 @@ export function sendDriverLocation(latitude: number, longitude: number) {
 
 export function disconnectDriverSocket() {
   subscribedTripId = null;
-  listeners.clear();
   socket?.disconnect();
   socket = null;
 }
