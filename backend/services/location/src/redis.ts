@@ -1,13 +1,12 @@
 import { createClient, type RedisClientType } from "redis";
 
-const DEFAULT_REDIS_URL = "redis://127.0.0.1:6379";
-
 let client: RedisClientType | null = null;
 let connecting: Promise<RedisClientType | null> | null = null;
 let fallbackLogged = false;
 
 export function redisUrl() {
-  return process.env.REDIS_URL || DEFAULT_REDIS_URL;
+  const url = process.env.REDIS_URL?.trim();
+  return url || undefined;
 }
 
 export function logGeoFallback(reason?: unknown) {
@@ -28,8 +27,13 @@ export async function getRedis(): Promise<RedisClientType | null> {
 }
 
 async function connect(): Promise<RedisClientType | null> {
+  const url = redisUrl();
+  if (!url) {
+    logGeoFallback("REDIS_URL is not set");
+    return null;
+  }
   const next = createClient({
-    url: redisUrl(),
+    url,
     socket: { connectTimeout: 1000 },
   });
   next.on("error", () => {
