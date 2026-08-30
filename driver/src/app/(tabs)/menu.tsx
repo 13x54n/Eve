@@ -1,8 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, Platform } from 'react-native';
+import { View, Text, Pressable, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Host, FieldGroup, ListItem } from '@expo/ui';
-import { SymbolView } from 'expo-symbols';
+import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { getDriverProfile } from '@/services/driver';
 import { useAuth } from '@/context/auth-context';
@@ -10,6 +9,41 @@ import { Brand, Spacing } from '@/constants/theme';
 import { useBrand } from '@/context/theme-context';
 import { lightImpact } from '@/lib/haptics';
 import { ActionButton } from '@/components/action-button';
+
+type MenuRow = {
+  icon: keyof typeof Feather.glyphMap;
+  title: string;
+  detail?: string;
+  onPress: () => void;
+};
+
+function SettingsSection({ title, rows }: { title: string; rows: MenuRow[] }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.card}>
+        {rows.map((row, index) => (
+          <Pressable
+            key={row.title}
+            accessibilityRole="button"
+            accessibilityLabel={row.title}
+            style={[styles.row, index < rows.length - 1 ? styles.rowBorder : null]}
+            onPress={row.onPress}
+          >
+            <View style={styles.icon}>
+              <Feather name={row.icon} size={18} color={Brand.accent} />
+            </View>
+            <View style={styles.copy}>
+              <Text style={styles.rowTitle}>{row.title}</Text>
+              {row.detail ? <Text style={styles.rowDetail}>{row.detail}</Text> : null}
+            </View>
+            <Feather name="chevron-right" size={18} color={Brand.muted} />
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export default function MenuScreen() {
   const brand = useBrand();
@@ -59,6 +93,55 @@ export default function MenuScreen() {
     ]);
   };
 
+  const accountRows: MenuRow[] = [
+    {
+      icon: 'user',
+      title: 'Personal information',
+      detail: personalInfoSublabel,
+      onPress: () => router.push('/profile/edit' as Href),
+    },
+    {
+      icon: 'truck',
+      title: 'Vehicle management',
+      detail: vehicleSublabel,
+      onPress: () => router.push('/onboarding/vehicle' as Href),
+    },
+    {
+      icon: 'file-text',
+      title: 'Documents',
+      detail: 'License, insurance, background check',
+      onPress: () => router.push('/onboarding/documents' as Href),
+    },
+  ];
+
+  const resourceRows: MenuRow[] = [
+    {
+      icon: 'life-buoy',
+      title: 'Support',
+      onPress: () => router.push('/trip/support' as Href),
+    },
+    {
+      icon: 'file',
+      title: 'Terms & privacy',
+      onPress: () => router.push('/legal' as Href),
+    },
+  ];
+
+  const preferenceRows: MenuRow[] = [
+    {
+      icon: 'bell',
+      title: 'Notifications & appearance',
+      detail: 'Ride updates and appearance',
+      onPress: () => router.push('/profile/notifications' as Href),
+    },
+    {
+      icon: 'lock',
+      title: 'Security',
+      detail: 'Password',
+      onPress: () => router.push('/profile/security' as Href),
+    },
+  ];
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
       <Text style={styles.topBarTitle}>Menu</Text>
@@ -72,65 +155,15 @@ export default function MenuScreen() {
           </Text>
         </View>
       </Pressable>
-      <View style={{ flex: 1 }}>
-      <Host matchContents>
-        <FieldGroup>
-          <FieldGroup.Section title="Account">
-            <ListItem
-              supportingText={personalInfoSublabel}
-              leading={<SymbolView name="person.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/profile/edit' as Href)}
-            >
-              Personal information
-            </ListItem>
-            <ListItem
-              supportingText={vehicleSublabel}
-              leading={<SymbolView name="car.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/onboarding/vehicle' as Href)}
-            >
-              Vehicle management
-            </ListItem>
-            <ListItem
-              supportingText="License, insurance, background check"
-              leading={<SymbolView name="doc.text.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/onboarding/documents' as Href)}
-            >
-              Documents
-            </ListItem>
-          </FieldGroup.Section>
-          <FieldGroup.Section title="Resources">
-            <ListItem
-              leading={<SymbolView name="lifepreserver" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/trip/support' as Href)}
-            >
-              Support
-            </ListItem>
-            <ListItem
-              leading={<SymbolView name="doc.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/legal' as Href)}
-            >
-              Terms & privacy
-            </ListItem>
-          </FieldGroup.Section>
-          <FieldGroup.Section title="Preferences">
-            <ListItem
-              supportingText="Ride updates and appearance"
-              leading={<SymbolView name="bell.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/profile/notifications' as Href)}
-            >
-              Notifications & appearance
-            </ListItem>
-            <ListItem
-              supportingText="Password"
-              leading={<SymbolView name="lock.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push('/profile/security' as Href)}
-            >
-              Security
-            </ListItem>
-          </FieldGroup.Section>
-        </FieldGroup>
-      </Host>
-      </View>
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <SettingsSection title="Account" rows={accountRows} />
+        <SettingsSection title="Resources" rows={resourceRows} />
+        <SettingsSection title="Preferences" rows={preferenceRows} />
+      </ScrollView>
       <View style={{ paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) }}>
         <ActionButton
           style={styles.signOutButton}
@@ -192,6 +225,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Brand.textSecondary,
   },
+  list: { flex: 1 },
+  listContent: { paddingBottom: Spacing.three },
+  section: { marginBottom: Spacing.three },
+  sectionTitle: {
+    marginBottom: 8,
+    marginLeft: 4,
+    color: Brand.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  card: { backgroundColor: Brand.surface, borderRadius: 14, paddingHorizontal: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 70, gap: 12, paddingHorizontal: 8 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: Brand.border },
+  icon: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EEF2FF',
+  },
+  copy: { flex: 1 },
+  rowTitle: { color: Brand.text, fontSize: 16, fontWeight: '700' },
+  rowDetail: { marginTop: 3, color: Brand.textSecondary, fontSize: 13 },
   signOutButton: {
     alignItems: 'center',
     justifyContent: 'center',
