@@ -1582,7 +1582,17 @@ function parseStaffEmail(value: unknown) {
     fail("Email is required", "ConflictError");
   }
   const email = value.trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  // RFC 5321 max length; cap first so validation stays linear.
+  if (email.length === 0 || email.length > 254) {
+    fail("A valid email is required", "ConflictError");
+  }
+  const at = email.indexOf("@");
+  if (at < 1 || at > email.length - 3 || email.lastIndexOf("@") !== at) {
+    fail("A valid email is required", "ConflictError");
+  }
+  const domain = email.slice(at + 1);
+  const dot = domain.lastIndexOf(".");
+  if (dot < 1 || dot === domain.length - 1 || /\s/.test(email)) {
     fail("A valid email is required", "ConflictError");
   }
   return email;
