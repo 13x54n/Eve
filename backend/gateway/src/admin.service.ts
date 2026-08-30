@@ -1592,8 +1592,13 @@ function parseStaffEmail(value: unknown) {
   }
   const domain = email.slice(at + 1);
   const dot = domain.lastIndexOf(".");
-  if (dot < 1 || dot === domain.length - 1 || /\s/.test(email)) {
+  if (dot < 1 || dot === domain.length - 1) {
     fail("A valid email is required", "ConflictError");
+  }
+  for (const ch of email) {
+    if (ch.trim() === "") {
+      fail("A valid email is required", "ConflictError");
+    }
   }
   return email;
 }

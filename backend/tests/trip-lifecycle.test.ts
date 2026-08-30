@@ -102,6 +102,16 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         .expect(200);
       expect(after.body.driver.presence).toBe("ONLINE");
       expect(after.body.driver.earningsTotal).toBeCloseTo(earningsBefore + proposedFare, 2);
+
+      const detail = await request(app)
+        .get(`/api/driver/trips/${trip.id}`)
+        .set("Authorization", `Bearer ${driver.token}`)
+        .expect(200);
+      expect(detail.body.trip).toMatchObject({
+        id: trip.id,
+        status: "COMPLETED",
+        netEarnings: proposedFare,
+      });
     },
     20000,
   );

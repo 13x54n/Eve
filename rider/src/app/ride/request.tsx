@@ -75,6 +75,17 @@ export default function RequestRideScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (params.dropoff) setDropoff(params.dropoff);
+    if (params.pickup) setPickup(params.pickup);
+    const lat = params.dropoff_lat ? Number(params.dropoff_lat) : NaN;
+    const lng = params.dropoff_lng ? Number(params.dropoff_lng) : NaN;
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      setDropoffCoord({ lat, lng });
+      setMapCoordinate({ latitude: lat, longitude: lng });
+    }
+  }, [params.dropoff, params.dropoff_lat, params.dropoff_lng, params.pickup]);
+
+  useEffect(() => {
     (async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -599,7 +610,7 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    paddingTop: 48,
+    paddingTop: 68,
     backgroundColor: "#F7F8EF",
   },
   header: {

@@ -86,6 +86,37 @@ export async function getEarnings() {
   return data;
 }
 
+export type DriverTripDetail = {
+  id: string;
+  bookingCode: string;
+  status: string;
+  rideType: string;
+  city: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupLat: number;
+  pickupLng: number;
+  dropoffLat: number;
+  dropoffLng: number;
+  distanceKm: number;
+  durationMin: number;
+  fareTotal: number;
+  netEarnings: number;
+  paymentStatus: string;
+  paymentMethod: string;
+  riderName: string;
+  riderRating: number;
+  cancellationReason: string | null;
+  createdAt: string;
+  startedAt: string | null;
+  endedAt: string | null;
+};
+
+export async function getTripEarnings(tripId: string) {
+  const { data } = await api.get<{ trip: DriverTripDetail }>(`/driver/trips/${tripId}`);
+  return data.trip;
+}
+
 export type IncomingTrip = {
   id: string;
   bookingCode: string;

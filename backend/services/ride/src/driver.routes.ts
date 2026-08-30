@@ -8,6 +8,7 @@ import {
   createOffer,
   documentUploadAuth,
   earnings,
+  getTrip,
   incomingTrips,
   listMessages,
   listSupport,
@@ -42,6 +43,7 @@ router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
 router.post("/trips/:id/offers", requireAuth, createOffer);
 router.get("/trips", requireAuth, trips);
 router.get("/trips/incoming", requireAuth, incomingTrips);
+router.get("/trips/:id", requireAuth, getTrip);
 router.get("/trips/:id/messages", requireAuth, listMessages);
 router.post("/trips/:id/messages", requireAuth, postMessage);
 router.post("/trips/:id/messages/read", requireAuth, markMessagesRead);

@@ -108,6 +108,20 @@ export async function trips(
   }
 }
 
+export async function getTrip(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const user = getAuthUser(req);
+    const trip = await driverService.getDriverTrip(user.id, String(req.params.id));
+    res.status(200).json({ trip });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function acceptTrip(
   req: Request,
   res: Response,

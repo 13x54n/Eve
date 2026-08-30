@@ -18,6 +18,10 @@ export type Trip = {
   durationMin: number;
   etaMinutes?: number | null;
   fareTotal: number;
+  paymentMethod?: string;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  cancellationReason?: string | null;
   vehicleType?: RiderVehicleType;
   recipientName?: string | null;
   recipientPhone?: string | null;

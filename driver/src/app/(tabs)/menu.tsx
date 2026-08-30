@@ -144,37 +144,37 @@ export default function MenuScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
-      <Text style={styles.topBarTitle}>Menu</Text>
-      <Pressable style={styles.profileCard} onPress={() => router.push('/profile/edit' as Href)}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{profile?.user?.name ?? 'Loading...'}</Text>
-          <Text style={styles.tripsText}>
-            {profile?.rating ? `${Number(profile.rating).toFixed(2)} · ` : ''}
-            {profile?.city ?? 'No city set'}
-          </Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <Text style={styles.topBarTitle}>Menu</Text>
+        <Pressable style={styles.profileCard} onPress={() => router.push('/profile/edit' as Href)}>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile?.user?.name ?? 'Loading...'}</Text>
+            <Text style={styles.tripsText}>
+              {profile?.rating ? `${Number(profile.rating).toFixed(2)} · ` : ''}
+              {profile?.city ?? 'No city set'}
+            </Text>
+          </View>
+        </Pressable>
+        <View
+          style={styles.list}
+        >
+          <SettingsSection title="Account" rows={accountRows} />
+          <SettingsSection title="Resources" rows={resourceRows} />
+          <SettingsSection title="Preferences" rows={preferenceRows} />
         </View>
-      </Pressable>
-      <ScrollView
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <SettingsSection title="Account" rows={accountRows} />
-        <SettingsSection title="Resources" rows={resourceRows} />
-        <SettingsSection title="Preferences" rows={preferenceRows} />
+        <View style={{ paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) }}>
+          <ActionButton
+            style={styles.signOutButton}
+            textStyle={styles.signOutText}
+            label="Sign out"
+            loadingLabel="Signing out..."
+            loading={signingOut}
+            onPress={handleSignOut}
+          />
+          <Text style={styles.versionText}>Eve Driver · v1.0.0</Text>
+        </View>
       </ScrollView>
-      <View style={{ paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) }}>
-        <ActionButton
-          style={styles.signOutButton}
-          textStyle={styles.signOutText}
-          label="Sign out"
-          loadingLabel="Signing out..."
-          loading={signingOut}
-          onPress={handleSignOut}
-        />
-        <Text style={styles.versionText}>Eve Driver · v1.0.0</Text>
-      </View>
     </SafeAreaView>
   );
 }

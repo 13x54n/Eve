@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
 
 type TxType = 'trip' | 'tip' | 'bonus' | 'cashout';
@@ -101,13 +102,9 @@ export default function Earnings() {
 
       {/* Top bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.backButton} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={22} color="#0F172A" />
-        </TouchableOpacity>
+        <View style={styles.backButton} />
         <Text style={styles.topBarTitle}>Eve Wallet</Text>
-        {/* <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-          <Ionicons name="time-outline" size={20} color="#0F172A" />
-        </TouchableOpacity> */}
+        <View style={styles.backButton} />
       </View>
 
       <SectionList
@@ -160,16 +157,14 @@ export default function Earnings() {
             <Text style={styles.historyTitle}>Transaction history</Text>
           </>
         }
-        // renderSectionHeader={({ section }) => (
-        //   <View style={styles.sectionHeaderRow}>
-        //     <Text style={styles.sectionHeaderText}>{section.title}</Text>
-        //     <Text style={styles.sectionHeaderTotal}>
-        //       +${section.total.toFixed(2)}
-        //     </Text>
-        //   </View>
-        // )}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.txRow} activeOpacity={0.6}>
+          <TouchableOpacity
+            style={styles.txRow}
+            activeOpacity={0.6}
+            onPress={() =>
+              router.push({ pathname: '/(tabs)/earnings/[id]', params: { id: item.id } })
+            }
+          >
             <TxIcon type={item.type} />
             <View style={styles.txMiddle}>
               <Text style={styles.txTitle}>{item.title}</Text>
@@ -183,6 +178,7 @@ export default function Earnings() {
             >
               {formatMoney(item.amount)}
             </Text>
+            <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.txSeparator} />}
@@ -320,7 +316,6 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderWidth: 1,
@@ -370,7 +365,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    // borderRadius: 16,
     padding: 12,
   },
   txIcon: {
@@ -398,6 +392,7 @@ const styles = StyleSheet.create({
   txAmount: {
     fontSize: 15,
     fontWeight: '700',
+    marginRight: 4,
   },
   txSeparator: {
     height: 8,

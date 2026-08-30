@@ -256,7 +256,7 @@ export default function CourierRequestScreen() {
 function makeStyles(brand: ReturnType<typeof useBrand>) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: brand.canvas },
-    container: { padding: 20, paddingTop: 52, paddingBottom: 40 },
+    container: { padding: 20, paddingTop: 72, paddingBottom: 40 },
     header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
     title: { color: brand.text, fontSize: 20, fontWeight: "800" },
     label: { marginTop: 14, marginBottom: 8, color: brand.textSecondary, fontSize: 12, fontWeight: "700" },
@@ -291,7 +291,7 @@ function makeStyles(brand: ReturnType<typeof useBrand>) {
     vehicleChipActive: { backgroundColor: brand.text },
     vehicleChipText: { color: brand.textSecondary, fontWeight: "700" },
     vehicleChipTextActive: { color: brand.surface },
-    button: { marginTop: 8, borderRadius: 12, backgroundColor: brand.accent },
+    button: { marginTop: 8,paddingVertical: 16, borderRadius: 12, backgroundColor: brand.accent },
     buttonText: { color: "#FFFFFF", fontWeight: "700" },
   });
 }

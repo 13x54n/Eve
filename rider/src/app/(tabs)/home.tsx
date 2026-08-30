@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import { searchAddresses, AddressSuggestion } from "@/services/location";
+import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
 import { cancelTrip } from "@/services/trips";
 import { useRideSession } from "@/context/ride-session";
 import { useAuth } from "@/context/auth-context";
@@ -88,15 +88,25 @@ export default function HomeScreen() {
   }
 
 
-  function handleSelectSuggestion(item: AddressSuggestion) {
+  async function handleSelectSuggestion(item: AddressSuggestion) {
     setDestination(item.label);
     setSuggestions([]);
     setSearchFocused(false);
+    const coords =
+      item.lat != null && item.lng != null
+        ? { lat: item.lat, lng: item.lng }
+        : await geocodeSuggestion(item, { lat: region.latitude, lng: region.longitude });
     router.push({
       pathname: "/ride/request",
       params: {
         pickup: "Current location",
-        dropoff: item.display_name,
+        dropoff: item.label,
+        ...(coords
+          ? {
+              dropoff_lat: String(coords.lat),
+              dropoff_lng: String(coords.lng),
+            }
+          : {}),
       },
     });
   }
@@ -225,7 +235,7 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <Pressable
                 style={styles.suggestionRow}
-                onPress={() => handleSelectSuggestion(item)}
+                onPress={() => void handleSelectSuggestion(item)}
               >
                 <View style={styles.suggestionIcon}>
                   <Feather name="map-pin" size={17} color="#2e4ed2" />

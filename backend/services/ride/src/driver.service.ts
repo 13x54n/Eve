@@ -597,35 +597,35 @@ export async function cancelTrip(
   return cancelledTrip;
 }
 
-export async function getDriverTrips(
-  userId: string,
-  options: { status?: string; take?: number; skip?: number } = {},
-) {
-  const profile = await prisma.driverProfile.findUnique({
-    where: { userId },
-  });
+const driverTripInclude = {
+  rider: { include: { user: true } },
+  vehicle: true,
+} as const;
 
-  if (!profile) {
-    const error = new Error("Driver profile not found");
-    error.name = "NotFoundError";
-    throw error;
-  }
-
-  const trips = await prisma.trip.findMany({
-    where: {
-      driverId: profile.id,
-      ...(options.status ? { status: options.status as never } : {}),
-    },
-    include: {
-      rider: { include: { user: true } },
-      vehicle: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: options.take || 30,
-    skip: options.skip || 0,
-  });
-
-  return trips.map((trip) => ({
+function serializeDriverTrip(trip: {
+  id: string;
+  bookingCode: string;
+  status: string;
+  rideType: string;
+  city: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupLat: number;
+  pickupLng: number;
+  dropoffLat: number;
+  dropoffLng: number;
+  distanceKm: number | { toString(): string };
+  durationMin: number;
+  fareTotal: number | { toString(): string };
+  paymentStatus: string;
+  paymentMethod: string;
+  cancellationReason: string | null;
+  createdAt: Date;
+  startedAt: Date | null;
+  endedAt: Date | null;
+  rider?: { rating?: unknown; user?: { name?: string | null } | null } | null;
+}) {
+  return {
     id: trip.id,
     bookingCode: trip.bookingCode,
     status: trip.status,
@@ -649,7 +649,56 @@ export async function getDriverTrips(
     createdAt: trip.createdAt,
     startedAt: trip.startedAt,
     endedAt: trip.endedAt,
-  }));
+  };
+}
+
+export async function getDriverTrips(
+  userId: string,
+  options: { status?: string; take?: number; skip?: number } = {},
+) {
+  const profile = await prisma.driverProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) {
+    const error = new Error("Driver profile not found");
+    error.name = "NotFoundError";
+    throw error;
+  }
+
+  const trips = await prisma.trip.findMany({
+    where: {
+      driverId: profile.id,
+      ...(options.status ? { status: options.status as never } : {}),
+    },
+    include: driverTripInclude,
+    orderBy: { createdAt: "desc" },
+    take: options.take || 30,
+    skip: options.skip || 0,
+  });
+
+  return trips.map(serializeDriverTrip);
+}
+
+export async function getDriverTrip(userId: string, tripId: string) {
+  const profile = await prisma.driverProfile.findUnique({
+    where: { userId },
+  });
+
+  if (!profile) {
+    fail("Driver profile not found", "NotFoundError");
+  }
+
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, driverId: profile.id },
+    include: driverTripInclude,
+  });
+
+  if (!trip) {
+    fail("Trip not found", "NotFoundError");
+  }
+
+  return serializeDriverTrip(trip);
 }
 
 export async function getDriverEarningsOverview(userId: string) {
