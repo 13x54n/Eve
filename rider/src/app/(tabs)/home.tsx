@@ -49,14 +49,11 @@ export default function HomeScreen() {
       void getGreetingTemplate()
         .then(setGreetingTemplate)
         .catch(() => {});
-    }, [refreshActive]),
+      if (activeTrip?.status === "ASSIGNED" || activeTrip?.status === "ONGOING") {
+        router.replace({ pathname: "/ride/tracking", params: { tripId: activeTrip.id } });
+      }
+    }, [activeTrip?.id, activeTrip?.status, refreshActive]),
   );
-
-  useEffect(() => {
-    if (activeTrip?.status === "ASSIGNED" || activeTrip?.status === "ONGOING") {
-      router.replace({ pathname: "/ride/tracking", params: { tripId: activeTrip.id } });
-    }
-  }, [activeTrip?.id, activeTrip?.status]);
 
   useEffect(() => {
     async function loadLocation() {
