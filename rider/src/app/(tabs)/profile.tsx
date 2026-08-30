@@ -1,8 +1,7 @@
-import { Host, FieldGroup, ListItem } from "@expo/ui";
-import { SymbolView } from "expo-symbols";
+import Feather from "@expo/vector-icons/Feather";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { getSessionUser } from "@/services/auth";
 import { useAuth } from "@/context/auth-context";
@@ -10,6 +9,41 @@ import { Brand, Spacing } from "@/constants/theme";
 import { useBrand } from "@/context/theme-context";
 import { lightImpact } from "@/lib/haptics";
 import { ActionButton } from "@/components/action-button";
+
+type MenuRow = {
+  icon: keyof typeof Feather.glyphMap;
+  title: string;
+  detail?: string;
+  onPress: () => void;
+};
+
+function SettingsSection({ title, rows }: { title: string; rows: MenuRow[] }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <View style={styles.card}>
+        {rows.map((row, index) => (
+          <Pressable
+            key={row.title}
+            accessibilityRole="button"
+            accessibilityLabel={row.title}
+            style={[styles.row, index < rows.length - 1 ? styles.rowBorder : null]}
+            onPress={row.onPress}
+          >
+            <View style={styles.icon}>
+              <Feather name={row.icon} size={18} color={Brand.accent} />
+            </View>
+            <View style={styles.copy}>
+              <Text style={styles.rowTitle}>{row.title}</Text>
+              {row.detail ? <Text style={styles.rowDetail}>{row.detail}</Text> : null}
+            </View>
+            <Feather name="chevron-right" size={18} color={Brand.muted} />
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
 
 export default function ProfileScreen() {
   const brand = useBrand();
@@ -61,6 +95,48 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const preferenceRows: MenuRow[] = [
+    {
+      icon: "user",
+      title: "Personal information",
+      detail: "Name, email, phone",
+      onPress: () => router.push("/profile/edit" as Href),
+    },
+    {
+      icon: "lock",
+      title: "Security",
+      detail: "Password",
+      onPress: () => router.push("/profile/security" as Href),
+    },
+    {
+      icon: "bell",
+      title: "Notifications & appearance",
+      detail: "Alerts and appearance",
+      onPress: () => router.push("/profile/notifications" as Href),
+    },
+    {
+      icon: "help-circle",
+      title: "Help and support",
+      detail: "FAQs and contact us",
+      onPress: () => router.push("/ride/support"),
+    },
+  ];
+
+  const moreRows: MenuRow[] = [
+    {
+      icon: "file-text",
+      title: "Terms & privacy",
+      detail: "Terms of Use and Privacy Policy",
+      onPress: () => router.push("/legal" as Href),
+    },
+    {
+      icon: "info",
+      title: "About Eve",
+      detail: "Version 1.0.0",
+      onPress: () => Alert.alert("About Eve", "Your everyday ride, made simpler."),
+    },
+  ];
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: brand.canvas }]} edges={["top"]}>
       <Text style={styles.title}>Profile</Text>
@@ -73,61 +149,17 @@ export default function ProfileScreen() {
           <Text style={styles.member}>{memberSince ? `Member since ${memberSince}` : ""}</Text>
         </View>
         <Pressable style={styles.editButton} accessibilityLabel="Edit profile" onPress={() => router.push("/profile/edit" as Href)}>
-          <SymbolView name="pencil" tintColor={Brand.accent} size={17} />
+          <Feather name="edit-2" size={16} color={Brand.accent} />
         </Pressable>
       </View>
-      <View style={{ flex: 1 }}>
-      <Host matchContents>
-        <FieldGroup>
-          <FieldGroup.Section title="Preferences">
-            <ListItem
-              supportingText="Name, email, phone"
-              leading={<SymbolView name="person.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push("/profile/edit" as Href)}
-            >
-              Personal information
-            </ListItem>
-            <ListItem
-              supportingText="Password"
-              leading={<SymbolView name="lock.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push("/profile/security" as Href)}
-            >
-              Security
-            </ListItem>
-            <ListItem
-              supportingText="Alerts and appearance"
-              leading={<SymbolView name="bell.fill" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push("/profile/notifications" as Href)}
-            >
-              Notifications & appearance
-            </ListItem>
-            <ListItem
-              supportingText="FAQs and contact us"
-              leading={<SymbolView name="questionmark.circle" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push("/ride/support")}
-            >
-              Help and support
-            </ListItem>
-          </FieldGroup.Section>
-          <FieldGroup.Section title="More">
-            <ListItem
-              supportingText="Terms of Use and Privacy Policy"
-              leading={<SymbolView name="doc.text" tintColor={Brand.accent} size={18} />}
-              onPress={() => router.push("/legal" as Href)}
-            >
-              Terms & privacy
-            </ListItem>
-            <ListItem
-              supportingText="Version 1.0.0"
-              leading={<SymbolView name="info.circle" tintColor={Brand.accent} size={18} />}
-              onPress={() => Alert.alert("About Eve", "Your everyday ride, made simpler.")}
-            >
-              About Eve
-            </ListItem>
-          </FieldGroup.Section>
-        </FieldGroup>
-      </Host>
-      </View>
+      <ScrollView
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <SettingsSection title="Preferences" rows={preferenceRows} />
+        <SettingsSection title="More" rows={moreRows} />
+      </ScrollView>
       <View style={{ paddingBottom: insets.bottom + (Platform.OS === "ios" ? 64 : 12) }}>
         <ActionButton
           style={styles.logoutButton}
@@ -159,6 +191,32 @@ const styles = StyleSheet.create({
   email: { marginTop: 3, color: Brand.textSecondary, fontSize: 13 },
   member: { alignSelf: "flex-start", marginTop: 8, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 10, color: Brand.textSecondary, backgroundColor: Brand.border, fontSize: 10, fontWeight: "600" },
   editButton: { alignItems: "center", justifyContent: "center", width: 34, height: 34, borderRadius: 17, backgroundColor: Brand.surface },
+  list: { flex: 1 },
+  listContent: { paddingBottom: Spacing.three },
+  section: { marginBottom: Spacing.three },
+  sectionTitle: {
+    marginBottom: 8,
+    marginLeft: 4,
+    color: Brand.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+  card: { backgroundColor: Brand.surface, borderRadius: 14, paddingHorizontal: 4 },
+  row: { flexDirection: "row", alignItems: "center", minHeight: 70, gap: 12, paddingHorizontal: 8 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: Brand.border },
+  icon: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "#EEF2FF",
+  },
+  copy: { flex: 1 },
+  rowTitle: { color: Brand.text, fontSize: 16, fontWeight: "700" },
+  rowDetail: { marginTop: 3, color: Brand.textSecondary, fontSize: 13 },
   logoutButton: { alignItems: "center", justifyContent: "center", marginBottom: 12, padding: 15, borderRadius: 12, backgroundColor: Brand.danger },
   logoutText: { color: Brand.surface, fontWeight: "700" },
 });
