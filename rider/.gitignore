@@ -43,3 +43,5 @@ example
 /android
 
 .env
+google-service-account.json
+AuthKey_*.p8

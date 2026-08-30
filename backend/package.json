@@ -9,8 +9,8 @@
     "gateway"
   ],
   "scripts": {
-    "dev": "NODE_OPTIONS=--conditions=development tsx watch gateway/src/server.ts",
-    "dev:split": "NODE_OPTIONS=--conditions=development concurrently -n auth,loc,ride,ntfy,gw -c blue,green,magenta,yellow,cyan \"npm run dev -w @eve/auth\" \"npm run dev -w @eve/location\" \"npm run dev -w @eve/ride\" \"npm run dev -w @eve/notify\" \"GATEWAY_MODE=proxy PORT=4000 tsx watch gateway/src/server.ts\"",
+    "dev": "cross-env NODE_OPTIONS=--conditions=development tsx watch gateway/src/server.ts",
+    "dev:split": "cross-env NODE_OPTIONS=--conditions=development concurrently -n auth,loc,ride,ntfy,gw -c blue,green,magenta,yellow,cyan \"npm run dev -w @eve/auth\" \"npm run dev -w @eve/location\" \"npm run dev -w @eve/ride\" \"npm run dev -w @eve/notify\" \"cross-env GATEWAY_MODE=proxy PORT=4000 tsx watch gateway/src/server.ts\"",
     "build": "prisma generate && tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p packages/http/tsconfig.json && tsc -p services/auth/tsconfig.json && tsc -p services/location/tsconfig.json && tsc -p services/notify/tsconfig.json && tsc -p services/ride/tsconfig.json && tsc -p gateway/tsconfig.json",
     "clean": "rm -rf packages/*/dist services/*/dist gateway/dist",
     "start": "node gateway/dist/server.js",
@@ -37,6 +37,7 @@
     "@types/pg": "^8.15.5",
     "@types/supertest": "^7.2.1",
     "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.1",
     "prisma": "^7.9.1",
     "supertest": "^7.2.2",

@@ -12,7 +12,7 @@
     }
   },
   "scripts": {
-    "dev": "NODE_OPTIONS=--conditions=development tsx watch src/server.ts",
+    "dev": "cross-env NODE_OPTIONS=--conditions=development tsx watch src/server.ts",
     "start": "node dist/server.js"
   },
   "dependencies": {

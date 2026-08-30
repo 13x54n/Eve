@@ -13,9 +13,6 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
 
-// npm install expo-linear-gradient @expo/vector-icons
-// (expo-linear-gradient works fine in Expo Go — no dev client needed)
-
 type TxType = 'trip' | 'tip' | 'bonus' | 'cashout';
 
 type Transaction = {

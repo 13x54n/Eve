@@ -1,0 +1,48 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Sherpa Foods",
+    "categories": ["TRAVEL", "NAVIGATION"],
+    "info": {
+      "en-US": {
+        "title": "Eve Rider",
+        "subtitle": "Request a ride, pick an offer",
+        "description": "Eve connects riders with independent drivers. Request a trip, review fare offers, accept a match, and track your ride. Payment happens off-platform — Eve records the suggested and matched fare for audit and does not collect ride payments.\n\nKEY FEATURES:\n• Request bike or car trips with a suggested fare\n• Compare driver offers and accept a match\n• Live map, pickup, and trip tracking\n• Ride history and in-app support\n\nLOCATION\nEve uses your location while you use the app to set pickup and drop-off points and to share your position with your driver during a trip.\n\nPRIVACY\nWe do not sell your personal information. See the in-app Privacy Policy and your hosted privacy URL in App Store Connect.",
+        "keywords": "ride,rideshare,taxi,driver,bike,car,trip,offer,fare,pickup",
+        "releaseNotes": "Initial App Store release of Eve Rider.",
+        "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
+        "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"
+      }
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "gamblingSimulated": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "seventeenPlus": false
+    },
+    "release": {
+      "automaticRelease": false,
+      "phasedRelease": true
+    },
+    "review": {
+      "firstName": "YOUR_REVIEW_FIRST_NAME",
+      "lastName": "YOUR_REVIEW_LAST_NAME",
+      "email": "YOUR_REVIEW_EMAIL@example.com",
+      "phone": "+1 YOUR_REVIEW_PHONE",
+      "demoUsername": "YOUR_REVIEW_RIDER_EMAIL",
+      "demoPassword": "YOUR_REVIEW_PASSWORD",
+      "notes": "Eve is a ride-matching marketplace. Payment is off-platform (for example cash). Provide a seeded or staging rider account. Allow location when prompted so maps and trip request work. Privacy Policy and Terms are in the app under Legal."
+    }
+  }
+}

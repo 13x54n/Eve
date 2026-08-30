@@ -1,13 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { requireApiBaseUrl } from '@/lib/public-env';
 
-export const API_BASE = process.env.EXPO_PUBLIC_API_URL;
-
-if (!API_BASE) {
-  throw new Error(
-    'EXPO_PUBLIC_API_URL is not configured. Start Expo again after setting it in driver/.env.',
-  );
-}
+export const API_BASE = requireApiBaseUrl('driver');
 
 export const api = axios.create({
   baseURL: API_BASE,

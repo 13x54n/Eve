@@ -1,27 +1,55 @@
 {
   "expo": {
-    "name": "Eve - Driver",
+    "name": "Eve Driver",
     "slug": "eve-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "eve-driver",
     "userInterfaceStyle": "light",
+    "primaryColor": "#208AEF",
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "ca.sherpafoods.evedriver",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you are online.",
+        "NSUserNotificationsUsageDescription": "Eve sends incoming trip requests, offer updates, and trip status alerts.",
+        "NSPhotoLibraryUsageDescription": "Eve lets you upload licence, insurance, and vehicle documents from your photo library during driver onboarding."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+          }
+        ]
       }
     },
     "android": {
       "icon": "./assets/images/icon.png",
-      "predictiveBackGestureEnabled": false,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png",
+        "backgroundColor": "#208AEF"
+      },
       "package": "ca.sherpafoods.evedriver",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": false,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
@@ -33,7 +61,9 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you're online."
+          "locationWhenInUsePermission": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you are online.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
         }
       ],
       [
@@ -48,7 +78,15 @@
       "expo-font",
       "expo-status-bar",
       "expo-web-browser",
-      "expo-notifications",
+      "expo-document-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#208AEF",
+          "defaultChannel": "default"
+        }
+      ],
       [
         "@rnmapbox/maps",
         {
@@ -64,7 +102,9 @@
       "router": {},
       "eas": {
         "projectId": "fcff2689-332f-4f65-9da1-98dced1d59bf"
-      }
+      },
+      "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
+      "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"
     }
   }
 }

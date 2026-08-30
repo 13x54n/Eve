@@ -1,12 +1,20 @@
-4) Wire ride requests to your backend
-Wherever you currently “request a ride”, use your existing api import:
+# Eve Rider
 
-```ts
-import { api } from '../services/api';
+Expo SDK 57 rider app (`ca.sherpafoods.eve`). File-based routes live in `src/app`. This app uses Mapbox and `expo-dev-client` — use a development build, not Expo Go.
 
-const { data } = await api.post('/rides', {
-  pickup: { lat: 43.6532, lng: -79.3832 },
-  dropoff: { lat: 43.6426, lng: -79.3871 },
-});
-// data.id, data.status, etc.
+## Local
+
+```bash
+cp .env.example .env
+# Set EXPO_PUBLIC_API_URL (http://localhost:4000/api or your LAN IP) and a Mapbox public token
+npm install
+npm start
 ```
+
+The API is the backend gateway `/api` (default `http://localhost:4000/api`). See the repo root `README.md`.
+
+## Store release
+
+Identifiers, EAS profiles, and the exact `eas build` / `eas submit` commands for **both** apps are in [`../STORE.md`](../STORE.md).
+
+Do not ship with a localhost or LAN `EXPO_PUBLIC_API_URL`. Replace the placeholders in `eas.json` first.

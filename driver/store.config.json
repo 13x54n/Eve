@@ -1,0 +1,48 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "copyright": "2026 Sherpa Foods",
+    "categories": ["TRAVEL", "NAVIGATION"],
+    "info": {
+      "en-US": {
+        "title": "Eve Driver",
+        "subtitle": "Go online and send fare offers",
+        "description": "Eve Driver is the companion app for independent drivers on the Eve marketplace. Go online, receive nearby ride requests, send a fare offer, and complete pickup through drop-off. Eve records suggested and matched fares for audit. It does not collect ride payments or take commission.\n\nKEY FEATURES:\n• Driver onboarding with vehicle and document upload\n• Go online and see nearby requests\n• Send one offer at a time and manage the trip lifecycle\n• Earnings history for completed trips\n\nLOCATION\nEve uses your location while the app is in use so we can send nearby offers and share progress with the rider during a trip. Background location is not required.\n\nDOCUMENTS\nYou can upload licence, insurance, and vehicle files from your device during onboarding.",
+        "keywords": "driver,rideshare,offer,fare,trip,earnings,bike,car,pickup,online",
+        "releaseNotes": "Initial App Store release of Eve Driver.",
+        "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
+        "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"
+      }
+    },
+    "advisory": {
+      "alcoholTobaccoOrDrugUseOrReferences": "NONE",
+      "gamblingSimulated": "NONE",
+      "medicalOrTreatmentInformation": "NONE",
+      "profanityOrCrudeHumor": "NONE",
+      "sexualContentGraphicAndNudity": "NONE",
+      "sexualContentOrNudity": "NONE",
+      "horrorOrFearThemes": "NONE",
+      "matureOrSuggestiveThemes": "NONE",
+      "violenceCartoonOrFantasy": "NONE",
+      "violenceRealistic": "NONE",
+      "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+      "contests": "NONE",
+      "gambling": false,
+      "unrestrictedWebAccess": false,
+      "seventeenPlus": false
+    },
+    "release": {
+      "automaticRelease": false,
+      "phasedRelease": true
+    },
+    "review": {
+      "firstName": "YOUR_REVIEW_FIRST_NAME",
+      "lastName": "YOUR_REVIEW_LAST_NAME",
+      "email": "YOUR_REVIEW_EMAIL@example.com",
+      "phone": "+1 YOUR_REVIEW_PHONE",
+      "demoUsername": "YOUR_REVIEW_DRIVER_EMAIL",
+      "demoPassword": "YOUR_REVIEW_PASSWORD",
+      "notes": "Eve Driver is a marketplace app for independent drivers. Provide an approved staging driver account. Allow location when prompted. Document upload uses the system file picker. Payment is off-platform. Privacy Policy and Terms are in the app under Legal."
+    }
+  }
+}

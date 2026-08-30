@@ -170,6 +170,8 @@ Liveness board: [http://localhost:3010](http://localhost:3010). Probes gateway `
 
 Restart Expo after changing `EXPO_PUBLIC_*` env vars.
 
+Store release (App Store / Play, TestFlight, EAS identifiers): see [`STORE.md`](STORE.md).
+
 ## Seed users (local only)
 
 After `npm run db:seed`, password for all seeded accounts is `Admin123!`.
