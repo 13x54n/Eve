@@ -124,7 +124,13 @@ export async function spawnRider(options: { name?: string; phone?: string } = {}
 }
 
 export async function spawnApprovedOnlineDriver(
-  options: { city?: string; vehicleType?: "BIKE" | "CAR"; viaAdmin?: boolean } = {},
+  options: {
+    city?: string;
+    vehicleType?: "BIKE" | "CAR";
+    viaAdmin?: boolean;
+    name?: string;
+    location?: { lat: number; lng: number };
+  } = {},
 ) {
   const { email, request: req } = registerDriver(options);
   const res = await req.expect(201);
@@ -136,7 +142,7 @@ export async function spawnApprovedOnlineDriver(
   } else {
     await approveDriver(profileId);
   }
-  await goOnline(token).expect(200);
+  await goOnline(token, options.location ?? PICKUP).expect(200);
   return { email, token, profileId, user: res.body.user };
 }
 

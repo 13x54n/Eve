@@ -1,5 +1,17 @@
 import { prisma } from "@eve/db";
 import { MATCH_LIMIT, MATCH_RADIUS_KM, distanceKm, fail } from "@eve/shared";
+import {
+  refreshDriverLocationIfIndexed,
+  rebuildGeoIndexes as rebuildGeoIndexesFromPostgres,
+  resetGeoIndexes as resetGeoIndexesInRedis,
+  removeDriver,
+  removeSearchingTrip as removeSearchingTripFromGeo,
+  searchDrivers,
+  searchTrips,
+  upsertDriver,
+  upsertSearchingTrip as upsertSearchingTripInGeo,
+  type VehicleType,
+} from "./geo.js";
 
 const GPS_WRITE_INTERVAL_MS = 15_000;
 const lastGpsWrite = new Map<string, number>();
@@ -12,10 +24,35 @@ export type NearbyDriver = {
   distance: number;
 };
 
-export async function nearbyDrivers(input: {
+export type NearbySearchingTrip = {
+  id: string;
+  distanceToPickup: number;
+};
+
+function vehicleTypesOf(vehicles: { vehicleType: string }[]): VehicleType[] {
+  return vehicles
+    .map((vehicle) => vehicle.vehicleType)
+    .filter((type): type is VehicleType => type === "BIKE" || type === "CAR");
+}
+
+function isMatchEligible(input: {
+  approvalStatus: string;
+  presence: string;
+  latitude: number | null;
+  longitude: number | null;
+}) {
+  return (
+    input.approvalStatus === "APPROVED"
+    && ["ONLINE", "IDLE"].includes(input.presence)
+    && input.latitude != null
+    && input.longitude != null
+  );
+}
+
+async function nearbyDriversFromDb(input: {
   pickupLat: number;
   pickupLng: number;
-  vehicleType: "BIKE" | "CAR";
+  vehicleType: VehicleType;
 }): Promise<NearbyDriver[]> {
   const drivers = await prisma.driverProfile.findMany({
     where: {
@@ -40,24 +77,16 @@ export async function nearbyDrivers(input: {
     .slice(0, MATCH_LIMIT);
 }
 
-export async function nearbySearchingTrips(userId: string) {
-  const profile = await prisma.driverProfile.findUnique({
-    where: { userId },
-    include: { vehicles: true },
-  });
-
-  if (!profile) fail("Driver profile not found", "NotFoundError");
-  if (profile.approvalStatus !== "APPROVED" || !["ONLINE", "IDLE"].includes(profile.presence)) {
-    return [] as { id: string; distanceToPickup: number }[];
-  }
-  if (profile.latitude == null || profile.longitude == null) {
-    return [];
-  }
-
+async function nearbySearchingTripsFromDb(input: {
+  latitude: number;
+  longitude: number;
+  vehicleTypes: VehicleType[];
+}): Promise<NearbySearchingTrip[]> {
+  if (input.vehicleTypes.length === 0) return [];
   const trips = await prisma.trip.findMany({
     where: {
       status: "SEARCHING",
-      vehicleType: { in: profile.vehicles.map((vehicle) => vehicle.vehicleType) },
+      vehicleType: { in: input.vehicleTypes },
     },
     select: { id: true, pickupLat: true, pickupLng: true },
     orderBy: { createdAt: "desc" },
@@ -66,10 +95,87 @@ export async function nearbySearchingTrips(userId: string) {
   return trips
     .map((trip) => ({
       id: trip.id,
-      distanceToPickup: distanceKm(profile.latitude!, profile.longitude!, trip.pickupLat, trip.pickupLng),
+      distanceToPickup: distanceKm(input.latitude, input.longitude, trip.pickupLat, trip.pickupLng),
     }))
     .filter((trip) => trip.distanceToPickup <= MATCH_RADIUS_KM)
     .sort((left, right) => left.distanceToPickup - right.distanceToPickup)
+    .slice(0, MATCH_LIMIT);
+}
+
+export async function nearbyDrivers(input: {
+  pickupLat: number;
+  pickupLng: number;
+  vehicleType: "BIKE" | "CAR";
+}): Promise<NearbyDriver[]> {
+  const hits = await searchDrivers(input.vehicleType, input.pickupLng, input.pickupLat);
+  if (hits == null) {
+    return nearbyDriversFromDb(input);
+  }
+  if (hits.length === 0) return [];
+
+  const rows = await prisma.driverProfile.findMany({
+    where: {
+      id: { in: hits.map((hit) => hit.id) },
+      approvalStatus: "APPROVED",
+      presence: { in: ["ONLINE", "IDLE"] },
+      vehicles: { some: { vehicleType: input.vehicleType } },
+      latitude: { not: null },
+      longitude: { not: null },
+    },
+    select: { id: true, userId: true },
+  });
+  const allowed = new Map(rows.map((row) => [row.id, row.userId]));
+
+  return hits
+    .filter((hit) => allowed.has(hit.id))
+    .map((hit) => ({
+      id: hit.id,
+      userId: allowed.get(hit.id)!,
+      latitude: hit.latitude,
+      longitude: hit.longitude,
+      distance: hit.distance,
+    }))
+    .slice(0, MATCH_LIMIT);
+}
+
+export async function nearbySearchingTrips(userId: string) {
+  const profile = await prisma.driverProfile.findUnique({
+    where: { userId },
+    include: { vehicles: true },
+  });
+
+  if (!profile) fail("Driver profile not found", "NotFoundError");
+  if (profile.approvalStatus !== "APPROVED" || !["ONLINE", "IDLE"].includes(profile.presence)) {
+    return [] as NearbySearchingTrip[];
+  }
+  if (profile.latitude == null || profile.longitude == null) {
+    return [];
+  }
+
+  const types = vehicleTypesOf(profile.vehicles);
+  const hits = await searchTrips(types, profile.longitude, profile.latitude);
+  if (hits == null) {
+    return nearbySearchingTripsFromDb({
+      latitude: profile.latitude,
+      longitude: profile.longitude,
+      vehicleTypes: types,
+    });
+  }
+  if (hits.length === 0) return [];
+
+  const rows = await prisma.trip.findMany({
+    where: {
+      id: { in: hits.map((hit) => hit.id) },
+      status: "SEARCHING",
+      vehicleType: { in: types },
+    },
+    select: { id: true },
+  });
+  const allowed = new Set(rows.map((row) => row.id));
+
+  return hits
+    .filter((hit) => allowed.has(hit.id))
+    .map((hit) => ({ id: hit.id, distanceToPickup: hit.distance }))
     .slice(0, MATCH_LIMIT);
 }
 
@@ -79,6 +185,48 @@ export async function distanceToPickup(userId: string, pickupLat: number, pickup
     return Number.POSITIVE_INFINITY;
   }
   return distanceKm(profile.latitude, profile.longitude, pickupLat, pickupLng);
+}
+
+export async function syncDriverGeo(userId: string) {
+  const profile = await prisma.driverProfile.findUnique({
+    where: { userId },
+    include: { vehicles: { select: { vehicleType: true } } },
+  });
+  if (!profile) return;
+  const latitude = profile.latitude;
+  const longitude = profile.longitude;
+  if (!isMatchEligible({ ...profile, latitude, longitude })) {
+    await removeDriver(profile.id, profile.userId);
+    return;
+  }
+  await upsertDriver({
+    id: profile.id,
+    userId: profile.userId,
+    latitude: latitude!,
+    longitude: longitude!,
+    vehicleTypes: vehicleTypesOf(profile.vehicles),
+  });
+}
+
+export async function indexSearchingTrip(input: {
+  id: string;
+  pickupLat: number;
+  pickupLng: number;
+  vehicleType: "BIKE" | "CAR";
+}) {
+  await upsertSearchingTripInGeo(input);
+}
+
+export async function removeSearchingTrip(id: string, vehicleType?: "BIKE" | "CAR") {
+  await removeSearchingTripFromGeo(id, vehicleType);
+}
+
+export async function rebuildGeoIndexes() {
+  return rebuildGeoIndexesFromPostgres();
+}
+
+export async function resetGeoIndexes() {
+  return resetGeoIndexesInRedis();
 }
 
 export async function updateDriverPresence(
@@ -116,6 +264,8 @@ export async function updateDriverPresence(
       ...(typeof input.longitude === "number" ? { longitude: input.longitude } : {}),
     },
   });
+
+  await syncDriverGeo(userId);
 }
 
 export async function recordDriverLocation(userId: string, latitude: number, longitude: number) {
@@ -128,6 +278,8 @@ export async function recordDriverLocation(userId: string, latitude: number, lon
       data: { latitude, longitude },
     });
   }
+
+  await refreshDriverLocationIfIndexed(userId, latitude, longitude);
 
   const trips = await prisma.trip.findMany({
     where: { driver: { userId }, status: { in: ["ASSIGNED", "ONGOING"] } },

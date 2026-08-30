@@ -5,9 +5,12 @@ import { getDriverProfile } from "@eve/db";
 import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
   distanceToPickup,
+  indexSearchingTrip,
   nearbyDrivers,
   nearbySearchingTrips,
   recordDriverLocation,
+  removeSearchingTrip,
+  syncDriverGeo,
   updateDriverPresence,
 } from "./matching.js";
 
@@ -75,6 +78,56 @@ internalLocationRouter.get("/trips/nearby", async (req, res, next) => {
       return;
     }
     res.json({ trips: await nearbySearchingTrips(userId) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+internalLocationRouter.post("/drivers/geo/sync", async (req, res, next) => {
+  try {
+    const userId = String(req.body?.userId ?? "");
+    if (!userId) {
+      res.status(400).json({ message: "userId is required" });
+      return;
+    }
+    await syncDriverGeo(userId);
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+internalLocationRouter.post("/trips/geo", async (req, res, next) => {
+  try {
+    const { id, pickupLat, pickupLng, vehicleType } = req.body ?? {};
+    if (
+      typeof id !== "string"
+      || typeof pickupLat !== "number"
+      || typeof pickupLng !== "number"
+      || (vehicleType !== "BIKE" && vehicleType !== "CAR")
+    ) {
+      res.status(400).json({ message: "id, pickupLat, pickupLng, and vehicleType are required" });
+      return;
+    }
+    await indexSearchingTrip({ id, pickupLat, pickupLng, vehicleType });
+    res.json({ ok: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
+internalLocationRouter.post("/trips/geo/remove", async (req, res, next) => {
+  try {
+    const { id, vehicleType } = req.body ?? {};
+    if (typeof id !== "string") {
+      res.status(400).json({ message: "id is required" });
+      return;
+    }
+    await removeSearchingTrip(
+      id,
+      vehicleType === "BIKE" || vehicleType === "CAR" ? vehicleType : undefined,
+    );
+    res.json({ ok: true });
   } catch (error) {
     next(error);
   }

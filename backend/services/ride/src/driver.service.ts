@@ -4,6 +4,8 @@ import { MATCH_RADIUS_KM, fail, money, startOfDay } from "@eve/shared";
 import {
   distanceToPickupClient,
   nearbySearchingTripsClient,
+  removeSearchingTripClient,
+  syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
 
@@ -343,6 +345,11 @@ export async function acceptTrip(userId: string, tripId: string) {
     where: { id: profile.id },
     data: { presence: "ON_TRIP" },
   });
+  await removeSearchingTripClient(
+    tripId,
+    trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,
+  );
+  await syncDriverGeoClient(userId);
 
   await recordTripEvent({
     tripId,
@@ -510,6 +517,7 @@ export async function completeTrip(
 
     return completed;
   });
+  await syncDriverGeoClient(userId);
 
   await recordTripEvent({
     tripId,
@@ -581,6 +589,11 @@ export async function cancelTrip(
       cancellationRate: { increment: 1 },
     },
   });
+  await removeSearchingTripClient(
+    tripId,
+    trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,
+  );
+  await syncDriverGeoClient(userId);
 
   await recordTripEvent({
     tripId,
