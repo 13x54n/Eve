@@ -10,6 +10,16 @@ services:
     volumes:
       - eve_pg:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   auth:
     image: node:22
     working_dir: /app
@@ -33,10 +43,12 @@ services:
     env_file: .env
     environment:
       LOCATION_PORT: "4002"
+      REDIS_URL: redis://redis:6379
     ports:
       - "4002:4002"
     depends_on:
       - postgres
+      - redis
 
   ride:
     image: node:22
@@ -49,12 +61,14 @@ services:
       RIDE_PORT: "4003"
       LOCATION_URL: http://location:4002
       NOTIFY_URL: http://notify:4004
+      REDIS_URL: redis://redis:6379
     ports:
       - "4003:4003"
     depends_on:
       - postgres
       - location
       - notify
+      - redis
 
   notify:
     image: node:22
@@ -86,6 +100,7 @@ services:
       LOCATION_URL: http://location:4002
       RIDE_URL: http://ride:4003
       NOTIFY_URL: http://notify:4004
+      REDIS_URL: redis://redis:6379
     ports:
       - "4000:4000"
     depends_on:
@@ -93,6 +108,7 @@ services:
       - location
       - ride
       - notify
+      - redis
 
 volumes:
   eve_pg:

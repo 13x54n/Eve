@@ -1,9 +1,12 @@
 import type { NearbyDriver } from "./matching.js";
 import {
   distanceToPickup as distanceToPickupLocal,
+  indexSearchingTrip as indexSearchingTripLocal,
   nearbyDrivers as nearbyDriversLocal,
   nearbySearchingTrips as nearbySearchingTripsLocal,
   recordDriverLocation as recordDriverLocationLocal,
+  removeSearchingTrip as removeSearchingTripLocal,
+  syncDriverGeo as syncDriverGeoLocal,
 } from "./matching.js";
 
 function locationUrl() {
@@ -62,4 +65,42 @@ export async function recordDriverLocation(userId: string, latitude: number, lon
   if (!response.ok) return recordDriverLocationLocal(userId, latitude, longitude);
   const body = await response.json() as { tripIds: string[] };
   return body.tripIds;
+}
+
+export async function syncDriverGeo(userId: string) {
+  const base = locationUrl();
+  if (!base) return syncDriverGeoLocal(userId);
+  const response = await fetch(new URL("/internal/drivers/geo/sync", base), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  if (!response.ok) return syncDriverGeoLocal(userId);
+}
+
+export async function indexSearchingTrip(input: {
+  id: string;
+  pickupLat: number;
+  pickupLng: number;
+  vehicleType: "BIKE" | "CAR";
+}) {
+  const base = locationUrl();
+  if (!base) return indexSearchingTripLocal(input);
+  const response = await fetch(new URL("/internal/trips/geo", base), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) return indexSearchingTripLocal(input);
+}
+
+export async function removeSearchingTrip(id: string, vehicleType?: "BIKE" | "CAR") {
+  const base = locationUrl();
+  if (!base) return removeSearchingTripLocal(id, vehicleType);
+  const response = await fetch(new URL("/internal/trips/geo/remove", base), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id, vehicleType }),
+  });
+  if (!response.ok) return removeSearchingTripLocal(id, vehicleType);
 }

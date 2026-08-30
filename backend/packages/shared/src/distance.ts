@@ -1,4 +1,4 @@
-export const MATCH_RADIUS_KM = 25;
+export const MATCH_RADIUS_KM = 15;
 export const MATCH_LIMIT = 5;
 
 export function distanceKm(fromLat: number, fromLng: number, toLat: number, toLng: number) {

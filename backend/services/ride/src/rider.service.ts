@@ -1,7 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { calculateFare, prisma, selectGreetingTemplate } from "@eve/db";
 import { distanceKm, durationMinutes, fail, money } from "@eve/shared";
-import { nearbyDriversClient } from "@eve/location";
+import {
+  indexSearchingTripClient,
+  nearbyDriversClient,
+  removeSearchingTripClient,
+  syncDriverGeoClient,
+} from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
 
 async function getRider(userId: string) {
@@ -118,7 +123,7 @@ export async function createTrip(userId: string, input: {
     : null;
   const trip = await prisma.trip.create({
     data: {
-      bookingCode: `EVE-${Date.now().toString(36).toUpperCase()}`,
+      bookingCode: `EVE-${randomBytes(6).toString("hex").toUpperCase()}`,
       riderId: rider.id,
       status: "SEARCHING",
       rideType: input.rideType,
@@ -143,6 +148,12 @@ export async function createTrip(userId: string, input: {
     },
   });
   const result = serializeTrip(trip, { userId, riderId: rider.id });
+  await indexSearchingTripClient({
+    id: trip.id,
+    pickupLat: trip.pickupLat,
+    pickupLng: trip.pickupLng,
+    vehicleType: trip.vehicleType,
+  });
   const drivers = await nearbyDriversClient({
     pickupLat: input.pickupLat,
     pickupLng: input.pickupLng,
@@ -341,6 +352,13 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
   });
   // Re-read outside the transaction so this reflects the committed state.
   const result = await getTrip(userId, tripId);
+  await Promise.all([
+    removeSearchingTripClient(
+      tripId,
+      result.vehicleType === "BIKE" || result.vehicleType === "CAR" ? result.vehicleType : undefined,
+    ),
+    syncDriverGeoClient(acceptedDriverUserId),
+  ]);
   emitTripAndUserEvent(tripId, "DRIVER", acceptedDriverUserId, "trip:assigned", result);
   for (const driverUserId of rejectedDriverUserIds) {
     emitUserEvent("DRIVER", driverUserId, "offer:rejected", { tripId });
@@ -371,12 +389,18 @@ export async function cancelTrip(userId: string, tripId: string) {
       await tx.driverProfile.update({ where: { id: trip.driverId }, data: { presence: "ONLINE" } });
     }
   });
+  await removeSearchingTripClient(
+    tripId,
+    trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,
+  );
   const result = await getTrip(userId, tripId);
   const assigned = trip.driverId
     ? await prisma.driverProfile.findUnique({ where: { id: trip.driverId }, select: { userId: true } })
     : null;
-  if (assigned) emitTripAndUserEvent(tripId, "DRIVER", assigned.userId, "trip:cancelled", result);
-  else emitTripEvent(tripId, "trip:cancelled", result);
+  if (assigned) {
+    await syncDriverGeoClient(assigned.userId);
+    emitTripAndUserEvent(tripId, "DRIVER", assigned.userId, "trip:cancelled", result);
+  } else emitTripEvent(tripId, "trip:cancelled", result);
   for (const row of pendingDrivers) {
     emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId });
   }

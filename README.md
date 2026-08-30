@@ -31,7 +31,9 @@ Clients talk only to the **gateway** on port **4000**. Admin HTTP lives on the g
 
 **Compose mode** (`GATEWAY_MODE=compose`, default): one Node process mounts all routers. Use `npm run dev` in `backend/`.
 
-**Proxy mode** (`GATEWAY_MODE=proxy`): gateway forwards `/api/auth`, `/api/driver`, `/api/rider`, and `/socket.io` to the services and keeps `/api/admin` local. Use `npm run dev:split` or `docker compose` in `backend/`.
+**Proxy mode** (`GATEWAY_MODE=proxy`): gateway forwards `/api/auth`, `/api/driver`, `/api/rider`, and `/socket.io` to the services and keeps `/api/admin` local. Use `npm run dev:split` in `backend/`.
+
+Details (routing, env, internal HTTP, production start): **[backend/docs/gateway.md](backend/docs/gateway.md)**.
 
 Public prefixes (both modes):
 

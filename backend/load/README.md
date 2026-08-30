@@ -16,8 +16,38 @@ npm run load:seed          # creates load-*@eve-load.test users and load/.tokens
 k6 run -e BASE_URL=http://localhost:4000 load/health.js
 k6 run -e BASE_URL=http://localhost:4000 load/lifecycle.js
 npm run load:smoke         # health then a short lifecycle run
+npm run load:capacity      # ramp GET /api/health until latency or errors break
 npm run load:cleanup       # deletes @eve-load.test users, trips, offers, ledger
 ```
+
+## Capacity (max requests / second)
+
+`lifecycle.js` is a ride flow, not a throughput test: one rider cannot hold two active trips, so it collapses into 409s. Use `capacity.js` to see how many HTTP requests the gateway can take at once.
+
+With the gateway on `npm run dev`:
+
+```bash
+npm run load:capacity
+```
+
+That ramps from 200 toward 4000 requests/second against `GET /api/health` (no auth, no trip rules). Watch:
+
+| Metric | Meaning |
+| --- | --- |
+| `http_reqs` rate | What the server actually served |
+| `http_req_duration` p95 | When this climbs past ~500ms, you are saturating |
+| `http_req_failed` | Errors / non-2xx |
+| `dropped_iterations` | k6 could not open enough VUs to hit the target rate |
+
+The ceiling is the last stage where fail rate stays near 0 and p95 stays healthy — not the `PEAK_RATE` you asked for if thresholds fail.
+
+Raise the target if the laptop still looks idle:
+
+```bash
+k6 run -e BASE_URL=http://localhost:4000 -e PEAK_RATE=8000 load/capacity.js
+```
+
+This is the Node/health ceiling. It is not trip-create throughput. Do not use `POST /api/rider/trips` for “max RPS”; use `lifecycle.js` or `search-storm.js` for that path.
 
 Optional: `LOAD_COUNT=50 npm run load:seed`
 
