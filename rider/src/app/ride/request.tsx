@@ -411,6 +411,22 @@ export default function RequestRideScreen() {
         </View>
       ) : null}
 
+      <View style={styles.paymentInfoCard}>
+        <View style={styles.paymentInfoHeader}>
+          <Feather name="info" size={20} color="#2E4ED5" />
+          <Text style={styles.paymentInfoTitle}>Payment: Cash Only</Text>
+        </View>
+        <Text style={styles.paymentInfoText}>
+          Pay your driver directly in cash at the end of your trip. The suggested fare will be shown when a driver accepts.
+        </Text>
+        <View style={styles.paymentInfoNote}>
+          <Feather name="dollar-sign" size={14} color="#6B7280" />
+          <Text style={styles.paymentInfoNoteText}>
+            Digital payment methods coming soon
+          </Text>
+        </View>
+      </View>
+
       <View style={styles.routePreviewCard}>
         <View style={styles.routePreviewHeader}>
           <View>
@@ -602,6 +618,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginTop: 14,
+  },
+  paymentInfoCard: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  paymentInfoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  paymentInfoTitle: {
+    color: "#1E40AF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  paymentInfoText: {
+    color: "#1E3A8A",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  paymentInfoNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+  },
+  paymentInfoNoteText: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontStyle: "italic",
   },
   routePreviewCard: {
     marginTop: 20,
