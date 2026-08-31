@@ -1,0 +1,25 @@
+# Git root ignore for EAS. Incomplete app-level .easignore files replace
+# .gitignore and were causing ~252MB uploads of sibling packages.
+
+**/node_modules
+**/.expo
+**/.kotlin
+**/dist
+**/web-build
+**/*.tsbuildinfo
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/.env
+**/.env*.local
+**/google-service-account.json
+**/.DS_Store
+**/.metro-health-check*
+
+/backend
+/admin
+/monitor
+/.agents
+/.cursor

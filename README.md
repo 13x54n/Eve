@@ -6,8 +6,8 @@ Community ride-matching marketplace. Riders request a trip, drivers send fare of
 
 ```
 Eve/
-  rider/     Expo 57 rider app — auth, request, offers, tracking, history
-  driver/    Expo 57 driver app — onboarding, presence, offers, trip lifecycle, earnings
+  rider/     Expo 57 rider app — Auth0, request, offers, tracking, history
+  driver/    Expo 57 driver app — Auth0, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
   monitor/   Next.js 16 liveness board — API/frontend ping, memory, host performance
   backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
@@ -33,14 +33,14 @@ Clients talk only to the **gateway** on port **4000**. Admin HTTP lives on the g
 
 **Proxy mode** (`GATEWAY_MODE=proxy`): gateway forwards `/api/auth`, `/api/driver`, `/api/rider`, and `/socket.io` to the services and keeps `/api/admin` local. Use `npm run dev:split` in `backend/`.
 
-Details (routing, env, internal HTTP, production start): **[backend/docs/gateway.md](backend/docs/gateway.md)**.
+Details (routing, env, internal HTTP, production start): **[backend/docs/gateway.md](backend/docs/gateway.md)**. Authentication (Auth0 + Eve JWT): **[backend/docs/auth.md](backend/docs/auth.md)**.
 
 Public prefixes (both modes):
 
 | Prefix | Purpose |
 | --- | --- |
 | `/api/health` | Health check |
-| `/api/auth` | Rider and admin auth |
+| `/api/auth` | Rider/driver Auth0 exchange, admin login, `/me` |
 | `/api/driver` | Driver auth, presence, trips, earnings |
 | `/api/rider` | Rider trips and offer accept |
 | `/api/admin` | Staff console (RBAC) |
@@ -53,7 +53,7 @@ Public prefixes (both modes):
 | `@eve/db` | Prisma client |
 | `@eve/http` | Express app, CORS, auth middleware |
 | `@eve/shared` | JWT, passwords, permissions |
-| `@eve/auth` | Register / login / password reset (`AUTH_PORT`, default 4001) |
+| `@eve/auth` | Auth0 ID-token exchange, admin login, leftover password routes (`AUTH_PORT`, default 4001) |
 | `@eve/location` | Driver presence (`LOCATION_PORT`, default 4002) |
 | `@eve/ride` | Matching, offers, trip lifecycle (`RIDE_PORT`, default 4003) |
 | `@eve/notify` | Notifications + Socket.IO (`NOTIFY_PORT`, default 4004) |
@@ -90,6 +90,8 @@ Create `backend/.env` (not in git). Required:
 ```
 DATABASE_URL=postgresql://eve:eve@localhost:5432/eve
 JWT_ACCESS_SECRET=replace-with-a-long-random-secret
+AUTH0_DOMAIN=your-tenant.us.auth0.com
+AUTH0_CLIENT_ID=your_native_app_client_id
 ```
 
 Optional:
@@ -146,7 +148,11 @@ Point clients at the gateway **`/api`** base. On a phone or simulator, use your 
 
 ```
 EXPO_PUBLIC_API_URL=http://localhost:4000/api
+EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
+EXPO_PUBLIC_AUTH0_CLIENT_ID=your_native_app_client_id
 ```
+
+Copy from `.env.example`. Rider and driver use Auth0 Universal Login, then exchange an ID token for an Eve API JWT. See **[backend/docs/auth.md](backend/docs/auth.md)** for callback URLs and the Native app settings. Rebuild a **development client** after changing the Auth0 config plugin (`npx expo run:ios` / `run:android`). `npx expo start` / Expo Go cannot run Auth0.
 
 `admin/.env.local`:
 
@@ -155,8 +161,8 @@ NEXT_PUBLIC_API_URL=http://localhost:4000/api
 ```
 
 ```bash
-cd rider && npm install && npm start
-cd driver && npm install && npm start
+cd rider && npm install && npx expo run:android
+cd driver && npm install && npx expo run:android
 cd admin && npm install && npm run dev
 ```
 
@@ -176,7 +182,7 @@ Store release (App Store / Play, TestFlight, EAS identifiers): see [`STORE.md`](
 
 ## Seed users (local only)
 
-After `npm run db:seed`, password for all seeded accounts is `Admin123!`.
+After `npm run db:seed`, password for all seeded accounts is `Admin123!`. Use those emails only in the **admin** console and against leftover password API routes (tests/load). Rider and driver apps sign in with Auth0, not these passwords.
 
 | Role | Email |
 | --- | --- |
@@ -192,8 +198,8 @@ Do not use these credentials outside local development.
 
 ## Apps in more detail
 
-**Rider** — request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
+**Rider** — Auth0 sign-in, request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
 
-**Driver** — register, vehicle and documents, go online, incoming trips, send offers, pickup / start / complete, earnings.
+**Driver** — Auth0 sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, earnings.
 
-**Admin** — staff login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; safety and support. No in-app commission or rider payment collection.
+**Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; safety and support. No in-app commission or rider payment collection.

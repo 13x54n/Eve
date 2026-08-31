@@ -25,23 +25,21 @@
         "NSPrivacyAccessedAPITypes": [
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
           },
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
-            "NSPrivacyAccessedAPITypeReasons": ["C617.1"]
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
           }
         ]
       }
     },
     "android": {
       "icon": "./assets/images/icon.png",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png",
-        "backgroundColor": "#208AEF"
-      },
       "package": "ca.sherpafoods.eve",
       "versionCode": 1,
       "predictiveBackGestureEnabled": false,
@@ -68,9 +66,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 76,
+          "backgroundColor": "#2e4ed2"
         }
       ],
       "expo-secure-store",
@@ -96,7 +94,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "61c1fda6-f52f-49b8-8b49-a587575be3f2"
+        "projectId": "2a8a9fd4-063a-4f30-8190-c1e9b780aaf0"
       },
       "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
       "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"

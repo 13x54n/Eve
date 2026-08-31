@@ -1,0 +1,24 @@
+# Used when EAS is run from rider/. Patterns are from the git root.
+**/node_modules
+**/.expo
+**/.kotlin
+**/dist
+**/web-build
+**/*.tsbuildinfo
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.key
+**/*.mobileprovision
+**/.env
+**/.env*.local
+**/google-service-account.json
+**/.DS_Store
+**/.metro-health-check*
+
+/backend
+/admin
+/monitor
+/driver
+/.agents
+/.cursor

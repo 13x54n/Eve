@@ -1,19 +1,25 @@
 import "@/components/map/mapbox-token";
 import { Stack } from "expo-router/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { Auth0Provider } from "react-native-auth0";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { DriverNotificationsProvider } from "@/context/driver-notifications";
 import { ThemeProvider } from "@/context/theme-context";
+import { requireAuth0Config } from "@/lib/auth0";
 
 export default function RootLayout() {
+  const { domain, clientId } = requireAuth0Config();
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <DriverNotificationsProvider>
-            <RootNavigator />
-          </DriverNotificationsProvider>
-        </AuthProvider>
+        <Auth0Provider domain={domain} clientId={clientId}>
+          <AuthProvider>
+            <DriverNotificationsProvider>
+              <RootNavigator />
+            </DriverNotificationsProvider>
+          </AuthProvider>
+        </Auth0Provider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

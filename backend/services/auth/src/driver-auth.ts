@@ -129,7 +129,7 @@ export async function loginDriver(input: { email: string; password: string }) {
     include: { driverProfile: true },
   });
 
-  if (!user || !user.isActive || user.role !== "DRIVER") {
+  if (!user || !user.isActive || user.role !== "DRIVER" || !user.passwordHash) {
     const error = new Error("Invalid email or password for driver account");
     error.name = "UnauthorizedError";
     throw error;

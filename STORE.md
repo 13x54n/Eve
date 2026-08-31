@@ -1,6 +1,6 @@
 # Store release — Eve Rider and Eve Driver
 
-Both apps are Expo SDK 57, use `expo-dev-client` plus Mapbox (`@rnmapbox/maps`), and must ship as **development clients / store binaries**, not Expo Go.
+Both apps are Expo SDK 57, use `expo-dev-client` plus Mapbox (`@rnmapbox/maps`) and Auth0 (`react-native-auth0`), and must ship as **development clients / store binaries**, not Expo Go.
 
 EAS Build and Submit consume plan minutes. Paid Apple Developer and Google Play accounts are required. Do not run cloud builds until identifiers, secrets, and store listings below are filled in.
 
@@ -9,7 +9,7 @@ EAS Build and Submit consume plan minutes. Paid Apple Developer and Google Play 
 | Rider | `rider/` | Eve Rider | `ca.sherpafoods.eve` | `ca.sherpafoods.eve` | `61c1fda6-f52f-49b8-8b49-a587575be3f2` |
 | Driver | `driver/` | Eve Driver | `ca.sherpafoods.evedriver` | `ca.sherpafoods.evedriver` | `fcff2689-332f-4f65-9da1-98dced1d59bf` |
 
-Schemes: `eve` and `eve-driver`.
+Schemes: Expo `eve` and `eve-driver`. Auth0 callback custom schemes: `eve` (rider) and `evedriver` (driver). See [backend/docs/auth.md](backend/docs/auth.md).
 
 ## 1. Replace placeholders before the first production build
 
@@ -17,6 +17,7 @@ In each app’s `eas.json` (`preview.env` and `production.env`):
 
 - `EXPO_PUBLIC_API_URL` — public gateway `/api` base, HTTPS. Not `localhost` or a LAN IP.
 - `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` — Mapbox **public** token (`pk.…`). Restrict it to the app bundle IDs / package names in the Mapbox console.
+- `EXPO_PUBLIC_AUTH0_DOMAIN` / `EXPO_PUBLIC_AUTH0_CLIENT_ID` — Native Auth0 application (same client for both apps). Callback and logout URLs must include both iOS and Android URLs for each bundle ID ([auth.md](backend/docs/auth.md)).
 
 In each app’s `eas.json` `submit.production` and `store.config.json`:
 
@@ -31,6 +32,8 @@ Optional EAS secrets (same names as the env keys) if you do not want tokens in `
 cd rider
 npx eas-cli@latest secret:create --name EXPO_PUBLIC_API_URL --value "https://YOUR_HOST/api" --type string
 npx eas-cli@latest secret:create --name EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN --value "pk.YOUR_TOKEN" --type string
+npx eas-cli@latest secret:create --name EXPO_PUBLIC_AUTH0_DOMAIN --value "your-tenant.us.auth0.com" --type string
+npx eas-cli@latest secret:create --name EXPO_PUBLIC_AUTH0_CLIENT_ID --value "YOUR_NATIVE_CLIENT_ID" --type string
 ```
 
 Repeat in `driver/`.
@@ -130,6 +133,6 @@ npx eas-cli@latest metadata:push
 
 ## 5. Local development (not store)
 
-See the root `README.md`. Rider and driver: `npm install` then `npm start` (needs a **dev client** because of Mapbox). Point `EXPO_PUBLIC_API_URL` at the gateway `/api` (LAN IP on a phone).
+See the root `README.md` and [backend/docs/auth.md](backend/docs/auth.md). Rider and driver: `npm install` then a **dev client** (`npx expo run:ios` / `run:android`) because of Mapbox and Auth0. Point `EXPO_PUBLIC_API_URL` at the gateway `/api` (LAN IP on a phone).
 
 `npm run dev` is a **backend** script (`backend/package.json`). There is no root workspace `package.json`. On Windows, Unix-style `NODE_OPTIONS=...` in those scripts used to fail; they were switched to `cross-env` in `backend/`.

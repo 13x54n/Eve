@@ -1,7 +1,8 @@
 import { createHash, randomBytes, randomInt } from "node:crypto";
-import { prisma } from "@eve/db";
+import { getDriverProfile, prisma, sanitizeDriverUser } from "@eve/db";
 import {
   createAccessToken,
+  fail,
   hashPassword,
   listPermissions,
   verifyPassword,
@@ -9,6 +10,7 @@ import {
   type AdminStaffTitle,
   type UserRole,
 } from "@eve/shared";
+import { verifyAuth0IdToken } from "./auth0.js";
 import { verificationCodeSender } from "./verification-code.js";
 
 const resetCodeLifetimeMs = 10 * 60 * 1000;
@@ -138,7 +140,7 @@ export async function loginRider(input: {
     },
   });
 
-  if (!user || !user.isActive) {
+  if (!user || !user.isActive || !user.passwordHash) {
     const error = new Error("Invalid email or password");
     error.name = "UnauthorizedError";
     throw error;
@@ -177,7 +179,7 @@ export async function loginAdmin(
     },
   });
 
-  const passwordIsValid = user
+  const passwordIsValid = user?.passwordHash
     ? await verifyPassword(user.passwordHash, input.password)
     : false;
 
@@ -377,6 +379,9 @@ export async function changePassword(
     error.name = "NotFoundError";
     throw error;
   }
+  if (!user.passwordHash) {
+    fail("Password is managed by Auth0", "UnauthorizedError");
+  }
   const valid = await verifyPassword(user.passwordHash, input.currentPassword);
   if (!valid) {
     const error = new Error("Current password is incorrect");
@@ -450,4 +455,121 @@ export async function resetPassword(input: {
       data: { consumedAt: new Date() },
     }),
   ]);
+}
+
+function displayNameFromAuth0(claims: {
+  email: string;
+  name?: string;
+  nickname?: string;
+}) {
+  const named = claims.name?.trim() || claims.nickname?.trim();
+  if (named) return named;
+  return claims.email.split("@")[0] || "Eve user";
+}
+
+async function createAuth0Driver(input: {
+  name: string;
+  email: string;
+  auth0Sub: string;
+}) {
+  const user = await prisma.$transaction(async (tx) => {
+    const newUser = await tx.user.create({
+      data: {
+        name: input.name,
+        email: input.email,
+        auth0Sub: input.auth0Sub,
+        role: "DRIVER",
+        accountStatus: "PENDING",
+      },
+    });
+
+    await tx.driverProfile.create({
+      data: {
+        userId: newUser.id,
+        approvalStatus: "PENDING",
+        presence: "OFFLINE",
+        rating: 5.0,
+        acceptanceRate: 100,
+        cancellationRate: 0,
+        onlineHours: 0,
+        earningsTotal: 0,
+      },
+    });
+
+    return newUser;
+  });
+
+  return user;
+}
+
+export async function exchangeAuth0Session(
+  role: "RIDER" | "DRIVER",
+  idToken: string,
+) {
+  const claims = await verifyAuth0IdToken(idToken);
+  const email = claims.email?.trim().toLowerCase();
+  if (!email) {
+    fail("Auth0 account is missing an email", "UnauthorizedError");
+  }
+
+  let user = await prisma.user.findUnique({ where: { auth0Sub: claims.sub } });
+
+  if (!user && claims.emailVerified) {
+    const byEmail = await prisma.user.findUnique({ where: { email } });
+    if (byEmail) {
+      if (byEmail.role !== role) {
+        fail("This account is registered for a different app", "ForbiddenError");
+      }
+      user = await prisma.user.update({
+        where: { id: byEmail.id },
+        data: { auth0Sub: claims.sub, lastLoginAt: new Date() },
+      });
+    }
+  }
+
+  if (!user) {
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) {
+      fail("An account with this email already exists", "ConflictError");
+    }
+
+    const name = displayNameFromAuth0({ ...claims, email });
+    user =
+      role === "DRIVER"
+        ? await createAuth0Driver({ name, email, auth0Sub: claims.sub })
+        : await prisma.user.create({
+            data: {
+              name,
+              email,
+              auth0Sub: claims.sub,
+              role: "RIDER",
+              riderProfile: { create: {} },
+            },
+          });
+  } else {
+    if (user.role !== role) {
+      fail("This account is registered for a different app", "ForbiddenError");
+    }
+    if (!user.isActive) {
+      fail("Invalid or expired token", "UnauthorizedError");
+    }
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
+
+  if (role === "DRIVER") {
+    const fullProfile = await getDriverProfile(user.id);
+    return {
+      accessToken: createAccessToken(user),
+      user: sanitizeDriverUser(user),
+      driverProfile: fullProfile,
+    };
+  }
+
+  return {
+    accessToken: createAccessToken(user),
+    user: sanitizeUser(user),
+  };
 }

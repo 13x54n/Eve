@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
   changePassword,
+  exchangeAuth0Session,
   getUserById,
   loginAdmin,
   loginRider,
@@ -15,6 +16,7 @@ import {
 } from "./auth.service.js";
 import { loginDriver, registerDriver } from "./driver-auth.js";
 import {
+  auth0ExchangeSchema,
   changePasswordSchema,
   driverLoginSchema,
   driverRegisterSchema,
@@ -62,6 +64,16 @@ authRouter.post("/login", limiter, async (req, res, next) => {
   }
 });
 
+authRouter.post("/auth0", limiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("RIDER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
 authRouter.post("/driver/register", limiter, async (req, res, next) => {
   try {
     res.status(201).json(await registerDriver(driverRegisterSchema.parse(req.body)));
@@ -73,6 +85,16 @@ authRouter.post("/driver/register", limiter, async (req, res, next) => {
 authRouter.post("/driver/login", limiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginDriver(driverLoginSchema.parse(req.body)));
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post("/driver/auth0", limiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
   } catch (error) {
     next(error);
   }
@@ -179,6 +201,16 @@ driverAuthRouter.post("/register", driverLimiter, async (req, res, next) => {
 driverAuthRouter.post("/login", driverLimiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginDriver(driverLoginSchema.parse(req.body)));
+  } catch (error) {
+    next(error);
+  }
+});
+
+driverAuthRouter.post("/auth0", driverLimiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
   } catch (error) {
     next(error);
   }

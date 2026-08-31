@@ -192,7 +192,8 @@ model User {
   name           String
   email          String          @unique
   phone          String?         @unique
-  passwordHash   String
+  passwordHash   String?
+  auth0Sub       String?         @unique
   role            UserRole         @default(RIDER)
   adminStaffRole  AdminStaffRole?
   adminStaffTitle AdminStaffTitle?
