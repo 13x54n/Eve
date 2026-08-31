@@ -62,7 +62,6 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 export default function CompletedScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
-  const [rating, setRating] = useState(0);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -99,7 +98,6 @@ export default function CompletedScreen() {
 
   const cancelled = trip?.status === "CANCELLED";
   const hideFare = trip?.direction === "receiving" || trip?.viewerRole === "recipient";
-  const showRating = Boolean(trip && !cancelled);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -216,19 +214,6 @@ export default function CompletedScreen() {
               value={formatWhen(trip.endedAt ?? trip.createdAt)}
             />
           </View>
-
-          {showRating ? (
-            <View style={styles.card}>
-              <Text style={styles.rateLabel}>Rate your driver</Text>
-              <View style={styles.stars}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Pressable key={star} onPress={() => setRating(star)} accessibilityLabel={`${star} stars`}>
-                    <Feather name="star" size={28} color={star <= rating ? "#F59E0B" : "#D1D5DB"} />
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          ) : null}
 
           <Pressable
             style={styles.helpRow}
