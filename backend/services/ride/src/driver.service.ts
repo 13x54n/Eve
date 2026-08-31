@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
-import { getDriverProfile, prisma, recordTripEvent } from "@eve/db";
+import { getDriverProfile, getMinFare, prisma, recordTripEvent } from "@eve/db";
 import { MATCH_RADIUS_KM, fail, money, startOfDay } from "@eve/shared";
 import {
   distanceToPickupClient,
@@ -226,9 +226,17 @@ export async function getIncomingTrips(userId: string) {
       })
     : [];
   const distanceById = new Map(nearbyIds.map((row) => [row.id, row.distanceToPickup]));
+  const minFareByKey = new Map<string, number>();
+  for (const trip of trips) {
+    const key = `${trip.city}:${trip.vehicleType}`;
+    if (!minFareByKey.has(key)) {
+      minFareByKey.set(key, await getMinFare(trip.city, trip.vehicleType));
+    }
+  }
   const nearby = nearbyIds
     .map((row) => trips.find((trip) => trip.id === row.id))
     .filter((trip): trip is NonNullable<typeof trip> => Boolean(trip))
+    .filter((trip) => trip.rider.userId !== userId)
     .map((trip) => ({
       id: trip.id,
       bookingCode: trip.bookingCode,
@@ -244,6 +252,7 @@ export async function getIncomingTrips(userId: string) {
       durationMin: trip.durationMin,
       suggestedFare: money(trip.suggestedFare),
       fareTotal: money(trip.fareTotal),
+      minFare: minFareByKey.get(`${trip.city}:${trip.vehicleType}`) ?? 0,
       estimatedEarnings: money(trip.fareTotal),
       rideType: trip.rideType,
       recipientName: trip.recipientName,
@@ -265,18 +274,30 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
     include: { rider: { select: { userId: true } } },
   });
   if (!trip) { const error = new Error("Trip not found"); error.name = "NotFoundError"; throw error; }
+  if (trip.rider.userId === userId) {
+    const error = new Error("You cannot offer on your own trip");
+    error.name = "ConflictError";
+    throw error;
+  }
   const distanceToPickup = await distanceToPickupClient(userId, trip.pickupLat, trip.pickupLng);
   if (
     trip.status !== "SEARCHING"
     || profile.approvalStatus !== "APPROVED"
     || !["ONLINE", "IDLE"].includes(profile.presence)
     || distanceToPickup > MATCH_RADIUS_KM
-    || !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType)
+    || (trip.rideType !== "COURIER" && !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType))
+    || (trip.rideType === "COURIER" && profile.vehicles.length === 0)
   ) {
     const error = new Error("This trip is not available to this driver"); error.name = "ConflictError"; throw error;
   }
-  if (input.proposedFare < Number(trip.fareTotal) || input.proposedFare > Number(trip.fareTotal) * 2) {
-    const error = new Error("Offer must start at the base fare for this distance and can go up to double it"); error.name = "ConflictError"; throw error;
+  const minFare = await getMinFare(trip.city, trip.vehicleType);
+  const maxFare = Number(trip.fareTotal) * 2;
+  if (input.proposedFare < minFare || input.proposedFare > maxFare) {
+    const error = new Error(
+      `Offer must be at least the minimum fare ($${minFare.toFixed(2)}) and at most double the suggested fare`,
+    );
+    error.name = "ConflictError";
+    throw error;
   }
   const [existingPending, activeTrip] = await Promise.all([
     prisma.tripOffer.findFirst({ where: { driverId: profile.id, status: "PENDING" } }),
@@ -312,11 +333,18 @@ export async function acceptTrip(userId: string, tripId: string) {
 
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
+    include: { rider: { select: { userId: true } } },
   });
 
   if (!trip) {
     const error = new Error("Trip not found");
     error.name = "NotFoundError";
+    throw error;
+  }
+
+  if (trip.rider.userId === userId) {
+    const error = new Error("You cannot accept your own trip");
+    error.name = "ConflictError";
     throw error;
   }
 
@@ -377,10 +405,7 @@ export async function arrivedAtPickup(userId: string, tripId: string) {
 
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, driverId: profile.id },
-    include: {
-      rider: { include: { user: true } },
-      vehicle: true,
-    },
+    include: driverTripInclude,
   });
 
   if (!trip) {
@@ -613,6 +638,7 @@ export async function cancelTrip(
 const driverTripInclude = {
   rider: { include: { user: true } },
   vehicle: true,
+  stops: { orderBy: { sequence: "asc" as const } },
 } as const;
 
 function serializeDriverTrip(trip: {
@@ -637,6 +663,7 @@ function serializeDriverTrip(trip: {
   startedAt: Date | null;
   endedAt: Date | null;
   rider?: { rating?: unknown; user?: { name?: string | null } | null } | null;
+  stops?: { id: string; sequence: number; address: string; lat: number; lng: number; kind: string }[];
 }) {
   return {
     id: trip.id,
@@ -662,6 +689,7 @@ function serializeDriverTrip(trip: {
     createdAt: trip.createdAt,
     startedAt: trip.startedAt,
     endedAt: trip.endedAt,
+    stops: trip.stops ?? [],
   };
 }
 

@@ -504,6 +504,23 @@ export type EnumPaymentMethodKindWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumPaymentMethodKindFilter<$PrismaModel>
 }
 
+export type EnumTripStopKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.TripStopKind | Prisma.EnumTripStopKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel> | $Enums.TripStopKind
+}
+
+export type EnumTripStopKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TripStopKind | Prisma.EnumTripStopKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTripStopKindWithAggregatesFilter<$PrismaModel> | $Enums.TripStopKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel>
+}
+
 export type EnumTripOfferStatusFilter<$PrismaModel = never> = {
   equals?: $Enums.TripOfferStatus | Prisma.EnumTripOfferStatusFieldRefInput<$PrismaModel>
   in?: $Enums.TripOfferStatus[] | Prisma.ListEnumTripOfferStatusFieldRefInput<$PrismaModel>
@@ -1282,6 +1299,23 @@ export type NestedEnumPaymentMethodKindWithAggregatesFilter<$PrismaModel = never
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumPaymentMethodKindFilter<$PrismaModel>
   _max?: Prisma.NestedEnumPaymentMethodKindFilter<$PrismaModel>
+}
+
+export type NestedEnumTripStopKindFilter<$PrismaModel = never> = {
+  equals?: $Enums.TripStopKind | Prisma.EnumTripStopKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel> | $Enums.TripStopKind
+}
+
+export type NestedEnumTripStopKindWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.TripStopKind | Prisma.EnumTripStopKindFieldRefInput<$PrismaModel>
+  in?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  notIn?: $Enums.TripStopKind[] | Prisma.ListEnumTripStopKindFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumTripStopKindWithAggregatesFilter<$PrismaModel> | $Enums.TripStopKind
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumTripStopKindFilter<$PrismaModel>
 }
 
 export type NestedEnumTripOfferStatusFilter<$PrismaModel = never> = {

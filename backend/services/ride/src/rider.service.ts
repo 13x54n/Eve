@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { calculateFare, prisma, selectGreetingTemplate } from "@eve/db";
+import { calculateFare, prisma, recordTripEvent, selectGreetingTemplate } from "@eve/db";
 import { distanceKm, durationMinutes, fail, money } from "@eve/shared";
 import {
   indexSearchingTripClient,
@@ -54,6 +54,14 @@ function serializeTrip(trip: any, viewer?: Viewer) {
     viewerRole: isRecipient ? "recipient" : "sender",
     canManage: !isRecipient,
     direction: isRecipient ? "receiving" : "sent",
+    stops: (trip.stops ?? []).map((stop: { id: string; sequence: number; address: string; lat: number; lng: number; kind: string }) => ({
+      id: stop.id,
+      sequence: stop.sequence,
+      address: stop.address,
+      lat: stop.lat,
+      lng: stop.lng,
+      kind: stop.kind,
+    })),
     driver: trip.driver
       ? {
           ...trip.driver,
@@ -95,6 +103,7 @@ const tripDetailInclude = {
   offers: { include: { driver: { include: { user: true } } } },
   driver: { include: { user: true } },
   vehicle: true,
+  stops: { orderBy: { sequence: "asc" as const } },
 } as const;
 
 export async function createTrip(userId: string, input: {
@@ -148,16 +157,20 @@ export async function createTrip(userId: string, input: {
     },
   });
   const result = serializeTrip(trip, { userId, riderId: rider.id });
+  const matchAllVehicleTypes = isCourier;
   await indexSearchingTripClient({
     id: trip.id,
     pickupLat: trip.pickupLat,
     pickupLng: trip.pickupLng,
     vehicleType: trip.vehicleType,
+    matchAllVehicleTypes,
   });
   const drivers = await nearbyDriversClient({
     pickupLat: input.pickupLat,
     pickupLng: input.pickupLng,
     vehicleType: input.vehicleType,
+    excludeUserId: userId,
+    matchAllVehicleTypes,
   });
   await Promise.all(
     drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", result)),
@@ -409,4 +422,127 @@ export async function cancelTrip(userId: string, tripId: string) {
 
 export async function getGreeting(userId: string) {
   return { template: await selectGreetingTemplate(userId) };
+}
+
+const MAX_TRIP_STOPS = 3;
+
+type RoutePoint = { address: string; lat: number; lng: number };
+
+function pathDistanceKm(points: { lat: number; lng: number }[]) {
+  let total = 0;
+  for (let i = 1; i < points.length; i++) {
+    total += distanceKm(points[i - 1]!.lat, points[i - 1]!.lng, points[i]!.lat, points[i]!.lng);
+  }
+  return total;
+}
+
+async function mutateTripRoute(
+  userId: string,
+  tripId: string,
+  change: { addStop?: RoutePoint; destination?: RoutePoint },
+) {
+  const rider = await getRider(userId);
+  const trip = await prisma.trip.findFirst({
+    where: { id: tripId, riderId: rider.id },
+    include: { stops: { orderBy: { sequence: "asc" } }, driver: true },
+  });
+  if (!trip) fail("Trip not found", "NotFoundError");
+  if (trip.status !== "ASSIGNED" && trip.status !== "ONGOING") {
+    fail("You can only change the route after a driver is assigned", "ConflictError");
+  }
+  if (change.addStop && trip.rideType === "COURIER") {
+    fail("Courier trips cannot add stops", "ConflictError");
+  }
+
+  const currentStops = trip.stops.filter((stop) => stop.kind === "STOP");
+  if (change.addStop && currentStops.length >= MAX_TRIP_STOPS) {
+    fail("You can add up to 3 stops", "ConflictError");
+  }
+
+  const dropoff = change.destination ?? {
+    address: trip.dropoffAddress,
+    lat: trip.dropoffLat,
+    lng: trip.dropoffLng,
+  };
+  const nextStops = change.addStop
+    ? [...currentStops.map((stop) => ({ address: stop.address, lat: stop.lat, lng: stop.lng })), change.addStop]
+    : currentStops.map((stop) => ({ address: stop.address, lat: stop.lat, lng: stop.lng }));
+
+  const lastBeforeDropoff = nextStops.at(-1) ?? {
+    lat: trip.pickupLat,
+    lng: trip.pickupLng,
+  };
+  const from = change.addStop
+    ? (nextStops.length > 1 ? nextStops[nextStops.length - 2]! : { lat: trip.pickupLat, lng: trip.pickupLng })
+    : lastBeforeDropoff;
+  const to = change.addStop ? change.addStop : dropoff;
+  if (distanceKm(from.lat, from.lng, to.lat, to.lng) < 0.05) {
+    fail("The new location must be different from the previous stop", "ConflictError");
+  }
+
+  const distance = pathDistanceKm([
+    { lat: trip.pickupLat, lng: trip.pickupLng },
+    ...nextStops,
+    { lat: dropoff.lat, lng: dropoff.lng },
+  ]);
+  const duration = durationMinutes(distance);
+  const quote = await calculateFare(trip.city, trip.vehicleType, distance, duration);
+  const fareTotal = Math.max(Number(trip.fareTotal), quote);
+  const nextRideType = trip.rideType === "COURIER"
+    ? "COURIER"
+    : nextStops.length > 0
+      ? "MULTI_STOP"
+      : trip.rideType;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.trip.update({
+      where: { id: trip.id },
+      data: {
+        dropoffAddress: dropoff.address,
+        dropoffLat: dropoff.lat,
+        dropoffLng: dropoff.lng,
+        distanceKm: distance,
+        durationMin: duration,
+        suggestedFare: quote,
+        fareTotal,
+        rideType: nextRideType,
+        routeDeviation: true,
+      },
+    });
+    if (change.addStop) {
+      await tx.tripStop.create({
+        data: {
+          tripId: trip.id,
+          sequence: currentStops.length,
+          address: change.addStop.address,
+          lat: change.addStop.lat,
+          lng: change.addStop.lng,
+          kind: "STOP",
+        },
+      });
+    }
+  });
+
+  await recordTripEvent({
+    tripId: trip.id,
+    actorId: userId,
+    action: change.addStop ? "trip.stop_added" : "trip.destination_changed",
+    details: (change.addStop ?? change.destination) as { address: string; lat: number; lng: number },
+  });
+
+  const result = await getTrip(userId, tripId);
+  emitTripEvent(trip.id, "trip:route_updated", result);
+  if (trip.driver?.userId) {
+    emitUserEvent("DRIVER", trip.driver.userId, "trip:route_updated", result);
+  }
+  emitUserEvent("RIDER", userId, "trip:route_updated", result);
+  return result;
+}
+
+export async function addTripStop(userId: string, tripId: string, input: RoutePoint) {
+  return mutateTripRoute(userId, tripId, { addStop: input });
+}
+
+export async function updateTripDestination(userId: string, tripId: string, input: RoutePoint) {
+  return mutateTripRoute(userId, tripId, { destination: input });
 }

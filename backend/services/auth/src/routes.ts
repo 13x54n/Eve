@@ -157,7 +157,8 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
 
 authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
   try {
-    const user = await getUserById((req as AuthenticatedRequest).user.id);
+    const session = (req as AuthenticatedRequest).user;
+    const user = await getUserById(session.id, session.role);
     res.status(200).json({ user });
   } catch (error) {
     next(error);
@@ -166,9 +167,11 @@ authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
 
 authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
   try {
+    const session = (req as AuthenticatedRequest).user;
     const user = await updateProfile(
-      (req as AuthenticatedRequest).user.id,
+      session.id,
       updateProfileSchema.parse(req.body),
+      session.role,
     );
     res.status(200).json({ user });
   } catch (error) {

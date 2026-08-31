@@ -161,12 +161,16 @@ export async function upsertSearchingTrip(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: VehicleType;
+  matchAllVehicleTypes?: boolean;
 }) {
   const redis = await getRedis();
   if (!redis) return;
   try {
+    const indexed = input.matchAllVehicleTypes
+      ? VEHICLE_TYPES
+      : uniqueVehicleTypes([input.vehicleType]);
     for (const type of VEHICLE_TYPES) {
-      if (type === input.vehicleType) {
+      if (indexed.includes(type)) {
         await redis.geoAdd(tripKey(type), {
           longitude: input.pickupLng,
           latitude: input.pickupLat,
@@ -247,7 +251,7 @@ export async function rebuildGeoIndexes() {
       }),
       prisma.trip.findMany({
         where: { status: "SEARCHING" },
-        select: { id: true, pickupLat: true, pickupLng: true, vehicleType: true },
+        select: { id: true, pickupLat: true, pickupLng: true, vehicleType: true, rideType: true },
       }),
     ]);
 
@@ -267,6 +271,7 @@ export async function rebuildGeoIndexes() {
         pickupLat: trip.pickupLat,
         pickupLng: trip.pickupLng,
         vehicleType: trip.vehicleType,
+        matchAllVehicleTypes: trip.rideType === "COURIER",
       });
     }
     return true;

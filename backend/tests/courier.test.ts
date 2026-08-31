@@ -7,6 +7,7 @@ import {
   nycTripPayload,
   spawnApprovedOnlineDriver,
   spawnRider,
+  createAdminToken,
 } from "./helpers/marketplace.js";
 
 afterAll(async () => {
@@ -93,6 +94,82 @@ describe("Courier trips", { timeout: 20000 }, () => {
       .post(`/api/rider/trips/${created.body.trip.id}/cancel`)
       .set("Authorization", `Bearer ${recipient.token}`)
       .expect(404);
+  });
+
+  it("shows a BIKE courier to a nearby CAR driver", async () => {
+    const sender = await spawnRider();
+    const driver = await spawnApprovedOnlineDriver({ viaAdmin: true, vehicleType: "CAR" });
+
+    const created = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${sender.token}`)
+      .send(nycTripPayload({
+        rideType: "COURIER",
+        vehicleType: "BIKE",
+        recipientName: "Package Recipient",
+        recipientPhone: "+15551234567",
+        packageNote: "Envelope",
+      }))
+      .expect(201);
+
+    const incoming = await request(app)
+      .get("/api/driver/trips/incoming")
+      .set("Authorization", `Bearer ${driver.token}`)
+      .expect(200);
+    expect(incoming.body.trips).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: created.body.trip.id,
+          rideType: "COURIER",
+          vehicleType: "BIKE",
+        }),
+      ]),
+    );
+
+    await request(app)
+      .post(`/api/driver/trips/${created.body.trip.id}/offers`)
+      .set("Authorization", `Bearer ${driver.token}`)
+      .send({ proposedFare: created.body.trip.fareTotal, etaMinutes: 5 })
+      .expect(201);
+  });
+
+  it("indexes admin-created SEARCHING courier trips for drivers", async () => {
+    const rider = await spawnRider();
+    const driver = await spawnApprovedOnlineDriver({ viaAdmin: true });
+    const admin = await createAdminToken();
+
+    const created = await request(app)
+      .post("/api/admin/trips")
+      .set("Authorization", `Bearer ${admin.token}`)
+      .send({
+        riderId: rider.user.id,
+        pickupAddress: "Pickup St",
+        dropoffAddress: "Dropoff Ave",
+        city: "New York",
+        pickupLat: 40.7128,
+        pickupLng: -74.006,
+        dropoffLat: 40.758,
+        dropoffLng: -73.9855,
+        vehicleType: "BIKE",
+        rideType: "COURIER",
+      })
+      .expect(201);
+
+    const tripId = created.body.trip?.id ?? created.body.id;
+    expect(tripId).toEqual(expect.any(String));
+
+    const incoming = await request(app)
+      .get("/api/driver/trips/incoming")
+      .set("Authorization", `Bearer ${driver.token}`)
+      .expect(200);
+    expect(incoming.body.trips).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: tripId,
+          rideType: "COURIER",
+        }),
+      ]),
+    );
   });
 
   it("requires recipient details for courier trips", async () => {

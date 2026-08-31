@@ -124,6 +124,7 @@ export type IncomingTrip = {
   pickupAddress: string;
   dropoffAddress: string;
   fareTotal: number;
+  minFare?: number;
   distanceKm: number;
   durationMin: number;
   vehicleType: VehicleType;
@@ -176,6 +177,14 @@ export type ActiveTrip = {
   recipientName?: string | null;
   recipientPhone?: string | null;
   packageNote?: string | null;
+  stops?: {
+    id: string;
+    sequence: number;
+    address: string;
+    lat: number;
+    lng: number;
+    kind: string;
+  }[];
 };
 
 export async function arrivedAtPickup(tripId: string) {

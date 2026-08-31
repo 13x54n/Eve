@@ -17,6 +17,8 @@ export async function nearbyDrivers(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  excludeUserId?: string;
+  matchAllVehicleTypes?: boolean;
 }): Promise<NearbyDriver[]> {
   const base = locationUrl();
   if (!base) return nearbyDriversLocal(input);
@@ -24,6 +26,8 @@ export async function nearbyDrivers(input: {
   url.searchParams.set("pickupLat", String(input.pickupLat));
   url.searchParams.set("pickupLng", String(input.pickupLng));
   url.searchParams.set("vehicleType", input.vehicleType);
+  if (input.excludeUserId) url.searchParams.set("excludeUserId", input.excludeUserId);
+  if (input.matchAllVehicleTypes) url.searchParams.set("matchAllVehicleTypes", "true");
   const response = await fetch(url);
   if (!response.ok) return nearbyDriversLocal(input);
   const body = await response.json() as { drivers: NearbyDriver[] };
@@ -83,6 +87,7 @@ export async function indexSearchingTrip(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  matchAllVehicleTypes?: boolean;
 }) {
   const base = locationUrl();
   if (!base) return indexSearchingTripLocal(input);

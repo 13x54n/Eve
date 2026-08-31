@@ -147,6 +147,14 @@ export const RideType = {
 export type RideType = (typeof RideType)[keyof typeof RideType]
 
 
+export const TripStopKind = {
+  STOP: 'STOP',
+  DROPOFF: 'DROPOFF'
+} as const
+
+export type TripStopKind = (typeof TripStopKind)[keyof typeof TripStopKind]
+
+
 export const PaymentMethodKind = {
   CARD: 'CARD',
   WALLET: 'WALLET',

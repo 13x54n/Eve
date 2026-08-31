@@ -49,18 +49,33 @@ function isMatchEligible(input: {
   );
 }
 
+function searchingTripVisibility(vehicleTypes: VehicleType[]) {
+  return {
+    status: "SEARCHING" as const,
+    OR: [
+      { vehicleType: { in: vehicleTypes } },
+      { rideType: "COURIER" as const },
+    ],
+  };
+}
+
 async function nearbyDriversFromDb(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: VehicleType;
+  excludeUserId?: string;
+  matchAllVehicleTypes?: boolean;
 }): Promise<NearbyDriver[]> {
   const drivers = await prisma.driverProfile.findMany({
     where: {
       approvalStatus: "APPROVED",
       presence: { in: ["ONLINE", "IDLE"] },
-      vehicles: { some: { vehicleType: input.vehicleType } },
+      ...(input.matchAllVehicleTypes
+        ? { vehicles: { some: {} } }
+        : { vehicles: { some: { vehicleType: input.vehicleType } } }),
       latitude: { not: null },
       longitude: { not: null },
+      ...(input.excludeUserId ? { userId: { not: input.excludeUserId } } : {}),
     },
     select: { id: true, userId: true, latitude: true, longitude: true },
   });
@@ -81,12 +96,13 @@ async function nearbySearchingTripsFromDb(input: {
   latitude: number;
   longitude: number;
   vehicleTypes: VehicleType[];
+  excludeRiderUserId?: string;
 }): Promise<NearbySearchingTrip[]> {
   if (input.vehicleTypes.length === 0) return [];
   const trips = await prisma.trip.findMany({
     where: {
-      status: "SEARCHING",
-      vehicleType: { in: input.vehicleTypes },
+      ...searchingTripVisibility(input.vehicleTypes),
+      ...(input.excludeRiderUserId ? { rider: { userId: { not: input.excludeRiderUserId } } } : {}),
     },
     select: { id: true, pickupLat: true, pickupLng: true },
     orderBy: { createdAt: "desc" },
@@ -106,6 +122,32 @@ export async function nearbyDrivers(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  excludeUserId?: string;
+  matchAllVehicleTypes?: boolean;
+}): Promise<NearbyDriver[]> {
+  const types: VehicleType[] = input.matchAllVehicleTypes
+    ? ["BIKE", "CAR"]
+    : [input.vehicleType];
+  const merged = new Map<string, NearbyDriver>();
+  for (const vehicleType of types) {
+    const found = await nearbyDriversForType({ ...input, vehicleType });
+    for (const driver of found) {
+      const previous = merged.get(driver.userId);
+      if (!previous || driver.distance < previous.distance) {
+        merged.set(driver.userId, driver);
+      }
+    }
+  }
+  return [...merged.values()]
+    .sort((left, right) => left.distance - right.distance)
+    .slice(0, MATCH_LIMIT);
+}
+
+async function nearbyDriversForType(input: {
+  pickupLat: number;
+  pickupLng: number;
+  vehicleType: VehicleType;
+  excludeUserId?: string;
 }): Promise<NearbyDriver[]> {
   const hits = await searchDrivers(input.vehicleType, input.pickupLng, input.pickupLat);
   if (hits == null) {
@@ -121,6 +163,7 @@ export async function nearbyDrivers(input: {
       vehicles: { some: { vehicleType: input.vehicleType } },
       latitude: { not: null },
       longitude: { not: null },
+      ...(input.excludeUserId ? { userId: { not: input.excludeUserId } } : {}),
     },
     select: { id: true, userId: true },
   });
@@ -159,6 +202,7 @@ export async function nearbySearchingTrips(userId: string) {
       latitude: profile.latitude,
       longitude: profile.longitude,
       vehicleTypes: types,
+      excludeRiderUserId: userId,
     });
   }
   if (hits.length === 0) return [];
@@ -166,8 +210,8 @@ export async function nearbySearchingTrips(userId: string) {
   const rows = await prisma.trip.findMany({
     where: {
       id: { in: hits.map((hit) => hit.id) },
-      status: "SEARCHING",
-      vehicleType: { in: types },
+      ...searchingTripVisibility(types),
+      rider: { userId: { not: userId } },
     },
     select: { id: true },
   });
@@ -213,6 +257,7 @@ export async function indexSearchingTrip(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  matchAllVehicleTypes?: boolean;
 }) {
   await upsertSearchingTripInGeo(input);
 }

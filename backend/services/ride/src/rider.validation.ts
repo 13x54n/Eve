@@ -32,6 +32,12 @@ export const riderTripSchema = z.object({
   }
 });
 
+export const routePointSchema = z.object({
+  address: z.string().trim().min(2).max(200),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+});
+
 export const chatMessageSchema = z.object({
   body: z.string().trim().min(1).max(1000),
 });

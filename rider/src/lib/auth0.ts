@@ -7,15 +7,19 @@ import {
 export const AUTH0_CUSTOM_SCHEME = "eve";
 export const AUTH0_SCOPE = "openid profile email offline_access";
 
+function auth0Host(value: string) {
+  return value.replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase();
+}
+
 export function requireAuth0Config() {
-  const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN;
-  const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID;
+  const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN?.trim();
+  const clientId = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID?.trim();
   if (!domain || !clientId) {
     throw new Error(
       "EXPO_PUBLIC_AUTH0_DOMAIN and EXPO_PUBLIC_AUTH0_CLIENT_ID are not set",
     );
   }
-  return { domain, clientId };
+  return { domain: auth0Host(domain), clientId };
 }
 
 export function isAuth0Cancelled(error: unknown) {

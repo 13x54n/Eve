@@ -82,6 +82,11 @@ export type DriverDocument = Prisma.DriverDocumentModel
  */
 export type Trip = Prisma.TripModel
 /**
+ * Model TripStop
+ * 
+ */
+export type TripStop = Prisma.TripStopModel
+/**
  * Model TripMessage
  * 
  */

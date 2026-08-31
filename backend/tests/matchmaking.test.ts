@@ -2,6 +2,7 @@ import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
 import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
+import { createAccessToken } from "@eve/shared";
 
 const createdEmails: string[] = [];
 
@@ -345,5 +346,71 @@ describe("Rider-driver matchmaking", () => {
       .expect(409);
 
     expect(second.body.message).toMatch(/wait for your current offer/i);
+  });
+
+  it("does not let a dual-role user offer on their own trip", async () => {
+    const riderRes = await registerRider().expect(201);
+    const riderToken = riderRes.body.accessToken;
+    const userId = riderRes.body.user.id as string;
+
+    await prisma.driverProfile.create({
+      data: {
+        userId,
+        approvalStatus: "APPROVED",
+        presence: "OFFLINE",
+        rating: 5,
+        acceptanceRate: 100,
+        cancellationRate: 0,
+        onlineHours: 0,
+        earningsTotal: 0,
+        vehicles: {
+          create: {
+            make: "Toyota",
+            model: "Camry",
+            year: 2022,
+            color: "Black",
+            plateNumber: `SELF${Date.now()}${Math.floor(Math.random() * 1000)}`,
+            vehicleType: "CAR",
+            serviceCategory: "standard",
+            capacity: 4,
+          },
+        },
+      },
+    });
+
+    const driverToken = createAccessToken({ id: userId, role: "DRIVER" });
+    await goOnline(driverToken, PICKUP);
+
+    const tripRes = await request(app)
+      .post("/api/rider/trips")
+      .set("Authorization", `Bearer ${riderToken}`)
+      .send({
+        pickupAddress: "Pickup St",
+        dropoffAddress: "Dropoff Ave",
+        city: "New York",
+        pickupLat: PICKUP.lat,
+        pickupLng: PICKUP.lng,
+        dropoffLat: DROPOFF.lat,
+        dropoffLng: DROPOFF.lng,
+        vehicleType: "CAR",
+      })
+      .expect(201);
+
+    const tripId = tripRes.body.trip.id as string;
+
+    const incomingRes = await request(app)
+      .get("/api/driver/trips/incoming")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .expect(200);
+
+    expect(incomingRes.body.trips.map((trip: { id: string }) => trip.id)).not.toContain(tripId);
+
+    const offerRes = await request(app)
+      .post(`/api/driver/trips/${tripId}/offers`)
+      .set("Authorization", `Bearer ${driverToken}`)
+      .send({ proposedFare: tripRes.body.trip.fareTotal, etaMinutes: 5 })
+      .expect(409);
+
+    expect(offerRes.body.message).toMatch(/own trip/i);
   });
 });

@@ -405,6 +405,7 @@ export const ModelName = {
   Vehicle: 'Vehicle',
   DriverDocument: 'DriverDocument',
   Trip: 'Trip',
+  TripStop: 'TripStop',
   TripMessage: 'TripMessage',
   TripOffer: 'TripOffer',
   TripEvent: 'TripEvent',
@@ -441,7 +442,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "greeting" | "greetingSettings" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
+    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripStop" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "greeting" | "greetingSettings" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1034,6 +1035,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.TripCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.TripCountAggregateOutputType> | number
+        }
+      }
+    }
+    TripStop: {
+      payload: Prisma.$TripStopPayload<ExtArgs>
+      fields: Prisma.TripStopFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TripStopFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TripStopFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        findFirst: {
+          args: Prisma.TripStopFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TripStopFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        findMany: {
+          args: Prisma.TripStopFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>[]
+        }
+        create: {
+          args: Prisma.TripStopCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        createMany: {
+          args: Prisma.TripStopCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TripStopCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>[]
+        }
+        delete: {
+          args: Prisma.TripStopDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        update: {
+          args: Prisma.TripStopUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        deleteMany: {
+          args: Prisma.TripStopDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TripStopUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TripStopUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>[]
+        }
+        upsert: {
+          args: Prisma.TripStopUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TripStopPayload>
+        }
+        aggregate: {
+          args: Prisma.TripStopAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTripStop>
+        }
+        groupBy: {
+          args: Prisma.TripStopGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripStopGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TripStopCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TripStopCountAggregateOutputType> | number
         }
       }
     }
@@ -2789,6 +2864,21 @@ export const TripScalarFieldEnum = {
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
 
 
+export const TripStopScalarFieldEnum = {
+  id: 'id',
+  tripId: 'tripId',
+  sequence: 'sequence',
+  address: 'address',
+  lat: 'lat',
+  lng: 'lng',
+  kind: 'kind',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TripStopScalarFieldEnum = (typeof TripStopScalarFieldEnum)[keyof typeof TripStopScalarFieldEnum]
+
+
 export const TripMessageScalarFieldEnum = {
   id: 'id',
   tripId: 'tripId',
@@ -3407,6 +3497,20 @@ export type ListEnumPaymentMethodKindFieldRefInput<$PrismaModel> = FieldRefInput
 
 
 /**
+ * Reference to a field of type 'TripStopKind'
+ */
+export type EnumTripStopKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TripStopKind'>
+    
+
+
+/**
+ * Reference to a field of type 'TripStopKind[]'
+ */
+export type ListEnumTripStopKindFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TripStopKind[]'>
+    
+
+
+/**
  * Reference to a field of type 'TripOfferStatus'
  */
 export type EnumTripOfferStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TripOfferStatus'>
@@ -3718,6 +3822,7 @@ export type GlobalOmitConfig = {
   vehicle?: Prisma.VehicleOmit
   driverDocument?: Prisma.DriverDocumentOmit
   trip?: Prisma.TripOmit
+  tripStop?: Prisma.TripStopOmit
   tripMessage?: Prisma.TripMessageOmit
   tripOffer?: Prisma.TripOfferOmit
   tripEvent?: Prisma.TripEventOmit

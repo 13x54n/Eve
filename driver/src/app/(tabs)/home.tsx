@@ -179,7 +179,19 @@ export default function Home() {
   async function submitOffer(trip: IncomingTrip) {
     if (offeringTripId) return;
     const fare = Number(offerFare[trip.id] ?? trip.fareTotal);
-    if (!Number.isFinite(fare) || fare < trip.fareTotal) return;
+    const minFare = trip.minFare ?? 0;
+    if (!Number.isFinite(fare) || fare <= 0) {
+      Alert.alert('Invalid offer', 'Enter a fare greater than zero.');
+      return;
+    }
+    if (fare < minFare) {
+      Alert.alert('Offer too low', `The minimum fare for this trip is $${minFare.toFixed(2)}.`);
+      return;
+    }
+    if (fare > trip.fareTotal * 2) {
+      Alert.alert('Offer too high', 'You can offer up to double the suggested fare.');
+      return;
+    }
     try {
       setOfferingTripId(trip.id);
       await createTripOffer(trip.id, fare, Math.max(1, Math.ceil(trip.durationMin / 3)));
@@ -260,11 +272,11 @@ export default function Home() {
                 ) : null}
                 <Text style={styles.requestRoute}>{trip.pickupAddress}</Text>
                 <Text style={styles.requestRoute}>to {trip.dropoffAddress}</Text>
-                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · base fare ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
+                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · suggested ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
                 <View style={styles.offerRow}>
                   <TextInput
                     style={styles.offerInput}
-                    placeholder={`From $${trip.fareTotal.toFixed(2)}`}
+                    placeholder={`Suggested $${trip.fareTotal.toFixed(2)} — you can go lower`}
                     keyboardType="decimal-pad"
                     value={offerFare[trip.id] ?? String(trip.fareTotal.toFixed(2))}
                     onChangeText={(value) => setOfferFare((current) => ({ ...current, [trip.id]: value }))}
@@ -565,7 +577,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: -40,
     paddingHorizontal: 16,
     paddingTop: 12,
     // backgroundColor: 'rgba(255,255,255,0.96)',

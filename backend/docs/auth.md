@@ -27,12 +27,16 @@ Password `POST /api/auth/login`, `/register`, `/auth/driver/login`, `/auth/drive
 User resolution on Auth0 exchange:
 
 - Match `User.auth0Sub`, else link by **verified** email, else create `RIDER` or `DRIVER`.
-- Reject (403) if the existing user is the other mobile role (or admin).
+- The same Auth0 identity can use both mobile apps. `User.role` stays the first signup role. Missing `RiderProfile` / `DriverProfile` is created on the matching exchange (driver onboarding stays `DriverProfile.approvalStatus = PENDING`; an existing rider's `accountStatus` is not flipped to `PENDING`).
+- Eve JWT `role` is **session context** (which app exchanged), not `User.role`. Rider APIs require a rider-session token; driver APIs require a driver-session token.
+- Reject (403) if the existing user is **admin**.
 - Auth0-only users have no `passwordHash`.
 
 ## Auth0 Native app
 
-Use one **Native** application (OIDC Conformant). Register **Allowed Callback URLs** and **Allowed Logout URLs** (lowercase, no trailing slash).
+Use one **Native** application (OIDC Conformant). `EXPO_PUBLIC_AUTH0_DOMAIN` / `AUTH0_DOMAIN` must be the host only (no `https://`, no trailing slash).
+
+Register **Allowed Callback URLs** and **Allowed Logout URLs** with the same four values (comma or newline separated). If Auth0 shows `Callback URL mismatch`, copy the `redirect_uri` query parameter from that error URL and paste it exactly.
 
 Rider (`customScheme` `eve`, bundle/package `ca.sherpafoods.eve`):
 
@@ -48,7 +52,7 @@ evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/callback
 evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/callback
 ```
 
-Enable the Username-Password-Authentication connection on that client.
+Do not use `eve-driver://`, do not prefix the domain with `https://`, and do not add a trailing slash after `callback`. Enable the Username-Password-Authentication connection on that client.
 
 ## Environment
 

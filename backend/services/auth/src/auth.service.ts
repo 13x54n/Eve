@@ -308,7 +308,15 @@ export async function logoutAdmin(refreshToken: string) {
   });
 }
 
-export async function getUserById(userId: string) {
+function withSessionRole(user: UserRecord, sessionRole?: UserRole) {
+  const sanitized = sanitizeUser(user);
+  if (sessionRole === "RIDER" || sessionRole === "DRIVER") {
+    return { ...sanitized, role: sessionRole };
+  }
+  return sanitized;
+}
+
+export async function getUserById(userId: string, sessionRole?: UserRole) {
   const user = await prisma.user.findFirst({
     where: {
       id: userId,
@@ -322,12 +330,13 @@ export async function getUserById(userId: string) {
     throw error;
   }
 
-  return sanitizeUser(user);
+  return withSessionRole(user, sessionRole);
 }
 
 export async function updateProfile(
   userId: string,
   input: { name: string; email: string; phone?: string | null; pushNotificationsEnabled?: boolean },
+  sessionRole?: UserRole,
 ) {
   const user = await prisma.user.findFirst({
     where: { id: userId, isActive: true },
@@ -364,7 +373,7 @@ export async function updateProfile(
     },
   });
 
-  return sanitizeUser(updated);
+  return withSessionRole(updated, sessionRole);
 }
 
 export async function changePassword(
@@ -467,39 +476,62 @@ function displayNameFromAuth0(claims: {
   return claims.email.split("@")[0] || "Eve user";
 }
 
+const pendingDriverProfile = {
+  approvalStatus: "PENDING" as const,
+  presence: "OFFLINE" as const,
+  rating: 5.0,
+  acceptanceRate: 100,
+  cancellationRate: 0,
+  onlineHours: 0,
+  earningsTotal: 0,
+};
+
 async function createAuth0Driver(input: {
   name: string;
   email: string;
   auth0Sub: string;
 }) {
-  const user = await prisma.$transaction(async (tx) => {
-    const newUser = await tx.user.create({
-      data: {
-        name: input.name,
-        email: input.email,
-        auth0Sub: input.auth0Sub,
-        role: "DRIVER",
-        accountStatus: "PENDING",
-      },
-    });
-
-    await tx.driverProfile.create({
-      data: {
-        userId: newUser.id,
-        approvalStatus: "PENDING",
-        presence: "OFFLINE",
-        rating: 5.0,
-        acceptanceRate: 100,
-        cancellationRate: 0,
-        onlineHours: 0,
-        earningsTotal: 0,
-      },
-    });
-
-    return newUser;
+  return prisma.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      auth0Sub: input.auth0Sub,
+      role: "DRIVER",
+      accountStatus: "PENDING",
+      driverProfile: { create: pendingDriverProfile },
+    },
   });
+}
 
-  return user;
+async function ensureMobileProfile(
+  userId: string,
+  role: "RIDER" | "DRIVER",
+  city?: string | null,
+) {
+  if (role === "DRIVER") {
+    await prisma.driverProfile.upsert({
+      where: { userId },
+      create: { userId, city: city ?? undefined, ...pendingDriverProfile },
+      update: {},
+    });
+    return;
+  }
+
+  await prisma.riderProfile.upsert({
+    where: { userId },
+    create: { userId },
+    update: {},
+  });
+}
+
+function rejectAdminOnMobile(user: { role: UserRole }) {
+  if (user.role === "ADMIN") {
+    fail("This account is registered for a different app", "ForbiddenError");
+  }
+}
+
+function sessionUser<T extends { role: string }>(user: T, role: "RIDER" | "DRIVER") {
+  return { ...user, role };
 }
 
 export async function exchangeAuth0Session(
@@ -517,9 +549,7 @@ export async function exchangeAuth0Session(
   if (!user && claims.emailVerified) {
     const byEmail = await prisma.user.findUnique({ where: { email } });
     if (byEmail) {
-      if (byEmail.role !== role) {
-        fail("This account is registered for a different app", "ForbiddenError");
-      }
+      rejectAdminOnMobile(byEmail);
       user = await prisma.user.update({
         where: { id: byEmail.id },
         data: { auth0Sub: claims.sub, lastLoginAt: new Date() },
@@ -547,9 +577,7 @@ export async function exchangeAuth0Session(
             },
           });
   } else {
-    if (user.role !== role) {
-      fail("This account is registered for a different app", "ForbiddenError");
-    }
+    rejectAdminOnMobile(user);
     if (!user.isActive) {
       fail("Invalid or expired token", "UnauthorizedError");
     }
@@ -557,19 +585,22 @@ export async function exchangeAuth0Session(
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+    await ensureMobileProfile(user.id, role, user.city);
   }
+
+  const session = sessionUser(user, role);
 
   if (role === "DRIVER") {
     const fullProfile = await getDriverProfile(user.id);
     return {
-      accessToken: createAccessToken(user),
-      user: sanitizeDriverUser(user),
+      accessToken: createAccessToken(session),
+      user: sanitizeDriverUser(session),
       driverProfile: fullProfile,
     };
   }
 
   return {
-    accessToken: createAccessToken(user),
-    user: sanitizeUser(user),
+    accessToken: createAccessToken(session),
+    user: sanitizeUser(session),
   };
 }

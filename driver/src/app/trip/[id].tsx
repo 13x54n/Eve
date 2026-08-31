@@ -84,6 +84,18 @@ export default function ActiveTripScreen() {
       .then(() => { if (id) subscribeTrip(id); })
       .catch(() => { /* GPS still updates locally; rider may lag until reconnect */ });
     const removeSocket = addDriverSocketListener((event, payload) => {
+      if (event === 'trip:route_updated') {
+        const next = payload as { id?: string; fareTotal?: number; dropoffAddress?: string };
+        if (next.id && next.id !== id) return;
+        Alert.alert(
+          'Route updated',
+          next.dropoffAddress
+            ? `The rider changed the route. New dropoff: ${next.dropoffAddress}${next.fareTotal != null ? ` · $${Number(next.fareTotal).toFixed(2)}` : ''}`
+            : 'The rider added a stop or changed the dropoff.',
+        );
+        void refresh();
+        return;
+      }
       if (event !== 'trip:message' || !payload || typeof payload !== 'object') return;
       const message = payload as { tripId?: string; authorId?: string };
       if (message.tripId === id && message.authorId && message.authorId !== user?.id) {
@@ -104,17 +116,29 @@ export default function ActiveTripScreen() {
   }, [id, refresh, user?.id]);
 
   const headingToPickup = trip?.status === 'ASSIGNED' && !hasArrived;
+  const nextStop = !headingToPickup ? trip?.stops?.[0] : undefined;
   const destination = trip
-    ? {
-        latitude: headingToPickup ? trip.pickupLat : trip.dropoffLat,
-        longitude: headingToPickup ? trip.pickupLng : trip.dropoffLng,
-      }
+    ? headingToPickup
+      ? { latitude: trip.pickupLat, longitude: trip.pickupLng }
+      : nextStop
+        ? { latitude: nextStop.lat, longitude: nextStop.lng }
+        : { latitude: trip.dropoffLat, longitude: trip.dropoffLng }
     : null;
   const routeCoordinates = useDrivingRoute(driverLocation, destination);
 
-  function openDirections(lat: number, lng: number) {
-    const fallback = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    const url = Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : fallback;
+  function openDirections() {
+    if (!trip) return;
+    const dest = headingToPickup
+      ? { lat: trip.pickupLat, lng: trip.pickupLng }
+      : { lat: trip.dropoffLat, lng: trip.dropoffLng };
+    const waypoints = headingToPickup
+      ? []
+      : (trip.stops ?? []).map((stop) => `${stop.lat},${stop.lng}`);
+    const waypointParam = waypoints.length ? `&waypoints=${waypoints.join('|')}` : '';
+    const fallback = `https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}${waypointParam}&travelmode=driving`;
+    const url = Platform.OS === 'ios' && waypoints.length === 0
+      ? `maps://?daddr=${dest.lat},${dest.lng}&dirflg=d`
+      : fallback;
     void Linking.openURL(url).catch(() => void Linking.openURL(fallback));
   }
 
@@ -225,8 +249,7 @@ export default function ActiveTripScreen() {
   const isCourier = trip.rideType === 'COURIER';
   const passengerName = !isCourier ? trip.recipientName : null;
   const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
-  const destinationLat = isHeadingToPickup ? trip.pickupLat : trip.dropoffLat;
-  const destinationLng = isHeadingToPickup ? trip.pickupLng : trip.dropoffLng;
+  const stops = trip.stops ?? [];
   const stageLabel = isHeadingToPickup
     ? (isCourier ? 'Pickup package' : 'Heading to pickup')
     : trip.status === 'ASSIGNED'
@@ -244,12 +267,26 @@ export default function ActiveTripScreen() {
         camera={{
           center: you,
           zoom: 13,
-          bounds: [pickup, dropoff, ...(driverLocation ? [driverLocation] : [])],
+          bounds: [
+            pickup,
+            dropoff,
+            ...stops.map((stop) => ({ latitude: stop.lat, longitude: stop.lng })),
+            ...(driverLocation ? [driverLocation] : []),
+          ],
           padding: { top: 88, right: 48, bottom: 320, left: 48 },
         }}
       >
         {driverLocation ? <EveMarker id="you" coordinate={driverLocation} color="#2e4ed2" title="You" /> : null}
         <EveMarker id="pickup" coordinate={pickup} color="#16A34A" title="Pickup" />
+        {stops.map((stop) => (
+          <EveMarker
+            key={stop.id}
+            id={`stop-${stop.id}`}
+            coordinate={{ latitude: stop.lat, longitude: stop.lng }}
+            color="#F59E0B"
+            title={stop.address}
+          />
+        ))}
         <EveMarker id="dropoff" coordinate={dropoff} color="#DC2626" title="Dropoff" />
         {routeCoordinates.length >= 2 ? <EveRoute coordinates={routeCoordinates} color="#2e4ed2" /> : null}
       </EveMap>
@@ -320,12 +357,18 @@ export default function ActiveTripScreen() {
           <View style={[styles.addressDot, { backgroundColor: '#16A34A' }]} />
           <Text style={styles.addressText} numberOfLines={1}>{trip.pickupAddress}</Text>
         </View>
+        {stops.map((stop) => (
+          <View style={styles.addressRow} key={stop.id}>
+            <View style={[styles.addressDot, { backgroundColor: '#F59E0B' }]} />
+            <Text style={styles.addressText} numberOfLines={1}>{stop.address}</Text>
+          </View>
+        ))}
         <View style={styles.addressRow}>
           <View style={[styles.addressDot, { backgroundColor: '#DC2626' }]} />
           <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
         </View>
 
-        <TouchableOpacity style={styles.navigateButton} onPress={() => openDirections(destinationLat, destinationLng)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.navigateButton} onPress={() => openDirections()} activeOpacity={0.85}>
           <MaterialCommunityIcons name="navigation-variant" size={18} color="#FFFFFF" />
           <Text style={styles.navigateText}>
             {isHeadingToPickup ? 'Navigate to pickup' : isCourier ? 'Navigate to recipient' : 'Navigate to destination'}

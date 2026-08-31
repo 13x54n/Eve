@@ -64,7 +64,11 @@ internalLocationRouter.get("/drivers/nearby", async (req, res, next) => {
       res.status(400).json({ message: "pickupLat, pickupLng, and vehicleType are required" });
       return;
     }
-    res.json({ drivers: await nearbyDrivers({ pickupLat, pickupLng, vehicleType }) });
+    const excludeUserId = typeof req.query.excludeUserId === "string" ? req.query.excludeUserId : undefined;
+    const matchAllVehicleTypes = req.query.matchAllVehicleTypes === "true";
+    res.json({
+      drivers: await nearbyDrivers({ pickupLat, pickupLng, vehicleType, excludeUserId, matchAllVehicleTypes }),
+    });
   } catch (error) {
     next(error);
   }
@@ -99,7 +103,7 @@ internalLocationRouter.post("/drivers/geo/sync", async (req, res, next) => {
 
 internalLocationRouter.post("/trips/geo", async (req, res, next) => {
   try {
-    const { id, pickupLat, pickupLng, vehicleType } = req.body ?? {};
+    const { id, pickupLat, pickupLng, vehicleType, matchAllVehicleTypes } = req.body ?? {};
     if (
       typeof id !== "string"
       || typeof pickupLat !== "number"
@@ -109,7 +113,13 @@ internalLocationRouter.post("/trips/geo", async (req, res, next) => {
       res.status(400).json({ message: "id, pickupLat, pickupLng, and vehicleType are required" });
       return;
     }
-    await indexSearchingTrip({ id, pickupLat, pickupLng, vehicleType });
+    await indexSearchingTrip({
+      id,
+      pickupLat,
+      pickupLng,
+      vehicleType,
+      matchAllVehicleTypes: matchAllVehicleTypes === true,
+    });
     res.json({ ok: true });
   } catch (error) {
     next(error);

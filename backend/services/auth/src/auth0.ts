@@ -12,8 +12,12 @@ export type Auth0IdClaims = {
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
 function auth0Config() {
-  const domain = process.env.AUTH0_DOMAIN?.trim();
+  const raw = process.env.AUTH0_DOMAIN?.trim();
   const clientId = process.env.AUTH0_CLIENT_ID?.trim();
+  const domain = raw
+    ?.replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "")
+    .toLowerCase();
   if (!domain || !clientId) {
     throw new Error("AUTH0_DOMAIN and AUTH0_CLIENT_ID must be configured");
   }

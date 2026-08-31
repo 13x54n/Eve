@@ -25,9 +25,13 @@ function applyDotEnv() {
 
 applyDotEnv();
 
+function auth0Host(value) {
+  return value.replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase();
+}
+
 /** @param {{ config: import("expo/config").ExpoConfig }} ctx */
 module.exports = ({ config }) => {
-  const domain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN?.trim();
+  const domain = auth0Host(process.env.EXPO_PUBLIC_AUTH0_DOMAIN?.trim() ?? "");
   if (!domain) {
     throw new Error(
       "EXPO_PUBLIC_AUTH0_DOMAIN is required for the Auth0 native plugin. Set it in driver/.env.",

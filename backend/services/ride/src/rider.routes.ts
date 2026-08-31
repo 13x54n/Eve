@@ -17,6 +17,8 @@ import {
   markMessagesRead,
   postMessage,
   postSupportMessage,
+  addTripStop,
+  updateTripDestination,
 } from "./rider.controller.js";
 
 const router = Router();
@@ -34,6 +36,8 @@ router.post("/trips", createTrip);
 router.get("/trips", listTrips);
 router.get("/trips/active", getActiveTrip);
 router.get("/trips/:id", getTrip);
+router.post("/trips/:id/stops", addTripStop);
+router.patch("/trips/:id/destination", updateTripDestination);
 router.get("/trips/:id/offers", getOffers);
 router.get("/trips/:id/messages", listMessages);
 router.post("/trips/:id/messages", postMessage);

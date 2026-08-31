@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Linking, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ExpoLinking from "expo-linking";
-import { cancelTrip, getTrip, getTripMessages, Trip } from "@/services/trips";
+import { cancelTrip, getTrip, getTripMessages, addTripStop, updateTripDestination, Trip } from "@/services/trips";
+import { MapLocationPicker } from "@/components/map-location-picker";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useAuth } from "@/context/auth-context";
 import { Brand } from "@/constants/theme";
@@ -12,7 +13,7 @@ import { ActionButton } from "@/components/action-button";
 import { EveMap, EveMarker, EveRoute } from "@/components/map/eve-map";
 import { useDrivingRoute } from "@/components/map/use-driving-route";
 
-const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived"];
+const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived", "trip:route_updated"];
 const MAP_BOTTOM_INSET = 340;
 
 export default function TrackingScreen() {
@@ -24,6 +25,7 @@ export default function TrackingScreen() {
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [routeEdit, setRouteEdit] = useState<"stop" | "dropoff" | null>(null);
 
   const applyTrip = useCallback((next: Trip) => {
     setLoadError(false);
@@ -127,6 +129,35 @@ export default function TrackingScreen() {
     ]);
   }
 
+  async function confirmRouteEdit(location: { latitude: number; longitude: number; label: string }) {
+    if (!trip) return;
+    const point = {
+      address: location.label || "Selected location",
+      lat: location.latitude,
+      lng: location.longitude,
+    };
+    try {
+      setBusy(true);
+      if (routeEdit === "stop" && trip.rideType === "COURIER") {
+        Alert.alert("Stops not available", "Courier deliveries can only change the dropoff.");
+        setRouteEdit(null);
+        return;
+      }
+      const next = routeEdit === "stop"
+        ? await addTripStop(trip.id, point)
+        : await updateTripDestination(trip.id, point);
+      applyTrip(next);
+      setRouteEdit(null);
+    } catch (error: unknown) {
+      const message = error && typeof error === "object" && "response" in error
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
+        : undefined;
+      Alert.alert("Could not update route", message ?? "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!tripId) {
     return (
       <View style={styles.loading}>
@@ -181,9 +212,11 @@ export default function TrackingScreen() {
   const ratingLabel = trip.driver?.rating != null ? Number(trip.driver.rating).toFixed(1) : null;
   const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
   const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
+  const stops = trip.stops ?? [];
   const cameraPoints = [
     ...(driverLocation ? [driverLocation] : []),
     pickup,
+    ...stops.map((stop) => ({ latitude: stop.lat, longitude: stop.lng })),
     dropoff,
   ];
 
@@ -213,6 +246,15 @@ export default function TrackingScreen() {
       >
         {driverLocation ? <EveMarker id="driver" coordinate={driverLocation} color={Brand.accent} title="Driver" /> : null}
         <EveMarker id="pickup" coordinate={pickup} color="#16A34A" title="Pickup" />
+        {stops.map((stop) => (
+          <EveMarker
+            key={stop.id}
+            id={`stop-${stop.id}`}
+            coordinate={{ latitude: stop.lat, longitude: stop.lng }}
+            color="#F59E0B"
+            title={stop.address}
+          />
+        ))}
         <EveMarker id="dropoff" coordinate={dropoff} color="#DC2626" title="Dropoff" />
         {routeCoordinates.length >= 2 ? (
           <EveRoute coordinates={routeCoordinates} color={Brand.accent} />
@@ -305,13 +347,33 @@ export default function TrackingScreen() {
             <View style={styles.routeRail}>
               <View style={[styles.addressDot, { backgroundColor: "#16A34A" }]} />
               <View style={styles.routeLine} />
+              {stops.map((stop) => (
+                <View key={stop.id} style={[styles.addressDot, { backgroundColor: "#F59E0B", marginVertical: 4 }]} />
+              ))}
+              {stops.length > 0 ? <View style={styles.routeLine} /> : null}
               <View style={[styles.addressDot, { backgroundColor: "#DC2626" }]} />
             </View>
             <View style={styles.routeCopy}>
               <Text style={styles.addressText} numberOfLines={1}>{trip.pickupAddress}</Text>
+              {stops.map((stop) => (
+                <Text key={stop.id} style={styles.addressText} numberOfLines={1}>{stop.address}</Text>
+              ))}
               <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
             </View>
           </View>
+
+          {canManage && (trip.status === "ASSIGNED" || trip.status === "ONGOING") ? (
+            <View style={styles.routeActions}>
+              {!isCourier && stops.length < 3 ? (
+                <Pressable style={styles.routeAction} onPress={() => setRouteEdit("stop")}>
+                  <Text style={styles.routeActionText}>Add stop</Text>
+                </Pressable>
+              ) : null}
+              <Pressable style={styles.routeAction} onPress={() => setRouteEdit("dropoff")}>
+                <Text style={styles.routeActionText}>Change dropoff</Text>
+              </Pressable>
+            </View>
+          ) : null}
 
           {canManage && (trip.status === "ASSIGNED" || trip.status === "ONGOING") ? (
             <ActionButton
@@ -326,6 +388,15 @@ export default function TrackingScreen() {
           ) : null}
         </View>
       </View>
+
+      <MapLocationPicker
+        visible={routeEdit != null}
+        initial={dropoff}
+        title={routeEdit === "stop" ? "Add a stop" : "Change dropoff"}
+        hint={routeEdit === "stop" ? "Choose a stop before dropoff." : "Choose a new dropoff."}
+        onClose={() => setRouteEdit(null)}
+        onConfirm={(location) => void confirmRouteEdit(location)}
+      />
 
       <Pressable
         style={[styles.fab, { top: insets.top + 8 }]}
@@ -462,6 +533,15 @@ const styles = StyleSheet.create({
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { color: Brand.text, fontSize: 13 },
   cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8 },
+  routeActions: { flexDirection: "row", gap: 8, marginTop: 12 },
+  routeAction: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: Brand.border,
+  },
+  routeActionText: { color: Brand.accent, fontWeight: "700", fontSize: 13 },
   share: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10, paddingVertical: 10 },
   shareText: { color: Brand.accent, fontWeight: "700", fontSize: 13 },
   cancelText: { color: Brand.danger, fontWeight: "700", fontSize: 14 },

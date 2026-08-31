@@ -2,7 +2,7 @@ import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
-import { hashPassword } from "@eve/shared";
+import { hashPassword, verifyAccessToken } from "@eve/shared";
 import { verifyAuth0IdToken } from "../services/auth/src/auth0.js";
 
 vi.mock("../services/auth/src/auth0.js", () => ({
@@ -15,6 +15,8 @@ describe("Auth0 token exchange", () => {
   const riderEmail = `auth0-rider-${Date.now()}@example.com`;
   const driverEmail = `auth0-driver-${Date.now()}@example.com`;
   const linkedEmail = `auth0-link-${Date.now()}@example.com`;
+  const dualRiderEmail = `auth0-dual-rider-${Date.now()}@example.com`;
+  const dualDriverEmail = `auth0-dual-driver-${Date.now()}@example.com`;
 
   beforeEach(() => {
     mockedVerify.mockReset();
@@ -22,7 +24,7 @@ describe("Auth0 token exchange", () => {
 
   afterAll(async () => {
     await prisma.user.deleteMany({
-      where: { email: { in: [riderEmail, driverEmail, linkedEmail] } },
+      where: { email: { in: [riderEmail, driverEmail, linkedEmail, dualRiderEmail, dualDriverEmail] } },
     });
   });
 
@@ -101,18 +103,101 @@ describe("Auth0 token exchange", () => {
     expect(stored?.auth0Sub).toBe("auth0|legacy-link");
   });
 
-  it("rejects a rider token on the driver exchange", async () => {
+  it("lets a rider attach a driver profile on the driver exchange", async () => {
     mockedVerify.mockResolvedValue({
-      sub: "auth0|rider-new",
-      email: riderEmail,
+      sub: "auth0|rider-dual",
+      email: dualRiderEmail,
       emailVerified: true,
       name: "Auth0 Rider",
     });
 
     await request(app)
+      .post("/api/auth/auth0")
+      .send({ idToken: "header.payload.signature" })
+      .expect(200);
+
+    mockedVerify.mockResolvedValue({
+      sub: "auth0|rider-dual",
+      email: dualRiderEmail,
+      emailVerified: true,
+      name: "Auth0 Rider",
+    });
+
+    const driverExchange = await request(app)
       .post("/api/auth/driver/auth0")
       .send({ idToken: "header.payload.signature" })
-      .expect(403);
+      .expect(200);
+
+    expect(driverExchange.body.user).toMatchObject({
+      email: dualRiderEmail,
+      role: "DRIVER",
+      accountStatus: "ACTIVE",
+    });
+    expect(driverExchange.body.driverProfile).toBeTruthy();
+
+    const stored = await prisma.user.findUnique({
+      where: { email: dualRiderEmail },
+      include: { riderProfile: true, driverProfile: true },
+    });
+    expect(stored?.role).toBe("RIDER");
+    expect(stored?.accountStatus).toBe("ACTIVE");
+    expect(stored?.riderProfile).toBeTruthy();
+    expect(stored?.driverProfile).toBeTruthy();
+
+    const payload = verifyAccessToken(driverExchange.body.accessToken);
+    expect(payload.role).toBe("DRIVER");
+    expect(payload.sub).toBe(stored?.id);
+
+    mockedVerify.mockResolvedValue({
+      sub: "auth0|rider-dual",
+      email: dualRiderEmail,
+      emailVerified: true,
+      name: "Auth0 Rider",
+    });
+
+    const riderExchange = await request(app)
+      .post("/api/auth/auth0")
+      .send({ idToken: "header.payload.signature" })
+      .expect(200);
+
+    expect(riderExchange.body.user.role).toBe("RIDER");
+    expect(verifyAccessToken(riderExchange.body.accessToken).role).toBe("RIDER");
+  });
+
+  it("lets a driver attach a rider profile on the rider exchange", async () => {
+    mockedVerify.mockResolvedValue({
+      sub: "auth0|driver-dual",
+      email: dualDriverEmail,
+      emailVerified: true,
+      name: "Auth0 Driver",
+    });
+
+    await request(app)
+      .post("/api/auth/driver/auth0")
+      .send({ idToken: "header.payload.signature" })
+      .expect(200);
+
+    mockedVerify.mockResolvedValue({
+      sub: "auth0|driver-dual",
+      email: dualDriverEmail,
+      emailVerified: true,
+      name: "Auth0 Driver",
+    });
+
+    const riderExchange = await request(app)
+      .post("/api/auth/auth0")
+      .send({ idToken: "header.payload.signature" })
+      .expect(200);
+
+    expect(riderExchange.body.user.role).toBe("RIDER");
+
+    const stored = await prisma.user.findUnique({
+      where: { email: dualDriverEmail },
+      include: { riderProfile: true, driverProfile: true },
+    });
+    expect(stored?.role).toBe("DRIVER");
+    expect(stored?.riderProfile).toBeTruthy();
+    expect(stored?.driverProfile).toBeTruthy();
   });
 
   it("rejects an invalid Auth0 token", async () => {
