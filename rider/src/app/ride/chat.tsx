@@ -26,13 +26,19 @@ export default function TripChatScreen() {
   const [messages, setMessages] = useState<TripMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!tripId) return;
     try {
+      setLoading(true);
+      setLoadError(false);
       setMessages(await getTripMessages(tripId));
     } catch {
-      /* keep last messages */
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
   }, [tripId]);
 
@@ -148,6 +154,10 @@ const styles = StyleSheet.create({
   title: { color: "#111827", fontSize: 16, fontWeight: "800" },
   list: { padding: 16, gap: 8, flexGrow: 1 },
   empty: { marginTop: 40, color: "#6B7280", textAlign: "center" },
+  errorContainer: { marginTop: 40, alignItems: "center", padding: 20 },
+  errorText: { marginTop: 12, color: "#B91C1C", fontSize: 16, fontWeight: "600", textAlign: "center" },
+  retryButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: "#2E4ED5" },
+  retryText: { color: "#FFFFFF", fontSize: 14, fontWeight: "600" },
   bubble: { maxWidth: "80%", padding: 12, borderRadius: 16 },
   mine: { alignSelf: "flex-end", backgroundColor: "#2E4ED5" },
   theirs: { alignSelf: "flex-start", backgroundColor: "#FFFFFF" },
