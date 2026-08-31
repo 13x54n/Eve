@@ -278,7 +278,11 @@ export default function RequestRideScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityLabel="Go back">
+        <Pressable 
+          onPress={() => router.back()} 
+          accessibilityLabel="Go back"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <Feather name="arrow-left" size={21} color="#111827" />
         </Pressable>
         <Text style={styles.eyebrow}>Confirm your trip</Text>
@@ -500,6 +504,19 @@ export default function RequestRideScreen() {
           onClose={() => setMapPickerVisible(false)}
           onConfirm={applyMapLocation}
         />
+      ) : null}
+
+      {!dropoff.trim() || !riderDetailsValid ? (
+        <View style={styles.validationMessage}>
+          <Feather name="info" size={16} color="#D97706" />
+          <Text style={styles.validationText}>
+            {!dropoff.trim() 
+              ? "Please enter a destination to continue" 
+              : selectedRider === "For Others" && riderName.trim().length <= 1
+              ? "Please enter the recipient's name"
+              : "Please enter a valid phone number (7+ digits)"}
+          </Text>
+        </View>
       ) : null}
 
       <ActionButton
@@ -966,6 +983,20 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+  },
+  validationMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    backgroundColor: "#FEF3C7",
+  },
+  validationText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400E",
   },
   button: {
     flexDirection: "row",
