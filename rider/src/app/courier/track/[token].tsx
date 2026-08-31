@@ -46,7 +46,7 @@ export default function PublicCourierTrackScreen() {
       ? { latitude: courier.pickupLat, longitude: courier.pickupLng }
       : { latitude: courier.dropoffLat, longitude: courier.dropoffLng }
     : null;
-  const routeCoordinates = useDrivingRoute(courier?.driverLocation ?? null, destination);
+  const { coordinates: routeCoordinates } = useDrivingRoute(courier?.driverLocation ?? null, destination);
 
   const styles = makeStyles(brand);
 

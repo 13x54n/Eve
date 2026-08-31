@@ -12,7 +12,7 @@ export function redisUrl() {
 export function logGeoFallback(reason?: unknown) {
   if (fallbackLogged) return;
   fallbackLogged = true;
-  console.warn("Matchmaking falling back to Haversine; Redis GEOSEARCH unavailable", reason ?? "");
+  console.warn("Matchmaking falling back to Haversine; Redis H3 index unavailable", reason ?? "");
 }
 
 export async function getRedis(): Promise<RedisClientType | null> {

@@ -18,6 +18,6 @@ See **[docs/gateway.md](docs/gateway.md)** for modes, routing, env vars, and how
 
 ## Matchmaking geo
 
-Nearby drivers and searching trips are indexed in Redis GEO (geohash sorted sets) and queried with `GEOSEARCH` by radius. Postgres stays the source of truth.
+Nearby drivers and searching trips are indexed in Uber H3 cells (Redis sets) and queried with `gridDisk` plus a Haversine radius filter. Postgres stays the source of truth.
 
-See **[docs/redis-geosearch-matchmaking.md](docs/redis-geosearch-matchmaking.md)** for keys, write paths, fallback, and how to change the **25 km** match radius (`MATCH_RADIUS_KM`).
+See **[docs/h3-matchmaking.md](docs/h3-matchmaking.md)** for keys, write paths, fallback, and how to change the **15 km** match radius (`MATCH_RADIUS_KM`).

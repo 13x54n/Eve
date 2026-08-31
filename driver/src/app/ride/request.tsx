@@ -219,7 +219,7 @@ export default function RequestRideScreen() {
   };
   const pickupPoint = { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng };
   const dropoffPoint = { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude };
-  const routeCoordinates = useDrivingRoute(pickupPoint, dropoffPoint);
+  const { coordinates: routeCoordinates } = useDrivingRoute(pickupPoint, dropoffPoint);
 
   const riderDetailsValid =
     selectedRider === "For me" || (riderName.trim().length > 1 && riderPhone.trim().length >= 7);

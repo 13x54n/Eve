@@ -37,6 +37,7 @@ function RootNavigator() {
       <Stack.Protected guard={isAuthenticated}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="trip/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="trip/offer" options={{ headerShown: false, gestureEnabled: false }} />
         <Stack.Screen name="trip/chat" options={{ headerShown: false }} />
         <Stack.Screen name="trip/support" options={{ headerShown: false }} />
         <Stack.Screen name="trip/support/[id]" options={{ headerShown: false }} />

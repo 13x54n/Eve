@@ -59,6 +59,7 @@ export const ModelName = {
   Vehicle: 'Vehicle',
   DriverDocument: 'DriverDocument',
   Trip: 'Trip',
+  TripDispatch: 'TripDispatch',
   TripStop: 'TripStop',
   TripMessage: 'TripMessage',
   TripOffer: 'TripOffer',
@@ -256,6 +257,20 @@ export const TripScalarFieldEnum = {
 } as const
 
 export type TripScalarFieldEnum = (typeof TripScalarFieldEnum)[keyof typeof TripScalarFieldEnum]
+
+
+export const TripDispatchScalarFieldEnum = {
+  id: 'id',
+  tripId: 'tripId',
+  driverId: 'driverId',
+  status: 'status',
+  voided: 'voided',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TripDispatchScalarFieldEnum = (typeof TripDispatchScalarFieldEnum)[keyof typeof TripDispatchScalarFieldEnum]
 
 
 export const TripStopScalarFieldEnum = {

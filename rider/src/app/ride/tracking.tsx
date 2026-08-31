@@ -14,7 +14,27 @@ import { EveMap, EveMarker, EveRoute } from "@/components/map/eve-map";
 import { useDrivingRoute } from "@/components/map/use-driving-route";
 
 const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived", "trip:route_updated"];
-const MAP_BOTTOM_INSET = 340;
+const MAP_BOTTOM_INSET = 360;
+
+function haversineKm(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number },
+) {
+  const radians = (value: number) => (value * Math.PI) / 180;
+  const latitudeDelta = radians(to.latitude - from.latitude);
+  const longitudeDelta = radians(to.longitude - from.longitude);
+  const a = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(radians(from.latitude)) * Math.cos(radians(to.latitude)) * Math.sin(longitudeDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fallbackDurationMin(
+  from: { latitude: number; longitude: number } | null,
+  to: { latitude: number; longitude: number },
+) {
+  if (!from) return 5;
+  return Math.max(5, Math.ceil(haversineKm(from, to) / 0.45));
+}
 
 export default function TrackingScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
@@ -103,7 +123,7 @@ export default function TrackingScreen() {
       ? { latitude: trip.pickupLat, longitude: trip.pickupLng }
       : { latitude: trip.dropoffLat, longitude: trip.dropoffLng }
     : null;
-  const routeCoordinates = useDrivingRoute(driverLocation, destination);
+  const { coordinates: routeCoordinates, durationMin: routeDurationMin } = useDrivingRoute(driverLocation, destination);
 
   function handleCancel() {
     if (!tripId) return;
@@ -208,10 +228,16 @@ export default function TrackingScreen() {
     : headingToPickup
       ? (isCourier ? "Pickup package" : "Meet at pickup")
       : (isCourier ? `Delivering to ${trip.recipientName ?? "recipient"}` : "On the way to dropoff");
-  const etaLabel = `${Math.max(1, trip.durationMin)} min`;
-  const ratingLabel = trip.driver?.rating != null ? Number(trip.driver.rating).toFixed(1) : null;
   const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
   const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
+  const pickupEtaMin = headingToPickup
+    ? (routeDurationMin ?? fallbackDurationMin(driverLocation, pickup))
+    : null;
+  const dropoffEtaMin = headingToPickup
+    ? (pickupEtaMin ?? 5) + Math.max(1, trip.durationMin)
+    : (routeDurationMin ?? Math.max(1, trip.durationMin));
+  const destEtaLabel = isCourier ? "Deliver" : "Dropoff";
+  const ratingLabel = trip.driver?.rating != null ? Number(trip.driver.rating).toFixed(1) : null;
   const stops = trip.stops ?? [];
   const cameraPoints = [
     ...(driverLocation ? [driverLocation] : []),
@@ -266,7 +292,18 @@ export default function TrackingScreen() {
           <View style={styles.handle} />
           <View style={styles.statusRow}>
             <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
-            <Text style={styles.time}>{etaLabel}</Text>
+            <View style={styles.etaRow}>
+              {headingToPickup && pickupEtaMin != null ? (
+                <View style={styles.etaItem}>
+                  <Text style={styles.etaCaption}>Pickup</Text>
+                  <Text style={styles.time}>{pickupEtaMin} min</Text>
+                </View>
+              ) : null}
+              <View style={styles.etaItem}>
+                <Text style={styles.etaCaption}>{destEtaLabel}</Text>
+                <Text style={styles.time}>{dropoffEtaMin} min</Text>
+              </View>
+            </View>
           </View>
 
           <View style={styles.driverRow}>
@@ -459,13 +496,13 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.border,
   },
   statusRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    gap: 12,
+    gap: 8,
   },
-  eyebrow: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1, flex: 1 },
-  time: { color: Brand.text, fontSize: 28, fontWeight: "800" },
+  eyebrow: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
+  etaRow: { flexDirection: "row", alignItems: "flex-end", gap: 20 },
+  etaItem: { minWidth: 88 },
+  etaCaption: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700" },
+  time: { color: Brand.text, fontSize: 26, fontWeight: "800" },
   driverRow: {
     flexDirection: "row",
     alignItems: "center",

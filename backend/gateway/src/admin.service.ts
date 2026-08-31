@@ -6,6 +6,7 @@ import {
   startOfDay,
   distanceKm,
   durationMinutes,
+  DISPATCH_SECONDS,
   fail,
   hashPassword,
   canCreateStaff,
@@ -997,17 +998,24 @@ export async function createTrip(
       vehicleType: trip.vehicleType,
       matchAllVehicleTypes,
     });
+    const dispatchExpiresAt = new Date(Date.now() + DISPATCH_SECONDS * 1000);
+    if (drivers.length > 0) {
+      await prisma.tripDispatch.createMany({
+        data: drivers.map((driver) => ({ tripId: trip.id, driverId: driver.id, expiresAt: dispatchExpiresAt })),
+        skipDuplicates: true,
+      });
+    }
+    const payload = {
+      id: trip.id,
+      pickupAddress: trip.pickupAddress,
+      dropoffAddress: trip.dropoffAddress,
+      fareTotal: Number(trip.fareTotal),
+      rideType: trip.rideType,
+      vehicleType: trip.vehicleType,
+      dispatchExpiresAt: dispatchExpiresAt.toISOString(),
+    };
     await Promise.all(
-      drivers.map((driver) =>
-        emitUserEvent("DRIVER", driver.userId, "trip:requested", {
-          id: trip.id,
-          pickupAddress: trip.pickupAddress,
-          dropoffAddress: trip.dropoffAddress,
-          fareTotal: Number(trip.fareTotal),
-          rideType: trip.rideType,
-          vehicleType: trip.vehicleType,
-        }),
-      ),
+      drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", payload)),
     );
   }
 

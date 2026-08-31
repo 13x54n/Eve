@@ -8,6 +8,7 @@ import {
   syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
+import { createTripDispatches, voidPendingDispatches } from "./dispatch.js";
 
 async function getRider(userId: string) {
   const rider = await prisma.riderProfile.findUnique({ where: { userId } });
@@ -172,10 +173,15 @@ export async function createTrip(userId: string, input: {
     excludeUserId: userId,
     matchAllVehicleTypes,
   });
-  await Promise.all(
-    drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", result)),
+  const dispatchExpiresAt = await createTripDispatches(
+    trip.id,
+    drivers.map((driver) => driver.id),
   );
-  await emitTripEvent(trip.id, "trip:requested", result);
+  const payload = { ...result, dispatchExpiresAt: dispatchExpiresAt.toISOString() };
+  await Promise.all(
+    drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", payload)),
+  );
+  await emitTripEvent(trip.id, "trip:requested", payload);
   if (recipientUserId) {
     emitUserEvent("RIDER", recipientUserId, isCourier ? "courier:incoming" : "trip:incoming", result);
   }
@@ -363,6 +369,7 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
     await tx.driverProfile.update({ where: { id: offer.driverId }, data: { presence: "ON_TRIP" } });
     return { acceptedDriverUserId: offer.driver.userId, rejectedDriverUserIds: rejected.map((row) => row.driver.userId) };
   });
+  await voidPendingDispatches(tripId);
   // Re-read outside the transaction so this reflects the committed state.
   const result = await getTrip(userId, tripId);
   await Promise.all([
@@ -402,6 +409,7 @@ export async function cancelTrip(userId: string, tripId: string) {
       await tx.driverProfile.update({ where: { id: trip.driverId }, data: { presence: "ONLINE" } });
     }
   });
+  await voidPendingDispatches(tripId);
   await removeSearchingTripClient(
     tripId,
     trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,

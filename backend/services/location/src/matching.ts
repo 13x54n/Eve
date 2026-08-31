@@ -165,19 +165,26 @@ async function nearbyDriversForType(input: {
       longitude: { not: null },
       ...(input.excludeUserId ? { userId: { not: input.excludeUserId } } : {}),
     },
-    select: { id: true, userId: true },
+    select: { id: true, userId: true, latitude: true, longitude: true },
   });
-  const allowed = new Map(rows.map((row) => [row.id, row.userId]));
+  const allowed = new Map(rows.map((row) => [row.id, row]));
 
   return hits
     .filter((hit) => allowed.has(hit.id))
-    .map((hit) => ({
-      id: hit.id,
-      userId: allowed.get(hit.id)!,
-      latitude: hit.latitude,
-      longitude: hit.longitude,
-      distance: hit.distance,
-    }))
+    .map((hit) => {
+      const row = allowed.get(hit.id)!;
+      const latitude = row.latitude!;
+      const longitude = row.longitude!;
+      return {
+        id: hit.id,
+        userId: row.userId,
+        latitude,
+        longitude,
+        distance: distanceKm(latitude, longitude, input.pickupLat, input.pickupLng),
+      };
+    })
+    .filter((driver) => driver.distance <= MATCH_RADIUS_KM)
+    .sort((left, right) => left.distance - right.distance)
     .slice(0, MATCH_LIMIT);
 }
 
@@ -213,13 +220,21 @@ export async function nearbySearchingTrips(userId: string) {
       ...searchingTripVisibility(types),
       rider: { userId: { not: userId } },
     },
-    select: { id: true },
+    select: { id: true, pickupLat: true, pickupLng: true },
   });
-  const allowed = new Set(rows.map((row) => row.id));
+  const allowed = new Map(rows.map((row) => [row.id, row]));
 
   return hits
     .filter((hit) => allowed.has(hit.id))
-    .map((hit) => ({ id: hit.id, distanceToPickup: hit.distance }))
+    .map((hit) => {
+      const row = allowed.get(hit.id)!;
+      return {
+        id: hit.id,
+        distanceToPickup: distanceKm(profile.latitude!, profile.longitude!, row.pickupLat, row.pickupLng),
+      };
+    })
+    .filter((trip) => trip.distanceToPickup <= MATCH_RADIUS_KM)
+    .sort((left, right) => left.distanceToPickup - right.distanceToPickup)
     .slice(0, MATCH_LIMIT);
 }
 

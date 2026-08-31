@@ -4,6 +4,7 @@ import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
 import {
   cleanupMarketplaceUsers,
+  incomingTripIds,
   nycTripPayload,
   spawnApprovedOnlineDriver,
   spawnRider,
@@ -49,14 +50,12 @@ describe("Courier trips", { timeout: 20000 }, () => {
       .get("/api/driver/trips/incoming")
       .set("Authorization", `Bearer ${driver.token}`)
       .expect(200);
-    expect(incoming.body.trips).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: created.body.trip.id,
-          rideType: "COURIER",
-          recipientName: "Recipient Rider",
-        }),
-      ]),
+    expect(incomingTripIds(incoming.body)).toContain(created.body.trip.id);
+    expect(incoming.body.activeDispatch ?? incoming.body.trips[0]).toEqual(
+      expect.objectContaining({
+        rideType: "COURIER",
+        recipientName: "Recipient Rider",
+      }),
     );
 
     const publicRes = await request(app)
@@ -116,14 +115,12 @@ describe("Courier trips", { timeout: 20000 }, () => {
       .get("/api/driver/trips/incoming")
       .set("Authorization", `Bearer ${driver.token}`)
       .expect(200);
-    expect(incoming.body.trips).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: created.body.trip.id,
-          rideType: "COURIER",
-          vehicleType: "BIKE",
-        }),
-      ]),
+    expect(incomingTripIds(incoming.body)).toContain(created.body.trip.id);
+    expect(incoming.body.activeDispatch ?? incoming.body.trips[0]).toEqual(
+      expect.objectContaining({
+        rideType: "COURIER",
+        vehicleType: "BIKE",
+      }),
     );
 
     await request(app)
@@ -162,13 +159,11 @@ describe("Courier trips", { timeout: 20000 }, () => {
       .get("/api/driver/trips/incoming")
       .set("Authorization", `Bearer ${driver.token}`)
       .expect(200);
-    expect(incoming.body.trips).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: tripId,
-          rideType: "COURIER",
-        }),
-      ]),
+    expect(incomingTripIds(incoming.body)).toContain(tripId);
+    expect(incoming.body.activeDispatch ?? incoming.body.trips[0]).toEqual(
+      expect.objectContaining({
+        rideType: "COURIER",
+      }),
     );
   });
 

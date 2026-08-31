@@ -22,6 +22,8 @@ import {
   saveVehicle,
   startTrip,
   trips,
+  acceptDispatch,
+  declineDispatch,
 } from "./driver.controller.js";
 import { requireAuth } from "@eve/http";
 
@@ -41,6 +43,8 @@ router.post("/vehicles", requireAuth, saveVehicle);
 router.post("/documents", requireAuth, saveDocument);
 router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
 router.post("/trips/:id/offers", requireAuth, createOffer);
+router.post("/trips/:id/dispatch/accept", requireAuth, acceptDispatch);
+router.post("/trips/:id/dispatch/decline", requireAuth, declineDispatch);
 router.get("/trips", requireAuth, trips);
 router.get("/trips/incoming", requireAuth, incomingTrips);
 router.get("/trips/:id", requireAuth, getTrip);

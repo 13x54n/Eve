@@ -4,6 +4,7 @@ import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
 import {
   cleanupMarketplaceUsers,
+  incomingTripIds,
   nycTripPayload,
   spawnApprovedOnlineDriver,
   spawnRider,
@@ -45,9 +46,7 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         .get("/api/driver/trips/incoming")
         .set("Authorization", `Bearer ${driver.token}`)
         .expect(200);
-      expect(incoming.body.trips).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: trip.id })]),
-      );
+      expect(incomingTripIds(incoming.body)).toContain(trip.id);
 
       const proposedFare = Number((Number(trip.fareTotal) + 1).toFixed(2));
       const offerRes = await request(app)

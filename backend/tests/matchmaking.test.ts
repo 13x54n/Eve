@@ -3,6 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
 import { createAccessToken } from "@eve/shared";
+import { incomingTripIds } from "./helpers/marketplace.js";
 
 const createdEmails: string[] = [];
 
@@ -67,6 +68,7 @@ describe("Rider-driver matchmaking", () => {
     });
     const tripIds = trips.map((trip) => trip.id);
 
+    await prisma.tripDispatch.deleteMany({ where: { tripId: { in: tripIds } } });
     await prisma.tripOffer.deleteMany({ where: { tripId: { in: tripIds } } });
     await prisma.trip.deleteMany({ where: { id: { in: tripIds } } });
     await prisma.user.deleteMany({ where: { email: { in: createdEmails } } });
@@ -109,9 +111,7 @@ describe("Rider-driver matchmaking", () => {
       .set("Authorization", `Bearer ${driverToken}`)
       .expect(200);
 
-    expect(incomingRes.body.trips).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: trip.id, vehicleType: "CAR" })]),
-    );
+    expect(incomingTripIds(incomingRes.body)).toContain(trip.id);
 
     const proposedFare = Number((Number(trip.fareTotal) + 2).toFixed(2));
 
@@ -297,9 +297,7 @@ describe("Rider-driver matchmaking", () => {
       .set("Authorization", `Bearer ${driverToken}`)
       .expect(200);
 
-    expect(incomingRes.body.trips).toEqual(
-      expect.arrayContaining([expect.objectContaining({ id: tripRes.body.trip.id })]),
-    );
+    expect(incomingTripIds(incomingRes.body)).toContain(tripRes.body.trip.id);
   });
 
   it("blocks a second offer while a driver is waiting to be matched", async () => {

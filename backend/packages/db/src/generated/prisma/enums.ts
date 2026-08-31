@@ -135,6 +135,16 @@ export const TripOfferStatus = {
 export type TripOfferStatus = (typeof TripOfferStatus)[keyof typeof TripOfferStatus]
 
 
+export const TripDispatchStatus = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  DECLINED: 'DECLINED',
+  EXPIRED: 'EXPIRED'
+} as const
+
+export type TripDispatchStatus = (typeof TripDispatchStatus)[keyof typeof TripDispatchStatus]
+
+
 export const RideType = {
   STANDARD: 'STANDARD',
   AIRPORT: 'AIRPORT',

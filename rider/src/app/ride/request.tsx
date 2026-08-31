@@ -268,7 +268,7 @@ export default function RequestRideScreen() {
   const pickupPoint = { latitude: pickupCoordinate.lat, longitude: pickupCoordinate.lng };
   const dropoffPoint = { latitude: mapCoordinate.latitude, longitude: mapCoordinate.longitude };
   const hasDropoff = Boolean(dropoffCoord) || Boolean(params.dropoff_lat && params.dropoff_lng);
-  const routeCoordinates = useDrivingRoute(
+  const { coordinates: routeCoordinates } = useDrivingRoute(
     hasDropoff ? pickupPoint : null,
     hasDropoff ? dropoffPoint : null,
   );

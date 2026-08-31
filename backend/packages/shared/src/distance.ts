@@ -1,5 +1,6 @@
 export const MATCH_RADIUS_KM = 15;
 export const MATCH_LIMIT = 5;
+export const DISPATCH_SECONDS = 30;
 
 export function distanceKm(fromLat: number, fromLng: number, toLat: number, toLng: number) {
   const radians = (value: number) => (value * Math.PI) / 180;
