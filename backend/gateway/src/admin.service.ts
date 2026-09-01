@@ -1,10 +1,12 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare } from "@eve/db";
 import { emitUserEvent } from "@eve/notify";
+import { indexSearchingTripClient, nearbyDriversClient } from "@eve/location";
 import {
   money,
   startOfDay,
   distanceKm,
   durationMinutes,
+  DISPATCH_SECONDS,
   fail,
   hashPassword,
   canCreateStaff,
@@ -76,8 +78,8 @@ export async function getDashboard(query: Record<string, unknown>) {
     matchedOffers,
     liveSos,
   ] = await Promise.all([
-    prisma.user.count({ where: { role: "RIDER" } }),
-    prisma.user.count({ where: { role: "DRIVER" } }),
+    prisma.riderProfile.count(),
+    prisma.driverProfile.count(),
     prisma.vehicle.count(),
     prisma.user.count({ where: { isActive: true, accountStatus: "ACTIVE" } }),
     prisma.driverProfile.groupBy({
@@ -275,7 +277,7 @@ export async function searchRiders(query: Record<string, unknown>) {
   const { q, skip, take, from, to, city } = parseFilters(query);
 
   const where: Prisma.UserWhereInput = {
-    role: "RIDER",
+    riderProfile: { isNot: null },
     ...(city ? { city } : {}),
     ...(from || to
       ? {
@@ -354,7 +356,7 @@ function sanitizePublicUser(user: {
 
 export async function getRider(id: string) {
   const user = await prisma.user.findFirst({
-    where: { id, role: "RIDER" },
+    where: { id, riderProfile: { isNot: null } },
     include: {
       riderProfile: {
         include: {
@@ -426,7 +428,7 @@ export async function updateRider(
   ip?: string,
 ) {
   const user = await prisma.user.findFirst({
-    where: { id, role: "RIDER" },
+    where: { id, riderProfile: { isNot: null } },
     include: { riderProfile: true },
   });
 
@@ -980,6 +982,42 @@ export async function createTrip(
     entityId: trip.id,
     ip,
   });
+
+  if (trip.status === "SEARCHING") {
+    const matchAllVehicleTypes = trip.rideType === "COURIER";
+    await indexSearchingTripClient({
+      id: trip.id,
+      pickupLat: trip.pickupLat,
+      pickupLng: trip.pickupLng,
+      vehicleType: trip.vehicleType,
+      matchAllVehicleTypes,
+    });
+    const drivers = await nearbyDriversClient({
+      pickupLat: trip.pickupLat,
+      pickupLng: trip.pickupLng,
+      vehicleType: trip.vehicleType,
+      matchAllVehicleTypes,
+    });
+    const dispatchExpiresAt = new Date(Date.now() + DISPATCH_SECONDS * 1000);
+    if (drivers.length > 0) {
+      await prisma.tripDispatch.createMany({
+        data: drivers.map((driver) => ({ tripId: trip.id, driverId: driver.id, expiresAt: dispatchExpiresAt })),
+        skipDuplicates: true,
+      });
+    }
+    const payload = {
+      id: trip.id,
+      pickupAddress: trip.pickupAddress,
+      dropoffAddress: trip.dropoffAddress,
+      fareTotal: Number(trip.fareTotal),
+      rideType: trip.rideType,
+      vehicleType: trip.vehicleType,
+      dispatchExpiresAt: dispatchExpiresAt.toISOString(),
+    };
+    await Promise.all(
+      drivers.map((driver) => emitUserEvent("DRIVER", driver.userId, "trip:requested", payload)),
+    );
+  }
 
   return getTrip(trip.id);
 }

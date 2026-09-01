@@ -25,72 +25,32 @@ export function sanitizeDriverUser(user: {
   };
 }
 
-export async function getDriverProfile(userId: string) {
-  let profile = await prisma.driverProfile.findUnique({
-    where: { userId },
-    include: {
-      user: true,
-      vehicles: true,
-      documents: { orderBy: { type: "asc" } },
-      fleetCompany: true,
-      trips: {
-        where: {
-          status: { in: ["ASSIGNED", "ONGOING"] },
-        },
-        include: {
-          rider: { include: { user: true } },
-          vehicle: true,
-        },
-        take: 1,
-      },
+const driverProfileInclude = {
+  user: true,
+  vehicles: true,
+  documents: { orderBy: { type: "asc" as const } },
+  fleetCompany: true,
+  trips: {
+    where: {
+      status: { in: ["ASSIGNED" as const, "ONGOING" as const] },
     },
+    include: {
+      rider: { include: { user: true } },
+      vehicle: true,
+      stops: { orderBy: { sequence: "asc" as const } },
+    },
+    take: 1,
+  },
+};
+
+export async function getDriverProfile(userId: string) {
+  const profile = await prisma.driverProfile.findUnique({
+    where: { userId },
+    include: driverProfileInclude,
   });
 
   if (!profile) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== "DRIVER") {
-      const error = new Error("Driver account not found");
-      error.name = "NotFoundError";
-      throw error;
-    }
-
-    await prisma.driverProfile.create({
-      data: {
-        userId: user.id,
-        city: user.city,
-        approvalStatus: "PENDING",
-        presence: "OFFLINE",
-        rating: 5.0,
-        acceptanceRate: 100,
-        cancellationRate: 0,
-        onlineHours: 0,
-        earningsTotal: 0,
-      },
-    });
-
-    profile = await prisma.driverProfile.findUnique({
-      where: { userId },
-      include: {
-        user: true,
-        vehicles: true,
-        documents: { orderBy: { type: "asc" } },
-        fleetCompany: true,
-        trips: {
-          where: {
-            status: { in: ["ASSIGNED", "ONGOING"] },
-          },
-          include: {
-            rider: { include: { user: true } },
-            vehicle: true,
-          },
-          take: 1,
-        },
-      },
-    });
-  }
-
-  if (!profile) {
-    const error = new Error("Driver profile could not be loaded");
+    const error = new Error("Driver account not found");
     error.name = "NotFoundError";
     throw error;
   }
@@ -132,6 +92,7 @@ export async function getDriverProfile(userId: string) {
           fareTotal: money(profile.trips[0].fareTotal),
           suggestedFare: money(profile.trips[0].suggestedFare),
           distanceKm: money(profile.trips[0].distanceKm),
+          stops: profile.trips[0].stops ?? [],
           rider: profile.trips[0].rider
             ? { ...profile.trips[0].rider, rating: money(profile.trips[0].rider.rating) }
             : profile.trips[0].rider,

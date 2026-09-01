@@ -7,7 +7,7 @@ export type GeoMarket = {
   dropoff: LatLng;
 };
 
-/** Six markets pairwise far beyond MATCH_RADIUS_KM (25). */
+/** Six markets pairwise far beyond MATCH_RADIUS_KM. */
 export const GEO_MARKETS: GeoMarket[] = [
   {
     id: "new-york",
@@ -70,7 +70,7 @@ export const ANTIMERIDIAN: GeoMarket = {
   dropoff: { lat: 0, lng: 179.7 },
 };
 
-export const ANTIMERIDIAN_NEAR_DRIVER: LatLng = { lat: 0, lng: -179.9 };
+export const ANTIMERIDIAN_NEAR_DRIVER: LatLng = { lat: 0, lng: -179.97 };
 export const ANTIMERIDIAN_FAR_DRIVER: LatLng = { lat: 0, lng: 170 };
 
 export function offsetKm(lat: number, lng: number, northKm: number, eastKm: number): LatLng {

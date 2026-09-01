@@ -17,13 +17,15 @@ import {
   markMessagesRead,
   postMessage,
   postSupportMessage,
+  addTripStop,
+  updateTripDestination,
 } from "./rider.controller.js";
 
 const router = Router();
 
 const riderApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -34,6 +36,8 @@ router.post("/trips", createTrip);
 router.get("/trips", listTrips);
 router.get("/trips/active", getActiveTrip);
 router.get("/trips/:id", getTrip);
+router.post("/trips/:id/stops", addTripStop);
+router.patch("/trips/:id/destination", updateTripDestination);
 router.get("/trips/:id/offers", getOffers);
 router.get("/trips/:id/messages", listMessages);
 router.post("/trips/:id/messages", postMessage);

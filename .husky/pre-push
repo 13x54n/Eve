@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Get the branch name
+branch="$(git rev-parse --abbrev-ref HEAD)"
+
+# Check if committing to main or h3
+if [ "$branch" = "main" ] || [ "$branch" = "h3" ]; then
+  echo "⚠️  Warning: You are committing directly to '$branch'."
+  echo "   Consider creating a feature branch instead."
+  echo "   Press Ctrl+C to abort or Enter to continue..."
+  read -r
+fi

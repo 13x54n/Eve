@@ -49,10 +49,15 @@ export function createAccessToken(user: {
       staffRole: user.adminStaffRole ?? null,
     },
     jwtSecret(),
-    accessTokenOptions(user.role),
+    {
+      ...accessTokenOptions(user.role),
+      algorithm: "HS256",
+    },
   );
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  return jwt.verify(token, jwtSecret()) as AccessTokenPayload;
+  return jwt.verify(token, jwtSecret(), {
+    algorithms: ["HS256"],
+  }) as AccessTokenPayload;
 }

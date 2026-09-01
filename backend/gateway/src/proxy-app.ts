@@ -31,6 +31,10 @@ export function createProxyApp() {
     createProxyMiddleware({ target: authUrl, changeOrigin: true }),
   );
   app.use(
+    "/api/driver/auth0",
+    createProxyMiddleware({ target: authUrl, changeOrigin: true }),
+  );
+  app.use(
     "/api/driver/presence",
     createProxyMiddleware({ target: locationUrl, changeOrigin: true }),
   );

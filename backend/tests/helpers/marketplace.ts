@@ -10,6 +10,15 @@ export const FAR_AWAY = { lat: 34.0522, lng: -118.2437 };
 export const TEST_PASSWORD = "password123";
 export const EMAIL_PREFIX = "reg-";
 
+export function incomingTripIds(body: {
+  trips?: { id: string }[];
+  activeDispatch?: { tripId: string } | null;
+}): string[] {
+  const ids = (body.trips ?? []).map((trip) => trip.id);
+  if (body.activeDispatch?.tripId) ids.push(body.activeDispatch.tripId);
+  return [...new Set(ids)];
+}
+
 const trackedEmails: string[] = [];
 
 function suffix() {
@@ -181,6 +190,7 @@ export async function cleanupMarketplaceUsers(emails: string[] = trackedEmails) 
       OR: [{ tripId: { in: tripIds } }, { userId: { in: userIds } }],
     },
   });
+  await prisma.tripDispatch.deleteMany({ where: { tripId: { in: tripIds } } });
   await prisma.tripOffer.deleteMany({ where: { tripId: { in: tripIds } } });
   await prisma.tripEvent.deleteMany({ where: { tripId: { in: tripIds } } });
   await prisma.trip.deleteMany({ where: { id: { in: tripIds } } });

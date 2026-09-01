@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { AuthenticatedRequest } from "@eve/http";
 import * as riderService from "./rider.service.js";
 import { createTripMessage, listTripMessages, markTripMessagesRead } from "./trip-chat.js";
-import { chatMessageSchema, riderTripSchema, supportTicketSchema } from "./rider.validation.js";
+import { chatMessageSchema, riderTripSchema, routePointSchema, supportTicketSchema } from "./rider.validation.js";
 
 function userId(req: Request) { return (req as AuthenticatedRequest).user.id; }
 
@@ -93,6 +93,20 @@ export async function postSupportMessage(req: Request, res: Response, next: Next
 export async function getGreeting(req: Request, res: Response, next: NextFunction) {
   try {
     res.json(await riderService.getGreeting(userId(req)));
+  } catch (error) { next(error); }
+}
+
+export async function addTripStop(req: Request, res: Response, next: NextFunction) {
+  try {
+    const trip = await riderService.addTripStop(userId(req), String(req.params.id), routePointSchema.parse(req.body));
+    res.status(200).json({ trip });
+  } catch (error) { next(error); }
+}
+
+export async function updateTripDestination(req: Request, res: Response, next: NextFunction) {
+  try {
+    const trip = await riderService.updateTripDestination(userId(req), String(req.params.id), routePointSchema.parse(req.body));
+    res.status(200).json({ trip });
   } catch (error) { next(error); }
 }
 

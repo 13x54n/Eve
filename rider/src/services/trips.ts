@@ -31,6 +31,7 @@ export type Trip = {
   viewerRole?: 'sender' | 'recipient';
   canManage?: boolean;
   direction?: 'sent' | 'receiving';
+  stops?: TripStop[];
   driver?: {
     rating?: number;
     latitude?: number | null;
@@ -40,6 +41,15 @@ export type Trip = {
   vehicle?: { make: string; model: string; plateNumber: string; color?: string };
   offers?: TripOffer[];
   createdAt: string;
+};
+
+export type TripStop = {
+  id: string;
+  sequence: number;
+  address: string;
+  lat: number;
+  lng: number;
+  kind: string;
 };
 
 export type TripOffer = {
@@ -117,5 +127,15 @@ export async function acceptOffer(tripId: string, offerId: string) {
 
 export async function cancelTrip(id: string) {
   const { data } = await api.post<{ trip: Trip }>(`/rider/trips/${id}/cancel`);
+  return data.trip;
+}
+
+export async function addTripStop(tripId: string, input: { address: string; lat: number; lng: number }) {
+  const { data } = await api.post<{ trip: Trip }>(`/rider/trips/${tripId}/stops`, input);
+  return data.trip;
+}
+
+export async function updateTripDestination(tripId: string, input: { address: string; lat: number; lng: number }) {
+  const { data } = await api.patch<{ trip: Trip }>(`/rider/trips/${tripId}/destination`, input);
   return data.trip;
 }

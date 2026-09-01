@@ -22,40 +22,44 @@ import {
   saveVehicle,
   startTrip,
   trips,
+  acceptDispatch,
+  declineDispatch,
 } from "./driver.controller.js";
-import { requireAuth } from "@eve/http";
+import { requireAuth, requireRole } from "@eve/http";
 
 const router = Router();
 
 const driverApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-router.use(driverApiLimiter);
+router.use(driverApiLimiter, requireAuth, requireRole("DRIVER"));
 
-router.get("/me", requireAuth, me);
-router.post("/vehicles", requireAuth, saveVehicle);
-router.post("/documents", requireAuth, saveDocument);
-router.get("/documents/upload-auth", requireAuth, documentUploadAuth);
-router.post("/trips/:id/offers", requireAuth, createOffer);
-router.get("/trips", requireAuth, trips);
-router.get("/trips/incoming", requireAuth, incomingTrips);
-router.get("/trips/:id", requireAuth, getTrip);
-router.get("/trips/:id/messages", requireAuth, listMessages);
-router.post("/trips/:id/messages", requireAuth, postMessage);
-router.post("/trips/:id/messages/read", requireAuth, markMessagesRead);
-router.post("/trips/:id/accept", requireAuth, acceptTrip);
-router.post("/trips/:id/arrived", requireAuth, arrivedAtPickup);
-router.post("/trips/:id/start", requireAuth, startTrip);
-router.post("/trips/:id/complete", requireAuth, completeTrip);
-router.post("/trips/:id/cancel", requireAuth, cancelTrip);
-router.get("/earnings", requireAuth, earnings);
-router.get("/support", requireAuth, listSupport);
-router.post("/support", requireAuth, createSupport);
-router.get("/support/:id", requireAuth, getSupport);
-router.post("/support/:id/messages", requireAuth, postSupportMessage);
+router.get("/me", me);
+router.post("/vehicles", saveVehicle);
+router.post("/documents", saveDocument);
+router.get("/documents/upload-auth", documentUploadAuth);
+router.post("/trips/:id/offers", createOffer);
+router.post("/trips/:id/dispatch/accept", acceptDispatch);
+router.post("/trips/:id/dispatch/decline", declineDispatch);
+router.get("/trips", trips);
+router.get("/trips/incoming", incomingTrips);
+router.get("/trips/:id", getTrip);
+router.get("/trips/:id/messages", listMessages);
+router.post("/trips/:id/messages", postMessage);
+router.post("/trips/:id/messages/read", markMessagesRead);
+router.post("/trips/:id/accept", acceptTrip);
+router.post("/trips/:id/arrived", arrivedAtPickup);
+router.post("/trips/:id/start", startTrip);
+router.post("/trips/:id/complete", completeTrip);
+router.post("/trips/:id/cancel", cancelTrip);
+router.get("/earnings", earnings);
+router.get("/support", listSupport);
+router.post("/support", createSupport);
+router.get("/support/:id", getSupport);
+router.post("/support/:id/messages", postSupportMessage);
 
 export default router;

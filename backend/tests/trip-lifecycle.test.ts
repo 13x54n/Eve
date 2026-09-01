@@ -4,6 +4,7 @@ import app from "../gateway/src/app.js";
 import { prisma } from "@eve/db";
 import {
   cleanupMarketplaceUsers,
+  incomingTripIds,
   nycTripPayload,
   spawnApprovedOnlineDriver,
   spawnRider,
@@ -45,9 +46,7 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         .get("/api/driver/trips/incoming")
         .set("Authorization", `Bearer ${driver.token}`)
         .expect(200);
-      expect(incoming.body.trips).toEqual(
-        expect.arrayContaining([expect.objectContaining({ id: trip.id })]),
-      );
+      expect(incomingTripIds(incoming.body)).toContain(trip.id);
 
       const proposedFare = Number((Number(trip.fareTotal) + 1).toFixed(2));
       const offerRes = await request(app)
@@ -172,36 +171,50 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
     expect(me.body.driver.presence).toBe("ONLINE");
   });
 
-  it("rejects offers below the base fare, above 2x, and duplicate offers", async () => {
+  it("rejects offers below the min fare, above 2x, and duplicate offers", async () => {
     const rider = await spawnRider();
     const driver = await spawnApprovedOnlineDriver();
     const trip = await createSearchingTrip(rider.token);
     const base = Number(trip.fareTotal);
 
-    const below = await request(app)
+    const belowMin = await request(app)
+      .post(`/api/driver/trips/${trip.id}/offers`)
+      .set("Authorization", `Bearer ${driver.token}`)
+      .send({ proposedFare: 0.01, etaMinutes: 5 })
+      .expect(409);
+    expect(belowMin.body.message).toMatch(/minimum fare/i);
+
+    const underSuggested = await request(app)
       .post(`/api/driver/trips/${trip.id}/offers`)
       .set("Authorization", `Bearer ${driver.token}`)
       .send({ proposedFare: Number((base - 0.01).toFixed(2)), etaMinutes: 5 })
-      .expect(409);
-    expect(below.body.message).toMatch(/base fare/i);
+      .expect(201);
+    expect(underSuggested.body.offer.proposedFare).toBeCloseTo(base - 0.01, 2);
+
+    await request(app)
+      .post(`/api/rider/trips/${trip.id}/cancel`)
+      .set("Authorization", `Bearer ${rider.token}`)
+      .expect(200);
+
+    const trip2 = await createSearchingTrip(rider.token);
 
     const above = await request(app)
-      .post(`/api/driver/trips/${trip.id}/offers`)
+      .post(`/api/driver/trips/${trip2.id}/offers`)
       .set("Authorization", `Bearer ${driver.token}`)
-      .send({ proposedFare: Number((base * 2 + 0.01).toFixed(2)), etaMinutes: 5 })
+      .send({ proposedFare: Number((Number(trip2.fareTotal) * 2 + 0.01).toFixed(2)), etaMinutes: 5 })
       .expect(409);
     expect(above.body.message).toMatch(/double/i);
 
     await request(app)
-      .post(`/api/driver/trips/${trip.id}/offers`)
+      .post(`/api/driver/trips/${trip2.id}/offers`)
       .set("Authorization", `Bearer ${driver.token}`)
-      .send({ proposedFare: base, etaMinutes: 5 })
+      .send({ proposedFare: trip2.fareTotal, etaMinutes: 5 })
       .expect(201);
 
     const duplicate = await request(app)
-      .post(`/api/driver/trips/${trip.id}/offers`)
+      .post(`/api/driver/trips/${trip2.id}/offers`)
       .set("Authorization", `Bearer ${driver.token}`)
-      .send({ proposedFare: base, etaMinutes: 5 })
+      .send({ proposedFare: trip2.fareTotal, etaMinutes: 5 })
       .expect(409);
     expect(duplicate.body.message).toMatch(/already offered|wait for your current offer/i);
   });

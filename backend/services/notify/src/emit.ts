@@ -8,6 +8,11 @@ export function setSocketServer(server: Server | null) {
   io = server;
 }
 
+function internalHeaders(): Record<string, string> {
+  const secret = process.env.INTERNAL_SERVICE_SECRET;
+  return secret ? { "x-internal-secret": secret } : {};
+}
+
 export async function emitTripEvent(tripId: string, event: string, payload: unknown) {
   if (io) {
     io.to(`trip:${tripId}`).emit(event, payload);
@@ -57,7 +62,7 @@ async function postEmit(body: Record<string, unknown>) {
   if (!url) return;
   await fetch(new URL("/internal/emit", url), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { ...internalHeaders(), "content-type": "application/json" },
     body: JSON.stringify(body),
   }).catch(() => {
     /* live clients lag; HTTP APIs still work */

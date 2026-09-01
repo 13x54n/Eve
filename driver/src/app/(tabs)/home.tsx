@@ -25,6 +25,7 @@ import {
   getIncomingTrips,
   IncomingTrip,
   PendingOffer,
+  ActiveDispatch,
   updatePresence,
 } from '@/services/driver';
 import { getOnboardingProgress } from '@/lib/onboarding-steps';
@@ -43,6 +44,7 @@ export default function Home() {
   pathnameRef.current = pathname;
   const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
+  const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
@@ -50,15 +52,27 @@ export default function Home() {
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const presenceRef = useRef<DriverPresence>('OFFLINE');
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
+  const openingOfferRef = useRef<string | null>(null);
   const onboarding = getOnboardingProgress(profile);
+
+  function openOfferScreen(tripId: string, expiresAt?: string) {
+    if (openingOfferRef.current === tripId) return;
+    const path = pathnameRef.current;
+    if (path.includes('/trip/offer')) return;
+    if (/^\/trip\/[^/]+$/.test(path)) return;
+    openingOfferRef.current = tripId;
+    router.push({ pathname: '/trip/offer', params: { tripId, expiresAt: expiresAt ?? '' } });
+  }
 
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
       if (presenceRef.current !== 'ONLINE' && presenceRef.current !== 'IDLE') {
         if (mounted) {
+          openingOfferRef.current = null;
           setIncomingTrips([]);
           setPendingOffer(null);
+          setActiveDispatch(null);
         }
         return;
       }
@@ -67,6 +81,12 @@ export default function Home() {
         if (mounted) {
           setIncomingTrips(incoming.trips);
           setPendingOffer(incoming.pendingOffer);
+          setActiveDispatch(incoming.activeDispatch);
+          if (incoming.activeDispatch) {
+            openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
+          } else {
+            openingOfferRef.current = null;
+          }
         }
       } catch { /* retry on next poll */ }
     };
@@ -77,7 +97,8 @@ export default function Home() {
       if (event === 'trip:requested') {
         void refresh();
         notifyImpact();
-        const trip = payload as { pickupAddress?: string; fareTotal?: number } | undefined;
+        const trip = payload as { id?: string; pickupAddress?: string; fareTotal?: number; dispatchExpiresAt?: string } | undefined;
+        if (trip?.id) openOfferScreen(trip.id, trip.dispatchExpiresAt);
         void notifyRideEvent(
           'New ride request',
           trip?.pickupAddress ? `Pickup at ${trip.pickupAddress} · est. $${Number(trip.fareTotal ?? 0).toFixed(2)}` : 'A rider nearby is requesting a trip.',
@@ -126,6 +147,12 @@ export default function Home() {
                 if (!active) return;
                 setIncomingTrips(incoming.trips);
                 setPendingOffer(incoming.pendingOffer);
+                setActiveDispatch(incoming.activeDispatch);
+                if (incoming.activeDispatch) {
+                  openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
+                } else {
+                  openingOfferRef.current = null;
+                }
               })
               .catch(() => { /* poller will retry */ });
           }
@@ -162,9 +189,17 @@ export default function Home() {
         const incoming = await getIncomingTrips();
         setIncomingTrips(incoming.trips);
         setPendingOffer(incoming.pendingOffer);
+        setActiveDispatch(incoming.activeDispatch);
+        if (incoming.activeDispatch) {
+          openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
+        } else {
+          openingOfferRef.current = null;
+        }
       } else {
+        openingOfferRef.current = null;
         setIncomingTrips([]);
         setPendingOffer(null);
+        setActiveDispatch(null);
       }
     } catch (error: any) {
       Alert.alert(
@@ -179,7 +214,19 @@ export default function Home() {
   async function submitOffer(trip: IncomingTrip) {
     if (offeringTripId) return;
     const fare = Number(offerFare[trip.id] ?? trip.fareTotal);
-    if (!Number.isFinite(fare) || fare < trip.fareTotal) return;
+    const minFare = trip.minFare ?? 0;
+    if (!Number.isFinite(fare) || fare <= 0) {
+      Alert.alert('Invalid offer', 'Enter a fare greater than zero.');
+      return;
+    }
+    if (fare < minFare) {
+      Alert.alert('Offer too low', `The minimum fare for this trip is $${minFare.toFixed(2)}.`);
+      return;
+    }
+    if (fare > trip.fareTotal * 2) {
+      Alert.alert('Offer too high', 'You can offer up to double the suggested fare.');
+      return;
+    }
     try {
       setOfferingTripId(trip.id);
       await createTripOffer(trip.id, fare, Math.max(1, Math.ceil(trip.durationMin / 3)));
@@ -187,6 +234,7 @@ export default function Home() {
       const incoming = await getIncomingTrips();
       setIncomingTrips(incoming.trips);
       setPendingOffer(incoming.pendingOffer);
+      setActiveDispatch(incoming.activeDispatch);
     } catch (error: any) {
       Alert.alert('Could not send offer', error?.response?.data?.message ?? 'Please try again.');
     }
@@ -207,9 +255,6 @@ export default function Home() {
             source={{ uri: 'https://ik.imagekit.io/lexy/Eve/logo.png' }}
             style={{ width: 60, height: 60, marginRight: 'auto' }}
           />
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <MaterialIcons name="support-agent" size={24} color="black" />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.requestSection}>
@@ -239,7 +284,7 @@ export default function Home() {
               </Text>
             </View>
           </View>
-        ) : incomingTrips.length > 0 ? (
+        ) : incomingTrips.length > 0 && !activeDispatch ? (
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Ride requests nearby</Text>
             {incomingTrips.map((trip) => (
@@ -260,11 +305,11 @@ export default function Home() {
                 ) : null}
                 <Text style={styles.requestRoute}>{trip.pickupAddress}</Text>
                 <Text style={styles.requestRoute}>to {trip.dropoffAddress}</Text>
-                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · base fare ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
+                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · suggested ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
                 <View style={styles.offerRow}>
                   <TextInput
                     style={styles.offerInput}
-                    placeholder={`From $${trip.fareTotal.toFixed(2)}`}
+                    placeholder={`Suggested $${trip.fareTotal.toFixed(2)} — you can go lower`}
                     keyboardType="decimal-pad"
                     value={offerFare[trip.id] ?? String(trip.fareTotal.toFixed(2))}
                     onChangeText={(value) => setOfferFare((current) => ({ ...current, [trip.id]: value }))}
@@ -333,10 +378,10 @@ export default function Home() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Earnings</Text>
             <Text style={styles.sectionSubtitle}>
-              Earning trends for drivers in your current area
+              Example hourly demand pattern
             </Text>
             <Text style={styles.sectionBody}>
-              Explore the best times and places to deliver today.
+              This is sample data to show typical busy hours. Real-time demand data coming soon.
             </Text>
           </View>
 

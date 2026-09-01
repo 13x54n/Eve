@@ -124,6 +124,7 @@ export type IncomingTrip = {
   pickupAddress: string;
   dropoffAddress: string;
   fareTotal: number;
+  minFare?: number;
   distanceKm: number;
   durationMin: number;
   vehicleType: VehicleType;
@@ -145,8 +146,45 @@ export type PendingOffer = {
   recipientName?: string | null;
 };
 
+export type ActiveDispatch = {
+  tripId: string;
+  bookingCode: string;
+  riderName: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  pickupLat: number;
+  pickupLng: number;
+  dropoffLat: number;
+  dropoffLng: number;
+  distanceKm: number;
+  durationMin: number;
+  fareTotal: number;
+  minFare: number;
+  vehicleType: VehicleType;
+  rideType?: string;
+  recipientName?: string | null;
+  expiresAt: string;
+};
+
 export async function getIncomingTrips() {
-  const { data } = await api.get<{ trips: IncomingTrip[]; pendingOffer: PendingOffer | null }>('/driver/trips/incoming');
+  const { data } = await api.get<{
+    trips: IncomingTrip[];
+    pendingOffer: PendingOffer | null;
+    activeDispatch: ActiveDispatch | null;
+  }>('/driver/trips/incoming');
+  return data;
+}
+
+export async function acceptDispatch(tripId: string, proposedFare?: number) {
+  const { data } = await api.post<{ offer: { id: string } }>(
+    `/driver/trips/${tripId}/dispatch/accept`,
+    proposedFare != null ? { proposedFare } : {},
+  );
+  return data.offer;
+}
+
+export async function declineDispatch(tripId: string) {
+  const { data } = await api.post<{ status: string }>(`/driver/trips/${tripId}/dispatch/decline`);
   return data;
 }
 
@@ -176,6 +214,14 @@ export type ActiveTrip = {
   recipientName?: string | null;
   recipientPhone?: string | null;
   packageNote?: string | null;
+  stops?: {
+    id: string;
+    sequence: number;
+    address: string;
+    lat: number;
+    lng: number;
+    kind: string;
+  }[];
 };
 
 export async function arrivedAtPickup(tripId: string) {

@@ -97,6 +97,13 @@ enum TripOfferStatus {
   WITHDRAWN
 }
 
+enum TripDispatchStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
 enum RideType {
   STANDARD
   AIRPORT
@@ -104,6 +111,11 @@ enum RideType {
   SCHEDULED
   CORPORATE
   COURIER
+}
+
+enum TripStopKind {
+  STOP
+  DROPOFF
 }
 
 enum PaymentMethodKind {
@@ -192,7 +204,8 @@ model User {
   name           String
   email          String          @unique
   phone          String?         @unique
-  passwordHash   String
+  passwordHash   String?
+  auth0Sub       String?         @unique
   role            UserRole         @default(RIDER)
   adminStaffRole  AdminStaffRole?
   adminStaffTitle AdminStaffTitle?
@@ -281,6 +294,7 @@ model DriverProfile {
   incidents        SafetyIncident[]      @relation("DriverIncidents")
   incentives       DriverIncentive[]
   offers           TripOffer[]
+  dispatches       TripDispatch[]
 }
 
 model Vehicle {
@@ -364,11 +378,45 @@ model Trip {
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
   offers             TripOffer[]
+  dispatches         TripDispatch[]
   chatMessages       TripMessage[]
+  stops              TripStop[]
 
   @@index([status, city, createdAt])
   @@index([bookingCode])
   @@index([recipientUserId, status])
+}
+
+model TripDispatch {
+  id        String             @id @default(cuid())
+  tripId    String
+  trip      Trip               @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  driverId  String
+  driver    DriverProfile      @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  status    TripDispatchStatus @default(PENDING)
+  voided    Boolean            @default(false)
+  expiresAt DateTime
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@unique([tripId, driverId])
+  @@index([driverId, status, expiresAt])
+  @@index([tripId, status])
+}
+
+model TripStop {
+  id        String       @id @default(cuid())
+  tripId    String
+  trip      Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  sequence  Int
+  address   String
+  lat       Float
+  lng       Float
+  kind      TripStopKind @default(STOP)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([tripId, sequence])
 }
 
 model TripMessage {

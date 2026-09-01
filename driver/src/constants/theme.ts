@@ -14,6 +14,18 @@ export const BrandLight = {
   border: '#F3F4F6',
 } as const;
 
+export const BrandDark = {
+  canvas: '#111827',
+  surface: '#1F2937',
+  text: '#F9FAFB',
+  textSecondary: '#9CA3AF',
+  accent: '#60A5FA',
+  splash: '#3B82F6',
+  danger: '#EF4444',
+  muted: '#6B7280',
+  border: '#374151',
+} as const;
+
 export const Brand = BrandLight;
 
 export type BrandTokens = {
@@ -28,7 +40,7 @@ export type BrandTokens = {
   border: string;
 };
 
-const palette = {
+const lightPalette = {
   text: BrandLight.text,
   background: BrandLight.canvas,
   backgroundElement: BrandLight.surface,
@@ -37,9 +49,18 @@ const palette = {
   accent: BrandLight.accent,
 } as const;
 
+const darkPalette = {
+  text: BrandDark.text,
+  background: BrandDark.canvas,
+  backgroundElement: BrandDark.surface,
+  backgroundSelected: '#374151',
+  textSecondary: BrandDark.textSecondary,
+  accent: BrandDark.accent,
+} as const;
+
 export const Colors = {
-  light: palette,
-  dark: palette,
+  light: lightPalette,
+  dark: darkPalette,
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;

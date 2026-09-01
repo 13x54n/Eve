@@ -1,0 +1,38 @@
+{
+  "name": "eve-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Eve ride-matching marketplace",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm test --workspaces --if-present",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.4.2"
+  },
+  "lint-staged": {
+    "backend/**/*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "rider/**/*.{js,jsx,ts,tsx}": [
+      "cd rider && npm run lint",
+      "prettier --write"
+    ],
+    "driver/**/*.{js,jsx,ts,tsx}": [
+      "cd driver && npm run lint",
+      "prettier --write"
+    ],
+    "admin/**/*.{js,jsx,ts,tsx}": [
+      "cd admin && npm run lint",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}

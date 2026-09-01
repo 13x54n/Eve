@@ -28,6 +28,26 @@ import { ActionButton } from '@/components/action-button';
 import { EveMap, EveMarker, EveRoute } from '@/components/map/eve-map';
 import { useDrivingRoute } from '@/components/map/use-driving-route';
 
+function haversineKm(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number },
+) {
+  const radians = (value: number) => (value * Math.PI) / 180;
+  const latitudeDelta = radians(to.latitude - from.latitude);
+  const longitudeDelta = radians(to.longitude - from.longitude);
+  const a = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(radians(from.latitude)) * Math.cos(radians(to.latitude)) * Math.sin(longitudeDelta / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fallbackDurationMin(
+  from: { latitude: number; longitude: number } | null,
+  to: { latitude: number; longitude: number },
+) {
+  if (!from) return 5;
+  return Math.max(5, Math.ceil(haversineKm(from, to) / 0.45));
+}
+
 export default function ActiveTripScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const pathname = usePathname();
@@ -84,6 +104,18 @@ export default function ActiveTripScreen() {
       .then(() => { if (id) subscribeTrip(id); })
       .catch(() => { /* GPS still updates locally; rider may lag until reconnect */ });
     const removeSocket = addDriverSocketListener((event, payload) => {
+      if (event === 'trip:route_updated') {
+        const next = payload as { id?: string; fareTotal?: number; dropoffAddress?: string };
+        if (next.id && next.id !== id) return;
+        Alert.alert(
+          'Route updated',
+          next.dropoffAddress
+            ? `The rider changed the route. New dropoff: ${next.dropoffAddress}${next.fareTotal != null ? ` · $${Number(next.fareTotal).toFixed(2)}` : ''}`
+            : 'The rider added a stop or changed the dropoff.',
+        );
+        void refresh();
+        return;
+      }
       if (event !== 'trip:message' || !payload || typeof payload !== 'object') return;
       const message = payload as { tripId?: string; authorId?: string };
       if (message.tripId === id && message.authorId && message.authorId !== user?.id) {
@@ -104,17 +136,29 @@ export default function ActiveTripScreen() {
   }, [id, refresh, user?.id]);
 
   const headingToPickup = trip?.status === 'ASSIGNED' && !hasArrived;
+  const nextStop = !headingToPickup ? trip?.stops?.[0] : undefined;
   const destination = trip
-    ? {
-        latitude: headingToPickup ? trip.pickupLat : trip.dropoffLat,
-        longitude: headingToPickup ? trip.pickupLng : trip.dropoffLng,
-      }
+    ? headingToPickup
+      ? { latitude: trip.pickupLat, longitude: trip.pickupLng }
+      : nextStop
+        ? { latitude: nextStop.lat, longitude: nextStop.lng }
+        : { latitude: trip.dropoffLat, longitude: trip.dropoffLng }
     : null;
-  const routeCoordinates = useDrivingRoute(driverLocation, destination);
+  const { coordinates: routeCoordinates, durationMin: routeDurationMin } = useDrivingRoute(driverLocation, destination);
 
-  function openDirections(lat: number, lng: number) {
-    const fallback = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-    const url = Platform.OS === 'ios' ? `maps://?daddr=${lat},${lng}&dirflg=d` : fallback;
+  function openDirections() {
+    if (!trip) return;
+    const dest = headingToPickup
+      ? { lat: trip.pickupLat, lng: trip.pickupLng }
+      : { lat: trip.dropoffLat, lng: trip.dropoffLng };
+    const waypoints = headingToPickup
+      ? []
+      : (trip.stops ?? []).map((stop) => `${stop.lat},${stop.lng}`);
+    const waypointParam = waypoints.length ? `&waypoints=${waypoints.join('|')}` : '';
+    const fallback = `https://www.google.com/maps/dir/?api=1&destination=${dest.lat},${dest.lng}${waypointParam}&travelmode=driving`;
+    const url = Platform.OS === 'ios' && waypoints.length === 0
+      ? `maps://?daddr=${dest.lat},${dest.lng}&dirflg=d`
+      : fallback;
     void Linking.openURL(url).catch(() => void Linking.openURL(fallback));
   }
 
@@ -225,16 +269,21 @@ export default function ActiveTripScreen() {
   const isCourier = trip.rideType === 'COURIER';
   const passengerName = !isCourier ? trip.recipientName : null;
   const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
-  const destinationLat = isHeadingToPickup ? trip.pickupLat : trip.dropoffLat;
-  const destinationLng = isHeadingToPickup ? trip.pickupLng : trip.dropoffLng;
+  const stops = trip.stops ?? [];
   const stageLabel = isHeadingToPickup
     ? (isCourier ? 'Pickup package' : 'Heading to pickup')
     : trip.status === 'ASSIGNED'
       ? (isCourier ? 'Package collected — ready to deliver' : passengerName ? `Arrived — waiting for ${passengerName}` : 'Arrived — waiting for rider')
       : (isCourier ? `Deliver to ${trip.recipientName ?? 'recipient'}` : passengerName ? `Drop off ${passengerName}` : 'Heading to destination');
-  const etaLabel = `${Math.max(1, trip.durationMin)} min`;
   const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
   const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
+  const pickupEtaMin = isHeadingToPickup
+    ? (routeDurationMin ?? fallbackDurationMin(driverLocation, pickup))
+    : null;
+  const dropoffEtaMin = isHeadingToPickup
+    ? (pickupEtaMin ?? 5) + Math.max(1, trip.durationMin)
+    : (routeDurationMin ?? Math.max(1, trip.durationMin));
+  const destEtaLabel = isCourier ? 'Deliver' : 'Dropoff';
   const you = driverLocation ?? pickup;
 
   return (
@@ -244,12 +293,26 @@ export default function ActiveTripScreen() {
         camera={{
           center: you,
           zoom: 13,
-          bounds: [pickup, dropoff, ...(driverLocation ? [driverLocation] : [])],
-          padding: { top: 88, right: 48, bottom: 320, left: 48 },
+          bounds: [
+            pickup,
+            dropoff,
+            ...stops.map((stop) => ({ latitude: stop.lat, longitude: stop.lng })),
+            ...(driverLocation ? [driverLocation] : []),
+          ],
+          padding: { top: 88, right: 48, bottom: 340, left: 48 },
         }}
       >
         {driverLocation ? <EveMarker id="you" coordinate={driverLocation} color="#2e4ed2" title="You" /> : null}
         <EveMarker id="pickup" coordinate={pickup} color="#16A34A" title="Pickup" />
+        {stops.map((stop) => (
+          <EveMarker
+            key={stop.id}
+            id={`stop-${stop.id}`}
+            coordinate={{ latitude: stop.lat, longitude: stop.lng }}
+            color="#F59E0B"
+            title={stop.address}
+          />
+        ))}
         <EveMarker id="dropoff" coordinate={dropoff} color="#DC2626" title="Dropoff" />
         {routeCoordinates.length >= 2 ? <EveRoute coordinates={routeCoordinates} color="#2e4ed2" /> : null}
       </EveMap>
@@ -266,7 +329,19 @@ export default function ActiveTripScreen() {
       <View style={[styles.sheet, { paddingBottom: Math.max(20, insets.bottom + 10) }]}>
         <View style={styles.handle} />
         <Text style={styles.stageLabel}>{stageLabel.toUpperCase()}</Text>
-        <Text style={styles.bookingCode}>{trip.bookingCode} · {etaLabel}</Text>
+        <Text style={styles.bookingCode}>{trip.bookingCode}</Text>
+        <View style={styles.etaRow}>
+          {isHeadingToPickup && pickupEtaMin != null ? (
+            <View style={styles.etaItem}>
+              <Text style={styles.etaCaption}>Pickup</Text>
+              <Text style={styles.etaValue}>{pickupEtaMin} min</Text>
+            </View>
+          ) : null}
+          <View style={styles.etaItem}>
+            <Text style={styles.etaCaption}>{destEtaLabel}</Text>
+            <Text style={styles.etaValue}>{dropoffEtaMin} min</Text>
+          </View>
+        </View>
 
         <View style={styles.riderRow}>
           <View style={styles.riderAvatar}>
@@ -320,12 +395,18 @@ export default function ActiveTripScreen() {
           <View style={[styles.addressDot, { backgroundColor: '#16A34A' }]} />
           <Text style={styles.addressText} numberOfLines={1}>{trip.pickupAddress}</Text>
         </View>
+        {stops.map((stop) => (
+          <View style={styles.addressRow} key={stop.id}>
+            <View style={[styles.addressDot, { backgroundColor: '#F59E0B' }]} />
+            <Text style={styles.addressText} numberOfLines={1}>{stop.address}</Text>
+          </View>
+        ))}
         <View style={styles.addressRow}>
           <View style={[styles.addressDot, { backgroundColor: '#DC2626' }]} />
           <Text style={styles.addressText} numberOfLines={1}>{trip.dropoffAddress}</Text>
         </View>
 
-        <TouchableOpacity style={styles.navigateButton} onPress={() => openDirections(destinationLat, destinationLng)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.navigateButton} onPress={() => openDirections()} activeOpacity={0.85}>
           <MaterialCommunityIcons name="navigation-variant" size={18} color="#FFFFFF" />
           <Text style={styles.navigateText}>
             {isHeadingToPickup ? 'Navigate to pickup' : isCourier ? 'Navigate to recipient' : 'Navigate to destination'}
@@ -410,6 +491,10 @@ const styles = StyleSheet.create({
   handle: { alignSelf: 'center', width: 38, height: 4, marginBottom: 16, borderRadius: 2, backgroundColor: '#D1D5DB' },
   stageLabel: { color: '#6B7280', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   bookingCode: { marginTop: 4, color: '#111827', fontSize: 22, fontWeight: '800' },
+  etaRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 20, marginTop: 10 },
+  etaItem: { minWidth: 88 },
+  etaCaption: { color: '#6B7280', fontSize: 11, fontWeight: '700' },
+  etaValue: { color: '#111827', fontSize: 22, fontWeight: '800' },
   riderRow: { flexDirection: 'row', alignItems: 'center', marginTop: 18, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   riderAvatar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FDE68A' },
   riderInitial: { color: '#111827', fontSize: 17, fontWeight: '800' },

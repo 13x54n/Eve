@@ -1,5 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
-import { getDriverProfile, prisma, recordTripEvent } from "@eve/db";
+import { getDriverProfile, getMinFare, prisma, recordTripEvent } from "@eve/db";
 import { MATCH_RADIUS_KM, fail, money, startOfDay } from "@eve/shared";
 import {
   distanceToPickupClient,
@@ -8,6 +8,12 @@ import {
   syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
+import {
+  expireTimedOutDispatches,
+  refreshAcceptanceRate,
+  serializeActiveDispatch,
+  voidPendingDispatches,
+} from "./dispatch.js";
 
 export { getDriverProfile };
 
@@ -192,7 +198,17 @@ export async function getIncomingTrips(userId: string) {
   }
 
   if (profile.approvalStatus !== "APPROVED" || !["ONLINE", "IDLE"].includes(profile.presence)) {
-    return { trips: [], pendingOffer: null };
+    return { trips: [], pendingOffer: null, activeDispatch: null };
+  }
+
+  await expireTimedOutDispatches(profile.id);
+
+  const activeTrip = await prisma.trip.findFirst({
+    where: { driverId: profile.id, status: { in: ["ASSIGNED", "ONGOING"] } },
+    select: { id: true },
+  });
+  if (activeTrip) {
+    return { trips: [], pendingOffer: null, activeDispatch: null };
   }
 
   const pendingOffer = await prisma.tripOffer.findFirst({
@@ -215,10 +231,51 @@ export async function getIncomingTrips(userId: string) {
         recipientName: pendingOffer.trip.recipientName,
         createdAt: pendingOffer.createdAt,
       },
+      activeDispatch: null,
     };
   }
 
+  const active = await prisma.tripDispatch.findFirst({
+    where: { driverId: profile.id, status: "PENDING", expiresAt: { gt: new Date() } },
+    include: { trip: { include: { rider: { include: { user: true } } } } },
+    orderBy: { expiresAt: "asc" },
+  });
+  const activeDispatch = active && active.trip.status === "SEARCHING"
+    ? serializeActiveDispatch({
+        expiresAt: active.expiresAt,
+        trip: {
+          id: active.trip.id,
+          bookingCode: active.trip.bookingCode,
+          riderName: active.trip.rider?.user?.name || "Rider",
+          pickupAddress: active.trip.pickupAddress,
+          dropoffAddress: active.trip.dropoffAddress,
+          pickupLat: active.trip.pickupLat,
+          pickupLng: active.trip.pickupLng,
+          dropoffLat: active.trip.dropoffLat,
+          dropoffLng: active.trip.dropoffLng,
+          distanceKm: Number(active.trip.distanceKm),
+          durationMin: active.trip.durationMin,
+          fareTotal: Number(active.trip.fareTotal),
+          minFare: await getMinFare(active.trip.city, active.trip.vehicleType),
+          vehicleType: active.trip.vehicleType,
+          rideType: active.trip.rideType,
+          recipientName: active.trip.recipientName,
+        },
+      })
+    : null;
+
   const nearbyIds = await nearbySearchingTripsClient(userId);
+  const hiddenDispatches = await prisma.tripDispatch.findMany({
+    where: {
+      driverId: profile.id,
+      OR: [
+        { status: "PENDING" },
+        { status: { in: ["DECLINED", "EXPIRED"] }, voided: false },
+      ],
+    },
+    select: { tripId: true },
+  });
+  const hiddenTripIds = new Set(hiddenDispatches.map((row) => row.tripId));
   const trips = nearbyIds.length
     ? await prisma.trip.findMany({
         where: { id: { in: nearbyIds.map((row) => row.id) }, status: "SEARCHING" },
@@ -226,9 +283,18 @@ export async function getIncomingTrips(userId: string) {
       })
     : [];
   const distanceById = new Map(nearbyIds.map((row) => [row.id, row.distanceToPickup]));
+  const minFareByKey = new Map<string, number>();
+  for (const trip of trips) {
+    const key = `${trip.city}:${trip.vehicleType}`;
+    if (!minFareByKey.has(key)) {
+      minFareByKey.set(key, await getMinFare(trip.city, trip.vehicleType));
+    }
+  }
   const nearby = nearbyIds
     .map((row) => trips.find((trip) => trip.id === row.id))
     .filter((trip): trip is NonNullable<typeof trip> => Boolean(trip))
+    .filter((trip) => trip.rider.userId !== userId)
+    .filter((trip) => !hiddenTripIds.has(trip.id))
     .map((trip) => ({
       id: trip.id,
       bookingCode: trip.bookingCode,
@@ -244,6 +310,7 @@ export async function getIncomingTrips(userId: string) {
       durationMin: trip.durationMin,
       suggestedFare: money(trip.suggestedFare),
       fareTotal: money(trip.fareTotal),
+      minFare: minFareByKey.get(`${trip.city}:${trip.vehicleType}`) ?? 0,
       estimatedEarnings: money(trip.fareTotal),
       rideType: trip.rideType,
       recipientName: trip.recipientName,
@@ -254,7 +321,7 @@ export async function getIncomingTrips(userId: string) {
       distanceToPickup: distanceById.get(trip.id) ?? null,
     }));
 
-  return { trips: nearby, pendingOffer: null };
+  return { trips: nearby, pendingOffer: null, activeDispatch };
 }
 
 export async function createTripOffer(userId: string, tripId: string, input: { proposedFare: number; etaMinutes: number }) {
@@ -265,18 +332,40 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
     include: { rider: { select: { userId: true } } },
   });
   if (!trip) { const error = new Error("Trip not found"); error.name = "NotFoundError"; throw error; }
+  if (trip.rider.userId === userId) {
+    const error = new Error("You cannot offer on your own trip");
+    error.name = "ConflictError";
+    throw error;
+  }
+  const missedDispatch = await prisma.tripDispatch.findFirst({
+    where: {
+      tripId,
+      driverId: profile.id,
+      voided: false,
+      status: { in: ["DECLINED", "EXPIRED"] },
+    },
+    select: { id: true },
+  });
+  if (missedDispatch) fail("This request is no longer available", "ConflictError");
   const distanceToPickup = await distanceToPickupClient(userId, trip.pickupLat, trip.pickupLng);
   if (
     trip.status !== "SEARCHING"
     || profile.approvalStatus !== "APPROVED"
     || !["ONLINE", "IDLE"].includes(profile.presence)
     || distanceToPickup > MATCH_RADIUS_KM
-    || !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType)
+    || (trip.rideType !== "COURIER" && !profile.vehicles.some((vehicle) => vehicle.vehicleType === trip.vehicleType))
+    || (trip.rideType === "COURIER" && profile.vehicles.length === 0)
   ) {
     const error = new Error("This trip is not available to this driver"); error.name = "ConflictError"; throw error;
   }
-  if (input.proposedFare < Number(trip.fareTotal) || input.proposedFare > Number(trip.fareTotal) * 2) {
-    const error = new Error("Offer must start at the base fare for this distance and can go up to double it"); error.name = "ConflictError"; throw error;
+  const minFare = await getMinFare(trip.city, trip.vehicleType);
+  const maxFare = Number(trip.fareTotal) * 2;
+  if (input.proposedFare < minFare || input.proposedFare > maxFare) {
+    const error = new Error(
+      `Offer must be at least the minimum fare ($${minFare.toFixed(2)}) and at most double the suggested fare`,
+    );
+    error.name = "ConflictError";
+    throw error;
   }
   const [existingPending, activeTrip] = await Promise.all([
     prisma.tripOffer.findFirst({ where: { driverId: profile.id, status: "PENDING" } }),
@@ -298,6 +387,58 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
   }
 }
 
+export async function acceptDispatch(userId: string, tripId: string, proposedFare?: number) {
+  const profile = await prisma.driverProfile.findUnique({ where: { userId } });
+  if (!profile) fail("Driver profile not found", "NotFoundError");
+  await expireTimedOutDispatches(profile.id);
+
+  const dispatch = await prisma.tripDispatch.findUnique({
+    where: { tripId_driverId: { tripId, driverId: profile.id } },
+    include: { trip: true },
+  });
+  if (
+    !dispatch
+    || dispatch.status !== "PENDING"
+    || dispatch.expiresAt <= new Date()
+    || dispatch.trip.status !== "SEARCHING"
+  ) {
+    fail("This request is no longer available", "ConflictError");
+  }
+
+  await prisma.tripDispatch.update({
+    where: { id: dispatch.id },
+    data: { status: "ACCEPTED" },
+  });
+  await refreshAcceptanceRate(profile.id);
+
+  const etaMinutes = Math.max(1, Math.ceil(dispatch.trip.durationMin / 3));
+  return createTripOffer(userId, tripId, {
+    proposedFare: money(proposedFare ?? dispatch.trip.fareTotal),
+    etaMinutes,
+  });
+}
+
+export async function declineDispatch(userId: string, tripId: string) {
+  const profile = await prisma.driverProfile.findUnique({ where: { userId } });
+  if (!profile) fail("Driver profile not found", "NotFoundError");
+  await expireTimedOutDispatches(profile.id);
+
+  const dispatch = await prisma.tripDispatch.findUnique({
+    where: { tripId_driverId: { tripId, driverId: profile.id } },
+  });
+  if (!dispatch) fail("Dispatch not found", "NotFoundError");
+  if (dispatch.status !== "PENDING") {
+    return { status: dispatch.status };
+  }
+
+  await prisma.tripDispatch.update({
+    where: { id: dispatch.id },
+    data: { status: "DECLINED" },
+  });
+  const acceptanceRate = await refreshAcceptanceRate(profile.id);
+  return { status: "DECLINED" as const, acceptanceRate };
+}
+
 export async function acceptTrip(userId: string, tripId: string) {
   const profile = await prisma.driverProfile.findUnique({
     where: { userId },
@@ -312,11 +453,18 @@ export async function acceptTrip(userId: string, tripId: string) {
 
   const trip = await prisma.trip.findUnique({
     where: { id: tripId },
+    include: { rider: { select: { userId: true } } },
   });
 
   if (!trip) {
     const error = new Error("Trip not found");
     error.name = "NotFoundError";
+    throw error;
+  }
+
+  if (trip.rider.userId === userId) {
+    const error = new Error("You cannot accept your own trip");
+    error.name = "ConflictError";
     throw error;
   }
 
@@ -350,6 +498,7 @@ export async function acceptTrip(userId: string, tripId: string) {
     trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,
   );
   await syncDriverGeoClient(userId);
+  await voidPendingDispatches(tripId);
 
   await recordTripEvent({
     tripId,
@@ -377,10 +526,7 @@ export async function arrivedAtPickup(userId: string, tripId: string) {
 
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, driverId: profile.id },
-    include: {
-      rider: { include: { user: true } },
-      vehicle: true,
-    },
+    include: driverTripInclude,
   });
 
   if (!trip) {
@@ -594,6 +740,7 @@ export async function cancelTrip(
     trip.vehicleType === "BIKE" || trip.vehicleType === "CAR" ? trip.vehicleType : undefined,
   );
   await syncDriverGeoClient(userId);
+  await voidPendingDispatches(tripId);
 
   await recordTripEvent({
     tripId,
@@ -613,6 +760,7 @@ export async function cancelTrip(
 const driverTripInclude = {
   rider: { include: { user: true } },
   vehicle: true,
+  stops: { orderBy: { sequence: "asc" as const } },
 } as const;
 
 function serializeDriverTrip(trip: {
@@ -637,6 +785,7 @@ function serializeDriverTrip(trip: {
   startedAt: Date | null;
   endedAt: Date | null;
   rider?: { rating?: unknown; user?: { name?: string | null } | null } | null;
+  stops?: { id: string; sequence: number; address: string; lat: number; lng: number; kind: string }[];
 }) {
   return {
     id: trip.id,
@@ -662,6 +811,7 @@ function serializeDriverTrip(trip: {
     createdAt: trip.createdAt,
     startedAt: trip.startedAt,
     endedAt: trip.endedAt,
+    stops: trip.stops ?? [],
   };
 }
 

@@ -32,7 +32,7 @@ export default function CourierRequestScreen() {
   const [currentLoc, setCurrentLoc] = useState<{ lat: number; lng: number } | null>(null);
   const [pickupCoord, setPickupCoord] = useState<{ lat: number; lng: number } | null>(null);
   const [dropoffCoord, setDropoffCoord] = useState<{ lat: number; lng: number } | null>(null);
-  const [vehicleType, setVehicleType] = useState<"CAR" | "BIKE">("BIKE");
+  const [vehicleType, setVehicleType] = useState<"CAR" | "BIKE">("CAR");
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [packageNote, setPackageNote] = useState("");

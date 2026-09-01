@@ -3,6 +3,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
   changePassword,
+  exchangeAuth0Session,
   getUserById,
   loginAdmin,
   loginRider,
@@ -15,6 +16,7 @@ import {
 } from "./auth.service.js";
 import { loginDriver, registerDriver } from "./driver-auth.js";
 import {
+  auth0ExchangeSchema,
   changePasswordSchema,
   driverLoginSchema,
   driverRegisterSchema,
@@ -62,6 +64,16 @@ authRouter.post("/login", limiter, async (req, res, next) => {
   }
 });
 
+authRouter.post("/auth0", limiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("RIDER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
+  } catch (error) {
+    next(error);
+  }
+});
+
 authRouter.post("/driver/register", limiter, async (req, res, next) => {
   try {
     res.status(201).json(await registerDriver(driverRegisterSchema.parse(req.body)));
@@ -73,6 +85,16 @@ authRouter.post("/driver/register", limiter, async (req, res, next) => {
 authRouter.post("/driver/login", limiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginDriver(driverLoginSchema.parse(req.body)));
+  } catch (error) {
+    next(error);
+  }
+});
+
+authRouter.post("/driver/auth0", limiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
   } catch (error) {
     next(error);
   }
@@ -114,10 +136,9 @@ authRouter.post("/admin/logout", async (req, res, next) => {
 authRouter.post("/forgot-password", limiter, async (req, res, next) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
-    const result = await requestPasswordReset(email);
+    await requestPasswordReset(email);
     res.status(200).json({
       message: "If an account exists, a verification code was sent.",
-      ...(result.verificationCode ? { verificationCode: result.verificationCode } : {}),
     });
   } catch (error) {
     next(error);
@@ -135,7 +156,8 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
 
 authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
   try {
-    const user = await getUserById((req as AuthenticatedRequest).user.id);
+    const session = (req as AuthenticatedRequest).user;
+    const user = await getUserById(session.id, session.role);
     res.status(200).json({ user });
   } catch (error) {
     next(error);
@@ -144,9 +166,11 @@ authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
 
 authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
   try {
+    const session = (req as AuthenticatedRequest).user;
     const user = await updateProfile(
-      (req as AuthenticatedRequest).user.id,
+      session.id,
       updateProfileSchema.parse(req.body),
+      session.role,
     );
     res.status(200).json({ user });
   } catch (error) {
@@ -179,6 +203,16 @@ driverAuthRouter.post("/register", driverLimiter, async (req, res, next) => {
 driverAuthRouter.post("/login", driverLimiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginDriver(driverLoginSchema.parse(req.body)));
+  } catch (error) {
+    next(error);
+  }
+});
+
+driverAuthRouter.post("/auth0", driverLimiter, async (req, res, next) => {
+  try {
+    res.status(200).json(
+      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+    );
   } catch (error) {
     next(error);
   }

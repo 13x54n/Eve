@@ -13,7 +13,7 @@ npm workspaces under `backend/`:
 | `@eve/db` | Prisma client |
 | `@eve/http` | Express base app, CORS, auth middleware, health payload |
 | `@eve/shared` | JWT, passwords, permissions |
-| `@eve/auth` | Register / login / password reset |
+| `@eve/auth` | Auth0 ID-token exchange, admin login, leftover password routes |
 | `@eve/location` | Driver presence and matchmaking geo |
 | `@eve/ride` | Matching, offers, trip lifecycle |
 | `@eve/notify` | Notifications + Socket.IO |
@@ -65,7 +65,7 @@ Same prefixes in both modes. Clients always use the gateway, not the service por
 | Prefix | Purpose |
 | --- | --- |
 | `/api/health` | Gateway health (`service: "gateway"`) |
-| `/api/auth` | Rider and admin auth |
+| `/api/auth` | Rider/driver Auth0 exchange, admin login, `/me` |
 | `/api/driver` | Driver auth, presence, trips, earnings |
 | `/api/rider` | Rider trips and offer accept |
 | `/api/public` | Public ride routes |
@@ -79,7 +79,7 @@ Order matters for `/api/driver`:
 | Path | Target |
 | --- | --- |
 | `/api/auth` | auth |
-| `/api/driver/register`, `/api/driver/login` | auth |
+| `/api/driver/register`, `/api/driver/login`, `/api/driver/auth0` | auth |
 | `/api/driver/presence` | location |
 | `/api/rider`, `/api/public`, remaining `/api/driver` | ride |
 | `/socket.io` | notify (`ws: true`) |
@@ -127,6 +127,15 @@ DATABASE_URL=postgresql://eve:eve@localhost:5432/eve
 JWT_ACCESS_SECRET=replace-with-a-long-random-secret
 ```
 
+Required for rider/driver Auth0 exchange (`POST /api/auth/auth0`, `/api/auth/driver/auth0`):
+
+```
+AUTH0_DOMAIN=your-tenant.us.auth0.com
+AUTH0_CLIENT_ID=your_native_app_client_id
+```
+
+Auth setup, callback URLs, and how the Eve JWT is issued: **[auth.md](auth.md)**.
+
 Split / proxy (`backend/.env`):
 
 ```
@@ -151,6 +160,7 @@ REDIS_URL=redis://localhost:6379
 | `GATEWAY_MODE` | `compose` or `proxy` |
 | `AUTH_URL`, `LOCATION_URL`, `RIDE_URL`, `NOTIFY_URL` | Proxy targets; also location/notify HTTP clients |
 | `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT` | Split-process listen ports |
+| `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID` | Auth0 Native app (ID-token verification) |
 
 ## Health and monitor
 

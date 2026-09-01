@@ -1,7 +1,11 @@
 import { Router } from "express";
+import { requireInternalService } from "@eve/http";
 import { emitAdminEventLocal, emitTripAndUserEventLocal, emitTripEventLocal, emitUserEventLocal } from "./emit.js";
 
 export const internalNotifyRouter = Router();
+
+// Require internal service authentication for all internal routes
+internalNotifyRouter.use(requireInternalService);
 
 internalNotifyRouter.post("/emit", (req, res) => {
   const { target, tripId, role, userId, event, payload } = req.body ?? {};

@@ -177,6 +177,12 @@ export default function HomeScreen() {
       <Animated.Text entering={FadeInDown.duration(420)} style={styles.title}>
         {interpolateGreeting(greetingTemplate, user?.name)}
       </Animated.Text>
+      {locationMessage ? (
+        <View style={styles.locationMessage}>
+          <Feather name="alert-circle" size={16} color="#D97706" />
+          <Text style={styles.locationMessageText}>{locationMessage}</Text>
+        </View>
+      ) : null}
       {activeTrip?.status === "SEARCHING" ? (
         <FindingBanner
           destination={activeTrip.dropoffAddress}
@@ -335,6 +341,20 @@ const styles = StyleSheet.create({
   },
   searchText: { fontSize: 16, color: "black", width: "100%", paddingVertical: 5 },
   title: { fontSize: 28, fontWeight: "700", marginTop: 45, marginBottom: 15 },
+  locationMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    backgroundColor: "#FEF3C7",
+  },
+  locationMessageText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400E",
+  },
   searchContainer: {
     flexDirection: "row",
     borderColor: "#2e4ed2",

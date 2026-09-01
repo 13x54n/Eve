@@ -8,12 +8,14 @@ import {
   type ReactNode,
 } from "react";
 import axios from "axios";
+import { useAuth0 } from "react-native-auth0";
 import {
   getAccessToken,
   getSessionUser,
   logout as clearStoredSession,
   type AuthResponse,
 } from "@/services/auth";
+import { AUTH0_CUSTOM_SCHEME } from "@/lib/auth0";
 import { setPushNotificationsEnabled } from "@/services/notifications";
 
 type SessionUser = AuthResponse["user"];
@@ -33,17 +35,25 @@ function isUnauthorized(error: unknown) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { clearSession, isLoading: auth0Loading } = useAuth0();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [hasStoredSession, setHasStoredSession] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
+    try {
+      await clearSession({}, { customScheme: AUTH0_CUSTOM_SCHEME });
+    } catch {
+      // Already signed out of Auth0, or the user cancelled the browser.
+    }
     await clearStoredSession();
     setUser(null);
     setHasStoredSession(false);
-  }, []);
+  }, [clearSession]);
 
   useEffect(() => {
+    if (auth0Loading) return;
+
     let cancelled = false;
 
     async function restoreSession() {
@@ -75,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [logout]);
+  }, [auth0Loading, logout]);
 
   useEffect(() => {
     setPushNotificationsEnabled(user?.pushNotificationsEnabled !== false);
@@ -84,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      loading,
+      loading: loading || auth0Loading,
       isAuthenticated: Boolean(user) || hasStoredSession,
       setUser: (nextUser) => {
         setUser(nextUser);
@@ -92,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout,
     }),
-    [user, loading, hasStoredSession, logout],
+    [user, loading, auth0Loading, hasStoredSession, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

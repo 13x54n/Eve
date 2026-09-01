@@ -10,6 +10,11 @@ const listeners = new Set<(event: string, payload: unknown) => void>();
 const connectionListeners = new Set<(connected: boolean) => void>();
 
 function socketUrl() {
+  const gateway = process.env.NEXT_PUBLIC_GATEWAY_URL?.trim();
+  if (gateway) {
+    return gateway.replace(/\/$/, "");
+  }
+
   const value = process.env.NEXT_PUBLIC_API_URL ?? "";
   return value.replace(/\/api\/?$/, "");
 }

@@ -102,10 +102,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     transform: [{ scale: 1 }],
-    transitionProperty: 'transform',
-    transitionDuration: 120,
-    transitionTimingFunction: 'ease-out',
-  },
+  } as any,
   pressed: {
     transform: [{ scale: 0.97 }],
   },

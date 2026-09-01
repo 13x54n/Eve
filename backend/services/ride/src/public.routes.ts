@@ -8,7 +8,7 @@ const skipInVitest = () => Boolean(process.env.VITEST);
 
 const publicLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 300,
+  limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInVitest,

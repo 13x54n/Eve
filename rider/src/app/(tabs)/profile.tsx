@@ -105,7 +105,7 @@ export default function ProfileScreen() {
     {
       icon: "lock",
       title: "Security",
-      detail: "Password",
+      detail: "Auth0 sign-in",
       onPress: () => router.push("/profile/security" as Href),
     },
     {

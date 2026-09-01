@@ -8,6 +8,7 @@ Stress the **compose** gateway (`npm run dev`, port 4000) against the same Postg
 - [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed (`brew install k6`)
 - Gateway running: `npm run dev` in `backend/`
 - `JWT_ACCESS_SECRET` in `.env` (seed writes JWTs with that secret)
+- Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Auth0 instead; see [docs/auth.md](../docs/auth.md).
 
 ## Commands
 

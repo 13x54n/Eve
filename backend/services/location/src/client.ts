@@ -13,10 +13,17 @@ function locationUrl() {
   return process.env.LOCATION_URL;
 }
 
+function internalHeaders(): Record<string, string> {
+  const secret = process.env.INTERNAL_SERVICE_SECRET;
+  return secret ? { "x-internal-secret": secret } : {};
+}
+
 export async function nearbyDrivers(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  excludeUserId?: string;
+  matchAllVehicleTypes?: boolean;
 }): Promise<NearbyDriver[]> {
   const base = locationUrl();
   if (!base) return nearbyDriversLocal(input);
@@ -24,7 +31,9 @@ export async function nearbyDrivers(input: {
   url.searchParams.set("pickupLat", String(input.pickupLat));
   url.searchParams.set("pickupLng", String(input.pickupLng));
   url.searchParams.set("vehicleType", input.vehicleType);
-  const response = await fetch(url);
+  if (input.excludeUserId) url.searchParams.set("excludeUserId", input.excludeUserId);
+  if (input.matchAllVehicleTypes) url.searchParams.set("matchAllVehicleTypes", "true");
+  const response = await fetch(url, { headers: internalHeaders() });
   if (!response.ok) return nearbyDriversLocal(input);
   const body = await response.json() as { drivers: NearbyDriver[] };
   return body.drivers;
@@ -35,7 +44,7 @@ export async function nearbySearchingTrips(userId: string) {
   if (!base) return nearbySearchingTripsLocal(userId);
   const url = new URL("/internal/trips/nearby", base);
   url.searchParams.set("userId", userId);
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: internalHeaders() });
   if (!response.ok) return nearbySearchingTripsLocal(userId);
   const body = await response.json() as { trips: { id: string; distanceToPickup: number }[] };
   return body.trips;
@@ -48,7 +57,7 @@ export async function distanceToPickup(userId: string, pickupLat: number, pickup
   url.searchParams.set("userId", userId);
   url.searchParams.set("pickupLat", String(pickupLat));
   url.searchParams.set("pickupLng", String(pickupLng));
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: internalHeaders() });
   if (!response.ok) return distanceToPickupLocal(userId, pickupLat, pickupLng);
   const body = await response.json() as { distanceKm: number };
   return body.distanceKm;
@@ -59,7 +68,7 @@ export async function recordDriverLocation(userId: string, latitude: number, lon
   if (!base) return recordDriverLocationLocal(userId, latitude, longitude);
   const response = await fetch(new URL("/internal/drivers/location", base), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { ...internalHeaders(), "content-type": "application/json" },
     body: JSON.stringify({ userId, latitude, longitude }),
   });
   if (!response.ok) return recordDriverLocationLocal(userId, latitude, longitude);
@@ -72,7 +81,7 @@ export async function syncDriverGeo(userId: string) {
   if (!base) return syncDriverGeoLocal(userId);
   const response = await fetch(new URL("/internal/drivers/geo/sync", base), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { ...internalHeaders(), "content-type": "application/json" },
     body: JSON.stringify({ userId }),
   });
   if (!response.ok) return syncDriverGeoLocal(userId);
@@ -83,12 +92,13 @@ export async function indexSearchingTrip(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: "BIKE" | "CAR";
+  matchAllVehicleTypes?: boolean;
 }) {
   const base = locationUrl();
   if (!base) return indexSearchingTripLocal(input);
   const response = await fetch(new URL("/internal/trips/geo", base), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { ...internalHeaders(), "content-type": "application/json" },
     body: JSON.stringify(input),
   });
   if (!response.ok) return indexSearchingTripLocal(input);
@@ -99,7 +109,7 @@ export async function removeSearchingTrip(id: string, vehicleType?: "BIKE" | "CA
   if (!base) return removeSearchingTripLocal(id, vehicleType);
   const response = await fetch(new URL("/internal/trips/geo/remove", base), {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { ...internalHeaders(), "content-type": "application/json" },
     body: JSON.stringify({ id, vehicleType }),
   });
   if (!response.ok) return removeSearchingTripLocal(id, vehicleType);

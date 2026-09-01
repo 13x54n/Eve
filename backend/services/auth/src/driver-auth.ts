@@ -129,7 +129,7 @@ export async function loginDriver(input: { email: string; password: string }) {
     include: { driverProfile: true },
   });
 
-  if (!user || !user.isActive || user.role !== "DRIVER") {
+  if (!user || !user.isActive || !user.driverProfile || !user.passwordHash) {
     const error = new Error("Invalid email or password for driver account");
     error.name = "UnauthorizedError";
     throw error;
@@ -149,10 +149,11 @@ export async function loginDriver(input: { email: string; password: string }) {
   });
 
   const fullProfile = await getDriverProfile(user.id);
+  const session = { ...user, role: "DRIVER" as const };
 
   return {
-    accessToken: createAccessToken(user),
-    user: sanitizeDriverUser(user),
+    accessToken: createAccessToken(session),
+    user: sanitizeDriverUser(session),
     driverProfile: fullProfile,
   };
 }

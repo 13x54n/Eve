@@ -80,6 +80,23 @@ export async function createOffer(req: Request, res: Response, next: NextFunctio
   } catch (error) { next(error); }
 }
 
+export async function acceptDispatch(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = getAuthUser(req);
+    const data = driverOfferSchema.pick({ proposedFare: true }).partial().parse(req.body ?? {});
+    const offer = await driverService.acceptDispatch(user.id, String(req.params.id), data.proposedFare);
+    res.status(201).json({ offer });
+  } catch (error) { next(error); }
+}
+
+export async function declineDispatch(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = getAuthUser(req);
+    const result = await driverService.declineDispatch(user.id, String(req.params.id));
+    res.status(200).json(result);
+  } catch (error) { next(error); }
+}
+
 export async function incomingTrips(
   req: Request,
   res: Response,

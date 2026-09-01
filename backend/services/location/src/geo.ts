@@ -1,6 +1,6 @@
 import { prisma } from "@eve/db";
-import { MATCH_LIMIT, MATCH_RADIUS_KM } from "@eve/shared";
-import { GEO_REPLY_WITH } from "redis";
+import { MATCH_LIMIT, MATCH_RADIUS_KM, distanceKm } from "@eve/shared";
+import { cellFor, diskCells } from "./h3.js";
 import { getRedis, logGeoFallback } from "./redis.js";
 
 export type VehicleType = "BIKE" | "CAR";
@@ -15,35 +15,59 @@ export type GeoHit = {
 const VEHICLE_TYPES: VehicleType[] = ["BIKE", "CAR"];
 const GEO_SEARCH_COUNT = MATCH_LIMIT * 3;
 
-function geoNamespace() {
+function h3Namespace() {
+  const worker = process.env.VITEST_WORKER_ID || process.env.VITEST_POOL_ID;
+  return worker ? `h3:test:${worker}` : "h3";
+}
+
+function legacyGeoNamespace() {
   const worker = process.env.VITEST_WORKER_ID || process.env.VITEST_POOL_ID;
   return worker ? `geo:test:${worker}` : "geo";
 }
 
-function driverKey(vehicleType: VehicleType) {
-  return `${geoNamespace()}:drivers:${vehicleType}`;
+function driverCellKey(vehicleType: VehicleType, cell: string) {
+  return `${h3Namespace()}:drivers:${vehicleType}:${cell}`;
 }
 
-function tripKey(vehicleType: VehicleType) {
-  return `${geoNamespace()}:trips:${vehicleType}`;
+function tripCellKey(vehicleType: VehicleType, cell: string) {
+  return `${h3Namespace()}:trips:${vehicleType}:${cell}`;
 }
 
 function driverUsersHash() {
-  return `${geoNamespace()}:driver:users`;
+  return `${h3Namespace()}:driver:users`;
 }
 
-function geoKeys() {
-  return [
-    driverKey("BIKE"),
-    driverKey("CAR"),
-    tripKey("BIKE"),
-    tripKey("CAR"),
-    driverUsersHash(),
-  ] as const;
+function driverPosHash() {
+  return `${h3Namespace()}:pos:drivers`;
+}
+
+function tripPosHash() {
+  return `${h3Namespace()}:pos:trips`;
+}
+
+function driverCellsHash() {
+  return `${h3Namespace()}:driver:cells`;
+}
+
+function tripCellsHash() {
+  return `${h3Namespace()}:trip:cells`;
 }
 
 function uniqueVehicleTypes(types: VehicleType[]) {
   return [...new Set(types.filter((type) => type === "BIKE" || type === "CAR"))];
+}
+
+function encodePos(latitude: number, longitude: number) {
+  return `${latitude},${longitude}`;
+}
+
+function parsePos(value: string | null | undefined): { latitude: number; longitude: number } | null {
+  if (!value) return null;
+  const [latRaw, lngRaw] = value.split(",");
+  const latitude = Number(latRaw);
+  const longitude = Number(lngRaw);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  return { latitude, longitude };
 }
 
 function toId(value: unknown): string | null {
@@ -53,44 +77,54 @@ function toId(value: unknown): string | null {
   return null;
 }
 
-function toNumber(value: unknown): number {
-  if (typeof value === "number") return value;
-  if (typeof value === "string" || typeof value === "bigint") return Number(value);
-  return Number.NaN;
-}
-
-function parseSearchRow(row: unknown): GeoHit | null {
-  if (!row || typeof row !== "object") return null;
-  const record = row as {
-    member?: unknown;
-    distance?: unknown;
-    coordinates?: { latitude?: unknown; longitude?: unknown };
-  };
-  const id = toId(record.member);
-  const distance = toNumber(record.distance);
-  const latitude = toNumber(record.coordinates?.latitude);
-  const longitude = toNumber(record.coordinates?.longitude);
-  if (!id || !Number.isFinite(distance) || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return null;
+async function unlinkByPattern(redis: NonNullable<Awaited<ReturnType<typeof getRedis>>>, pattern: string) {
+  const batch: string[] = [];
+  for await (const key of redis.scanIterator({ MATCH: pattern, COUNT: 200 })) {
+    const name = toId(key);
+    if (!name) continue;
+    batch.push(name);
+    if (batch.length >= 200) {
+      await redis.unlink(batch);
+      batch.length = 0;
+    }
   }
-  return { id, distance, latitude, longitude };
+  if (batch.length > 0) await redis.unlink(batch);
 }
 
-async function searchKey(key: string, longitude: number, latitude: number): Promise<GeoHit[] | null> {
+async function unlinkIndexes() {
+  const redis = await getRedis();
+  if (!redis) return false;
+  await unlinkByPattern(redis, `${h3Namespace()}:*`);
+  await unlinkByPattern(redis, `${legacyGeoNamespace()}:*`);
+  return true;
+}
+
+async function searchKey(
+  keyForCell: (cell: string) => string,
+  longitude: number,
+  latitude: number,
+  posHash: string,
+): Promise<GeoHit[] | null> {
   const redis = await getRedis();
   if (!redis) return null;
   try {
-    const rows = await redis.geoSearchWith(
-      key,
-      { longitude, latitude },
-      { radius: MATCH_RADIUS_KM, unit: "km" },
-      [GEO_REPLY_WITH.DISTANCE, GEO_REPLY_WITH.COORDINATES],
-      {
-        SORT: "ASC",
-        COUNT: GEO_SEARCH_COUNT,
-      },
-    );
-    return rows.map(parseSearchRow).filter((hit): hit is GeoHit => Boolean(hit));
+    const cells = diskCells(latitude, longitude);
+    const keys = cells.map(keyForCell);
+    if (keys.length === 0) return [];
+    const members = await redis.sUnion(keys);
+    const ids = members.map(toId).filter((id): id is string => Boolean(id));
+    if (ids.length === 0) return [];
+    const positions = await redis.hmGet(posHash, ids);
+    const hits: GeoHit[] = [];
+    for (let index = 0; index < ids.length; index += 1) {
+      const pos = parsePos(positions[index]);
+      if (!pos) continue;
+      const distance = distanceKm(latitude, longitude, pos.latitude, pos.longitude);
+      if (distance > MATCH_RADIUS_KM) continue;
+      hits.push({ id: ids[index]!, distance, latitude: pos.latitude, longitude: pos.longitude });
+    }
+    hits.sort((left, right) => left.distance - right.distance);
+    return hits.slice(0, GEO_SEARCH_COUNT);
   } catch (error) {
     logGeoFallback(error);
     return null;
@@ -107,17 +141,18 @@ export async function upsertDriver(input: {
   const redis = await getRedis();
   if (!redis) return;
   const wanted = new Set(uniqueVehicleTypes(input.vehicleTypes));
+  const cell = cellFor(input.latitude, input.longitude);
   try {
+    const previousCell = await redis.hGet(driverCellsHash(), input.id);
     await redis.hSet(driverUsersHash(), input.userId, input.id);
+    await redis.hSet(driverPosHash(), input.id, encodePos(input.latitude, input.longitude));
+    await redis.hSet(driverCellsHash(), input.id, cell);
     for (const type of VEHICLE_TYPES) {
+      if (previousCell && (previousCell !== cell || !wanted.has(type))) {
+        await redis.sRem(driverCellKey(type, previousCell), input.id);
+      }
       if (wanted.has(type)) {
-        await redis.geoAdd(driverKey(type), {
-          longitude: input.longitude,
-          latitude: input.latitude,
-          member: input.id,
-        });
-      } else {
-        await redis.zRem(driverKey(type), input.id);
+        await redis.sAdd(driverCellKey(type, cell), input.id);
       }
     }
   } catch (error) {
@@ -129,7 +164,12 @@ export async function removeDriver(id: string, userId?: string) {
   const redis = await getRedis();
   if (!redis) return;
   try {
-    await Promise.all(VEHICLE_TYPES.map((type) => redis.zRem(driverKey(type), id)));
+    const cell = await redis.hGet(driverCellsHash(), id);
+    if (cell) {
+      await Promise.all(VEHICLE_TYPES.map((type) => redis.sRem(driverCellKey(type, cell), id)));
+    }
+    await redis.hDel(driverCellsHash(), id);
+    await redis.hDel(driverPosHash(), id);
     if (userId) await redis.hDel(driverUsersHash(), userId);
   } catch (error) {
     logGeoFallback(error);
@@ -142,15 +182,18 @@ export async function refreshDriverLocationIfIndexed(userId: string, latitude: n
   try {
     const profileId = await redis.hGet(driverUsersHash(), userId);
     if (!profileId) return;
+    const previousCell = await redis.hGet(driverCellsHash(), profileId);
+    if (!previousCell) return;
+    const cell = cellFor(latitude, longitude);
+    await redis.hSet(driverPosHash(), profileId, encodePos(latitude, longitude));
+    if (cell === previousCell) return;
     for (const type of VEHICLE_TYPES) {
-      const score = await redis.zScore(driverKey(type), profileId);
-      if (score == null) continue;
-      await redis.geoAdd(driverKey(type), {
-        longitude,
-        latitude,
-        member: profileId,
-      });
+      const inIndex = await redis.sIsMember(driverCellKey(type, previousCell), profileId);
+      if (!inIndex) continue;
+      await redis.sRem(driverCellKey(type, previousCell), profileId);
+      await redis.sAdd(driverCellKey(type, cell), profileId);
     }
+    await redis.hSet(driverCellsHash(), profileId, cell);
   } catch (error) {
     logGeoFallback(error);
   }
@@ -161,19 +204,24 @@ export async function upsertSearchingTrip(input: {
   pickupLat: number;
   pickupLng: number;
   vehicleType: VehicleType;
+  matchAllVehicleTypes?: boolean;
 }) {
   const redis = await getRedis();
   if (!redis) return;
+  const indexed = new Set(
+    input.matchAllVehicleTypes ? VEHICLE_TYPES : uniqueVehicleTypes([input.vehicleType]),
+  );
+  const cell = cellFor(input.pickupLat, input.pickupLng);
   try {
+    const previousCell = await redis.hGet(tripCellsHash(), input.id);
+    await redis.hSet(tripPosHash(), input.id, encodePos(input.pickupLat, input.pickupLng));
+    await redis.hSet(tripCellsHash(), input.id, cell);
     for (const type of VEHICLE_TYPES) {
-      if (type === input.vehicleType) {
-        await redis.geoAdd(tripKey(type), {
-          longitude: input.pickupLng,
-          latitude: input.pickupLat,
-          member: input.id,
-        });
-      } else {
-        await redis.zRem(tripKey(type), input.id);
+      if (previousCell && (previousCell !== cell || !indexed.has(type))) {
+        await redis.sRem(tripCellKey(type, previousCell), input.id);
+      }
+      if (indexed.has(type)) {
+        await redis.sAdd(tripCellKey(type, cell), input.id);
       }
     }
   } catch (error) {
@@ -185,8 +233,15 @@ export async function removeSearchingTrip(id: string, vehicleType?: VehicleType)
   const redis = await getRedis();
   if (!redis) return;
   try {
+    const cell = await redis.hGet(tripCellsHash(), id);
     const types = vehicleType ? [vehicleType] : VEHICLE_TYPES;
-    await Promise.all(types.map((type) => redis.zRem(tripKey(type), id)));
+    if (cell) {
+      await Promise.all(types.map((type) => redis.sRem(tripCellKey(type, cell), id)));
+    }
+    if (!vehicleType || types.length === VEHICLE_TYPES.length) {
+      await redis.hDel(tripCellsHash(), id);
+      await redis.hDel(tripPosHash(), id);
+    }
   } catch (error) {
     logGeoFallback(error);
   }
@@ -197,7 +252,7 @@ export async function searchDrivers(
   longitude: number,
   latitude: number,
 ): Promise<GeoHit[] | null> {
-  return searchKey(driverKey(vehicleType), longitude, latitude);
+  return searchKey((cell) => driverCellKey(vehicleType, cell), longitude, latitude, driverPosHash());
 }
 
 export async function searchTrips(
@@ -209,7 +264,7 @@ export async function searchTrips(
   if (types.length === 0) return [];
   const merged = new Map<string, GeoHit>();
   for (const type of types) {
-    const hits = await searchKey(tripKey(type), longitude, latitude);
+    const hits = await searchKey((cell) => tripCellKey(type, cell), longitude, latitude, tripPosHash());
     if (hits == null) return null;
     for (const hit of hits) {
       const previous = merged.get(hit.id);
@@ -225,9 +280,7 @@ export async function rebuildGeoIndexes() {
   const redis = await getRedis();
   if (!redis) return false;
   try {
-    for (const key of geoKeys()) {
-      await redis.unlink(key);
-    }
+    await unlinkIndexes();
 
     const [drivers, trips] = await Promise.all([
       prisma.driverProfile.findMany({
@@ -247,7 +300,7 @@ export async function rebuildGeoIndexes() {
       }),
       prisma.trip.findMany({
         where: { status: "SEARCHING" },
-        select: { id: true, pickupLat: true, pickupLng: true, vehicleType: true },
+        select: { id: true, pickupLat: true, pickupLng: true, vehicleType: true, rideType: true },
       }),
     ]);
 
@@ -267,6 +320,7 @@ export async function rebuildGeoIndexes() {
         pickupLat: trip.pickupLat,
         pickupLng: trip.pickupLng,
         vehicleType: trip.vehicleType,
+        matchAllVehicleTypes: trip.rideType === "COURIER",
       });
     }
     return true;
@@ -277,13 +331,8 @@ export async function rebuildGeoIndexes() {
 }
 
 export async function resetGeoIndexes() {
-  const redis = await getRedis();
-  if (!redis) return false;
   try {
-    for (const key of geoKeys()) {
-      await redis.unlink(key);
-    }
-    return true;
+    return await unlinkIndexes();
   } catch (error) {
     logGeoFallback(error);
     return false;
