@@ -1,0 +1,280 @@
+version: '3.9'
+
+# ============================================
+# Production Docker Compose Configuration
+# ============================================
+# This configuration uses optimized production images
+# Usage: docker-compose -f docker-compose.prod.yml up
+
+services:
+  # ============================================
+  # Infrastructure Services
+  # ============================================
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: eve-postgres-prod
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-eve}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-eve}
+      POSTGRES_DB: ${POSTGRES_DB:-eve}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-eve}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: eve-redis-prod
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # ============================================
+  # Microservices (Production Images)
+  # ============================================
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: auth
+    image: eve-auth:latest
+    container_name: eve-auth-prod
+    env_file: .env.prod
+    environment:
+      NODE_ENV: production
+      AUTH_PORT: 4001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  location:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: location
+    image: eve-location:latest
+    container_name: eve-location-prod
+    env_file: .env.prod
+    environment:
+      NODE_ENV: production
+      LOCATION_PORT: 4002
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  ride:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ride
+    image: eve-ride:latest
+    container_name: eve-ride-prod
+    env_file: .env.prod
+    environment:
+      NODE_ENV: production
+      RIDE_PORT: 4003
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+      REDIS_URL: redis://redis:6379
+      LOCATION_URL: http://location:4002
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4003:4003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      location:
+        condition: service_started
+      notify:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  notify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: notify
+    image: eve-notify:latest
+    container_name: eve-notify-prod
+    env_file: .env.prod
+    environment:
+      NODE_ENV: production
+      NOTIFY_PORT: 4004
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+      LOCATION_URL: http://location:4002
+    ports:
+      - "4004:4004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      location:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gateway
+    image: eve-gateway:latest
+    container_name: eve-gateway-prod
+    env_file: .env.prod
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      GATEWAY_MODE: proxy
+      DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+      REDIS_URL: redis://redis:6379
+      AUTH_URL: http://auth:4001
+      LOCATION_URL: http://location:4002
+      RIDE_URL: http://ride:4003
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      location:
+        condition: service_started
+      ride:
+        condition: service_started
+      notify:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  eve-network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local

@@ -1,0 +1,212 @@
+version: '3.9'
+
+# ============================================
+# Development Docker Compose Configuration
+# ============================================
+# This configuration is optimized for local development with hot-reload
+# All services use volume mounts for live code updates
+# Usage: docker-compose up
+
+services:
+  # ============================================
+  # Infrastructure Services
+  # ============================================
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: eve-postgres
+    environment:
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+      POSTGRES_DB: eve
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eve"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eve-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: eve-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - eve-network
+
+  # ============================================
+  # Microservices
+  # ============================================
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eve-auth
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/db/src/generated
+    command: npm run dev -w @eve/auth
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      AUTH_PORT: 4001
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+    ports:
+      - "4001:4001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: unless-stopped
+
+  location:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eve-location
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/db/src/generated
+    command: npm run dev -w @eve/location
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      LOCATION_PORT: 4002
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4002:4002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eve-network
+    restart: unless-stopped
+
+  ride:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eve-ride
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/db/src/generated
+    command: npm run dev -w @eve/ride
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      RIDE_PORT: 4003
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+      LOCATION_URL: http://location:4002
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4003:4003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      location:
+        condition: service_started
+      notify:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: unless-stopped
+
+  notify:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eve-notify
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/db/src/generated
+    command: npm run dev -w @eve/notify
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      NOTIFY_PORT: 4004
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      LOCATION_URL: http://location:4002
+    ports:
+      - "4004:4004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      location:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: eve-gateway
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/packages/db/src/generated
+    command: sh -c "npx prisma migrate deploy && npm run dev"
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      GATEWAY_MODE: proxy
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+      AUTH_URL: http://auth:4001
+      LOCATION_URL: http://location:4002
+      RIDE_URL: http://ride:4003
+      NOTIFY_URL: http://notify:4004
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      location:
+        condition: service_started
+      ride:
+        condition: service_started
+      notify:
+        condition: service_started
+    networks:
+      - eve-network
+    restart: unless-stopped
+
+networks:
+  eve-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
