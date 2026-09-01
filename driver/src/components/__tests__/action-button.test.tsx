@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import ActionButton from '../action-button';
+import { ActionButton } from '../action-button';
 
 describe('ActionButton', () => {
   it('renders correctly with default props', () => {

@@ -16,7 +16,7 @@ export function renderWithProviders(
  * Mock API response helper
  */
 export function mockApiSuccess(data: any) {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
     ok: true,
     status: 200,
     json: async () => data,
@@ -27,7 +27,7 @@ export function mockApiSuccess(data: any) {
  * Mock API error helper
  */
 export function mockApiError(status: number, message: string) {
-  (global.fetch as jest.Mock).mockResolvedValueOnce({
+  (globalThis.fetch as jest.Mock).mockResolvedValueOnce({
     ok: false,
     status,
     json: async () => ({ message }),
