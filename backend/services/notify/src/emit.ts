@@ -14,33 +14,20 @@ export function setSocketServer(server: Server | null) {
   io = server;
 }
 
-function internalHeaders(): Record<string, string> {
-  const secret = process.env.INTERNAL_SERVICE_SECRET;
-  return secret ? { "x-internal-secret": secret } : {};
-}
-
-function isGrpcEnabled() {
-  return process.env.GRPC_ENABLED === 'true';
-}
-
+/**
+ * gRPC-first emit with Socket.IO direct access
+ */
 export async function emitTripEvent(tripId: string, event: string, payload: unknown) {
   if (io) {
     io.to(`trip:${tripId}`).emit(event, payload);
     return;
   }
   
-  // Try gRPC first if enabled
-  if (isGrpcEnabled()) {
-    try {
-      await emitTripEventGrpc(tripId, event, payload);
-      return;
-    } catch (error) {
-      console.warn('gRPC emitTripEvent failed, falling back to HTTP:', error);
-    }
+  try {
+    await emitTripEventGrpc(tripId, event, payload);
+  } catch (error) {
+    console.warn('gRPC emitTripEvent failed, no websocket server available:', error);
   }
-  
-  // Fall back to HTTP
-  await postEmit({ target: "trip", tripId, event, payload });
 }
 
 export async function emitUserEvent(
@@ -54,21 +41,13 @@ export async function emitUserEvent(
     return;
   }
   
-  // Try gRPC first if enabled
-  if (isGrpcEnabled()) {
-    try {
-      await emitUserEventGrpc(role, userId, event, payload);
-      return;
-    } catch (error) {
-      console.warn('gRPC emitUserEvent failed, falling back to HTTP:', error);
-    }
+  try {
+    await emitUserEventGrpc(role, userId, event, payload);
+  } catch (error) {
+    console.warn('gRPC emitUserEvent failed, no websocket server available:', error);
   }
-  
-  // Fall back to HTTP
-  await postEmit({ target: "user", role, userId, event, payload });
 }
 
-/** One emit to the trip room and a user room. Sockets in both rooms still receive it once. */
 export async function emitTripAndUserEvent(
   tripId: string,
   role: "RIDER" | "DRIVER",
@@ -81,18 +60,11 @@ export async function emitTripAndUserEvent(
     return;
   }
   
-  // Try gRPC first if enabled
-  if (isGrpcEnabled()) {
-    try {
-      await emitTripAndUserEventGrpc(tripId, role, userId, event, payload);
-      return;
-    } catch (error) {
-      console.warn('gRPC emitTripAndUserEvent failed, falling back to HTTP:', error);
-    }
+  try {
+    await emitTripAndUserEventGrpc(tripId, role, userId, event, payload);
+  } catch (error) {
+    console.warn('gRPC emitTripAndUserEvent failed, no websocket server available:', error);
   }
-  
-  // Fall back to HTTP
-  await postEmit({ target: "trip+user", tripId, role, userId, event, payload });
 }
 
 export async function emitAdminEvent(event: string, payload: unknown) {
@@ -101,30 +73,11 @@ export async function emitAdminEvent(event: string, payload: unknown) {
     return;
   }
   
-  // Try gRPC first if enabled
-  if (isGrpcEnabled()) {
-    try {
-      await emitAdminEventGrpc(event, payload);
-      return;
-    } catch (error) {
-      console.warn('gRPC emitAdminEvent failed, falling back to HTTP:', error);
-    }
+  try {
+    await emitAdminEventGrpc(event, payload);
+  } catch (error) {
+    console.warn('gRPC emitAdminEvent failed, no websocket server available:', error);
   }
-  
-  // Fall back to HTTP
-  await postEmit({ target: "admin", event, payload });
-}
-
-async function postEmit(body: Record<string, unknown>) {
-  const url = process.env.NOTIFY_URL;
-  if (!url) return;
-  await fetch(new URL("/internal/emit", url), {
-    method: "POST",
-    headers: { ...internalHeaders(), "content-type": "application/json" },
-    body: JSON.stringify(body),
-  }).catch(() => {
-    /* live clients lag; HTTP APIs still work */
-  });
 }
 
 export function emitTripEventLocal(tripId: string, event: string, payload: unknown) {

@@ -2,40 +2,27 @@
 
 ## Overview
 
-Eve's backend supports high-performance gRPC communication between microservices, offering 3-10x lower latency compared to HTTP/REST for internal service calls. This implementation features a hybrid approach with automatic fallback to HTTP and local function calls for maximum reliability.
+Eve's backend uses high-performance gRPC as the **primary communication protocol** between microservices, offering 3-10x lower latency compared to HTTP/REST. Services communicate exclusively via gRPC with automatic fallback to local function calls for maximum reliability.
 
 ## Architecture
 
 ### Communication Layers
 
-Eve services support three communication modes in order of priority:
+Eve services use a streamlined two-tier approach:
 
-1. **gRPC** - Primary: Binary protocol, <5ms latency, streaming support
-2. **HTTP/REST** - Fallback: JSON over HTTP, 10-30ms latency
-3. **Local** - Last resort: Direct function calls when service is unreachable
+1. **gRPC** - Primary: Binary protocol, <5ms latency, streaming support, always enabled
+2. **Local** - Fallback: Direct function calls when gRPC is unreachable
 
-### Hybrid Client Pattern
+### gRPC-First Client Pattern
 
 ```typescript
 async function nearbyDrivers(input) {
-  // Try gRPC first if enabled
-  if (isGrpcEnabled()) {
-    try {
-      return await nearbyDriversGrpc(input);
-    } catch (error) {
-      console.warn('gRPC failed, falling back to HTTP');
-    }
-  }
-  
-  // Fall back to HTTP
   try {
-    return await nearbyDriversHttp(input);
+    return await nearbyDriversGrpc(input);
   } catch (error) {
-    console.warn('HTTP failed, falling back to local');
+    console.warn('gRPC failed, using local fallback:', error);
+    return nearbyDriversLocal(input);
   }
-  
-  // Last resort: local function
-  return nearbyDriversLocal(input);
 }
 ```
 
@@ -65,8 +52,7 @@ async function nearbyDrivers(input) {
 ### Environment Variables
 
 ```bash
-# Enable gRPC
-GRPC_ENABLED=true
+# gRPC is always enabled - no flag needed
 
 # Service ports
 LOCATION_GRPC_PORT=50051
@@ -86,17 +72,17 @@ GRPC_LOGGING=true
 
 ### Starting Services
 
-#### Development (with gRPC)
+#### Development
 ```bash
-export GRPC_ENABLED=true
 npm run dev:split
 ```
 
 #### Production
 ```bash
-export GRPC_ENABLED=true
 npm start
 ```
+
+gRPC servers start automatically on configured ports.
 
 ## Protocol Buffers
 
@@ -178,9 +164,10 @@ For ride matching (10 location updates/sec per driver):
 
 All clients implement graceful degradation:
 
-1. gRPC failure → HTTP
-2. HTTP failure → Local function
-3. Local function failure → Error propagated to caller
+1. gRPC failure → Local function
+2. Local function failure → Error propagated to caller
+
+No HTTP layer - services communicate directly via gRPC or local functions.
 
 ### Retry Strategy
 
@@ -418,11 +405,30 @@ For issues or questions about gRPC implementation:
 ## Summary
 
 Eve's gRPC implementation provides:
-- ✅ 3-10x performance improvement
-- ✅ Automatic HTTP fallback
-- ✅ Zero breaking changes to existing code
+- ✅ 3-10x performance improvement over HTTP
+- ✅ Automatic local fallback for reliability
+- ✅ Always-on by default - zero configuration needed
 - ✅ Production-ready architecture
 - ✅ Streaming support (foundation)
-- ⏳ TLS/mTLS (ready for production)
+- ✅ Simple gRPC → Local pattern
 
-Enable with `GRPC_ENABLED=true` to start seeing performance benefits immediately!
+gRPC is the primary communication method - start services and it works automatically!
+
+## Migration from Hybrid to gRPC-First
+
+**Breaking Change** - Version 2.0 of the gRPC implementation removed HTTP fallback:
+
+### What Changed
+- Removed `GRPC_ENABLED` environment variable - gRPC is always on
+- Removed HTTP internal endpoints (`/internal/*` routes)
+- Simplified fallback: gRPC → Local (no HTTP layer)
+- Services must be able to reach each other via gRPC URLs
+
+### Migration Steps
+1. Ensure all services can reach gRPC ports (50051, 50052)
+2. Remove `GRPC_ENABLED` from environment configuration
+3. Update any deployment scripts that rely on HTTP internal endpoints
+4. Services will automatically use gRPC for inter-service calls
+
+### Rollback
+If issues arise, services fall back to local functions automatically. No data loss occurs - only communication method changes.

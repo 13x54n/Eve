@@ -14,10 +14,8 @@ createLocationApp().listen(httpPort, "0.0.0.0", () => {
   });
 });
 
-// Start gRPC server if enabled
-if (process.env.GRPC_ENABLED === 'true') {
-  startLocationGrpcServer(grpcPort).catch((error) => {
-    console.error('Failed to start Location gRPC server:', error);
-    process.exit(1);
-  });
-}
+// Start gRPC server
+startLocationGrpcServer(grpcPort).catch((error) => {
+  console.error('Failed to start Location gRPC server:', error);
+  process.exit(1);
+});
