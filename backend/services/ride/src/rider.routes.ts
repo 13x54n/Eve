@@ -25,7 +25,7 @@ const router = Router();
 
 const riderApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
 });

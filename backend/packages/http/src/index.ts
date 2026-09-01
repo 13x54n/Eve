@@ -4,6 +4,7 @@ export { healthPayload, type HealthPayload } from "./health.js";
 export {
   requireAdmin,
   requireAuth,
+  requireInternalService,
   requirePermission,
   requireRole,
   requireStaffAccess,

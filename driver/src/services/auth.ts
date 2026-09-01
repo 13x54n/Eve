@@ -21,12 +21,16 @@ export interface AuthResponse {
 
 export async function exchangeAuth0(idToken: string): Promise<AuthResponse> {
   const { data } = await api.post<AuthResponse>('/auth/driver/auth0', { idToken });
-  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.accessToken);
+  await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.accessToken, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
   return data;
 }
 
 export async function getAccessToken() {
-  return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+  return SecureStore.getItemAsync(ACCESS_TOKEN_KEY, {
+    keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+  });
 }
 
 export async function logout() {

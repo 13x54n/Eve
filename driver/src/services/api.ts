@@ -1,5 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 import { requireApiBaseUrl } from '@/lib/public-env';
 
 export const API_BASE = requireApiBaseUrl('driver');
@@ -28,7 +29,14 @@ api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
+      // Clear stored Eve token
       await SecureStore.deleteItemAsync('access_token');
+      // Navigate to auth screen - Auth0 session will be cleared by logout in auth context
+      try {
+        router.replace('/(auth)/welcome');
+      } catch {
+        // Navigation may fail if router not ready
+      }
     }
     if (__DEV__) {
       console.error(

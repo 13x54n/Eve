@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { getDriverProfile } from "@eve/db";
-import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, type AuthenticatedRequest } from "@eve/http";
+import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, requireInternalService, type AuthenticatedRequest } from "@eve/http";
 import {
   distanceToPickup,
   indexSearchingTrip,
@@ -23,7 +23,7 @@ const presenceSchema = z.object({
 export const presenceRouter = Router();
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -40,6 +40,9 @@ presenceRouter.patch("/presence", limiter, requireAuth, async (req, res, next) =
 });
 
 export const internalLocationRouter = Router();
+
+// Require internal service authentication for all internal routes
+internalLocationRouter.use(requireInternalService);
 
 internalLocationRouter.post("/drivers/location", async (req, res, next) => {
   try {

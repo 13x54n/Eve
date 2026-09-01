@@ -136,10 +136,9 @@ authRouter.post("/admin/logout", async (req, res, next) => {
 authRouter.post("/forgot-password", limiter, async (req, res, next) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
-    const result = await requestPasswordReset(email);
+    await requestPasswordReset(email);
     res.status(200).json({
       message: "If an account exists, a verification code was sent.",
-      ...(result.verificationCode ? { verificationCode: result.verificationCode } : {}),
     });
   } catch (error) {
     next(error);
