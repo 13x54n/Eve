@@ -255,9 +255,6 @@ export default function Home() {
             source={{ uri: 'https://ik.imagekit.io/lexy/Eve/logo.png' }}
             style={{ width: 60, height: 60, marginRight: 'auto' }}
           />
-          <TouchableOpacity style={styles.iconButton} activeOpacity={0.7}>
-            <MaterialIcons name="support-agent" size={24} color="black" />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.requestSection}>
@@ -381,10 +378,10 @@ export default function Home() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Earnings</Text>
             <Text style={styles.sectionSubtitle}>
-              Earning trends for drivers in your current area
+              Example hourly demand pattern
             </Text>
             <Text style={styles.sectionBody}>
-              Explore the best times and places to deliver today.
+              This is sample data to show typical busy hours. Real-time demand data coming soon.
             </Text>
           </View>
 

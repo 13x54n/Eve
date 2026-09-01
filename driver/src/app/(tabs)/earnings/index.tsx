@@ -82,15 +82,25 @@ function formatMoney(n: number) {
 export default function Earnings() {
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    let mounted = true;
-    void getEarnings().then((result) => {
-      if (!mounted) return;
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      const result = await getEarnings();
       setSummary(result.summary);
       setRecentTrips(result.recentTrips);
-    }).catch(() => { /* keep empty state on failure */ });
-    return () => { mounted = false; };
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
   }, []);
 
   const sections = useMemo(() => groupTripsIntoSections(recentTrips), [recentTrips]);
@@ -183,6 +193,21 @@ export default function Earnings() {
         )}
         ItemSeparatorComponent={() => <View style={styles.txSeparator} />}
         SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
+        ListEmptyComponent={
+          error ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="alert-circle" size={48} color="#B91C1C" />
+              <Text style={styles.emptyText}>Could not load earnings</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={() => void load()}>
+                <Text style={styles.retryText}>Tap to retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : loading ? (
+            <Text style={styles.loadingText}>Loading earnings...</Text>
+          ) : (
+            <Text style={styles.emptyText}>No earnings yet</Text>
+          )
+        }
       />
     </SafeAreaView>
   );
@@ -396,5 +421,34 @@ const styles = StyleSheet.create({
   },
   txSeparator: {
     height: 8,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    padding: 40,
+    marginTop: 20,
+  },
+  emptyText: {
+    marginTop: 16,
+    color: '#6B7280',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  loadingText: {
+    marginTop: 40,
+    color: '#6B7280',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#2E4ED5',
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

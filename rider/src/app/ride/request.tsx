@@ -30,10 +30,8 @@ const vehicleOptions = [
 ] as const;
 const riderOptions = [
   ["For me", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
-  ["For Others", "Quick rides through traffic", "zap", "https://images.unsplash.com/vector-1738924827087-0609ce088bfd?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
+  ["For Others", "Book a ride for someone else", "user", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
 ] as const;
-
-type ActiveField = "pickup" | "dropoff" | { type: "stop"; index: number };
 
 export default function RequestRideScreen() {
   const { refreshActive } = useRideSession();
@@ -49,10 +47,8 @@ export default function RequestRideScreen() {
 
   const [pickupSuggestions, setPickupSuggestions] = useState<AddressSuggestion[]>([]);
   const [dropoffSuggestions, setDropoffSuggestions] = useState<AddressSuggestion[]>([]);
-  const [stopSuggestions, setStopSuggestions] = useState<AddressSuggestion[][]>([]);
-  const [activeField, setActiveField] = useState<ActiveField | null>(null);
+  const [activeField, setActiveField] = useState<"pickup" | "dropoff" | null>(null);
   const [suggesting, setSuggesting] = useState(false);
-  const [stops, setStops] = useState<string[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState("Car");
   const [selectedRider, setSelectedRider] = useState(params.forOthers === "1" ? "For Others" : "For me");
   const [riderName, setRiderName] = useState("");
@@ -128,27 +124,8 @@ export default function RequestRideScreen() {
     );
   }
 
-  function onChangeStop(index: number, text: string) {
-    setStops((currentStops) =>
-      currentStops.map((stop, stopIndex) => (stopIndex === index ? text : stop)),
-    );
-    setActiveField({ type: "stop", index });
-    setSuggesting(true);
-    searchAddresses(
-      text,
-      (results) => {
-        setStopSuggestions((currentSuggestions) =>
-          currentSuggestions.map((suggestions, stopIndex) =>
-            stopIndex === index ? results : suggestions,
-          ),
-        );
-        setSuggesting(false);
-      },
-      currentLoc ?? undefined,
-    );
-  }
 
-  async function handleSelectSuggestion(item: AddressSuggestion, field: ActiveField) {
+  async function handleSelectSuggestion(item: AddressSuggestion, field: "pickup" | "dropoff") {
     const city = item.municipality || item.district || item.province || "";
     const coords = await geocodeSuggestion(item, currentLoc ?? undefined);
     if (field === "pickup") {
@@ -164,37 +141,10 @@ export default function RequestRideScreen() {
         setDropoffCoord(coords);
         setMapCoordinate({ latitude: coords.lat, longitude: coords.lng });
       }
-    } else {
-      setStops((currentStops) =>
-        currentStops.map((stop, index) =>
-          index === field.index ? item.label : stop,
-        ),
-      );
-      setStopSuggestions((currentSuggestions) =>
-        currentSuggestions.map((suggestions, index) =>
-          index === field.index ? [] : suggestions,
-        ),
-      );
     }
     setActiveField(null);
   }
 
-  function addStop() {
-    setStops((currentStops) => [...currentStops, ""]);
-    setStopSuggestions((currentSuggestions) => [...currentSuggestions, []]);
-  }
-
-  function removeStop(index: number) {
-    setStops((currentStops) => currentStops.filter((_, stopIndex) => stopIndex !== index));
-    setStopSuggestions((currentSuggestions) =>
-      currentSuggestions.filter((_, stopIndex) => stopIndex !== index),
-    );
-    setActiveField((field) =>
-      field && typeof field !== "string" && field.type === "stop" && field.index === index
-        ? null
-        : field,
-    );
-  }
 
   function swapLocations() {
     setPickup(dropoff);
@@ -206,8 +156,6 @@ export default function RequestRideScreen() {
     if (pickupCoord) {
       setMapCoordinate({ latitude: pickupCoord.lat, longitude: pickupCoord.lng });
     }
-    setStops((currentStops) => [...currentStops].reverse());
-    setStopSuggestions((currentSuggestions) => [...currentSuggestions].reverse());
   }
 
   function openMapPicker() {
@@ -230,15 +178,6 @@ export default function RequestRideScreen() {
       setDropoff(label);
       setDropoffSuggestions([]);
       setDropoffCoord(pinned);
-    } else if (activeField && activeField.type === "stop") {
-      setStops((currentStops) =>
-        currentStops.map((stop, index) => (index === activeField.index ? label : stop)),
-      );
-      setStopSuggestions((currentSuggestions) =>
-        currentSuggestions.map((suggestions, index) =>
-          index === activeField.index ? [] : suggestions,
-        ),
-      );
     }
 
     setMapCoordinate({ latitude: location.latitude, longitude: location.longitude });
@@ -304,7 +243,7 @@ export default function RequestRideScreen() {
       });
       await refreshActive();
       lightImpact();
-      router.replace("/(tabs)/home");
+      router.replace("/ride/searching");
     } catch (error: any) {
       if (error.response?.status === 409) {
         try {
@@ -334,14 +273,16 @@ export default function RequestRideScreen() {
       ? []
       : activeField === "pickup"
         ? pickupSuggestions
-        : activeField === "dropoff"
-          ? dropoffSuggestions
-          : stopSuggestions[activeField.index] ?? [];
+        : dropoffSuggestions;
 
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityLabel="Go back">
+        <Pressable 
+          onPress={() => router.back()} 
+          accessibilityLabel="Go back"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
           <Feather name="arrow-left" size={21} color="#111827" />
         </Pressable>
         <Text style={styles.eyebrow}>Confirm your trip</Text>
@@ -376,10 +317,6 @@ export default function RequestRideScreen() {
       </View>
 
       <View style={styles.routeActions}>
-        <Pressable style={styles.routeAction} onPress={addStop} accessibilityRole="button">
-          <Feather name="plus" size={16} color="#2E4ED5" />
-          <Text style={styles.routeActionText}>Add stop</Text>
-        </Pressable>
         <Pressable style={styles.routeAction} onPress={swapLocations} accessibilityRole="button">
           <Feather name="repeat" size={16} color="#2E4ED5" />
           <Text style={styles.routeActionText}>Swap locations</Text>
@@ -390,9 +327,7 @@ export default function RequestRideScreen() {
           <Text style={styles.suggestionsTitle}>
             {activeField === "pickup"
               ? "Pickup suggestions"
-              : activeField === "dropoff"
-                ? "Dropoff suggestions"
-                : `Stop ${activeField.index + 1} suggestions`}
+              : "Dropoff suggestions"}
           </Text>
           <Pressable
             style={styles.mapChoiceButton}
@@ -430,26 +365,6 @@ export default function RequestRideScreen() {
           )}
         </View>
       )}
-      {stops.map((stop, index) => (
-        <View key={`stop-${index}`} style={styles.stopRow}>
-          <View style={styles.stopMarker}>
-            <Text style={styles.stopNumber}>{index + 1}</Text>
-          </View>
-          <TextInput
-            style={styles.stopInput}
-            value={stop}
-            onChangeText={(text) => onChangeStop(index, text)}
-            onFocus={() => setActiveField({ type: "stop", index })}
-            placeholder={`Stop ${index + 1}`}
-          />
-          <Pressable
-            onPress={() => removeStop(index)}
-            accessibilityLabel={`Remove stop ${index + 1}`}
-          >
-            <Feather name="x" size={18} color="#9CA3AF" />
-          </Pressable>
-        </View>
-      ))}
       <Text style={styles.sectionTitle}>Rider</Text>
 
       <View style={styles.vehicleRow}>
@@ -495,6 +410,22 @@ export default function RequestRideScreen() {
           />
         </View>
       ) : null}
+
+      <View style={styles.paymentInfoCard}>
+        <View style={styles.paymentInfoHeader}>
+          <Feather name="info" size={20} color="#2E4ED5" />
+          <Text style={styles.paymentInfoTitle}>Payment: Cash Only</Text>
+        </View>
+        <Text style={styles.paymentInfoText}>
+          Pay your driver directly in cash at the end of your trip. The suggested fare will be shown when a driver accepts.
+        </Text>
+        <View style={styles.paymentInfoNote}>
+          <Feather name="dollar-sign" size={14} color="#6B7280" />
+          <Text style={styles.paymentInfoNoteText}>
+            Digital payment methods coming soon
+          </Text>
+        </View>
+      </View>
 
       <View style={styles.routePreviewCard}>
         <View style={styles.routePreviewHeader}>
@@ -591,6 +522,19 @@ export default function RequestRideScreen() {
         />
       ) : null}
 
+      {!dropoff.trim() || !riderDetailsValid ? (
+        <View style={styles.validationMessage}>
+          <Feather name="info" size={16} color="#D97706" />
+          <Text style={styles.validationText}>
+            {!dropoff.trim() 
+              ? "Please enter a destination to continue" 
+              : selectedRider === "For Others" && riderName.trim().length <= 1
+              ? "Please enter the recipient's name"
+              : "Please enter a valid phone number (7+ digits)"}
+          </Text>
+        </View>
+      ) : null}
+
       <ActionButton
         disabled={!dropoff.trim() || !riderDetailsValid}
         loading={submitting}
@@ -674,6 +618,44 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
     marginTop: 14,
+  },
+  paymentInfoCard: {
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#EFF6FF",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  paymentInfoHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  paymentInfoTitle: {
+    color: "#1E40AF",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  paymentInfoText: {
+    color: "#1E3A8A",
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  paymentInfoNote: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    padding: 10,
+    borderRadius: 8,
+    backgroundColor: "#FFFFFF",
+  },
+  paymentInfoNoteText: {
+    color: "#6B7280",
+    fontSize: 12,
+    fontStyle: "italic",
   },
   routePreviewCard: {
     marginTop: 20,
@@ -1055,6 +1037,20 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+  },
+  validationMessage: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    backgroundColor: "#FEF3C7",
+  },
+  validationText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#92400E",
   },
   button: {
     flexDirection: "row",

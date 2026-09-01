@@ -142,9 +142,11 @@ export default function TripOfferScreen() {
       await acceptDispatch(tripId, fare);
       notifyImpact();
       leave();
-    } catch {
+    } catch (error: unknown) {
       resolved.current = false;
       setBusy(false);
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      Alert.alert("Could not accept trip", message ?? "The trip may no longer be available. Please try again.");
     }
   }
 
