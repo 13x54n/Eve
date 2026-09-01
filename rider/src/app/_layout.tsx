@@ -5,6 +5,7 @@ import { Auth0Provider } from "react-native-auth0";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { RideSessionProvider } from "@/context/ride-session";
 import { ThemeProvider } from "@/context/theme-context";
+import { NetworkProvider } from "@/context/network-context";
 import { requireAuth0Config } from "@/lib/auth0";
 
 export default function RootLayout() {
@@ -13,13 +14,15 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <Auth0Provider domain={domain} clientId={clientId}>
-          <AuthProvider>
-            <RideSessionProvider>
-              <RootNavigator />
-            </RideSessionProvider>
-          </AuthProvider>
-        </Auth0Provider>
+        <NetworkProvider>
+          <Auth0Provider domain={domain} clientId={clientId}>
+            <AuthProvider>
+              <RideSessionProvider>
+                <RootNavigator />
+              </RideSessionProvider>
+            </AuthProvider>
+          </Auth0Provider>
+        </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
@@ -33,24 +36,28 @@ function RootNavigator() {
   }
 
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
       <Stack.Protected guard={isAuthenticated}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/request" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/searching" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/tracking" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/completed" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/chat" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/support" options={{ headerShown: false }} />
-        <Stack.Screen name="ride/support/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="courier/request" options={{ headerShown: false }} />
-        <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen name="legal" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="ride/request" />
+        <Stack.Screen name="ride/searching" />
+        <Stack.Screen name="ride/tracking" />
+        <Stack.Screen name="ride/completed" />
+        <Stack.Screen name="ride/chat" />
+        <Stack.Screen name="ride/support" />
+        <Stack.Screen name="ride/support/[id]" />
+        <Stack.Screen name="courier/request" />
+        <Stack.Screen name="profile" />
+        <Stack.Screen name="legal" />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="courier/track/[token]" options={{ headerShown: false }} />
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="courier/track/[token]" />
       </Stack.Protected>
     </Stack>
   );

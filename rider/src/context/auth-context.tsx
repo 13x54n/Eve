@@ -17,6 +17,10 @@ import {
 } from "@/services/auth";
 import { AUTH0_CUSTOM_SCHEME } from "@/lib/auth0";
 import { setPushNotificationsEnabled } from "@/services/notifications";
+import { OfflineStorage } from "@/lib/offline-storage";
+import { useNetwork } from "@/context/network-context";
+import { actionQueue } from "@/lib/action-queue";
+import { registerTripMutationHandlers } from "@/services/trip-mutations";
 
 type SessionUser = AuthResponse["user"];
 
@@ -36,6 +40,7 @@ function isUnauthorized(error: unknown) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { clearSession, isLoading: auth0Loading } = useAuth0();
+  const { isOnline } = useNetwork();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [hasStoredSession, setHasStoredSession] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -44,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await clearSession({}, { customScheme: AUTH0_CUSTOM_SCHEME });
     } catch {
-      // Already signed out of Auth0, or the user cancelled the browser.
     }
     await clearStoredSession();
+    await OfflineStorage.clear();
+    await actionQueue.clear();
     setUser(null);
     setHasStoredSession(false);
   }, [clearSession]);
@@ -64,16 +70,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const cachedUser = await OfflineStorage.get<SessionUser>("USER_PROFILE");
+      if (cachedUser && !cancelled) {
+        setUser(cachedUser);
+        setHasStoredSession(true);
+      }
+
+      if (!isOnline && cachedUser) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
       try {
         const sessionUser = await getSessionUser();
         if (cancelled) return;
         setUser(sessionUser);
         setHasStoredSession(true);
+        await OfflineStorage.set("USER_PROFILE", sessionUser);
       } catch (error) {
         if (cancelled) return;
         if (isUnauthorized(error)) {
           await logout();
         } else {
+          if (cachedUser) {
+            setUser(cachedUser);
+          }
           setHasStoredSession(true);
         }
       } finally {
@@ -85,7 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [auth0Loading, logout]);
+  }, [auth0Loading, logout, isOnline]);
+
+  useEffect(() => {
+    void actionQueue.initialize();
+    registerTripMutationHandlers();
+  }, []);
+
+  useEffect(() => {
+    if (isOnline) {
+      void actionQueue.process(true);
+    }
+  }, [isOnline]);
 
   useEffect(() => {
     setPushNotificationsEnabled(user?.pushNotificationsEnabled !== false);
@@ -96,9 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading: loading || auth0Loading,
       isAuthenticated: Boolean(user) || hasStoredSession,
-      setUser: (nextUser) => {
+      setUser: async (nextUser) => {
         setUser(nextUser);
         setHasStoredSession(Boolean(nextUser));
+        if (nextUser) {
+          await OfflineStorage.set("USER_PROFILE", nextUser);
+        }
       },
       logout,
     }),
