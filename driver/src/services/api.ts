@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { requireApiBaseUrl } from '@/lib/public-env';
@@ -11,12 +11,31 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach access token
-api.interceptors.request.use(async (config) => {
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 1000;
+const RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504];
+
+function shouldRetry(error: AxiosError): boolean {
+  if (!error.response) {
+    return true;
+  }
+  return RETRY_STATUS_CODES.includes(error.response.status);
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   const accessToken = await SecureStore.getItemAsync('access_token');
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+
+  if (!config.headers['x-retry-count']) {
+    config.headers['x-retry-count'] = '0';
+  }
+
   if (__DEV__) {
     console.log(
       `[api] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`,
@@ -28,16 +47,36 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & {
+      headers: { 'x-retry-count': string };
+    };
+
     if (error.response?.status === 401) {
-      // Clear stored Eve token
       await SecureStore.deleteItemAsync('access_token');
-      // Navigate to auth screen - Auth0 session will be cleared by logout in auth context
       try {
         router.replace('/(auth)/welcome');
       } catch {
-        // Navigation may fail if router not ready
       }
     }
+
+    const retryCount = parseInt(config?.headers?.['x-retry-count'] || '0', 10);
+
+    if (config && shouldRetry(error) && retryCount < MAX_RETRIES) {
+      const newRetryCount = retryCount + 1;
+      config.headers['x-retry-count'] = String(newRetryCount);
+
+      const delay = RETRY_DELAY * Math.pow(2, retryCount);
+      
+      if (__DEV__) {
+        console.log(
+          `[api] Retry ${newRetryCount}/${MAX_RETRIES} after ${delay}ms for ${config.method?.toUpperCase()} ${config.url}`,
+        );
+      }
+
+      await sleep(delay);
+      return api(config);
+    }
+
     if (__DEV__) {
       console.error(
         `[api] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} failed`,

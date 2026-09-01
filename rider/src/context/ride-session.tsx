@@ -16,6 +16,8 @@ import { getActiveTrip, Trip } from '@/services/trips';
 import { addSocketListener, connectSocket, disconnectSocket, subscribeTrip } from '@/services/socket';
 import { notifyRideEvent, requestRideNotificationPermission } from '@/services/notifications';
 import { getActiveChatTripId } from '@/services/active-chat';
+import { OfflineStorage } from '@/lib/offline-storage';
+import { useNetwork } from '@/context/network-context';
 
 type RideSessionValue = {
   activeTrip: Trip | null;
@@ -49,6 +51,7 @@ function openTripFromNotification(data: Record<string, unknown> | undefined) {
 
 export function RideSessionProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
+  const { isOnline } = useNetwork();
   const [activeTrip, setActiveTrip] = useState<Trip | null>(null);
   const tripIdRef = useRef<string | null>(null);
 
@@ -56,18 +59,38 @@ export function RideSessionProvider({ children }: { children: ReactNode }) {
     if (!isAuthenticated) {
       setActiveTrip(null);
       tripIdRef.current = null;
+      await OfflineStorage.remove("ACTIVE_TRIP");
       return null;
     }
+
+    const cachedTrip = await OfflineStorage.get<Trip>("ACTIVE_TRIP");
+    if (cachedTrip) {
+      setActiveTrip(cachedTrip);
+      tripIdRef.current = cachedTrip.id;
+    }
+
+    if (!isOnline && cachedTrip) {
+      return cachedTrip;
+    }
+
     try {
       const trip = await getActiveTrip();
       setActiveTrip(trip);
       tripIdRef.current = trip?.id ?? null;
-      if (trip) subscribeTrip(trip.id);
+      if (trip) {
+        subscribeTrip(trip.id);
+        await OfflineStorage.set("ACTIVE_TRIP", trip);
+      } else {
+        await OfflineStorage.remove("ACTIVE_TRIP");
+      }
       return trip;
-    } catch {
+    } catch (error) {
+      if (cachedTrip) {
+        return cachedTrip;
+      }
       return null;
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isOnline]);
 
   useEffect(() => {
     if (!isAuthenticated) {

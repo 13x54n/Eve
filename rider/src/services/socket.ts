@@ -5,7 +5,10 @@ let socket: Socket | null = null;
 let connectPromise: Promise<Socket | null> | null = null;
 let connectGeneration = 0;
 let subscribedTripId: string | null = null;
+let reconnectAttempts = 0;
 const listeners = new Set<(event: string, payload: unknown) => void>();
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_DELAY = 1000;
 
 function socketUrl() {
   return process.env.EXPO_PUBLIC_WS_URL || (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/api\/?$/, '');
@@ -26,8 +29,15 @@ export function addSocketListener(listener: (event: string, payload: unknown) =>
   };
 }
 
+export function isSocketConnected(): boolean {
+  return socket?.connected ?? false;
+}
+
 export async function connectSocket() {
-  if (socket?.connected) return socket;
+  if (socket?.connected) {
+    reconnectAttempts = 0;
+    return socket;
+  }
   if (connectPromise) return connectPromise;
 
   const generation = ++connectGeneration;
@@ -38,15 +48,40 @@ export async function connectSocket() {
 
     socket?.removeAllListeners();
     socket?.disconnect();
-    const next = io(socketUrl(), { auth: { token }, transports: ['websocket'] });
+    
+    const next = io(socketUrl(), { 
+      auth: { token }, 
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: MAX_RECONNECT_ATTEMPTS,
+      reconnectionDelay: RECONNECT_BASE_DELAY,
+      reconnectionDelayMax: RECONNECT_BASE_DELAY * Math.pow(2, 4),
+    });
+    
     if (generation !== connectGeneration) {
       next.disconnect();
       return null;
     }
     socket = next;
     socket.onAny((event, payload) => dispatch(event, payload));
-    socket.on('connect', joinSubscribedTrip);
-    if (socket.connected) return socket;
+    socket.on('connect', () => {
+      reconnectAttempts = 0;
+      joinSubscribedTrip();
+      console.log('[Socket] Connected');
+    });
+    socket.on('disconnect', () => {
+      console.log('[Socket] Disconnected');
+    });
+    socket.on('connect_error', (error) => {
+      reconnectAttempts++;
+      console.error(`[Socket] Connection error (attempt ${reconnectAttempts}):`, error.message);
+    });
+    
+    if (socket.connected) {
+      reconnectAttempts = 0;
+      return socket;
+    }
+    
     await new Promise<void>((resolve, reject) => {
       const current = socket;
       if (!current) {
@@ -73,6 +108,7 @@ export function disconnectSocket() {
   connectGeneration += 1;
   connectPromise = null;
   subscribedTripId = null;
+  reconnectAttempts = 0;
   socket?.removeAllListeners();
   socket?.disconnect();
   socket = null;
