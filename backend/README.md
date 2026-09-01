@@ -4,6 +4,22 @@ API gateway and services (auth, location, ride, notify) on Postgres. npm workspa
 
 Clients talk only to the **gateway** on port **4000**. You can run everything in one process (**compose**) or as four services behind a proxy (**split**).
 
+## Quick Start
+
+### With Docker (Recommended)
+
+```bash
+# Interactive setup
+./docker-setup.sh
+
+# Or manually
+docker compose up
+```
+
+See **[docs/docker.md](docs/docker.md)** for complete Docker setup guide.
+
+### Without Docker
+
 See **[docs/gateway.md](docs/gateway.md)** for modes, routing, env vars, and how to start compose vs split.
 
 ## Scripts (from `backend/`)
