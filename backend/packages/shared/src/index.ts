@@ -22,3 +22,4 @@ export {
   type Permission,
   type StaffActor,
 } from "./permissions.js";
+export { cache, CacheService, withCache } from "./cache.js";

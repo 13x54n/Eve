@@ -228,7 +228,7 @@ export default function RequestRideScreen() {
 
     try {
       setSubmitting(true);
-      await createTrip({
+      const trip = await createTrip({
         pickupAddress: pickup.trim(),
         dropoffAddress: dropoff.trim(),
         city: pickupCity || dropoffCity || "Kathmandu",
@@ -243,7 +243,7 @@ export default function RequestRideScreen() {
       });
       await refreshActive();
       lightImpact();
-      router.replace("/ride/searching");
+      router.replace({ pathname: "/ride/searching", params: { tripId: trip.id } });
     } catch (error: any) {
       if (error.response?.status === 409) {
         try {
