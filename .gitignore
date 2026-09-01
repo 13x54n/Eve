@@ -8,3 +8,5 @@
 **/*.mobileprovision
 **/google-service-account.json
 .DS_Store
+
+.agents/
