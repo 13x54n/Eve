@@ -1,4 +1,4 @@
-import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare } from "@eve/db";
+import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare, invalidateFareCache } from "@eve/db";
 import { emitUserEvent } from "@eve/notify";
 import { indexSearchingTripClient, nearbyDriversClient } from "@eve/location";
 import {
@@ -1066,6 +1066,9 @@ export async function savePricing(
     ip,
   });
 
+  // Invalidate fare cache for this city and vehicle type
+  await invalidateFareCache(created.city, created.vehicleType as "BIKE" | "CAR");
+
   return created;
 }
 
@@ -1098,6 +1101,9 @@ export async function transitionPricing(
     entityId: id,
     ip,
   });
+
+  // Invalidate fare cache for this city and vehicle type
+  await invalidateFareCache(updated.city, updated.vehicleType as "BIKE" | "CAR");
 
   return updated;
 }
