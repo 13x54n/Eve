@@ -42,6 +42,7 @@ export default defineConfig({
           "@eve/ride",
           "@eve/notify",
           "@eve/gateway",
+          "@eve/grpc",
         ],
       },
     },

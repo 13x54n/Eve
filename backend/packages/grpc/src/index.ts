@@ -1,7 +1,8 @@
 import * as grpc from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
+import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, isAbsolute, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,6 +23,7 @@ export interface GrpcClientConfig {
 export class GrpcServer {
   private server: grpc.Server;
   private services: Map<string, any> = new Map();
+  boundPort = 0;
 
   constructor() {
     this.server = new grpc.Server({
@@ -39,12 +41,13 @@ export class GrpcServer {
   }
 
   /**
-   * Start the gRPC server
+   * Start the gRPC server. Port 0 binds an ephemeral port; the assigned port is
+   * stored on `boundPort` and returned.
    */
-  async start(config: GrpcServerConfig): Promise<void> {
+  async start(config: GrpcServerConfig): Promise<number> {
     const creds = config.credentials || grpc.ServerCredentials.createInsecure();
     
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<number>((resolve, reject) => {
       this.server.bindAsync(
         `0.0.0.0:${config.port}`,
         creds,
@@ -53,9 +56,10 @@ export class GrpcServer {
             console.error('Failed to start gRPC server:', error);
             reject(error);
           } else {
+            this.boundPort = port;
             this.server.start();
             console.log(`✓ gRPC server listening on port ${port}`);
-            resolve();
+            resolve(port);
           }
         }
       );
@@ -84,13 +88,35 @@ export class GrpcServer {
 }
 
 /**
+ * Resolve a proto file from source (Vitest/tsx) or compiled dist layouts.
+ */
+export function resolveProtoPath(protoPath: string): string {
+  if (isAbsolute(protoPath)) {
+    if (existsSync(protoPath)) return protoPath;
+    throw new Error(`Proto file not found: ${protoPath}`);
+  }
+
+  const withoutBackendPrefix = protoPath.replace(/^backend[\\/]/, '');
+  const candidates = [
+    join(process.cwd(), protoPath),
+    join(process.cwd(), withoutBackendPrefix),
+    join(__dirname, '../../../', protoPath),
+    join(__dirname, '../../../', withoutBackendPrefix),
+    join(__dirname, '../../../../', protoPath),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  throw new Error(`Proto file not found: ${protoPath}. Tried:\n${candidates.join('\n')}`);
+}
+
+/**
  * Load protocol buffer definition
  */
 export function loadProto(protoPath: string, packageName?: string): any {
-  // Resolve path relative to backend root
-  const resolvedPath = protoPath.startsWith('/')
-    ? protoPath
-    : join(__dirname, '../../../', protoPath);
+  const resolvedPath = resolveProtoPath(protoPath);
 
   const packageDefinition = protoLoader.loadSync(resolvedPath, {
     keepCase: true,
