@@ -1,6 +1,77 @@
 # Eve
 
+[![Node.js](https://img.shields.io/badge/Node.js-22+-green.svg)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-red.svg)](https://redis.io/)
+[![Expo](https://img.shields.io/badge/Expo-57-000020.svg)](https://expo.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
+
 Community ride-matching marketplace. Riders request a trip, drivers send fare offers, the rider accepts a match, and payment happens off-platform (for example cash). Eve records a **suggested fare** and the **matched fare** for audit. It does not collect ride payments and does not take commission. Vehicle types: bike and car.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Technology Stack](#technology-stack)
+- [Repository Structure](#repository)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Local Setup](#local-setup)
+- [Documentation](#documentation)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+## Overview
+
+Eve is a full-stack ride-matching platform featuring:
+- **Real-time matching** using Uber H3 geospatial indexing
+- **Microservices architecture** with optional gRPC support
+- **Native mobile apps** for riders and drivers (iOS/Android)
+- **Admin dashboard** for operations and support
+- **Auth0 integration** for secure authentication
+- **WebSocket** real-time updates for live tracking
+
+## Technology Stack
+
+### Backend
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Node.js | 22+ | Runtime environment |
+| TypeScript | 5.9+ | Type-safe development |
+| Express | 5.x | HTTP server framework |
+| Prisma | 7.9+ | ORM and database migrations |
+| PostgreSQL | 16 | Primary database |
+| Redis | 7 | Caching and geospatial indexing |
+| Socket.IO | 4.x | Real-time communication |
+| gRPC | @grpc/grpc-js | Inter-service communication (optional) |
+
+### Frontend - Mobile Apps
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Expo | 57 | React Native framework |
+| React Native | 0.76+ | Mobile UI framework |
+| Auth0 | react-native-auth0 | Authentication |
+| Mapbox | @rnmapbox/maps | Maps and navigation |
+| TypeScript | 5.9+ | Type-safe development |
+
+### Frontend - Web Apps
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js | 16 | React framework |
+| React | 19 | UI library |
+| TypeScript | 5.9+ | Type-safe development |
+| Tailwind CSS | 3.x | Styling |
+| shadcn/ui | Latest | Component library |
+
+### Infrastructure
+| Technology | Purpose |
+|------------|---------|
+| Docker | Containerization |
+| Docker Compose | Local development orchestration |
+| Husky | Git hooks |
+| Vitest | Backend testing |
+| Playwright | E2E testing |
+| k6 | Load testing |
 
 ## Repository
 
@@ -15,25 +86,75 @@ Eve/
 
 ## Architecture
 
-Clients talk only to the **gateway** on port **4000**. Admin HTTP lives on the gateway. Auth, location, ride, and notify can run in-process or as separate services.
+Eve uses a **microservices architecture** where all clients communicate with a central gateway that routes requests to specialized services. The gateway can run in two modes:
 
+### System Architecture
+
+```mermaid
+graph TB
+    subgraph Clients["Client Applications"]
+        Rider[Rider App<br/>iOS/Android]
+        Driver[Driver App<br/>iOS/Android]
+        Admin[Admin Console<br/>Next.js]
+        Monitor[Monitor Dashboard<br/>Next.js]
+    end
+
+    subgraph Gateway["API Gateway :4000"]
+        GW[Gateway Service<br/>Routing & Admin API]
+    end
+
+    subgraph Services["Microservices"]
+        Auth[Auth Service :4001<br/>Authentication & JWT]
+        Location[Location Service :4002<br/>GPS & Geo-matching]
+        Ride[Ride Service :4003<br/>Trips & Offers]
+        Notify[Notify Service :4004<br/>Real-time Events]
+    end
+
+    subgraph Data["Data Layer"]
+        PG[(PostgreSQL 16<br/>Primary Database)]
+        RD[(Redis 7<br/>Cache & Geo Index)]
+    end
+
+    Rider --> GW
+    Driver --> GW
+    Admin --> GW
+    Monitor --> GW
+
+    GW --> Auth
+    GW --> Location
+    GW --> Ride
+    GW --> Notify
+
+    Auth --> PG
+    Location --> PG
+    Location --> RD
+    Ride --> PG
+    Ride --> RD
+    Ride -.Internal HTTP/gRPC.-> Location
+    Ride -.Internal HTTP/gRPC.-> Notify
+    Notify --> PG
+    Notify -.Internal HTTP/gRPC.-> Location
 ```
-  rider / driver / admin
-            │
-            ▼
-     gateway :4000
-            │
-     ┌──────┼──────────────┐
-     ▼      ▼       ▼      ▼
-  auth    location  ride  notify     Postgres
-  :4001   :4002     :4003 :4004
-```
 
-**Compose mode** (`GATEWAY_MODE=compose`, default): one Node process mounts all routers. Use `npm run dev` in `backend/`.
+### Gateway Modes
 
-**Proxy mode** (`GATEWAY_MODE=proxy`): gateway forwards `/api/auth`, `/api/driver`, `/api/rider`, and `/socket.io` to the services and keeps `/api/admin` local. Use `npm run dev:split` in `backend/`.
+**Compose mode** (`GATEWAY_MODE=compose`, default):
+- One Node process mounts all routers
+- Faster for local development
+- Use `npm run dev` in `backend/`
+- Services communicate in-process
 
-Details (routing, env, internal HTTP, production start): **[backend/docs/gateway.md](backend/docs/gateway.md)**. Authentication (Auth0 + Eve JWT): **[backend/docs/auth.md](backend/docs/auth.md)**.
+**Proxy mode** (`GATEWAY_MODE=proxy`):
+- Gateway forwards requests to separate service processes
+- Better for production and testing service isolation
+- Use `npm run dev:split` in `backend/`
+- Services communicate via HTTP/gRPC
+
+**Learn more:**
+- Gateway routing and modes: [backend/docs/gateway.md](backend/docs/gateway.md)
+- Authentication flow: [backend/docs/auth.md](backend/docs/auth.md)
+- Geospatial matching: [backend/docs/h3-matchmaking.md](backend/docs/h3-matchmaking.md)
+- gRPC implementation: [backend/docs/grpc.md](backend/docs/grpc.md)
 
 Public prefixes (both modes):
 
@@ -61,9 +182,87 @@ Public prefixes (both modes):
 
 ## Prerequisites
 
-- Node 22+
-- npm
-- Docker (Postgres, or the full backend stack)
+### Required
+
+- **Node.js**: 22.x or higher ([Download](https://nodejs.org/))
+- **npm**: 10.x or higher (comes with Node.js)
+- **Docker Desktop**: Latest version ([Download](https://www.docker.com/products/docker-desktop/))
+  - Required for PostgreSQL and Redis
+  - Optional: Run full backend stack in Docker
+
+### Optional
+
+- **Xcode**: 15+ (for iOS development on macOS)
+- **Android Studio**: Latest (for Android development)
+- **EAS CLI**: For mobile app builds (`npm install -g eas-cli`)
+
+### Port Requirements
+
+Ensure these ports are available:
+- `4000` - Gateway (main API)
+- `4001` - Auth service (proxy mode)
+- `4002` - Location service (proxy mode)
+- `4003` - Ride service (proxy mode)
+- `4004` - Notify service (proxy mode)
+- `5432` - PostgreSQL
+- `6379` - Redis
+- `3000` - Admin console
+- `3010` - Monitor dashboard
+- `8081` - Expo dev server
+
+### Verify Prerequisites
+
+```bash
+# Check Node.js version
+node --version  # Should be 22.x or higher
+
+# Check npm version
+npm --version   # Should be 10.x or higher
+
+# Check Docker
+docker --version
+docker compose version
+
+# Check available ports
+lsof -i :4000  # Should return nothing if port is free
+```
+
+## Quick Start
+
+Get Eve running in 5 minutes:
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd Eve
+
+# 2. Start infrastructure
+cd backend
+docker compose up postgres redis -d
+
+# 3. Set up backend
+cp .env.example .env
+# Edit .env and set JWT_ACCESS_SECRET and AUTH0_* variables
+npm install
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+
+# 4. Start the API
+npm run dev
+
+# 5. In another terminal, start admin console
+cd admin
+cp .env.example .env.local
+npm install
+npm run dev
+```
+
+Visit:
+- API: http://localhost:4000/api/health
+- Admin: http://localhost:3000
+
+For detailed setup instructions, see [GETTING_STARTED.md](GETTING_STARTED.md).
 
 ## Local setup
 
@@ -203,3 +402,135 @@ Do not use these credentials outside local development.
 **Driver** — Auth0 sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, earnings.
 
 **Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; safety and support. No in-app commission or rider payment collection.
+
+## Documentation
+
+### Core Documentation
+- [Getting Started Guide](GETTING_STARTED.md) - Complete setup walkthrough
+- [Architecture Overview](ARCHITECTURE.md) - System design and data flows
+- [Environment Variables](ENVIRONMENT_VARIABLES.md) - Configuration reference
+- [Deployment Guide](DEPLOYMENT.md) - Production deployment
+- [Development Workflow](DEVELOPMENT.md) - Git workflow and standards
+- [FAQ & Troubleshooting](FAQ.md) - Common issues and solutions
+
+### Backend Documentation
+- [Gateway Configuration](backend/docs/gateway.md) - Compose vs proxy modes
+- [Authentication](backend/docs/auth.md) - Auth0 integration
+- [Docker Setup](backend/docs/docker.md) - Container orchestration
+- [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
+- [gRPC Implementation](backend/docs/grpc.md) - Inter-service communication
+- [Redis Caching](backend/docs/caching.md) - Cache strategies
+
+### Application Guides
+- [Rider App](rider/README.md) - Mobile app for passengers
+- [Driver App](driver/README.md) - Mobile app for drivers
+- [Admin Console](admin/README.md) - Web-based operations dashboard
+- [Monitor Dashboard](monitor/README.md) - System health monitoring
+
+### Additional Resources
+- [Security Policy](SECURITY.md) - Security practices and reporting
+- [Testing Standards](TESTING.md) - Test coverage and guidelines
+- [Store Release](STORE.md) - App Store and Play Store deployment
+
+## Troubleshooting
+
+### Common Issues
+
+#### Port Already in Use
+```bash
+# Find process using port 4000
+lsof -i :4000
+
+# Kill the process
+kill -9 <PID>
+```
+
+#### Database Connection Failed
+```bash
+# Ensure PostgreSQL is running
+docker compose ps postgres
+
+# Check connection
+docker compose exec postgres psql -U eve -d eve -c "SELECT 1;"
+
+# Restart PostgreSQL
+docker compose restart postgres
+```
+
+#### Prisma Client Not Generated
+```bash
+cd backend
+npm run db:generate
+```
+
+#### Auth0 Configuration Issues
+- Verify `AUTH0_DOMAIN` does not include `https://` or trailing slash
+- Check callback URLs match exactly (case-sensitive)
+- Ensure Native app type is selected in Auth0 dashboard
+- See [backend/docs/auth.md](backend/docs/auth.md) for details
+
+#### Mobile App Won't Start
+```bash
+# Clear Metro bundler cache
+npx expo start --clear
+
+# Rebuild development client
+npx expo run:ios  # or run:android
+
+# Ensure .env file exists
+cp .env.example .env
+```
+
+#### Docker Issues on Windows/Mac
+- Increase Docker memory to 8GB+ in Docker Desktop settings
+- Enable file sharing for the project directory
+- Use WSL2 backend on Windows
+
+For more solutions, see [FAQ.md](FAQ.md).
+
+## Contributing
+
+### Development Setup
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Follow the [Development Workflow](DEVELOPMENT.md) guide
+4. Commit your changes (`git commit -m 'Add amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
+
+### Code Standards
+- TypeScript for all new code
+- ESLint and Prettier for formatting
+- Write tests for new features
+- Follow existing patterns and conventions
+- Update documentation for API changes
+
+### Running Tests
+```bash
+# Backend tests
+cd backend
+npm test
+
+# Admin E2E tests
+cd admin
+npm run test:e2e
+
+# Load tests
+cd backend
+npm run load:smoke
+```
+
+## License
+
+Private - All rights reserved
+
+## Support
+
+For issues and questions:
+- Check [FAQ.md](FAQ.md) for common problems
+- Review existing GitHub Issues
+- Contact the development team
+
+---
+
+**Last Updated**: 2026-09-01
