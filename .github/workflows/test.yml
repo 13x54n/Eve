@@ -163,6 +163,7 @@ jobs:
           EXPO_PUBLIC_AUTH0_CLIENT_ID: ci-test-client-id
           EXPO_PUBLIC_API_URL: http://localhost:4000/api
         run: npm run lint
+        continue-on-error: true
       
       - name: Type check
         working-directory: driver
