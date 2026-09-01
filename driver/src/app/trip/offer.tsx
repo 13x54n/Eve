@@ -234,7 +234,7 @@ export default function TripOfferScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Brand.canvas },
-  map: { ...StyleSheet.absoluteFillObject },
+  map: StyleSheet.absoluteFill,
   timerWrap: {
     position: "absolute",
     left: 0,

@@ -8,7 +8,7 @@ export function setSocketServer(server: Server | null) {
   io = server;
 }
 
-function internalHeaders() {
+function internalHeaders(): Record<string, string> {
   const secret = process.env.INTERNAL_SERVICE_SECRET;
   return secret ? { "x-internal-secret": secret } : {};
 }

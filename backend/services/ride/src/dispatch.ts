@@ -74,9 +74,9 @@ export function serializeActiveDispatch(row: {
     pickupLng: number;
     dropoffLat: number;
     dropoffLng: number;
-    distanceKm: unknown;
+    distanceKm: number;
     durationMin: number;
-    fareTotal: unknown;
+    fareTotal: number;
     minFare?: number;
     vehicleType: string;
     rideType: string;

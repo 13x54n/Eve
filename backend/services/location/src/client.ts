@@ -13,7 +13,7 @@ function locationUrl() {
   return process.env.LOCATION_URL;
 }
 
-function internalHeaders() {
+function internalHeaders(): Record<string, string> {
   const secret = process.env.INTERNAL_SERVICE_SECRET;
   return secret ? { "x-internal-secret": secret } : {};
 }
