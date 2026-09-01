@@ -11,6 +11,26 @@ export default defineConfig({
     clearMocks: true,
     restoreMocks: true,
     unstubEnvs: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
+      exclude: [
+        "node_modules/**",
+        "tests/**",
+        "dist/**",
+        "**/*.config.ts",
+        "**/*.d.ts",
+        "**/generated/**",
+        "load/**",
+        "prisma/**",
+      ],
+      thresholds: {
+        statements: 70,
+        branches: 60,
+        functions: 65,
+        lines: 70,
+      },
+    },
     server: {
       deps: {
         inline: [
