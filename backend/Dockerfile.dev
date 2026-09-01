@@ -34,7 +34,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client with a dummy DATABASE_URL
+# Prisma needs DATABASE_URL to validate schema, but doesn't connect during generation
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # Change ownership to appuser

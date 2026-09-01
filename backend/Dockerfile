@@ -40,7 +40,8 @@ RUN npm ci
 # Copy source code and Prisma schema
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client with a dummy DATABASE_URL
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # ============================================
@@ -62,6 +63,7 @@ RUN npm ci --omit=dev
 # Copy Prisma schema and generate client
 COPY prisma.config.ts ./
 COPY packages/db/src/schema.prisma ./packages/db/src/
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
 # ============================================
