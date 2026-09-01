@@ -78,6 +78,10 @@ services:
       NODE_ENV: production
       AUTH_PORT: 4001
       DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
     ports:
       - "4001:4001"
     depends_on:
@@ -113,8 +117,13 @@ services:
       LOCATION_PORT: 4002
       DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
       REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_PORT: 50051
+      LOCATION_GRPC_URL: location:50051
     ports:
       - "4002:4002"
+      - "50051:50051"
     depends_on:
       postgres:
         condition: service_healthy
@@ -152,6 +161,13 @@ services:
       REDIS_URL: redis://redis:6379
       LOCATION_URL: http://location:4002
       NOTIFY_URL: http://notify:4004
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_URL: location:50051
+      NOTIFY_GRPC_URL: notify:50052
+      IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY}
+      IMAGEKIT_PUBLIC_KEY: ${IMAGEKIT_PUBLIC_KEY}
+      IMAGEKIT_DRIVER_FOLDER: ${IMAGEKIT_DRIVER_FOLDER:-/eve/drivers}
     ports:
       - "4003:4003"
     depends_on:
@@ -193,8 +209,13 @@ services:
       NOTIFY_PORT: 4004
       DATABASE_URL: postgresql://${POSTGRES_USER:-eve}:${POSTGRES_PASSWORD:-eve}@postgres:5432/${POSTGRES_DB:-eve}
       LOCATION_URL: http://location:4002
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      NOTIFY_GRPC_PORT: 50052
+      NOTIFY_GRPC_URL: notify:50052
     ports:
       - "4004:4004"
+      - "50052:50052"
     depends_on:
       postgres:
         condition: service_healthy
@@ -235,6 +256,10 @@ services:
       LOCATION_URL: http://location:4002
       RIDE_URL: http://ride:4003
       NOTIFY_URL: http://notify:4004
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_URL: location:50051
+      NOTIFY_GRPC_URL: notify:50052
     ports:
       - "4000:4000"
     depends_on:
