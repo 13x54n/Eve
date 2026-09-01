@@ -407,7 +407,7 @@ export async function requestPasswordReset(email: string) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || !user.isActive) {
-    return { verificationCode: undefined };
+    return;
   }
 
   await prisma.passwordResetCode.deleteMany({ where: { userId: user.id } });
@@ -422,11 +422,6 @@ export async function requestPasswordReset(email: string) {
   });
 
   await verificationCodeSender.sendCode({ email: user.email, code });
-
-  return {
-    verificationCode:
-      process.env.NODE_ENV === "production" ? undefined : code,
-  };
 }
 
 export async function resetPassword(input: {

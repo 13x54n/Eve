@@ -4,6 +4,8 @@ export interface VerificationCodeSender {
 
 export const verificationCodeSender: VerificationCodeSender = {
   async sendCode({ email, code }) {
-    console.log(`[verification-code] ${email}: ${code}`);
+    // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
+    // For now, verification codes should be sent via email in all environments
+    // Never log or return verification codes in responses
   },
 };

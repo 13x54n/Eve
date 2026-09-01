@@ -102,3 +102,20 @@ export function requireStaffAccess(req: Request, res: Response, next: NextFuncti
   }
   next();
 }
+
+export function requireInternalService(req: Request, res: Response, next: NextFunction) {
+  const secret = req.headers["x-internal-secret"];
+  const expectedSecret = process.env.INTERNAL_SERVICE_SECRET;
+
+  if (!expectedSecret) {
+    res.status(500).json({ message: "Internal service authentication not configured" });
+    return;
+  }
+
+  if (!secret || secret !== expectedSecret) {
+    res.status(403).json({ message: "Forbidden: Invalid service credentials" });
+    return;
+  }
+
+  next();
+}

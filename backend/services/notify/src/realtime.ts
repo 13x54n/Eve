@@ -1,6 +1,7 @@
 import type { Server as SocketServer } from "socket.io";
 import { verifyAccessToken } from "@eve/shared";
 import { recordDriverLocationClient as recordDriverLocation } from "@eve/location";
+import { prisma } from "@eve/db";
 import { setSocketServer, emitAdminEventLocal, emitTripEventLocal } from "./emit.js";
 
 export function attachRealtime(server: SocketServer) {
@@ -22,8 +23,30 @@ export function attachRealtime(server: SocketServer) {
     if (user.role === "ADMIN") {
       socket.join("admin:ops");
     }
-    socket.on("trip:subscribe", (tripId: string) => {
-      if (typeof tripId === "string" && tripId.length > 0) socket.join(`trip:${tripId}`);
+    socket.on("trip:subscribe", async (tripId: string) => {
+      if (typeof tripId !== "string" || tripId.length === 0) return;
+      
+      // Verify user is rider or driver on this trip
+      try {
+        const trip = await prisma.trip.findUnique({
+          where: { id: tripId },
+          select: { riderId: true, driverId: true }
+        });
+        
+        if (!trip) {
+          socket.emit("error", { message: "Trip not found" });
+          return;
+        }
+        
+        if (trip.riderId !== user.sub && trip.driverId !== user.sub) {
+          socket.emit("error", { message: "Unauthorized: You are not a participant in this trip" });
+          return;
+        }
+        
+        socket.join(`trip:${tripId}`);
+      } catch (error) {
+        socket.emit("error", { message: "Failed to subscribe to trip" });
+      }
     });
     socket.on("driver:location", async (payload: { latitude?: number; longitude?: number }) => {
       if (user.role !== "DRIVER") return;
