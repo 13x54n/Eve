@@ -75,7 +75,7 @@ export class CacheService {
       return value;
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache get error for key ${key}:`, error);
+      console.warn("Cache get error for key:", key, error);
       return null;
     }
   }
@@ -95,7 +95,7 @@ export class CacheService {
       }
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache set error for key ${key}:`, error);
+      console.warn("Cache set error for key:", key, error);
     }
   }
 
@@ -116,7 +116,7 @@ export class CacheService {
       return value;
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache hGetAll error for key ${key}:`, error);
+      console.warn("Cache hGetAll error for key:", key, error);
       return {};
     }
   }
@@ -132,7 +132,7 @@ export class CacheService {
       await redis.hSet(key, field, value);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache hSet error for key ${key}:`, error);
+      console.warn("Cache hSet error for key:", key, error);
     }
   }
 
@@ -147,7 +147,7 @@ export class CacheService {
       await redis.hSet(key, fields);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache hSetAll error for key ${key}:`, error);
+      console.warn("Cache hSetAll error for key:", key, error);
     }
   }
 
@@ -162,7 +162,7 @@ export class CacheService {
       await redis.del(keys);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache del error for keys ${keys.join(", ")}:`, error);
+      console.warn("Cache del error for keys:", keys, error);
     }
   }
 
@@ -177,7 +177,7 @@ export class CacheService {
       await redis.expire(key, seconds);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache expire error for key ${key}:`, error);
+      console.warn("Cache expire error for key:", key, error);
     }
   }
 
@@ -193,7 +193,7 @@ export class CacheService {
       return result === 1;
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache exists error for key ${key}:`, error);
+      console.warn("Cache exists error for key:", key, error);
       return false;
     }
   }
@@ -209,7 +209,7 @@ export class CacheService {
       return await redis.incrBy(key, by);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache increment error for key ${key}:`, error);
+      console.warn("Cache increment error for key:", key, error);
       return 0;
     }
   }
@@ -225,7 +225,7 @@ export class CacheService {
       return await redis.decrBy(key, by);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache decrement error for key ${key}:`, error);
+      console.warn("Cache decrement error for key:", key, error);
       return 0;
     }
   }
@@ -241,7 +241,7 @@ export class CacheService {
       await redis.zAdd(key, { score, value: member });
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache zAdd error for key ${key}:`, error);
+      console.warn("Cache zAdd error for key:", key, error);
     }
   }
 
@@ -256,7 +256,7 @@ export class CacheService {
       return await redis.zRevRange(key, start, stop);
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache zRevRange error for key ${key}:`, error);
+      console.warn("Cache zRevRange error for key:", key, error);
       return [];
     }
   }
@@ -288,7 +288,7 @@ export class CacheService {
       return deletedCount;
     } catch (error) {
       this.metrics.errors++;
-      console.warn(`Cache invalidatePattern error for pattern ${pattern}:`, error);
+      console.warn("Cache invalidatePattern error for pattern:", pattern, error);
       return 0;
     }
   }
