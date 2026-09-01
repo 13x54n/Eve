@@ -164,6 +164,20 @@ run_migrations() {
     echo ""
 }
 
+# Seed database
+run_seed() {
+    print_header "Seeding Database"
+
+    print_info "Running seed script..."
+    docker compose exec gateway npm run db:seed || {
+        print_error "Database seed failed"
+        exit 1
+    }
+
+    print_success "Database seeded"
+    echo ""
+}
+
 # Check service health
 check_health() {
     print_header "Checking Service Health"
@@ -217,6 +231,7 @@ show_commands() {
     echo "Rebuild services:             docker compose up --build"
     echo ""
     echo "Run Prisma Studio:            docker compose exec gateway npx prisma studio"
+    echo "Seed database:                docker compose exec gateway npm run db:seed"
     echo "Run tests:                    docker compose exec gateway npm test"
     echo "Access PostgreSQL:            docker compose exec postgres psql -U eve -d eve"
     echo "Access Redis CLI:             docker compose exec redis redis-cli"
@@ -245,6 +260,8 @@ main_menu() {
             setup_env
             start_services "dev"
             wait_for_services
+            run_migrations
+            run_seed
             check_health
             show_urls
             show_commands

@@ -416,6 +416,29 @@ docker compose logs
 
 ### Database connection errors
 
+Inside a container, `localhost` / `127.0.0.1` refers to that container — not the Postgres service. Use the Compose service hostname `postgres` when running Prisma inside Docker.
+
+**Verify the gateway container has the correct URL:**
+```bash
+docker compose exec gateway printenv DATABASE_URL
+# Expected: postgresql://eve:eve@postgres:5432/eve
+```
+
+**Seed from Docker (recommended):**
+```bash
+docker compose exec gateway npm run db:seed
+# or from backend/: npm run db:seed:docker
+# or: make db-seed
+```
+
+**Seed from the host** (Postgres port 5432 published to localhost):
+```bash
+cd backend
+npm run db:seed
+```
+
+Your `backend/.env` should use `DATABASE_URL=postgresql://eve:eve@localhost:5432/eve` for host-native commands. Docker Compose overrides this to `@postgres:5432` for service containers.
+
 **Check PostgreSQL is running:**
 ```bash
 docker compose ps postgres
@@ -431,6 +454,7 @@ docker compose exec postgres psql -U eve -d eve -c "SELECT 1;"
 docker compose down -v
 docker compose up -d postgres
 docker compose exec gateway npx prisma migrate deploy
+docker compose exec gateway npm run db:seed
 ```
 
 ### Prisma Client not found
