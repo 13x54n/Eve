@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package eve.location;
+
+// Location Service handles driver presence, GPS tracking, and matchmaking queries
+service LocationService {
+  // Driver location and presence
+  rpc RecordDriverLocation(DriverLocationRequest) returns (DriverLocationResponse);
+  rpc RecordDriverLocationStream(stream DriverLocationRequest) returns (stream DriverLocationResponse);
+  rpc SyncDriverGeo(SyncDriverGeoRequest) returns (EmptyResponse);
+  
+  // Matchmaking queries
+  rpc NearbyDrivers(NearbyDriversRequest) returns (NearbyDriversResponse);
+  rpc NearbySearchingTrips(NearbySearchingTripsRequest) returns (NearbySearchingTripsResponse);
+  rpc DistanceToPickup(DistanceToPickupRequest) returns (DistanceToPickupResponse);
+  
+  // Trip geo indexing
+  rpc IndexSearchingTrip(IndexSearchingTripRequest) returns (EmptyResponse);
+  rpc RemoveSearchingTrip(RemoveSearchingTripRequest) returns (EmptyResponse);
+}
+
+// Driver location update request
+message DriverLocationRequest {
+  string user_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+}
+
+// Driver location update response
+message DriverLocationResponse {
+  repeated string trip_ids = 1;
+}
+
+// Sync driver geo request
+message SyncDriverGeoRequest {
+  string user_id = 1;
+}
+
+// Nearby drivers request
+message NearbyDriversRequest {
+  double pickup_lat = 1;
+  double pickup_lng = 2;
+  string vehicle_type = 3; // "BIKE" or "CAR"
+  optional string exclude_user_id = 4;
+  bool match_all_vehicle_types = 5;
+}
+
+// Driver information
+message Driver {
+  string id = 1;
+  string user_id = 2;
+  double distance_to_pickup = 3;
+  double rating = 4;
+  repeated string vehicle_types = 5;
+  double latitude = 6;
+  double longitude = 7;
+}
+
+// Nearby drivers response
+message NearbyDriversResponse {
+  repeated Driver drivers = 1;
+}
+
+// Nearby searching trips request
+message NearbySearchingTripsRequest {
+  string user_id = 1;
+}
+
+// Trip information
+message Trip {
+  string id = 1;
+  double distance_to_pickup = 2;
+  double pickup_lat = 3;
+  double pickup_lng = 4;
+  string vehicle_type = 5;
+}
+
+// Nearby searching trips response
+message NearbySearchingTripsResponse {
+  repeated Trip trips = 1;
+}
+
+// Distance to pickup request
+message DistanceToPickupRequest {
+  string user_id = 1;
+  double pickup_lat = 2;
+  double pickup_lng = 3;
+}
+
+// Distance to pickup response
+message DistanceToPickupResponse {
+  double distance_km = 1;
+}
+
+// Index searching trip request
+message IndexSearchingTripRequest {
+  string id = 1;
+  double pickup_lat = 2;
+  double pickup_lng = 3;
+  string vehicle_type = 4;
+  bool match_all_vehicle_types = 5;
+}
+
+// Remove searching trip request
+message RemoveSearchingTripRequest {
+  string id = 1;
+  optional string vehicle_type = 2;
+}
+
+// Empty response
+message EmptyResponse {
+  bool success = 1;
+}

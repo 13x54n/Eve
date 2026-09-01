@@ -17,9 +17,12 @@
   },
   "dependencies": {
     "@eve/db": "*",
+    "@eve/grpc": "*",
     "@eve/http": "*",
     "@eve/location": "*",
     "@eve/shared": "*",
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.10",
     "express": "^5.1.0",
     "dotenv": "^17.2.1",
     "socket.io": "^4.8.3"

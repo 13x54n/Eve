@@ -1,4 +1,10 @@
 import type { Server } from "socket.io";
+import {
+  emitTripEventGrpc,
+  emitUserEventGrpc,
+  emitAdminEventGrpc,
+  emitTripAndUserEventGrpc,
+} from './grpc-client.js';
 
 const ADMIN_OPS_ROOM = "admin:ops";
 
@@ -13,11 +19,27 @@ function internalHeaders(): Record<string, string> {
   return secret ? { "x-internal-secret": secret } : {};
 }
 
+function isGrpcEnabled() {
+  return process.env.GRPC_ENABLED === 'true';
+}
+
 export async function emitTripEvent(tripId: string, event: string, payload: unknown) {
   if (io) {
     io.to(`trip:${tripId}`).emit(event, payload);
     return;
   }
+  
+  // Try gRPC first if enabled
+  if (isGrpcEnabled()) {
+    try {
+      await emitTripEventGrpc(tripId, event, payload);
+      return;
+    } catch (error) {
+      console.warn('gRPC emitTripEvent failed, falling back to HTTP:', error);
+    }
+  }
+  
+  // Fall back to HTTP
   await postEmit({ target: "trip", tripId, event, payload });
 }
 
@@ -31,6 +53,18 @@ export async function emitUserEvent(
     io.to(`${role.toLowerCase()}:${userId}`).emit(event, payload);
     return;
   }
+  
+  // Try gRPC first if enabled
+  if (isGrpcEnabled()) {
+    try {
+      await emitUserEventGrpc(role, userId, event, payload);
+      return;
+    } catch (error) {
+      console.warn('gRPC emitUserEvent failed, falling back to HTTP:', error);
+    }
+  }
+  
+  // Fall back to HTTP
   await postEmit({ target: "user", role, userId, event, payload });
 }
 
@@ -46,6 +80,18 @@ export async function emitTripAndUserEvent(
     emitTripAndUserEventLocal(tripId, role, userId, event, payload);
     return;
   }
+  
+  // Try gRPC first if enabled
+  if (isGrpcEnabled()) {
+    try {
+      await emitTripAndUserEventGrpc(tripId, role, userId, event, payload);
+      return;
+    } catch (error) {
+      console.warn('gRPC emitTripAndUserEvent failed, falling back to HTTP:', error);
+    }
+  }
+  
+  // Fall back to HTTP
   await postEmit({ target: "trip+user", tripId, role, userId, event, payload });
 }
 
@@ -54,6 +100,18 @@ export async function emitAdminEvent(event: string, payload: unknown) {
     io.to(ADMIN_OPS_ROOM).emit(event, payload);
     return;
   }
+  
+  // Try gRPC first if enabled
+  if (isGrpcEnabled()) {
+    try {
+      await emitAdminEventGrpc(event, payload);
+      return;
+    } catch (error) {
+      console.warn('gRPC emitAdminEvent failed, falling back to HTTP:', error);
+    }
+  }
+  
+  // Fall back to HTTP
   await postEmit({ target: "admin", event, payload });
 }
 
