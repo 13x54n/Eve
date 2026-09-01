@@ -19,10 +19,8 @@ httpServer.listen(httpPort, "0.0.0.0", () => {
   console.log(`Notify service HTTP running on port ${httpPort}`);
 });
 
-// Start gRPC server if enabled
-if (process.env.GRPC_ENABLED === 'true') {
-  startNotifyGrpcServer(grpcPort).catch((error) => {
-    console.error('Failed to start Notify gRPC server:', error);
-    process.exit(1);
-  });
-}
+// Start gRPC server
+startNotifyGrpcServer(grpcPort).catch((error) => {
+  console.error('Failed to start Notify gRPC server:', error);
+  process.exit(1);
+});

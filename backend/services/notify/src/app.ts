@@ -1,10 +1,8 @@
 import { applyErrorHandler, createBaseApp, healthPayload } from "@eve/http";
-import { internalNotifyRouter } from "./routes.js";
 
 export function createNotifyApp() {
   const app = createBaseApp();
   app.get("/health", (_req, res) => res.json(healthPayload("notify")));
-  app.use("/internal", internalNotifyRouter);
   applyErrorHandler(app);
   return app;
 }

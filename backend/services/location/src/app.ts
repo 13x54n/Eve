@@ -2,15 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { getDriverProfile } from "@eve/db";
-import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, requireInternalService, type AuthenticatedRequest } from "@eve/http";
+import { applyErrorHandler, createBaseApp, healthPayload, requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
-  distanceToPickup,
-  indexSearchingTrip,
-  nearbyDrivers,
-  nearbySearchingTrips,
-  recordDriverLocation,
-  removeSearchingTrip,
-  syncDriverGeo,
   updateDriverPresence,
 } from "./matching.js";
 
@@ -39,133 +32,10 @@ presenceRouter.patch("/presence", limiter, requireAuth, async (req, res, next) =
   }
 });
 
-export const internalLocationRouter = Router();
-
-// Require internal service authentication for all internal routes
-internalLocationRouter.use(requireInternalService);
-
-internalLocationRouter.post("/drivers/location", async (req, res, next) => {
-  try {
-    const { userId, latitude, longitude } = req.body ?? {};
-    if (typeof userId !== "string" || typeof latitude !== "number" || typeof longitude !== "number") {
-      res.status(400).json({ message: "userId, latitude, and longitude are required" });
-      return;
-    }
-    const tripIds = await recordDriverLocation(userId, latitude, longitude);
-    res.json({ tripIds });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.get("/drivers/nearby", async (req, res, next) => {
-  try {
-    const pickupLat = Number(req.query.pickupLat);
-    const pickupLng = Number(req.query.pickupLng);
-    const vehicleType = String(req.query.vehicleType) as "BIKE" | "CAR";
-    if (!Number.isFinite(pickupLat) || !Number.isFinite(pickupLng) || (vehicleType !== "BIKE" && vehicleType !== "CAR")) {
-      res.status(400).json({ message: "pickupLat, pickupLng, and vehicleType are required" });
-      return;
-    }
-    const excludeUserId = typeof req.query.excludeUserId === "string" ? req.query.excludeUserId : undefined;
-    const matchAllVehicleTypes = req.query.matchAllVehicleTypes === "true";
-    res.json({
-      drivers: await nearbyDrivers({ pickupLat, pickupLng, vehicleType, excludeUserId, matchAllVehicleTypes }),
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.get("/trips/nearby", async (req, res, next) => {
-  try {
-    const userId = String(req.query.userId ?? "");
-    if (!userId) {
-      res.status(400).json({ message: "userId is required" });
-      return;
-    }
-    res.json({ trips: await nearbySearchingTrips(userId) });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.post("/drivers/geo/sync", async (req, res, next) => {
-  try {
-    const userId = String(req.body?.userId ?? "");
-    if (!userId) {
-      res.status(400).json({ message: "userId is required" });
-      return;
-    }
-    await syncDriverGeo(userId);
-    res.json({ ok: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.post("/trips/geo", async (req, res, next) => {
-  try {
-    const { id, pickupLat, pickupLng, vehicleType, matchAllVehicleTypes } = req.body ?? {};
-    if (
-      typeof id !== "string"
-      || typeof pickupLat !== "number"
-      || typeof pickupLng !== "number"
-      || (vehicleType !== "BIKE" && vehicleType !== "CAR")
-    ) {
-      res.status(400).json({ message: "id, pickupLat, pickupLng, and vehicleType are required" });
-      return;
-    }
-    await indexSearchingTrip({
-      id,
-      pickupLat,
-      pickupLng,
-      vehicleType,
-      matchAllVehicleTypes: matchAllVehicleTypes === true,
-    });
-    res.json({ ok: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.post("/trips/geo/remove", async (req, res, next) => {
-  try {
-    const { id, vehicleType } = req.body ?? {};
-    if (typeof id !== "string") {
-      res.status(400).json({ message: "id is required" });
-      return;
-    }
-    await removeSearchingTrip(
-      id,
-      vehicleType === "BIKE" || vehicleType === "CAR" ? vehicleType : undefined,
-    );
-    res.json({ ok: true });
-  } catch (error) {
-    next(error);
-  }
-});
-
-internalLocationRouter.get("/distance", async (req, res, next) => {
-  try {
-    const userId = String(req.query.userId ?? "");
-    const pickupLat = Number(req.query.pickupLat);
-    const pickupLng = Number(req.query.pickupLng);
-    if (!userId || !Number.isFinite(pickupLat) || !Number.isFinite(pickupLng)) {
-      res.status(400).json({ message: "userId, pickupLat, and pickupLng are required" });
-      return;
-    }
-    res.json({ distanceKm: await distanceToPickup(userId, pickupLat, pickupLng) });
-  } catch (error) {
-    next(error);
-  }
-});
-
 export function createLocationApp() {
   const app = createBaseApp();
   app.get("/health", (_req, res) => res.json(healthPayload("location")));
   app.use("/api/driver", presenceRouter);
-  app.use("/internal", internalLocationRouter);
   applyErrorHandler(app);
   return app;
 }
