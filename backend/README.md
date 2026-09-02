@@ -6,13 +6,18 @@ Clients talk only to the **gateway** on port **4000**. You can run everything in
 
 ## Quick Start
 
-### With Docker (Recommended)
+### With Docker (recommended)
+
+From `backend/`:
 
 ```bash
-docker compose up
+cp .env.example .env
+# Set JWT_ACCESS_SECRET (required)
+
+docker compose up --build
 ```
 
-See **[docs/docker.md](docs/docker.md)** for complete Docker setup guide.
+Gateway: `http://localhost:4000`. See **[docs/docker.md](docs/docker.md)** for health URLs, logs, and seed.
 
 ### Without Docker
 

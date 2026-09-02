@@ -1,15 +1,12 @@
-# ============================================
-# Development Docker Compose Configuration
-# ============================================
-# This configuration is optimized for local development with hot-reload
-# All services use volume mounts for live code updates
-# Usage: docker-compose up
+# Local split-stack: gateway proxies to auth, location, ride, notify.
+# Usage (from backend/): docker compose up --build
+# Compose loads backend/.env for ${DATABASE_URL} at build time.
+
+x-dev-build: &dev-build
+  context: .
+  dockerfile: Dockerfile.dev
 
 services:
-  # ============================================
-  # Infrastructure Services
-  # ============================================
-  
   postgres:
     image: postgres:16-alpine
     container_name: eve-postgres
@@ -27,7 +24,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - eve-network
+      - eve
 
   redis:
     image: redis:7-alpine
@@ -42,21 +39,31 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - eve-network
+      - eve
 
-  # ============================================
-  # Microservices
-  # ============================================
+  migrate:
+    build: *dev-build
+    container_name: eve-migrate
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "rm -rf packages/db/src/generated/prisma && npx prisma generate && npx prisma migrate deploy"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: "no"
 
   auth:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: *dev-build
     container_name: eve-auth
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/packages/db/src/generated
     command: npm run dev -w @eve/auth
     env_file: .env
     environment:
@@ -70,21 +77,18 @@ services:
     ports:
       - "4001:4001"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
-      - eve-network
+      - eve
     restart: unless-stopped
 
   location:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: *dev-build
     container_name: eve-location
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/packages/db/src/generated
     command: npm run dev -w @eve/location
     env_file: .env
     environment:
@@ -100,23 +104,20 @@ services:
       - "4002:4002"
       - "50051:50051"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     networks:
-      - eve-network
+      - eve
     restart: unless-stopped
 
   ride:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: *dev-build
     container_name: eve-ride
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/packages/db/src/generated
     command: npm run dev -w @eve/ride
     env_file: .env
     environment:
@@ -136,8 +137,8 @@ services:
     ports:
       - "4003:4003"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       location:
@@ -145,18 +146,15 @@ services:
       notify:
         condition: service_started
     networks:
-      - eve-network
+      - eve
     restart: unless-stopped
 
   notify:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: *dev-build
     container_name: eve-notify
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/packages/db/src/generated
     command: npm run dev -w @eve/notify
     env_file: .env
     environment:
@@ -172,24 +170,21 @@ services:
       - "4004:4004"
       - "50052:50052"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       location:
         condition: service_started
     networks:
-      - eve-network
+      - eve
     restart: unless-stopped
 
   gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
+    build: *dev-build
     container_name: eve-gateway
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/packages/db/src/generated
-    command: sh -c "npx prisma migrate deploy && npm run dev"
+    command: npm run dev -w @eve/gateway
     env_file: .env
     environment:
       NODE_ENV: development
@@ -208,8 +203,8 @@ services:
     ports:
       - "4000:4000"
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
       auth:
@@ -221,15 +216,13 @@ services:
       notify:
         condition: service_started
     networks:
-      - eve-network
+      - eve
     restart: unless-stopped
 
 networks:
-  eve-network:
+  eve:
     driver: bridge
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
