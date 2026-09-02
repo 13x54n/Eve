@@ -1,38 +1,61 @@
-import { prisma } from "@eve/db";
+import { prisma, Prisma } from "@eve/db";
 import { hashPassword } from "@eve/shared";
 
+async function clearSeedData() {
+  const steps: Array<[string, (tx: Prisma.TransactionClient) => Promise<unknown>]> = [
+    ["ticket messages", (tx) => tx.ticketMessage.deleteMany()],
+    ["support tickets", (tx) => tx.supportTicket.deleteMany()],
+    ["safety incidents", (tx) => tx.safetyIncident.deleteMany()],
+    ["lost items", (tx) => tx.lostItem.deleteMany()],
+    ["privacy requests", (tx) => tx.privacyRequest.deleteMany()],
+    ["trip events", (tx) => tx.tripEvent.deleteMany()],
+    ["trip offers", (tx) => tx.tripOffer.deleteMany()],
+    ["trip messages", (tx) => tx.tripMessage.deleteMany()],
+    ["trip dispatches", (tx) => tx.tripDispatch.deleteMany()],
+    ["trip stops", (tx) => tx.tripStop.deleteMany()],
+    ["ledger entries", (tx) => tx.ledgerEntry.deleteMany()],
+    ["alerts", (tx) => tx.alert.deleteMany()],
+    ["notifications", (tx) => tx.notification.deleteMany()],
+    ["audit logs", (tx) => tx.auditLog.deleteMany()],
+    ["admin login events", (tx) => tx.adminLoginEvent.deleteMany()],
+    ["admin sessions", (tx) => tx.adminSession.deleteMany()],
+    ["greeting settings", (tx) => tx.greetingSettings.deleteMany()],
+    ["greetings", (tx) => tx.greeting.deleteMany()],
+    ["promos", (tx) => tx.promo.deleteMany()],
+    ["driver incentives", (tx) => tx.driverIncentive.deleteMany()],
+    ["driver documents", (tx) => tx.driverDocument.deleteMany()],
+    ["trips", (tx) => tx.trip.deleteMany()],
+    ["payment methods", (tx) => tx.paymentMethod.deleteMany()],
+    ["vehicles", (tx) => tx.vehicle.deleteMany()],
+    ["driver profiles", (tx) => tx.driverProfile.deleteMany()],
+    ["rider profiles", (tx) => tx.riderProfile.deleteMany()],
+    ["fleet companies", (tx) => tx.fleetCompany.deleteMany()],
+    ["fare configs", (tx) => tx.fareConfig.deleteMany()],
+    ["zones", (tx) => tx.zone.deleteMany()],
+    ["password reset codes", (tx) => tx.passwordResetCode.deleteMany()],
+    ["users", (tx) => tx.user.deleteMany()],
+  ];
+
+  await prisma.$transaction(async (tx) => {
+    for (const [label, run] of steps) {
+      console.log(`Seeding: clearing ${label}...`);
+      await run(tx);
+    }
+  });
+}
+
+function optionalVehicleId(vehicles: Array<{ id: string }> | undefined) {
+  const vehicleId = vehicles?.[0]?.id;
+  return vehicleId ? { vehicleId } : {};
+}
+
 async function seed() {
+  console.log("Seeding: hashing default admin password...");
   const passwordHash = await hashPassword("Admin123!");
 
-  await prisma.ticketMessage.deleteMany();
-  await prisma.supportTicket.deleteMany();
-  await prisma.safetyIncident.deleteMany();
-  await prisma.lostItem.deleteMany();
-  await prisma.privacyRequest.deleteMany();
-  await prisma.tripEvent.deleteMany();
-  await prisma.tripOffer.deleteMany();
-  await prisma.ledgerEntry.deleteMany();
-  await prisma.alert.deleteMany();
-  await prisma.notification.deleteMany();
-  await prisma.auditLog.deleteMany();
-  await prisma.adminLoginEvent.deleteMany();
-  await prisma.adminSession.deleteMany();
-  await prisma.greetingSettings.deleteMany();
-  await prisma.greeting.deleteMany();
-  await prisma.promo.deleteMany();
-  await prisma.driverIncentive.deleteMany();
-  await prisma.driverDocument.deleteMany();
-  await prisma.trip.deleteMany();
-  await prisma.paymentMethod.deleteMany();
-  await prisma.vehicle.deleteMany();
-  await prisma.driverProfile.deleteMany();
-  await prisma.riderProfile.deleteMany();
-  await prisma.fleetCompany.deleteMany();
-  await prisma.fareConfig.deleteMany();
-  await prisma.zone.deleteMany();
-  await prisma.passwordResetCode.deleteMany();
-  await prisma.user.deleteMany();
+  await clearSeedData();
 
+  console.log("Seeding: creating admin users...");
   const owner = await prisma.user.create({
     data: {
       name: "Eve Owner",
@@ -91,6 +114,7 @@ async function seed() {
     ],
   });
 
+  console.log("Seeding: creating riders...");
   const riders = await Promise.all(
     [
       ["Amina Cole", "amina@example.com", "+15551110001", "New York"],
@@ -121,6 +145,7 @@ async function seed() {
     ),
   );
 
+  console.log("Seeding: creating fleet and drivers...");
   const fleet = await prisma.fleetCompany.create({
     data: { name: "Harbor Fleet", city: "New York" },
   });
@@ -197,12 +222,13 @@ async function seed() {
   const firstDriver = drivers[0]!.driverProfile!;
   const secondDriver = drivers[1]!.driverProfile!;
 
+  console.log("Seeding: creating trips...");
   const ongoing = await prisma.trip.create({
     data: {
       bookingCode: "EVE-1001",
       riderId: firstRider.id,
       driverId: secondDriver.id,
-      vehicleId: secondDriver.vehicles[0]?.id,
+      ...optionalVehicleId(secondDriver.vehicles),
       status: "ONGOING",
       rideType: "STANDARD",
       city: "New York",
@@ -229,7 +255,7 @@ async function seed() {
       bookingCode: "EVE-1002",
       riderId: secondRider.id,
       driverId: firstDriver.id,
-      vehicleId: firstDriver.vehicles[0]?.id,
+      ...optionalVehicleId(firstDriver.vehicles),
       status: "COMPLETED",
       rideType: "AIRPORT",
       city: "New York",
@@ -308,6 +334,7 @@ async function seed() {
     ],
   });
 
+  console.log("Seeding: creating fare config, zones, and support data...");
   await prisma.fareConfig.create({
     data: {
       city: "New York",

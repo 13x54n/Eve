@@ -28,7 +28,9 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:validate": "prisma validate",
-    "db:seed": "prisma db seed"
+    "db:seed": "cross-env NODE_OPTIONS=--conditions=development prisma db seed",
+    "db:seed:docker": "docker compose exec gateway npm run db:seed",
+    "db:reset": "cross-env NODE_OPTIONS=--conditions=development prisma migrate reset --force"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
