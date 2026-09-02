@@ -1,6 +1,6 @@
 import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { nearbyDrivers, pingRedis, resetGeoIndexes } from "@eve/location";
 import { prisma } from "@eve/db";
 import { MATCH_LIMIT, MATCH_RADIUS_KM, distanceKm } from "@eve/shared";

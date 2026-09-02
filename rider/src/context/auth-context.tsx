@@ -15,7 +15,7 @@ import {
   logout as clearStoredSession,
   type AuthResponse,
 } from "@/services/auth";
-import { AUTH0_CUSTOM_SCHEME } from "@/lib/auth0";
+import { AUTH0_CUSTOM_SCHEME, auth0LogoutReturnTo } from "@/lib/auth0";
 import { setPushNotificationsEnabled } from "@/services/notifications";
 import { OfflineStorage } from "@/lib/offline-storage";
 import { useNetwork } from "@/context/network-context";
@@ -47,7 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await clearSession({}, { customScheme: AUTH0_CUSTOM_SCHEME });
+      await clearSession(
+        { returnTo: auth0LogoutReturnTo() },
+        { customScheme: AUTH0_CUSTOM_SCHEME },
+      );
     } catch {
     }
     await clearStoredSession();

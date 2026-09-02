@@ -5,15 +5,14 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "services/*",
-    "gateway"
+    "services/*"
   ],
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--conditions=development tsx watch gateway/src/server.ts",
-    "dev:split": "cross-env NODE_OPTIONS=--conditions=development concurrently -n auth,loc,ride,ntfy,gw -c blue,green,magenta,yellow,cyan \"npm run dev -w @eve/auth\" \"npm run dev -w @eve/location\" \"npm run dev -w @eve/ride\" \"npm run dev -w @eve/notify\" \"cross-env GATEWAY_MODE=proxy PORT=4000 tsx watch gateway/src/server.ts\"",
-    "build": "prisma generate && tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p packages/http/tsconfig.json && tsc -p services/auth/tsconfig.json && tsc -p services/location/tsconfig.json && tsc -p services/notify/tsconfig.json && tsc -p services/ride/tsconfig.json && tsc -p gateway/tsconfig.json",
-    "clean": "rm -rf packages/*/dist services/*/dist gateway/dist",
-    "start": "node gateway/dist/server.js",
+    "dev": "cross-env NODE_OPTIONS=--conditions=development concurrently -n auth,loc,ride,ntfy,admin -c blue,green,magenta,yellow,cyan \"npm run dev -w @eve/auth\" \"npm run dev -w @eve/location\" \"npm run dev -w @eve/ride\" \"npm run dev -w @eve/notify\" \"npm run dev -w @eve/admin\"",
+    "dev:split": "npm run dev",
+    "build": "prisma generate && tsc -p packages/shared/tsconfig.json && tsc -p packages/db/tsconfig.json && tsc -p packages/http/tsconfig.json && tsc -p services/auth/tsconfig.json && tsc -p services/location/tsconfig.json && tsc -p services/notify/tsconfig.json && tsc -p services/ride/tsconfig.json && tsc -p services/admin/tsconfig.json",
+    "clean": "rm -rf packages/*/dist services/*/dist",
+    "start": "concurrently -n auth,loc,ride,ntfy,admin \"npm start -w @eve/auth\" \"npm start -w @eve/location\" \"npm start -w @eve/ride\" \"npm start -w @eve/notify\" \"npm start -w @eve/admin\"",
     "test": "vitest run",
     "test:regression": "vitest run",
     "test:watch": "vitest",
@@ -22,14 +21,14 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "load:seed": "tsx load/seed-load-users.ts",
     "load:cleanup": "tsx load/cleanup.ts",
-    "load:smoke": "k6 run -e BASE_URL=http://localhost:4000 load/health.js && k6 run -e BASE_URL=http://localhost:4000 --vus 5 --duration 20s load/lifecycle.js",
-    "load:capacity": "k6 run -e BASE_URL=http://localhost:4000 load/capacity.js",
+    "load:smoke": "k6 run -e BASE_URL=http://localhost:4003 load/health.js && k6 run -e BASE_URL=http://localhost:4003 --vus 5 --duration 20s load/lifecycle.js",
+    "load:capacity": "k6 run -e BASE_URL=http://localhost:4003 load/capacity.js",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:validate": "prisma validate",
     "db:seed": "cross-env NODE_OPTIONS=--conditions=development prisma db seed",
-    "db:seed:docker": "docker compose exec gateway npm run db:seed",
+    "db:seed:docker": "docker compose exec auth npm run db:seed",
     "db:reset": "cross-env NODE_OPTIONS=--conditions=development prisma migrate reset --force"
   },
   "devDependencies": {

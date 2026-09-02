@@ -5,13 +5,13 @@ Rider and driver apps sign in with **Auth0 Universal Login**. The API still auth
 ## Flow (rider and driver)
 
 1. The app opens Auth0 (`react-native-auth0` `authorize`, PKCE). This needs a **custom development build** — it does not work in Expo Go.
-2. After login, the app reads the Auth0 **ID token** (`getCredentials`) and `POST`s it to the gateway.
+2. After login, the app reads the Auth0 **ID token** (`getCredentials`) and `POST`s it to auth (`:4001`).
 3. `@eve/auth` verifies the JWT against Auth0 JWKS (`iss` = tenant, `aud` = Native Client ID), finds or creates a Prisma `User`, and returns `{ accessToken, user }` (Eve JWT).
 4. The app stores the Eve token in Secure Store and sends `Authorization: Bearer` on later API and socket calls, same as before.
 
-Logout: Auth0 `clearSession` plus delete the Eve token.
+Logout: Auth0 `clearSession` with a dedicated `/logout` `returnTo` (not the login `/callback` URL), then delete the Eve token.
 
-## Gateway endpoints
+## Auth service endpoints
 
 | Method | Path | Who |
 | --- | --- | --- |
@@ -36,7 +36,9 @@ User resolution on Auth0 exchange:
 
 Use one **Native** application (OIDC Conformant). `EXPO_PUBLIC_AUTH0_DOMAIN` / `AUTH0_DOMAIN` must be the host only (no `https://`, no trailing slash).
 
-Register **Allowed Callback URLs** and **Allowed Logout URLs** with the same four values (comma or newline separated). If Auth0 shows `Callback URL mismatch`, copy the `redirect_uri` query parameter from that error URL and paste it exactly.
+Register **Allowed Callback URLs** and **Allowed Logout URLs** as **separate** lists. If Auth0 shows `Callback URL mismatch`, copy the `redirect_uri` query parameter from that error URL and paste it exactly into **Allowed Callback URLs**.
+
+**Allowed Callback URLs** (login only):
 
 Rider (`customScheme` `eve`, bundle/package `ca.sherpafoods.eve`):
 
@@ -52,7 +54,16 @@ evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/callback
 evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/callback
 ```
 
-Do not use `eve-driver://`, do not prefix the domain with `https://`, and do not add a trailing slash after `callback`. Enable the Username-Password-Authentication connection on that client.
+**Allowed Logout URLs** (must not reuse `/callback`, or logout opens Universal Login):
+
+```
+eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/logout
+eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/logout
+evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/logout
+evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/logout
+```
+
+Do not use `eve-driver://`, do not prefix the domain with `https://`, and do not add a trailing slash after `callback` or `logout`. Enable the Username-Password-Authentication connection on that client.
 
 ## Environment
 
@@ -69,7 +80,9 @@ Apps (`rider/.env`, `driver/.env`; also `preview` / `production` in each `eas.js
 ```
 EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
 EXPO_PUBLIC_AUTH0_CLIENT_ID=your_native_app_client_id
-EXPO_PUBLIC_API_URL=http://localhost:4000/api
+EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api
+EXPO_PUBLIC_API_URL=http://localhost:4003/api
+EXPO_PUBLIC_WS_URL=http://localhost:4004
 ```
 
 Do not put a Client Secret in the mobile apps. Restart Metro after changing `EXPO_PUBLIC_*`. After adding the Auth0 config plugin, rebuild the **dev client** (`npx expo run:ios` / `run:android` or EAS `development` profile).

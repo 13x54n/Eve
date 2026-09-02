@@ -5,7 +5,7 @@ Detailed documentation for Eve's microservices architecture.
 ## Table of Contents
 
 - [Overview](#overview)
-- [Gateway Service](#gateway-service)
+- [Admin Service](#admin-service)
 - [Auth Service](#auth-service)
 - [Location Service](#location-service)
 - [Ride Service](#ride-service)
@@ -15,75 +15,26 @@ Detailed documentation for Eve's microservices architecture.
 
 ## Overview
 
-Eve's backend consists of 5 main components:
-- **Gateway**: API entry point and routing
+Eve's backend consists of five Node services:
 - **Auth**: Authentication and user management
-- **Location**: GPS tracking and geospatial matching
-- **Ride**: Trip lifecycle and offer management
+- **Location**: GPS tracking and geospatial matching (gRPC)
+- **Ride**: Trip lifecycle, offers, and driver presence HTTP
 - **Notify**: Real-time events via WebSocket
+- **Admin**: Staff console API (`/api/admin`)
 
-## Gateway Service
+See [services-ports.md](services-ports.md) for ports. Clients call services directly (no HTTP gateway).
 
-**Port**: 4000  
-**Package**: `@eve/gateway`  
-**Location**: `backend/gateway/`
+## Admin Service
+
+**Port**: 4005  
+**Package**: `@eve/admin`  
+**Location**: `backend/services/admin/`
 
 ### Responsibilities
 
-- Route HTTP requests to appropriate services
-- Serve admin API endpoints (not delegated to services)
-- CORS configuration and enforcement
-- Rate limiting
-- Health checks aggregation
+- Staff dashboard, riders, drivers, trips, pricing, ledger, safety, tickets, promos, greetings, notifications, analytics, audit, staff CRUD
 
-### Routing Rules
-
-| Path | Target | Method |
-|------|--------|--------|
-| `/api/health` | Gateway | GET |
-| `/api/auth/*` | Auth service | ALL |
-| `/api/driver/auth0` | Auth service | POST |
-| `/api/driver/presence` | Location service | POST |
-| `/api/driver/*` | Ride service | ALL |
-| `/api/rider/*` | Ride service | ALL |
-| `/api/public/*` | Ride service | GET |
-| `/api/admin/*` | Gateway (local) | ALL |
-| `/socket.io/*` | Notify service | WebSocket |
-
-### Configuration
-
-**Environment Variables**:
-- `PORT` - Listen port (default: 4000)
-- `GATEWAY_MODE` - `compose` or `proxy`
-- `AUTH_URL`, `LOCATION_URL`, `RIDE_URL`, `NOTIFY_URL` - Service URLs (proxy mode)
-
-### Modes
-
-**Compose Mode** (default):
-- All services in one process
-- Faster startup
-- Lower latency
-- Ideal for development
-
-**Proxy Mode**:
-- Separate processes
-- Independent scaling
-- Production deployment
-- HTTP/gRPC inter-service communication
-
-### Admin API
-
-Gateway serves admin endpoints directly:
-
-- `POST /api/admin/login` - Admin login
-- `GET /api/admin/dashboard` - Dashboard stats
-- `GET /api/admin/riders` - List riders
-- `GET /api/admin/drivers` - List drivers
-- `PATCH /api/admin/drivers/:id/approval` - Approve driver
-- `GET /api/admin/trips` - List trips
-- `POST /api/admin/pricing` - Create fare config
-
-**See**: `backend/gateway/src/admin.service.ts`
+**See**: `backend/services/admin/src/admin.service.ts`
 
 ## Auth Service
 
@@ -186,7 +137,7 @@ Email/password authentication for staff:
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `POST /api/driver/presence` | POST | Update driver location/status |
+| `PATCH /api/driver/presence` | PATCH | Update driver location/status |
 | `POST /internal/nearby-drivers` | POST | Find drivers near pickup |
 | `POST /internal/nearby-trips` | POST | Find trips near driver |
 | `POST /internal/distance` | POST | Calculate distance |
@@ -502,7 +453,7 @@ const drivers = await nearbyDriversGrpc({
 Services use automatic fallback:
 1. Try gRPC (if enabled)
 2. Fall back to HTTP
-3. Fall back to local function (compose mode)
+3. Fall back to local matching in the same process if gRPC is unreachable
 
 ## Configuration
 
@@ -517,8 +468,7 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 - `LOG_LEVEL` - Logging level
 
 **Service-specific**:
-- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`
-- `AUTH_URL`, `LOCATION_URL`, `RIDE_URL`, `NOTIFY_URL`
+- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`
 - `GRPC_ENABLED`, `GRPC_LOGGING`
 - `MATCH_RADIUS_KM`
 
@@ -529,7 +479,6 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 All services expose `/health`:
 
 ```bash
-curl http://localhost:4000/api/health  # Gateway
 curl http://localhost:4001/health      # Auth
 curl http://localhost:4002/health      # Location
 curl http://localhost:4003/health      # Ride
@@ -565,7 +514,7 @@ logger.error('Database error', { error });
 
 ## Related Documentation
 
-- [Gateway Configuration](gateway.md)
+- [Service ports](services-ports.md)
 - [Authentication Flow](auth.md)
 - [H3 Geospatial Matching](h3-matchmaking.md)
 - [gRPC Implementation](grpc.md)

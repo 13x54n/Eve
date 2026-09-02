@@ -1,8 +1,15 @@
 # Eve backend
 
-API gateway and services (auth, location, ride, notify) on Postgres. npm workspaces: `packages/*`, `services/*`, `gateway`.
+Auth, location, ride, notify, and admin as separate Node processes on Postgres and Redis. npm workspaces: `packages/*`, `services/*`.
 
-Clients talk only to the **gateway** on port **4000**. You can run everything in one process (**compose**) or as four services behind a proxy (**split**).
+Clients call services directly:
+
+| App | HTTP | WebSocket |
+| --- | --- | --- |
+| Rider / driver | Auth `:4001`, ride `:4003` | Notify `:4004` |
+| Admin console | Auth `:4001`, admin `:4005`, ride `:4003` (Next rewrites) | Notify `:4004` |
+
+Location HTTP is health-only (`:4002`); matchmaking uses gRPC on **50051**.
 
 ## Quick Start
 
@@ -17,20 +24,19 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Gateway: `http://localhost:4000`. See **[docs/docker.md](docs/docker.md)** for health URLs, logs, and seed.
+See **[docs/docker.md](docs/docker.md)** for health URLs, logs, and seed.
 
 ### Without Docker
 
-See **[docs/gateway.md](docs/gateway.md)** for modes, routing, env vars, and how to start compose vs split. See **[docs/auth.md](docs/auth.md)** for Auth0 (rider/driver) and admin password login.
+Run Postgres and Redis, then from `backend/`: `npm run dev` (starts all five services). See **[docs/auth.md](docs/auth.md)** for Auth0 (rider/driver) and admin password login.
 
 ## Scripts (from `backend/`)
 
 | Script | Purpose |
 | --- | --- |
-| `npm run dev` | Compose gateway (`GATEWAY_MODE=compose`) |
-| `npm run dev:split` | Proxy gateway + auth, location, ride, notify |
-| `npm start` | Compiled gateway (`gateway/dist/server.js`) |
-| `npm test` | Vitest (compose app) |
+| `npm run dev` | Auth, location, ride, notify, admin (`tsx` watch) |
+| `npm start` | Compiled five services |
+| `npm test` | Vitest (in-process test app) |
 | `npm run db:generate` / `db:migrate` / `db:seed` | Prisma |
 
 ## Matchmaking geo

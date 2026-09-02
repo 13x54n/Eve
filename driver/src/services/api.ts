@@ -1,9 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
-import { requireApiBaseUrl } from '@/lib/public-env';
+import { requireApiBaseUrl, requireAuthBaseUrl } from '@/lib/public-env';
 
 export const API_BASE = requireApiBaseUrl('driver');
+export const AUTH_BASE = requireAuthBaseUrl('driver');
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -13,7 +14,7 @@ export const api = axios.create({
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
-const RETRY_STATUS_CODES = [408, 429, 500, 502, 503, 504];
+const RETRY_STATUS_CODES = [408, 500, 502, 503, 504];
 
 function shouldRetry(error: AxiosError): boolean {
   if (!error.response) {
@@ -26,7 +27,16 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function isAuthRequest(url?: string) {
+  const path = (url ?? "").replace(/^\//, "");
+  if (path === "auth" || path.startsWith("auth/")) {
+    return true;
+  }
+  return /^(driver\/(login|register|auth0))(\/|$)/.test(path);
+}
+
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+  config.baseURL = isAuthRequest(config.url) ? AUTH_BASE : API_BASE;
   const accessToken = await SecureStore.getItemAsync('access_token');
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;

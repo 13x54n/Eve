@@ -161,8 +161,10 @@ cp .env.example .env
 Edit `.env`:
 
 ```bash
-# Backend API (use your LAN IP for physical devices)
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+# Backend URLs (use your LAN IP for physical devices)
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
 # Auth0 Configuration
 EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
@@ -255,7 +257,11 @@ rider/
    eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/callback
    eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/callback
    ```
-3. Configure **Allowed Logout URLs** (same as callback)
+3. Configure **Allowed Logout URLs** (`/logout`, not `/callback`):
+   ```
+   eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/logout
+   eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/logout
+   ```
 4. Copy Domain and Client ID to `.env`
 
 **See**: [../backend/docs/auth.md](../backend/docs/auth.md) for details.
@@ -354,15 +360,17 @@ npx expo run:ios  # or run:android
 
 **Solution**: Update `.env` with your machine's IP:
 ```bash
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 ```
 
 ### Auth0 callback not working
 
 **Solution**: 
-1. Verify callback URLs in Auth0 dashboard
+1. Verify **Allowed Callback URLs** use `/callback` and **Allowed Logout URLs** use `/logout`
 2. Rebuild development client: `npx expo run:ios`
-3. Check custom scheme in `app.json`
+3. Check custom scheme in `app.json` (`eve`)
 
 ### Maps not showing
 

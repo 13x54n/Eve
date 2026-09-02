@@ -46,7 +46,7 @@ Created a comprehensive `CacheService` class with the following methods:
 - Fallback to default values if config not found
 
 #### 3. Cache Invalidation
-**File:** `backend/gateway/src/admin.service.ts`
+**File:** `backend/services/admin/src/admin.service.ts`
 
 Added `invalidateFareCache()` calls in:
 - `savePricing()` - After creating new fare config

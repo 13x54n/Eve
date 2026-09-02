@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check } from "k6";
 import { baseUrl } from "./lib.js";
 
-const path = __ENV.PATH || "/api/health";
+const path = __ENV.PATH || "/health";
 const startRate = Number(__ENV.START_RATE || 200);
 const peakRate = Number(__ENV.PEAK_RATE || 4000);
 

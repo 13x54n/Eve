@@ -37,7 +37,7 @@ describe("OpenAPI Contract Tests", () => {
       
       // Check for essential endpoints
       const expectedPaths = [
-        "/api/health",
+        "/health",
         "/api/rider/trips",
         "/api/driver/trips/incoming",
       ];

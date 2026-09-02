@@ -1,6 +1,6 @@
 import request from "supertest";
 import { afterAll, describe, expect, it } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { createAccessToken } from "@eve/shared";
 import { incomingTripIds } from "./helpers/marketplace.js";

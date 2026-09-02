@@ -1,12 +1,12 @@
 # Backend load tests (k6)
 
-Stress the **compose** gateway (`npm run dev`, port 4000) against the same Postgres you use locally. These scripts are not part of `npm test`.
+Stress ride (`npm run dev`, port 4003) against the same Postgres you use locally. These scripts are not part of `npm test`.
 
 ## Prerequisites
 
 - Postgres migrated and seeded
 - [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed (`brew install k6`)
-- Gateway running: `npm run dev` in `backend/`
+- Ride running: `npm run dev` in `backend/`
 - `JWT_ACCESS_SECRET` in `.env` (seed writes JWTs with that secret)
 - Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Auth0 instead; see [docs/auth.md](../docs/auth.md).
 
@@ -14,24 +14,24 @@ Stress the **compose** gateway (`npm run dev`, port 4000) against the same Postg
 
 ```bash
 npm run load:seed          # creates load-*@eve-load.test users and load/.tokens.json
-k6 run -e BASE_URL=http://localhost:4000 load/health.js
-k6 run -e BASE_URL=http://localhost:4000 load/lifecycle.js
+k6 run -e BASE_URL=http://localhost:4003 load/health.js
+k6 run -e BASE_URL=http://localhost:4003 load/lifecycle.js
 npm run load:smoke         # health then a short lifecycle run
-npm run load:capacity      # ramp GET /api/health until latency or errors break
+npm run load:capacity      # ramp GET /health until latency or errors break
 npm run load:cleanup       # deletes @eve-load.test users, trips, offers, ledger
 ```
 
 ## Capacity (max requests / second)
 
-`lifecycle.js` is a ride flow, not a throughput test: one rider cannot hold two active trips, so it collapses into 409s. Use `capacity.js` to see how many HTTP requests the gateway can take at once.
+`lifecycle.js` is a ride flow, not a throughput test: one rider cannot hold two active trips, so it collapses into 409s. Use `capacity.js` to see how many HTTP requests ride can take at once.
 
-With the gateway on `npm run dev`:
+With services on `npm run dev`:
 
 ```bash
 npm run load:capacity
 ```
 
-That ramps from 200 toward 4000 requests/second against `GET /api/health` (no auth, no trip rules). Watch:
+That ramps from 200 toward 4000 requests/second against `GET /health` (no auth, no trip rules). Watch:
 
 | Metric | Meaning |
 | --- | --- |
@@ -45,14 +45,14 @@ The ceiling is the last stage where fail rate stays near 0 and p95 stays healthy
 Raise the target if the laptop still looks idle:
 
 ```bash
-k6 run -e BASE_URL=http://localhost:4000 -e PEAK_RATE=8000 load/capacity.js
+k6 run -e BASE_URL=http://localhost:4003 -e PEAK_RATE=8000 load/capacity.js
 ```
 
 This is the Node/health ceiling. It is not trip-create throughput. Do not use `POST /api/rider/trips` for “max RPS”; use `lifecycle.js` or `search-storm.js` for that path.
 
 Optional: `LOAD_COUNT=50 npm run load:seed`
 
-Start at **20 VUs / 1m**, then **50 VUs / 2m**. Compose is a single Node process.
+Start at **20 VUs / 1m**, then **50 VUs / 2m**.
 
 ## Scripts
 

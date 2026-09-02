@@ -1,24 +1,17 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ActionButton } from '../action-button';
 
 describe('ActionButton', () => {
-  it('renders correctly with default props', () => {
-    render(<ActionButton title="Test Button" onPress={() => {}} />);
-    
-    const button = screen.getByText('Test Button');
-    expect(button).toBeTruthy();
+  it('renders the label', () => {
+    render(<ActionButton label="Test Button" onPress={() => {}} />);
+    expect(screen.getByText('Test Button')).toBeTruthy();
   });
 
   it('calls onPress when pressed', () => {
     const onPressMock = jest.fn();
-    const { getByText } = render(
-      <ActionButton title="Press Me" onPress={onPressMock} />
-    );
-    
-    const button = getByText('Press Me');
-    button.props.onPress();
-    
+    render(<ActionButton label="Press Me" onPress={onPressMock} />);
+    fireEvent.press(screen.getByRole('button'));
     expect(onPressMock).toHaveBeenCalledTimes(1);
   });
 });

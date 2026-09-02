@@ -1,6 +1,6 @@
 import request from "supertest";
 import type { Test } from "supertest";
-import app from "../../gateway/src/app.js";
+import app from "./test-app.js";
 import { prisma } from "@eve/db";
 import { createAccessToken, hashPassword } from "@eve/shared";
 

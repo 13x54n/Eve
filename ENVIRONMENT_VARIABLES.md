@@ -21,7 +21,7 @@ These variables **must** be set for the backend to function:
 | Variable | Description | Example | Where Used |
 |----------|-------------|---------|------------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://eve:eve@localhost:5432/eve` | All services |
-| `JWT_ACCESS_SECRET` | Secret for signing access tokens | Generate with `openssl rand -base64 32` | Auth service, Gateway |
+| `JWT_ACCESS_SECRET` | Secret for signing access tokens | Generate with `openssl rand -base64 32` | Auth service |
 | `AUTH0_DOMAIN` | Auth0 tenant domain (no https://) | `your-tenant.us.auth0.com` | Auth service |
 | `AUTH0_CLIENT_ID` | Auth0 Native application client ID | `abc123...` | Auth service |
 
@@ -96,42 +96,19 @@ openssl rand -base64 48
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `PORT` | Gateway listen port | `4000` | No |
-| `AUTH_PORT` | Auth service port | `4001` | Proxy mode |
-| `LOCATION_PORT` | Location service port | `4002` | Proxy mode |
-| `RIDE_PORT` | Ride service port | `4003` | Proxy mode |
-| `NOTIFY_PORT` | Notify service port | `4004` | Proxy mode |
-| `AUTH_URL` | Auth service URL | `http://localhost:4001` | Proxy mode |
-| `LOCATION_URL` | Location service URL | `http://localhost:4002` | Proxy mode |
-| `RIDE_URL` | Ride service URL | `http://localhost:4003` | Proxy mode |
-| `NOTIFY_URL` | Notify service URL | `http://localhost:4004` | Proxy mode |
+| `AUTH_PORT` | Auth service port | `4001` | No |
+| `LOCATION_PORT` | Location HTTP port | `4002` | No |
+| `RIDE_PORT` | Ride service port | `4003` | No |
+| `NOTIFY_PORT` | Notify HTTP/Socket.IO port | `4004` | No |
+| `ADMIN_PORT` | Admin API port | `4005` | No |
+| `LOCATION_GRPC_PORT` | Location gRPC | `50051` | No |
+| `NOTIFY_GRPC_PORT` | Notify gRPC | `50052` | No |
+| `LOCATION_GRPC_URL` | gRPC client target | `127.0.0.1:50051` | No |
+| `NOTIFY_GRPC_URL` | gRPC client target | `127.0.0.1:50052` | No |
 
-**Compose vs Proxy Mode**:
-```bash
-# Compose Mode (default) - single process
-GATEWAY_MODE=compose
-# No service URLs needed
+There is no HTTP gateway and no `GATEWAY_MODE`. From `backend/`, `npm run dev` starts all five services.
 
-# Proxy Mode - multiple processes
-GATEWAY_MODE=proxy
-AUTH_URL=http://localhost:4001
-LOCATION_URL=http://localhost:4002
-RIDE_URL=http://localhost:4003
-NOTIFY_URL=http://localhost:4004
-
-# Docker (use service names)
-AUTH_URL=http://auth:4001
-LOCATION_URL=http://location:4002
-RIDE_URL=http://ride:4003
-NOTIFY_URL=http://notify:4004
-```
-
-### Gateway Configuration
-
-| Variable | Description | Values | Default |
-|----------|-------------|--------|---------|
-| `GATEWAY_MODE` | Gateway operation mode | `compose`, `proxy` | `compose` |
-| `NODE_ENV` | Environment | `development`, `production` | `development` |
+Docker Compose sets `LOCATION_GRPC_URL=location:50051` and `NOTIFY_GRPC_URL=notify:50052`.
 
 ### Internal Service Security
 
@@ -276,7 +253,9 @@ CORS_ORIGINS=https://admin.example.com,https://monitor.example.com
 
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
-| `EXPO_PUBLIC_API_URL` | Backend API base URL | `http://192.168.1.100:4000/api` | ✅ Yes |
+| `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | `http://192.168.1.100:4001/api` | ✅ Yes |
+| `EXPO_PUBLIC_API_URL` | Ride HTTP base | `http://192.168.1.100:4003/api` | ✅ Yes |
+| `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | `http://192.168.1.100:4004` | ✅ Yes |
 | `EXPO_PUBLIC_AUTH0_DOMAIN` | Auth0 domain | `tenant.us.auth0.com` | ✅ Yes |
 | `EXPO_PUBLIC_AUTH0_CLIENT_ID` | Auth0 client ID | `abc123...` | ✅ Yes |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox public token | `pk.abc123...` | ✅ Yes |
@@ -298,7 +277,9 @@ ipconfig | findstr IPv4
 
 **Example**:
 ```bash
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 EXPO_PUBLIC_AUTH0_DOMAIN=eve-dev.us.auth0.com
 EXPO_PUBLIC_AUTH0_CLIENT_ID=abc123xyz
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.eyJ1Ijoibm...
@@ -310,7 +291,9 @@ Same variables as Rider app:
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `EXPO_PUBLIC_API_URL` | Backend API URL | ✅ Yes |
+| `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | ✅ Yes |
+| `EXPO_PUBLIC_API_URL` | Ride HTTP base | ✅ Yes |
+| `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | ✅ Yes |
 | `EXPO_PUBLIC_AUTH0_DOMAIN` | Auth0 domain | ✅ Yes |
 | `EXPO_PUBLIC_AUTH0_CLIENT_ID` | Auth0 client ID | ✅ Yes |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox token | ✅ Yes |
@@ -324,52 +307,46 @@ Same variables as Rider app:
 | Variable | Description | Example | Required |
 |----------|-------------|---------|----------|
 | `NEXT_PUBLIC_API_URL` | API base URL (for browser) | `/api` | ✅ Yes |
-| `API_PROXY_TARGET` | Internal proxy target | `http://127.0.0.1:4000` | ✅ Yes |
-| `NEXT_PUBLIC_GATEWAY_URL` | Gateway URL | `http://127.0.0.1:4000` | ✅ Yes |
+| `AUTH_PROXY_TARGET` | Auth rewrite | `http://127.0.0.1:4001` | No |
+| `RIDE_PROXY_TARGET` | Ride rewrite | `http://127.0.0.1:4003` | No |
+| `NOTIFY_PROXY_TARGET` | Socket.IO rewrite | `http://127.0.0.1:4004` | No |
+| `ADMIN_PROXY_TARGET` | Admin API rewrite | `http://127.0.0.1:4005` | No |
+| `NEXT_PUBLIC_NOTIFY_URL` | Socket.IO origin | `http://127.0.0.1:4004` | No |
 | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox token | `pk.abc123...` | No |
 
 **How it works**:
-- Browser calls `/api/*` (same-origin, no CORS)
-- Next.js rewrites to `API_PROXY_TARGET`
-- Gateway responds
+- Browser calls `/api/*` (same-origin)
+- Next.js rewrites to auth, ride, admin, and notify
 
 **Example**:
 ```bash
-# Development (default)
 NEXT_PUBLIC_API_URL=/api
-API_PROXY_TARGET=http://127.0.0.1:4000
-NEXT_PUBLIC_GATEWAY_URL=http://127.0.0.1:4000
-
-# Production
-NEXT_PUBLIC_API_URL=https://api.example.com/api
-API_PROXY_TARGET=http://gateway-internal:4000
-NEXT_PUBLIC_GATEWAY_URL=https://api.example.com
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
+NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
 ### Monitor Dashboard (`monitor/.env`)
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `NEXT_PUBLIC_GATEWAY_URL` | Gateway health check URL | `http://localhost:4000` | Yes |
-| `MONITOR_AUTH_URL` | Auth service URL | `http://localhost:4001` | Proxy mode |
-| `MONITOR_LOCATION_URL` | Location service URL | `http://localhost:4002` | Proxy mode |
-| `MONITOR_RIDE_URL` | Ride service URL | `http://localhost:4003` | Proxy mode |
-| `MONITOR_NOTIFY_URL` | Notify service URL | `http://localhost:4004` | Proxy mode |
-| `MONITOR_ADMIN_URL` | Admin console URL | `http://localhost:3000` | No |
-| `MONITOR_REQUIRE_SPLIT` | Require split services to be healthy | `0` | No |
+| `MONITOR_AUTH_URL` | Auth health | `http://localhost:4001/health` | Yes |
+| `MONITOR_LOCATION_URL` | Location health | `http://localhost:4002/health` | Yes |
+| `MONITOR_RIDE_URL` | Ride health | `http://localhost:4003/health` | Yes |
+| `MONITOR_NOTIFY_URL` | Notify health | `http://localhost:4004/health` | Yes |
+| `MONITOR_ADMIN_API_URL` | Admin API health | `http://localhost:4005/health` | Yes |
+| `MONITOR_ADMIN_URL` | Admin console | `http://localhost:3000` | No |
 
 **Example**:
 ```bash
-# Compose mode (default)
-NEXT_PUBLIC_GATEWAY_URL=http://localhost:4000
+MONITOR_AUTH_URL=http://localhost:4001/health
+MONITOR_LOCATION_URL=http://localhost:4002/health
+MONITOR_RIDE_URL=http://localhost:4003/health
+MONITOR_NOTIFY_URL=http://localhost:4004/health
+MONITOR_ADMIN_API_URL=http://localhost:4005/health
 MONITOR_ADMIN_URL=http://localhost:3000
-
-# Proxy mode (monitor all services)
-MONITOR_REQUIRE_SPLIT=1
-MONITOR_AUTH_URL=http://localhost:4001
-MONITOR_LOCATION_URL=http://localhost:4002
-MONITOR_RIDE_URL=http://localhost:4003
-MONITOR_NOTIFY_URL=http://localhost:4004
 ```
 
 ## Security Best Practices
@@ -437,19 +414,27 @@ JWT_ACCESS_SECRET=dev-secret-change-in-production
 PASSWORD_RESET_SECRET=reset-dev-secret
 AUTH0_DOMAIN=your-tenant.us.auth0.com
 AUTH0_CLIENT_ID=your_client_id
-GATEWAY_MODE=compose
-PORT=4000
+AUTH_PORT=4001
+RIDE_PORT=4003
+LOCATION_GRPC_URL=127.0.0.1:50051
+NOTIFY_GRPC_URL=127.0.0.1:50052
 ```
 
 **`admin/.env.local`**:
 ```bash
 NEXT_PUBLIC_API_URL=/api
-API_PROXY_TARGET=http://127.0.0.1:4000
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
+NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
 **`rider/.env`**:
 ```bash
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
 EXPO_PUBLIC_AUTH0_CLIENT_ID=your_client_id
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
@@ -465,11 +450,8 @@ REDIS_URL=redis://redis:6379
 JWT_ACCESS_SECRET=dev-secret
 AUTH0_DOMAIN=your-tenant.us.auth0.com
 AUTH0_CLIENT_ID=your_client_id
-GATEWAY_MODE=proxy
-AUTH_URL=http://auth:4001
-LOCATION_URL=http://location:4002
-RIDE_URL=http://ride:4003
-NOTIFY_URL=http://notify:4004
+LOCATION_GRPC_URL=location:50051
+NOTIFY_GRPC_URL=notify:50052
 ```
 
 ### Production
@@ -484,11 +466,8 @@ PASSWORD_RESET_SECRET=<64-char-random-string>
 INTERNAL_SERVICE_SECRET=<96-char-random-string>
 AUTH0_DOMAIN=prod-tenant.auth0.com
 AUTH0_CLIENT_ID=prod_client_id
-GATEWAY_MODE=proxy
-AUTH_URL=http://auth-internal:4001
-LOCATION_URL=http://location-internal:4002
-RIDE_URL=http://ride-internal:4003
-NOTIFY_URL=http://notify-internal:4004
+LOCATION_GRPC_URL=location:50051
+NOTIFY_GRPC_URL=notify:50052
 IMAGEKIT_PRIVATE_KEY=<private-key>
 IMAGEKIT_PUBLIC_KEY=<public-key>
 IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/prod-id
@@ -521,7 +500,7 @@ NOTIFY_GRPC_URL=notify-internal:50052
 - **Solution**: Add your origin to `CORS_ORIGINS` or use `/api` proxy in Next.js
 
 **Error**: `Mobile app cannot connect to API`
-- **Solution**: Use LAN IP, not `localhost`, in `EXPO_PUBLIC_API_URL`
+- **Solution**: Use LAN IP, not `localhost`, in `EXPO_PUBLIC_AUTH_URL`, `EXPO_PUBLIC_API_URL`, and `EXPO_PUBLIC_WS_URL`
 
 ### Verification Checklist
 
@@ -532,7 +511,7 @@ grep -E "^(DATABASE_URL|JWT_ACCESS_SECRET|AUTH0_DOMAIN)=" .env
 
 # Admin
 cd admin
-grep -E "^(NEXT_PUBLIC_API_URL|API_PROXY_TARGET)=" .env.local
+grep -E "^(NEXT_PUBLIC_API_URL|AUTH_PROXY_TARGET|RIDE_PROXY_TARGET)=" .env.local
 
 # Mobile apps
 cd rider

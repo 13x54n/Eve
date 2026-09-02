@@ -41,13 +41,11 @@ Eve uses **Socket.IO** for real-time bidirectional communication between clients
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Gateway
     participant Notify
     participant Ride
     participant Redis
 
-    Client->>Gateway: WebSocket Connect /socket.io
-    Gateway->>Notify: Forward Connection
+    Client->>Notify: WebSocket Connect :4004 /socket.io
     Notify->>Notify: Authenticate JWT
     Notify->>Client: Connection Established
     Notify->>Client: Join user:{userId} room
@@ -68,13 +66,12 @@ sequenceDiagram
 - Manages rooms and subscriptions
 - Broadcasts events to clients
 
-**Gateway**:
-- Proxies `/socket.io/*` to Notify service
-- Handles sticky sessions (if load balanced)
+**Clients**:
+- Rider/driver: `EXPO_PUBLIC_WS_URL` (default `http://localhost:4004`)
+- Admin: Next rewrite `/socket.io` → notify `:4004`
 
-**Other Services**:
-- Emit events via HTTP POST to `/internal/emit`
-- Or via gRPC (if enabled)
+**Other services**:
+- Emit via `@eve/notify` (Socket.IO in-process when attached, else gRPC on 50052)
 
 ## Client Connection
 

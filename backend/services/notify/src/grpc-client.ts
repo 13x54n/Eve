@@ -12,7 +12,7 @@ let client: any = null;
 function getClient() {
   if (client) return client;
   
-  const url = process.env.NOTIFY_GRPC_URL || 'localhost:50052';
+  const url = process.env.NOTIFY_GRPC_URL || '127.0.0.1:50052';
   
   client = createGrpcClient(
     NotifyService,

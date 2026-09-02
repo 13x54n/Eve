@@ -1,4 +1,4 @@
-export { createLocationApp, presenceRouter } from "./app.js";
+export { createLocationApp } from "./app.js";
 export {
   distanceToPickup,
   indexSearchingTrip,
@@ -11,6 +11,7 @@ export {
   syncDriverGeo,
   updateDriverPresence,
 } from "./matching.js";
+export { startLocationGrpcServer } from "./grpc-server.js";
 export { pingRedis } from "./redis.js";
 export {
   distanceToPickup as distanceToPickupClient,

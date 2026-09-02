@@ -1,50 +1,26 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ActionButton } from '../action-button';
 
 describe('ActionButton', () => {
-  it('renders correctly with default props', () => {
-    render(<ActionButton title="Test Button" onPress={() => {}} />);
-    
-    const button = screen.getByText('Test Button');
-    expect(button).toBeTruthy();
+  it('renders the label', () => {
+    render(<ActionButton label="Test Button" onPress={() => {}} />);
+    expect(screen.getByText('Test Button')).toBeTruthy();
   });
 
   it('calls onPress when pressed', () => {
     const onPressMock = jest.fn();
-    const { getByText } = render(
-      <ActionButton title="Press Me" onPress={onPressMock} />
-    );
-    
-    const button = getByText('Press Me');
-    button.props.onPress();
-    
+    render(<ActionButton label="Press Me" onPress={onPressMock} />);
+    fireEvent.press(screen.getByRole('button'));
     expect(onPressMock).toHaveBeenCalledTimes(1);
   });
 
-  it('renders with custom variant', () => {
-    const { getByText } = render(
-      <ActionButton 
-        title="Primary Button" 
-        onPress={() => {}}
-        variant="primary"
-      />
-    );
-    
-    expect(getByText('Primary Button')).toBeTruthy();
-  });
-
-  it('handles disabled state', () => {
+  it('does not call onPress when disabled', () => {
     const onPressMock = jest.fn();
-    const { getByText } = render(
-      <ActionButton 
-        title="Disabled Button" 
-        onPress={onPressMock}
-        disabled
-      />
+    render(
+      <ActionButton label="Disabled Button" onPress={onPressMock} disabled />,
     );
-    
-    const button = getByText('Disabled Button');
-    expect(button).toBeTruthy();
+    fireEvent.press(screen.getByRole('button'));
+    expect(onPressMock).not.toHaveBeenCalled();
   });
 });

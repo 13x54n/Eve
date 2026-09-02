@@ -1,6 +1,8 @@
 # Getting Started with Eve
 
-This guide will help you set up the complete Eve platform for local development in under 1 hour.
+Alpha path: **PostgreSQL/Redis → backend (`npm run dev`) → rider/driver**. The admin console and monitor dashboard are optional and are not alpha release targets.
+
+This guide will help you set up local development in under 1 hour.
 
 ## Table of Contents
 
@@ -10,9 +12,9 @@ This guide will help you set up the complete Eve platform for local development 
 - [Step 3: Backend Configuration](#step-3-backend-configuration)
 - [Step 4: Database Setup](#step-4-database-setup)
 - [Step 5: Start Backend Services](#step-5-start-backend-services)
-- [Step 6: Admin Console Setup](#step-6-admin-console-setup)
-- [Step 7: Monitor Dashboard Setup](#step-7-monitor-dashboard-setup)
-- [Step 8: Mobile Apps Setup](#step-8-mobile-apps-setup-optional)
+- [Step 6: Admin Console Setup (optional)](#step-6-admin-console-setup-optional)
+- [Step 7: Monitor Dashboard Setup (optional)](#step-7-monitor-dashboard-setup-optional)
+- [Step 8: Mobile Apps Setup](#step-8-mobile-apps-setup)
 - [Verification](#verification)
 - [Next Steps](#next-steps)
 - [Common Issues](#common-issues)
@@ -28,7 +30,7 @@ Before starting, ensure you have:
 - [ ] Docker Desktop installed and running
 - [ ] At least 8GB RAM available
 - [ ] 10GB free disk space
-- [ ] Ports 3000, 3010, 4000-4004, 5432, 6379, 8081 available
+- [ ] Ports 3000, 3010, 4001-4005, 5432, 6379, 8081 available
 - [ ] (Optional) Xcode 15+ for iOS development
 - [ ] (Optional) Android Studio for Android development
 
@@ -222,11 +224,7 @@ This creates:
 
 ## Step 5: Start Backend Services
 
-You can run the backend in two modes:
-
-### Option A: Compose Mode (Recommended for Development)
-
-Single Node process with all services:
+Run all five Node services:
 
 ```bash
 # Still in backend directory
@@ -235,41 +233,26 @@ npm run dev
 
 Expected output:
 ```
-🚀 Gateway listening on http://localhost:4000
-✓ PostgreSQL connected
-✓ Redis connected
-✓ Geo indexes rebuilt
+Auth service running on port 4001
+Location service HTTP running on port 4002
+Location gRPC server ready on port 50051
+Ride service running on port 4003
+Notify service HTTP running on port 4004
+Admin service running on port 4005
 ```
 
-### Option B: Proxy Mode (Multiple Processes)
-
-Run each service separately (useful for debugging):
-
-```bash
-# In backend directory
-npm run dev:split
-```
-
-This starts 5 processes:
-- Gateway on :4000
-- Auth service on :4001
-- Location service on :4002
-- Ride service on :4003
-- Notify service on :4004
+This starts five processes: auth :4001, location :4002, ride :4003, notify :4004, admin :4005.
 
 ### 5.1 Verify Backend is Running
 
 Open a new terminal and test the API:
 
 ```bash
-# Health check
-curl http://localhost:4000/api/health
-
-# Expected response:
-# {"status":"ok","service":"gateway","timestamp":"..."}
+curl http://localhost:4001/health
+curl http://localhost:4003/health
 ```
 
-## Step 6: Admin Console Setup
+## Step 6: Admin Console Setup (optional)
 
 The admin console lets you manage riders, drivers, trips, and pricing.
 
@@ -295,8 +278,11 @@ cp .env.example .env.local
 Default `.env.local`:
 ```bash
 NEXT_PUBLIC_API_URL=/api
-API_PROXY_TARGET=http://127.0.0.1:4000
-NEXT_PUBLIC_GATEWAY_URL=http://127.0.0.1:4000
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
+NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
 ### 6.3 Start Admin Console
@@ -323,7 +309,7 @@ Expected output:
 
 You should see the admin dashboard!
 
-## Step 7: Monitor Dashboard Setup
+## Step 7: Monitor Dashboard Setup (optional)
 
 The monitor dashboard shows system health and performance metrics.
 
@@ -365,12 +351,11 @@ Expected output:
 Open http://localhost:3010
 
 You should see health metrics for:
-- Gateway API
-- Services (if running proxy mode)
-- Admin console
+- Auth, location, ride, notify, and admin APIs
+- Admin console (if running)
 - Memory and CPU usage
 
-## Step 8: Mobile Apps Setup (Optional)
+## Step 8: Mobile Apps Setup
 
 Mobile apps require additional setup for Mapbox and Auth0.
 
@@ -392,7 +377,9 @@ npm install
 cp .env.example .env
 
 # Edit .env and set:
-# EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:4000/api
+# EXPO_PUBLIC_AUTH_URL=http://<YOUR_LAN_IP>:4001/api
+# EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:4003/api
+# EXPO_PUBLIC_WS_URL=http://<YOUR_LAN_IP>:4004
 # EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
 # EXPO_PUBLIC_AUTH0_CLIENT_ID=your_client_id
 # EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token
@@ -443,11 +430,8 @@ For detailed mobile setup, see:
 ### Backend Verification
 
 ```bash
-# Test health endpoint
-curl http://localhost:4000/api/health
-
-# Test auth endpoint
-curl http://localhost:4000/api/auth/health
+curl http://localhost:4001/health
+curl http://localhost:4003/health
 
 # Check database
 cd backend
@@ -471,11 +455,11 @@ npx prisma studio
 ### Services Verification
 
 ```bash
-# If running proxy mode, check each service
 curl http://localhost:4001/health  # Auth
 curl http://localhost:4002/health  # Location
 curl http://localhost:4003/health  # Ride
 curl http://localhost:4004/health  # Notify
+curl http://localhost:4005/health  # Admin API
 ```
 
 ## Next Steps
@@ -490,7 +474,7 @@ Now that Eve is running:
 2. **Read the Documentation**
    - [Architecture Overview](ARCHITECTURE.md)
    - [Backend Services](backend/docs/)
-   - [Testing Guide](TESTING.md)
+   - [Backend tests](backend/) (`npm test` in `backend/`, `rider/`, `driver/`)
 
 3. **Run Tests**
    ```bash
@@ -513,12 +497,12 @@ Now that Eve is running:
 
 ### Port Already in Use
 
-**Error**: `EADDRINUSE: address already in use :::4000`
+**Error**: `EADDRINUSE: address already in use :::4003`
 
 **Solution**:
 ```bash
 # Find process using the port
-lsof -i :4000
+lsof -i :4003
 
 # Kill the process
 kill -9 <PID>
@@ -637,7 +621,7 @@ If you're stuck:
 You should now have:
 
 - ✅ PostgreSQL and Redis running in Docker
-- ✅ Backend API running on http://localhost:4000
+- ✅ Backend services on http://localhost:4001–4005
 - ✅ Admin console running on http://localhost:3000
 - ✅ Monitor dashboard running on http://localhost:3010
 - ✅ Database seeded with test data

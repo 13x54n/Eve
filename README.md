@@ -81,12 +81,12 @@ Eve/
   driver/    Expo 57 driver app — Auth0, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
   monitor/   Next.js 16 liveness board — API/frontend ping, memory, host performance
-  backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
+  backend/   API: npm workspaces (packages, services) + Prisma/Postgres
 ```
 
 ## Architecture
 
-Eve uses a **microservices architecture** where all clients communicate with a central gateway that routes requests to specialized services. The gateway can run in two modes:
+Eve uses **separate Node microservices**. Clients call auth, ride, admin, and notify directly (no HTTP gateway).
 
 ### System Architecture
 
@@ -99,73 +99,63 @@ graph TB
         Monitor[Monitor Dashboard<br/>Next.js]
     end
 
-    subgraph Gateway["API Gateway :4000"]
-        GW[Gateway Service<br/>Routing & Admin API]
-    end
-
     subgraph Services["Microservices"]
-        Auth[Auth Service :4001<br/>Authentication & JWT]
-        Location[Location Service :4002<br/>GPS & Geo-matching]
-        Ride[Ride Service :4003<br/>Trips & Offers]
-        Notify[Notify Service :4004<br/>Real-time Events]
+        Auth[Auth Service :4001<br/>Authentication and JWT]
+        Location[Location Service :4002<br/>GPS and geo matching]
+        Ride[Ride Service :4003<br/>Trips and presence]
+        Notify[Notify Service :4004<br/>Real-time events]
+        AdminApi[Admin Service :4005<br/>Staff API]
     end
 
     subgraph Data["Data Layer"]
         PG[(PostgreSQL 16<br/>Primary Database)]
-        RD[(Redis 7<br/>Cache & Geo Index)]
+        RD[(Redis 7<br/>Cache and Geo Index)]
     end
 
-    Rider --> GW
-    Driver --> GW
-    Admin --> GW
-    Monitor --> GW
-
-    GW --> Auth
-    GW --> Location
-    GW --> Ride
-    GW --> Notify
+    Rider --> Auth
+    Rider --> Ride
+    Rider --> Notify
+    Driver --> Auth
+    Driver --> Ride
+    Driver --> Notify
+    Admin --> Auth
+    Admin --> AdminApi
+    Admin --> Ride
+    Admin --> Notify
+    Monitor --> Auth
+    Monitor --> Location
+    Monitor --> Ride
+    Monitor --> Notify
+    Monitor --> AdminApi
 
     Auth --> PG
     Location --> PG
     Location --> RD
     Ride --> PG
     Ride --> RD
-    Ride -.Internal HTTP/gRPC.-> Location
-    Ride -.Internal HTTP/gRPC.-> Notify
+    Ride -.gRPC.-> Location
+    Ride -.gRPC.-> Notify
+    AdminApi --> PG
     Notify --> PG
-    Notify -.Internal HTTP/gRPC.-> Location
 ```
 
-### Gateway Modes
-
-**Compose mode** (`GATEWAY_MODE=compose`, default):
-- One Node process mounts all routers
-- Faster for local development
-- Use `npm run dev` in `backend/`
-- Services communicate in-process
-
-**Proxy mode** (`GATEWAY_MODE=proxy`):
-- Gateway forwards requests to separate service processes
-- Better for production and testing service isolation
-- Use `npm run dev:split` in `backend/`
-- Services communicate via HTTP/gRPC
-
 **Learn more:**
-- Gateway routing and modes: [backend/docs/gateway.md](backend/docs/gateway.md)
+- Service ports: [backend/docs/services-ports.md](backend/docs/services-ports.md)
 - Authentication flow: [backend/docs/auth.md](backend/docs/auth.md)
 - Geospatial matching: [backend/docs/h3-matchmaking.md](backend/docs/h3-matchmaking.md)
 - gRPC implementation: [backend/docs/grpc.md](backend/docs/grpc.md)
 
-Public prefixes (both modes):
+Public prefixes:
 
-| Prefix | Purpose |
-| --- | --- |
-| `/api/health` | Health check |
-| `/api/auth` | Rider/driver Auth0 exchange, admin login, `/me` |
-| `/api/driver` | Driver auth, presence, trips, earnings |
-| `/api/rider` | Rider trips and offer accept |
-| `/api/admin` | Staff console (RBAC) |
-| `/socket.io` | Realtime (notify) |
+| Prefix | Service | Purpose |
+| --- | --- | --- |
+| `/health` | each service | Health check |
+| `/api/auth` | auth :4001 | Auth0 exchange, admin login, `/me` |
+| `/api/driver/login` `register` `auth0` | auth :4001 | Driver auth |
+| `/api/driver` | ride :4003 | Presence, trips, earnings |
+| `/api/rider` | ride :4003 | Rider trips and offer accept |
+| `/api/admin` | admin :4005 | Staff console (RBAC) |
+| `/socket.io` | notify :4004 | Realtime |
 
 ### Backend packages and services
 
@@ -174,11 +164,11 @@ Public prefixes (both modes):
 | `@eve/db` | Prisma client |
 | `@eve/http` | Express app, CORS, auth middleware |
 | `@eve/shared` | JWT, passwords, permissions |
-| `@eve/auth` | Auth0 ID-token exchange, admin login, leftover password routes (`AUTH_PORT`, default 4001) |
-| `@eve/location` | Driver presence (`LOCATION_PORT`, default 4002) |
-| `@eve/ride` | Matching, offers, trip lifecycle (`RIDE_PORT`, default 4003) |
+| `@eve/auth` | Auth0 ID-token exchange, admin login (`AUTH_PORT`, default 4001) |
+| `@eve/location` | Matchmaking geo / gRPC (`LOCATION_PORT`, default 4002) |
+| `@eve/ride` | Matching, offers, trip lifecycle, presence (`RIDE_PORT`, default 4003) |
 | `@eve/notify` | Notifications + Socket.IO (`NOTIFY_PORT`, default 4004) |
-| `@eve/gateway` | Compose or proxy entrypoint (`PORT`, default 4000) |
+| `@eve/admin` | Staff HTTP API (`ADMIN_PORT`, default 4005) |
 
 ## Prerequisites
 
@@ -199,11 +189,11 @@ Public prefixes (both modes):
 ### Port Requirements
 
 Ensure these ports are available:
-- `4000` - Gateway (main API)
-- `4001` - Auth service (proxy mode)
-- `4002` - Location service (proxy mode)
-- `4003` - Ride service (proxy mode)
-- `4004` - Notify service (proxy mode)
+- `4001` - Auth
+- `4002` - Location
+- `4003` - Ride
+- `4004` - Notify
+- `4005` - Admin API
 - `5432` - PostgreSQL
 - `6379` - Redis
 - `3000` - Admin console
@@ -224,7 +214,7 @@ docker --version
 docker compose version
 
 # Check available ports
-lsof -i :4000  # Should return nothing if port is free
+lsof -i :4001  # Auth; also keep 4002–4005 free
 ```
 
 ## Quick Start
@@ -259,7 +249,7 @@ npm run dev
 ```
 
 Visit:
-- API: http://localhost:4000/api/health
+- API: http://localhost:4003/health
 - Admin: http://localhost:3000
 
 For detailed setup instructions, see [GETTING_STARTED.md](GETTING_STARTED.md).
@@ -276,7 +266,7 @@ docker compose up postgres -d
 
 Default compose credentials: user `eve`, password `eve`, database `eve` on `localhost:5432`.
 
-Or start auth, location, ride, notify, and gateway together (`GATEWAY_MODE=proxy` is set on the gateway service):
+Or start auth, location, ride, notify, and admin together:
 
 ```bash
 docker compose up
@@ -297,10 +287,7 @@ Optional:
 
 | Variable | When |
 | --- | --- |
-| `PORT` | Gateway listen port (default `4000`) |
-| `GATEWAY_MODE` | `compose` or `proxy` |
-| `AUTH_URL`, `LOCATION_URL`, `RIDE_URL`, `NOTIFY_URL` | Proxy mode service bases |
-| `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT` | Split-process listen ports |
+| `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT` | Service listen ports |
 | `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_DRIVER_FOLDER` | Driver document upload auth |
 | `CORS_ORIGINS` | Comma-separated browser origins allowed to call the API (default `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:8081`, `http://127.0.0.1:8081`). Native apps omit `Origin` and are allowed through. Production example: `CORS_ORIGINS=https://admin.example.com` |
 
@@ -316,21 +303,14 @@ npm run db:seed
 
 ### 4. Run the API
 
-In-process (compose) — typical local default:
+Five services (`npm run dev`):
 
 ```bash
 cd backend
 npm run dev
 ```
 
-Gateway: `http://localhost:4000`. Health: `GET /api/health`.
-
-Split processes (proxy gateway + four services):
-
-```bash
-cd backend
-npm run dev:split
-```
+Health: `GET http://localhost:4001/health` (auth), `:4002` (location), `:4003` (ride), `:4004` (notify), `:4005` (admin).
 
 Tests:
 
@@ -341,12 +321,14 @@ npm test
 
 ### 5. Apps
 
-Point clients at the gateway **`/api`** base. On a phone or simulator, use your machine’s LAN IP instead of `localhost`.
+Point rider/driver at auth, ride, and notify. On a phone or simulator, use your machine’s LAN IP instead of `localhost`.
 
 `rider/.env` and `driver/.env`:
 
 ```
-EXPO_PUBLIC_API_URL=http://localhost:4000/api
+EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api
+EXPO_PUBLIC_API_URL=http://localhost:4003/api
+EXPO_PUBLIC_WS_URL=http://localhost:4004
 EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
 EXPO_PUBLIC_AUTH0_CLIENT_ID=your_native_app_client_id
 ```
@@ -356,7 +338,12 @@ Copy from `.env.example`. Rider and driver use Auth0 Universal Login, then excha
 `admin/.env.local`:
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_API_URL=/api
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
+NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
 ```bash
@@ -373,7 +360,7 @@ Monitor (separate from admin):
 cd monitor && npm install && npm run dev
 ```
 
-Liveness board: [http://localhost:3010](http://localhost:3010). Probes gateway `/api/health`, optional split-service ports, and frontend origins. See `monitor/.env.example`.
+Liveness board: [http://localhost:3010](http://localhost:3010). Probes auth/location/ride/notify/admin `/health` and frontend origins. See `monitor/.env.example`.
 
 Restart Expo after changing `EXPO_PUBLIC_*` env vars.
 
@@ -414,7 +401,7 @@ Do not use these credentials outside local development.
 - [FAQ & Troubleshooting](FAQ.md) - Common issues and solutions
 
 ### Backend Documentation
-- [Gateway Configuration](backend/docs/gateway.md) - Compose vs proxy modes
+- [Backend services](backend/docs/services-ports.md) - Ports and process layout
 - [Authentication](backend/docs/auth.md) - Auth0 integration
 - [Docker Setup](backend/docs/docker.md) - Container orchestration
 - [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
@@ -438,8 +425,8 @@ Do not use these credentials outside local development.
 
 #### Port Already in Use
 ```bash
-# Find process using port 4000
-lsof -i :4000
+# Find a process using a service port (example: ride)
+lsof -i :4003
 
 # Kill the process
 kill -9 <PID>

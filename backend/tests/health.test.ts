@@ -1,15 +1,15 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 
 describe("Health endpoint", () => {
   it("returns a healthy response", async () => {
     const response = await request(app)
-      .get("/api/health")
+      .get("/health")
       .expect(200);
 
     expect(response.body.status).toBe("ok");
-    expect(response.body.service).toBe("gateway");
+    expect(response.body.service).toBe("ride");
     expect(response.body.memory).toEqual(
       expect.objectContaining({
         rss: expect.any(Number),

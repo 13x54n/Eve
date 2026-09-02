@@ -1,5 +1,7 @@
 # Deployment Guide
 
+> This document still describes an older gateway-based deploy. Alpha local development uses five Node services (`npm run dev` from `backend/`) with no HTTP gateway. Do not treat Kubernetes/Compose diagrams here as the current alpha stack.
+
 This guide covers production deployment options for the Eve platform.
 
 ## Table of Contents

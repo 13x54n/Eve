@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import * as SecureStore from 'expo-secure-store';
+import { requireWsUrl } from '@/lib/public-env';
 
 let socket: Socket | null = null;
 let subscribedTripId: string | null = null;
@@ -9,7 +10,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_BASE_DELAY = 1000;
 
 function socketUrl() {
-  return process.env.EXPO_PUBLIC_WS_URL || (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/api\/?$/, '');
+  return requireWsUrl('driver');
 }
 
 function joinSubscribedTrip() {

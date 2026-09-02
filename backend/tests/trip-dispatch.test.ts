@@ -1,6 +1,6 @@
 import request from "supertest";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { createTripDispatches } from "../services/ride/src/dispatch.js";
 import {
