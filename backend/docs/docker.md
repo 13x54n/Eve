@@ -72,6 +72,12 @@ docker compose up
 
 The gateway automatically runs database migrations on startup.
 
+To seed the database, run this from the `backend/` directory after the gateway is running:
+
+```bash
+npm run db:seed:docker
+```
+
 ### Stop services:
 
 ```bash
@@ -426,9 +432,9 @@ docker compose exec gateway printenv DATABASE_URL
 
 **Seed from Docker (recommended):**
 ```bash
-docker compose exec gateway npm run db:seed
-# or from backend/: npm run db:seed:docker
-# or: make db-seed
+npm run db:seed:docker
+# Equivalent: docker compose exec gateway npm run db:seed
+# Equivalent: make db-seed
 ```
 
 **Seed from the host** (Postgres port 5432 published to localhost):

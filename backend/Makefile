@@ -3,7 +3,7 @@
 # ============================================
 # Convenient shortcuts for Docker and development commands
 
-.PHONY: help setup dev dev-build dev-down dev-logs dev-clean
+.PHONY: help dev dev-build dev-down dev-logs dev-clean
 .PHONY: prod prod-build prod-down prod-logs
 .PHONY: test db-migrate db-seed db-studio
 .PHONY: build-gateway build-auth build-location build-ride build-notify
@@ -23,9 +23,6 @@ help: ## Show this help message
 # ============================================
 # Development
 # ============================================
-setup: ## Interactive Docker setup
-	@./docker-setup.sh
-
 dev: ## Start development services with Docker
 	docker compose up
 

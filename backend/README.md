@@ -9,10 +9,6 @@ Clients talk only to the **gateway** on port **4000**. You can run everything in
 ### With Docker (Recommended)
 
 ```bash
-# Interactive setup
-./docker-setup.sh
-
-# Or manually
 docker compose up
 ```
 
