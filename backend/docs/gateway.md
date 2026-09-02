@@ -116,7 +116,7 @@ GATEWAY_MODE=proxy npm start       # proxy gateway; start the four services too
 npm start -w @eve/auth             # one compiled service
 ```
 
-[`docker-compose.yml.temp`](../docker-compose.yml.temp) is the intended split stack (Postgres, Redis, four services, proxy gateway). It is not currently named `docker-compose.yml`.
+[`docker-compose.yml`](../docker-compose.yml) is the local split stack (Postgres, Redis, migrate, four services, proxy gateway). See [docker.md](docker.md).
 
 ## Environment
 

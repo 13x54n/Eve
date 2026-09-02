@@ -1,30 +1,24 @@
-# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-# DO NOT exclude package-lock.json - it's required for npm ci
 
-# Build outputs
 dist/
 build/
 *.tsbuildinfo
 
-# Test coverage
 coverage/
 .nyc_output/
 
-# Environment files
 .env
 .env.local
 .env.*.local
+.env.prod
 
-# Git
 .git/
 .gitignore
 .gitattributes
 
-# IDE
 .vscode/
 .idea/
 *.swp
@@ -32,40 +26,28 @@ coverage/
 *~
 .DS_Store
 
-# Docs and markdown (not needed in container)
 docs/
 *.md
 !README.md
 
-# CI/CD
 .github/
 .gitlab-ci.yml
 
-# Prisma
-prisma/migrations/
-!prisma/schema.prisma
-!prisma/seed.ts
-
-# Tests
 **/*.test.ts
 **/*.spec.ts
 tests/
 __tests__/
 vitest.config.ts
 
-# Load testing
 load/
 
-# PM2
 ecosystem.config.cjs
 
-# Temp files
 *.log
 *.tmp
 tmp/
 temp/
 
-# Docker
 Dockerfile*
 docker-compose*.yml
 .dockerignore

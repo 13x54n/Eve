@@ -1,24 +1,13 @@
-# ============================================
-# Development Dockerfile with Hot Reload
-# ============================================
-# This Dockerfile is optimized for local development with hot-reload
-# Usage: Used by docker-compose.yml for development
+FROM node:22-bookworm-slim
 
-FROM node:22-slim
-
-# Install OpenSSL for Prisma
 RUN apt-get update -y && \
-    apt-get install -y openssl && \
+    apt-get install -y openssl python3 make g++ && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Create app user for better security even in development
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/db/package.json ./packages/db/
 COPY packages/http/package.json ./packages/http/
@@ -28,21 +17,13 @@ COPY services/ride/package.json ./services/ride/
 COPY services/notify/package.json ./services/notify/
 COPY gateway/package.json ./gateway/
 
-# Install all dependencies (including dev dependencies for tsx, typescript, etc.)
 RUN npm ci
 
-# Copy source code
 COPY . .
 
-# Generate Prisma Client with a dummy DATABASE_URL
-# Prisma needs DATABASE_URL to validate schema, but doesn't connect during generation
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+# Supplied at build time from backend/.env (see docker-compose.yml build.args).
+ARG DATABASE_URL
+ENV DATABASE_URL="postgresql://eve:eve@postgres:5432/eve"
 RUN npx prisma generate
 
-# Change ownership to appuser
-RUN chown -R appuser:appuser /app
-
-USER appuser
-
-# Default command (will be overridden by docker-compose)
 CMD ["npm", "run", "dev"]
