@@ -54,7 +54,7 @@ Code: [`services/location/src/geo.ts`](../services/location/src/geo.ts) and [`se
 | Rider creates a trip | Index trip cells, then `nearbyDrivers` |
 | Offer accept, assign, cancel | Remove trip; sync driver geo for `ON_TRIP` / `ONLINE` |
 
-On boot, the location service and compose gateway call `rebuildGeoIndexes()`: `SCAN`/`UNLINK` the H3 (and leftover GEO) namespace, then re-index every eligible driver and `SEARCHING` trip from Postgres. That heals a Redis restart and Prisma-only seeds (for example load-test users).
+On boot, the location service calls `rebuildGeoIndexes()`: `SCAN`/`UNLINK` the H3 (and leftover GEO) namespace, then re-index every eligible driver and `SEARCHING` trip from Postgres. That heals a Redis restart and Prisma-only seeds (for example load-test users).
 
 Connection: `REDIS_URL` (default `redis://127.0.0.1:6379`). Compose: `redis:7` in [`docker-compose.yml.temp`](../docker-compose.yml.temp). Production (EC2/pm2) must already have Redis reachable; deploy does not install it.
 

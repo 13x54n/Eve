@@ -1,4 +1,4 @@
-# Local split-stack: gateway proxies to auth, location, ride, notify.
+# Local split-stack: auth, location, ride, notify, admin.
 # Usage (from backend/): docker compose up --build
 # Compose loads backend/.env for ${DATABASE_URL} at build time.
 
@@ -70,10 +70,10 @@ services:
       NODE_ENV: development
       AUTH_PORT: 4001
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-jwt-secret-change-in-production}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-dev-internal-secret-change-in-production}
-      AUTH0_DOMAIN: ${AUTH0_DOMAIN:-example.us.auth0.com}
-      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID:-dev-auth0-client-id}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
     ports:
       - "4001:4001"
     depends_on:
@@ -96,8 +96,8 @@ services:
       LOCATION_PORT: 4002
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
       REDIS_URL: redis://redis:6379
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-jwt-secret-change-in-production}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-dev-internal-secret-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       LOCATION_GRPC_PORT: 50051
       LOCATION_GRPC_URL: location:50051
     ports:
@@ -125,10 +125,8 @@ services:
       RIDE_PORT: 4003
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
       REDIS_URL: redis://redis:6379
-      LOCATION_URL: http://location:4002
-      NOTIFY_URL: http://notify:4004
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-jwt-secret-change-in-production}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-dev-internal-secret-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       LOCATION_GRPC_URL: location:50051
       NOTIFY_GRPC_URL: notify:50052
       IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY:-}
@@ -161,9 +159,8 @@ services:
       NODE_ENV: development
       NOTIFY_PORT: 4004
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
-      LOCATION_URL: http://location:4002
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-jwt-secret-change-in-production}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-dev-internal-secret-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       NOTIFY_GRPC_PORT: 50052
       NOTIFY_GRPC_URL: notify:50052
     ports:
@@ -178,40 +175,31 @@ services:
       - eve
     restart: unless-stopped
 
-  gateway:
+  admin:
     build: *dev-build
-    container_name: eve-gateway
+    container_name: eve-admin
     volumes:
       - .:/app
       - /app/node_modules
-    command: npm run dev -w @eve/gateway
+    command: npm run dev -w @eve/admin
     env_file: .env
     environment:
       NODE_ENV: development
-      PORT: 4000
-      GATEWAY_MODE: proxy
+      ADMIN_PORT: 4005
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
       REDIS_URL: redis://redis:6379
-      AUTH_URL: http://auth:4001
-      LOCATION_URL: http://location:4002
-      RIDE_URL: http://ride:4003
-      NOTIFY_URL: http://notify:4004
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-jwt-secret-change-in-production}
-      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-dev-internal-secret-change-in-production}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       LOCATION_GRPC_URL: location:50051
       NOTIFY_GRPC_URL: notify:50052
     ports:
-      - "4000:4000"
+      - "4005:4005"
     depends_on:
       migrate:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-      auth:
-        condition: service_started
       location:
-        condition: service_started
-      ride:
         condition: service_started
       notify:
         condition: service_started

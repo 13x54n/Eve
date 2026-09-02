@@ -10,13 +10,11 @@ const listeners = new Set<(event: string, payload: unknown) => void>();
 const connectionListeners = new Set<(connected: boolean) => void>();
 
 function socketUrl() {
-  const gateway = process.env.NEXT_PUBLIC_GATEWAY_URL?.trim();
-  if (gateway) {
-    return gateway.replace(/\/$/, "");
+  const notify = process.env.NEXT_PUBLIC_NOTIFY_URL?.trim();
+  if (notify) {
+    return notify.replace(/\/$/, "");
   }
-
-  const value = process.env.NEXT_PUBLIC_API_URL ?? "";
-  return value.replace(/\/api\/?$/, "");
+  return "http://127.0.0.1:4004";
 }
 
 function notifyConnection(connected: boolean) {

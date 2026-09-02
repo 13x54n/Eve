@@ -29,11 +29,16 @@ import { requireAuth, requireRole } from "@eve/http";
 
 const router = Router();
 
+const skipInVitest = () => Boolean(process.env.VITEST);
+
 const driverApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 150,
+  limit: 600,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) =>
+    skipInVitest() ||
+    (req.method === "GET" && req.path.endsWith("/trips/incoming")),
 });
 
 router.use(driverApiLimiter, requireAuth, requireRole("DRIVER"));

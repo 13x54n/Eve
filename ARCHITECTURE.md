@@ -21,8 +21,8 @@ Eve is a **microservices-based** ride-matching platform designed for scalability
 ### Core Principles
 
 1. **Microservices Architecture**: Separate, independently deployable services
-2. **API Gateway Pattern**: Single entry point for all clients
-3. **Real-time Communication**: WebSocket for live updates
+2. **Direct client-to-service HTTP**: Rider/driver call auth, ride, and notify (no API gateway)
+3. **Real-time Communication**: WebSocket on notify `:4004`
 4. **Geospatial Optimization**: H3 hexagonal indexing for fast matching
 5. **Auth0 Integration**: Secure, managed authentication
 6. **Type Safety**: TypeScript across the entire stack
@@ -44,15 +44,12 @@ graph TB
         CF[CloudFront/CDN<br/>Static Assets]
     end
 
-    subgraph API["API Gateway Layer"]
-        GW[API Gateway :4000<br/>Express + Admin Routes]
-    end
-
-    subgraph Services["Microservices Layer"]
-        Auth[Auth Service :4001<br/>Authentication & JWT]
-        Location[Location Service :4002<br/>GPS & Geo-matching]
-        Ride[Ride Service :4003<br/>Trip Lifecycle]
-        Notify[Notify Service :4004<br/>WebSocket & Events]
+    subgraph API["Backend services"]
+        Auth[Auth Service :4001<br/>Authentication and JWT]
+        Location[Location Service :4002<br/>GPS and geo matching]
+        Ride[Ride Service :4003<br/>Trip lifecycle and presence]
+        Notify[Notify Service :4004<br/>WebSocket and events]
+        AdminApi[Admin Service :4005<br/>Staff API]
     end
 
     subgraph DataLayer["Data Layer"]
@@ -66,15 +63,21 @@ graph TB
         ImageKit[ImageKit<br/>Image Storage]
     end
 
-    RiderApp --> GW
-    DriverApp --> GW
-    AdminWeb --> GW
-    MonitorWeb --> GW
-
-    GW --> Auth
-    GW --> Location
-    GW --> Ride
-    GW --> Notify
+    RiderApp --> Auth
+    RiderApp --> Ride
+    RiderApp --> Notify
+    DriverApp --> Auth
+    DriverApp --> Ride
+    DriverApp --> Notify
+    AdminWeb --> Auth
+    AdminWeb --> AdminApi
+    AdminWeb --> Ride
+    AdminWeb --> Notify
+    MonitorWeb --> Auth
+    MonitorWeb --> Location
+    MonitorWeb --> Ride
+    MonitorWeb --> Notify
+    MonitorWeb --> AdminApi
 
     Auth --> PG
     Location --> PG
@@ -83,9 +86,9 @@ graph TB
     Ride --> Redis
     Notify --> PG
 
-    Ride -.Internal.-> Location
-    Ride -.Internal.-> Notify
-    Notify -.Internal.-> Location
+    Ride -.gRPC.-> Location
+    Ride -.gRPC.-> Notify
+    AdminApi --> PG
 
     RiderApp -.Auth.-> Auth0
     DriverApp -.Auth.-> Auth0
@@ -97,76 +100,13 @@ graph TB
     MonitorWeb --> CF
 ```
 
-### Deployment Modes
+### Local development
 
-Eve supports two operational modes:
-
-#### Compose Mode (Development)
-```mermaid
-graph LR
-    Client[Clients] --> Gateway[Gateway Process :4000]
-    Gateway --> Auth[Auth Module]
-    Gateway --> Location[Location Module]
-    Gateway --> Ride[Ride Module]
-    Gateway --> Notify[Notify Module]
-    Auth --> DB[(Database)]
-    Location --> DB
-    Ride --> DB
-    Notify --> DB
-```
-
-**Characteristics**:
-- Single Node.js process
-- Faster startup time
-- In-process communication
-- Ideal for local development
-
-#### Proxy Mode (Production)
-```mermaid
-graph LR
-    Client[Clients] --> Gateway[Gateway :4000]
-    Gateway --> Auth[Auth :4001]
-    Gateway --> Location[Location :4002]
-    Gateway --> Ride[Ride :4003]
-    Gateway --> Notify[Notify :4004]
-    Auth --> DB[(Database)]
-    Location --> DB
-    Ride --> DB
-    Notify --> DB
-    Ride -.HTTP/gRPC.-> Location
-    Ride -.HTTP/gRPC.-> Notify
-```
-
-**Characteristics**:
-- Separate processes per service
-- Independent scaling
-- HTTP/gRPC inter-service communication
-- Production deployment model
+From `backend/`, `npm run dev` starts five Node processes (auth, location, ride, notify, admin). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with in-process fallback.
 
 ## Microservices
 
 ### Service Responsibilities
-
-#### Gateway Service (Port 4000)
-
-**Responsibilities**:
-- Route client requests to appropriate services
-- Serve admin API endpoints
-- CORS configuration
-- Rate limiting
-- Health checks
-
-**Endpoints**:
-- `/api/auth/*` → Auth service
-- `/api/rider/*` → Ride service
-- `/api/driver/*` → Auth, Location, Ride (depending on path)
-- `/api/admin/*` → Local admin routes
-- `/socket.io/*` → Notify service
-
-**Key Files**:
-- `backend/gateway/src/server.ts` - Main entry point
-- `backend/gateway/src/compose-app.ts` - Compose mode
-- `backend/gateway/src/proxy-app.ts` - Proxy mode
 
 #### Auth Service (Port 4001)
 
@@ -197,10 +137,8 @@ graph LR
 - Calculate distances
 
 **Key Operations**:
-- `POST /api/driver/presence` - Update driver location & status
-- `GET /internal/nearby-drivers` - Find drivers near pickup
-- `GET /internal/nearby-trips` - Find trips near driver
-- `POST /internal/distance` - Calculate distance
+- `PATCH /api/driver/presence` on **ride** (`:4003`) — driver online/offline
+- Location HTTP is `/health` only; matching is gRPC on `50051`
 
 **Key Technologies**:
 - **Uber H3**: Hexagonal geospatial indexing (resolution 8, ~0.46km)

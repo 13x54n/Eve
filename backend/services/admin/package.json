@@ -1,5 +1,5 @@
 {
-  "name": "@eve/gateway",
+  "name": "@eve/admin",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -16,17 +16,13 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@eve/auth": "*",
     "@eve/db": "*",
     "@eve/http": "*",
     "@eve/location": "*",
     "@eve/notify": "*",
-    "@eve/ride": "*",
     "@eve/shared": "*",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.0.1",
     "dotenv": "^17.2.1",
-    "http-proxy-middleware": "^3.0.5",
-    "socket.io": "^4.8.3"
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1"
   }
 }

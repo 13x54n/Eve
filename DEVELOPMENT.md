@@ -26,14 +26,11 @@ This guide covers development practices, workflows, and standards for contributi
 ### Development Environment
 
 ```bash
-# Backend development
+# Development
 cd backend
-npm run dev  # Compose mode with hot reload
+npm run dev  # Five services with hot reload
 
-# Or proxy mode
-npm run dev:split
-
-# Admin console
+# Admin console (optional for alpha)
 cd admin
 npm run dev
 
@@ -627,7 +624,7 @@ npm run db:generate
 
 **"Port already in use"**:
 ```bash
-lsof -i :4000
+lsof -i :4003
 kill -9 <PID>
 ```
 

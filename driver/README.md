@@ -162,8 +162,10 @@ cp .env.example .env
 Edit `.env`:
 
 ```bash
-# Backend API (use LAN IP for physical devices)
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+# Backend URLs (use LAN IP for physical devices)
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
 # Auth0 (same client as rider app)
 EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
@@ -287,7 +289,11 @@ driver/
    evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/callback
    ```
    **Note**: `evedriver` (no hyphen) - Auth0 schemes cannot include hyphens
-3. Configure **Allowed Logout URLs** (same)
+3. Configure **Allowed Logout URLs** (`/logout`, not `/callback`):
+   ```
+   evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/logout
+   evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/logout
+   ```
 4. Expo `scheme` in app.json remains `eve-driver` (with hyphen)
 
 ### ImageKit Setup
@@ -390,7 +396,8 @@ cd ../backend
 grep IMAGEKIT .env
 
 # Check backend logs
-docker compose logs gateway
+cd ../backend
+npm run dev
 ```
 
 ### No trip requests appearing
@@ -400,7 +407,7 @@ docker compose logs gateway
 **Solution**:
 1. Verify `approvalStatus = APPROVED`
 2. Toggle online/offline
-3. Check presence API: `GET /api/driver/presence`
+3. Check presence API: `PATCH /api/driver/presence`
 4. Create test trip from rider app
 5. Check distance (must be within 15km)
 

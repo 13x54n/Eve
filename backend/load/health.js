@@ -12,6 +12,6 @@ export const options = {
 };
 
 export default function health() {
-  const res = http.get(`${baseUrl()}/api/health`);
+  const res = http.get(`${baseUrl()}/health`);
   check(res, { "health is ok": (r) => r.status === 200 && r.json("status") === "ok" });
 }

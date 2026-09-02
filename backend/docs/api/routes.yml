@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/health:
+ * /health:
  *   get:
  *     summary: Health check endpoint
  *     tags: [System]

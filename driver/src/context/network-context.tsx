@@ -37,7 +37,7 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     const online =
       state.isConnected === true &&
       (state.isInternetReachable === true || state.isInternetReachable === null);
-    setOnline(online);
+    setIsOnline(online);
   }, []);
 
   const refresh = useCallback(async () => {

@@ -12,7 +12,6 @@
     "resolveJsonModule": true
   },
   "include": [
-    "gateway/src/**/*.ts",
     "packages/*/src/**/*.ts",
     "services/*/src/**/*.ts",
     "tests/**/*.ts",

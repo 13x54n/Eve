@@ -74,7 +74,7 @@ GRPC_LOGGING=true
 
 #### Development
 ```bash
-npm run dev:split
+npm run dev
 ```
 
 #### Production
@@ -282,8 +282,8 @@ describe('Location gRPC', () => {
 ### Integration Tests
 
 ```bash
-# Start services with gRPC
-GRPC_ENABLED=true npm run dev:split
+# Start services
+npm run dev
 
 # Run tests
 npm test
@@ -320,7 +320,7 @@ npm test
 
 - [ ] Auth Service gRPC endpoints
 - [ ] Ride Service gRPC endpoints
-- [ ] Gateway gRPC support
+- [ ] Admin service gRPC (not required; admin is HTTP)
 
 ## Troubleshooting
 
@@ -332,12 +332,9 @@ npm test
 # Check if gRPC server is running
 netstat -an | grep 50051
 
-# Check environment variable
-echo $GRPC_ENABLED
-
-# Enable gRPC
-export GRPC_ENABLED=true
-npm run dev:split
+# Confirm location gRPC is reachable (default 127.0.0.1:50051)
+# LOCATION_GRPC_URL / NOTIFY_GRPC_URL in backend/.env
+npm run dev
 ```
 
 #### 2. Proto Loading Errors

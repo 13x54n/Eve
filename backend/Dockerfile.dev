@@ -11,11 +11,12 @@ COPY package.json package-lock.json ./
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/db/package.json ./packages/db/
 COPY packages/http/package.json ./packages/http/
+COPY packages/grpc/package.json ./packages/grpc/
 COPY services/auth/package.json ./services/auth/
 COPY services/location/package.json ./services/location/
 COPY services/ride/package.json ./services/ride/
 COPY services/notify/package.json ./services/notify/
-COPY gateway/package.json ./gateway/
+COPY services/admin/package.json ./services/admin/
 
 RUN npm ci
 

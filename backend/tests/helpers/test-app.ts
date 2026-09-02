@@ -1,12 +1,15 @@
 import { applyErrorHandler, createBaseApp, healthPayload } from "@eve/http";
 import { authRouter, driverAuthRouter } from "@eve/auth";
-import { presenceRouter } from "@eve/location";
-import { driverRoutes, publicRideRoutes, riderRoutes } from "@eve/ride";
-import adminRoutes from "./admin.routes.js";
+import { driverRoutes, presenceRouter, publicRideRoutes, riderRoutes } from "@eve/ride";
+import { adminRoutes } from "@eve/admin";
 
-export function createComposeApp() {
+/**
+ * In-process Express app for Vitest: same HTTP prefixes as the split services,
+ * without a production gateway.
+ */
+export function createTestApp() {
   const app = createBaseApp();
-  app.get("/api/health", (_req, res) => res.json(healthPayload("gateway")));
+  app.get("/health", (_req, res) => res.json(healthPayload("ride")));
   app.use("/api/auth", authRouter);
   app.use("/api/driver", driverAuthRouter);
   app.use("/api/driver", presenceRouter);
@@ -17,3 +20,6 @@ export function createComposeApp() {
   applyErrorHandler(app);
   return app;
 }
+
+const app = createTestApp();
+export default app;

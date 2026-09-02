@@ -6,7 +6,7 @@ import {
   expect,
   it,
 } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { hashPassword } from "@eve/shared";
 

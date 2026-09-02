@@ -22,7 +22,7 @@ Complete API reference for the Eve platform backend.
 
 ## Overview
 
-The Eve API is a RESTful API that uses JSON for request and response payloads. All API requests are made to the Gateway service which routes to appropriate microservices.
+The Eve API is a RESTful API that uses JSON for request and response payloads. Rider and driver apps call **auth** (`:4001`) and **ride** (`:4003`) directly. Socket.IO connects to **notify** (`:4004`).
 
 **Current Version**: 1.0  
 **Protocol**: HTTP/HTTPS  
@@ -33,7 +33,9 @@ The Eve API is a RESTful API that uses JSON for request and response payloads. A
 
 ### Development
 ```
-http://localhost:4000/api
+Auth:  http://localhost:4001/api
+Ride:  http://localhost:4003/api
+WS:    http://localhost:4004
 ```
 
 ### Production
@@ -648,7 +650,7 @@ GET /public/trips/:trackingCode
 ```typescript
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:4000', {
+const socket = io('http://localhost:4004', {
   path: '/socket.io',
   query: { token: '<jwt-token>' }
 });
@@ -702,7 +704,7 @@ socket.on('trip:assigned', (data) => {
 ### Environment Variables
 
 Create environment with:
-- `base_url`: `http://localhost:4000/api`
+- `base_url`: `http://localhost:4003/api`
 - `token`: `<your-jwt-token>`
 
 ### Collections Included
@@ -733,7 +735,7 @@ pm.test("Response has trip", function () {
 Start the backend and visit:
 
 ```
-http://localhost:4000/api-docs
+http://localhost:4003/api-docs
 ```
 
 ### Generating Specification
@@ -762,7 +764,7 @@ Open http://localhost:8080
 
 ```bash
 # Create trip
-curl -X POST http://localhost:4000/api/rider/trips \
+curl -X POST http://localhost:4003/api/rider/trips \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <token>" \
   -d '{
@@ -777,7 +779,7 @@ curl -X POST http://localhost:4000/api/rider/trips \
 ### JavaScript/TypeScript
 
 ```typescript
-const response = await fetch('http://localhost:4000/api/rider/trips', {
+const response = await fetch('http://localhost:4003/api/rider/trips', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -801,7 +803,7 @@ const data = await response.json();
 import requests
 
 response = requests.post(
-    'http://localhost:4000/api/rider/trips',
+    'http://localhost:4003/api/rider/trips',
     headers={
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {token}'

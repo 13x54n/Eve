@@ -28,8 +28,11 @@ Common questions and solutions for the Eve platform.
 ### Q: Which ports need to be available?
 
 **A:**
-- `4000` - Gateway (required)
-- `4001-4004` - Services (proxy mode only)
+- `4001` - Auth
+- `4002` - Location HTTP (`50051` gRPC)
+- `4003` - Ride
+- `4004` - Notify HTTP/Socket.IO (`50052` gRPC)
+- `4005` - Admin API
 - `5432` - PostgreSQL (required)
 - `6379` - Redis (required)
 - `3000` - Admin console
@@ -38,8 +41,8 @@ Common questions and solutions for the Eve platform.
 
 Check ports:
 ```bash
-lsof -i :4000  # macOS/Linux
-netstat -ano | findstr :4000  # Windows
+lsof -i :4003  # macOS/Linux
+netstat -ano | findstr :4003  # Windows
 ```
 
 ### Q: Do I need Auth0 to run the backend?
@@ -88,22 +91,19 @@ docker compose up postgres -d
 docker compose exec postgres psql -U eve -d eve -c "SELECT 1;"
 ```
 
-### Q: "Port 4000 is already in use"
+### Q: "Port 4003 is already in use"
 
-**A:** Another process is using the port.
+**A:** Another process is using a backend port (auth 4001, location 4002, ride 4003, notify 4004, admin 4005).
 
 **Solution**:
 ```bash
 # Find process
-lsof -i :4000  # macOS/Linux
-netstat -ano | findstr :4000  # Windows
+lsof -i :4003  # macOS/Linux
+netstat -ano | findstr :4003  # Windows
 
 # Kill process
 kill -9 <PID>  # macOS/Linux
 taskkill /PID <PID> /F  # Windows
-
-# Or use different port
-PORT=4001 npm run dev
 ```
 
 ### Q: Backend starts but returns 500 errors
@@ -111,7 +111,7 @@ PORT=4001 npm run dev
 **A:** Check logs for specific errors:
 
 ```bash
-# Check gateway logs
+# Check service logs
 cd backend
 npm run dev
 # Look for error messages
@@ -367,7 +367,9 @@ ifconfig | grep "inet " | grep -v 127.0.0.1
 ipconfig | findstr IPv4
 
 # Update .env
-EXPO_PUBLIC_API_URL=http://192.168.1.100:4000/api
+EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
+EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 #                            ^^^^^^^^^^^^^^
 #                            Your LAN IP
 
@@ -461,7 +463,7 @@ cd backend
 docker compose logs
 
 # Specific service
-docker compose logs gateway
+docker compose logs ride
 
 # Common issues:
 # - Missing environment variables
@@ -612,7 +614,7 @@ docker stats
 # Increase memory limits
 # Edit docker-compose.prod.yml
 services:
-  gateway:
+  ride:
     deploy:
       resources:
         limits:
@@ -674,7 +676,7 @@ sudo systemctl restart nginx
 ```nginx
 # /etc/nginx/sites-available/eve-api
 location /socket.io/ {
-    proxy_pass http://localhost:4000;
+    proxy_pass http://localhost:4004;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";
@@ -746,11 +748,12 @@ npm --version
 docker --version
 
 # Check services
-curl http://localhost:4000/api/health
+curl http://localhost:4001/health
+curl http://localhost:4003/health
 docker compose ps
 
 # View logs
-docker compose logs -f gateway
+docker compose logs -f ride
 tail -f backend/logs/app.log
 
 # Clean everything (dev only!)

@@ -1,6 +1,6 @@
 import request from "supertest";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { hashPassword, verifyAccessToken } from "@eve/shared";
 import { verifyAuth0IdToken } from "../services/auth/src/auth0.js";

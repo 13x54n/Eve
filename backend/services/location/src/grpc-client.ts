@@ -13,7 +13,7 @@ let client: any = null;
 function getClient() {
   if (client) return client;
   
-  const url = process.env.LOCATION_GRPC_URL || 'localhost:50051';
+  const url = process.env.LOCATION_GRPC_URL || '127.0.0.1:50051';
   const useLogging = process.env.GRPC_LOGGING === 'true';
   
   client = createGrpcClient(

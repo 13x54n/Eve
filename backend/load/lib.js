@@ -2,7 +2,7 @@ export const PICKUP = { lat: 40.7128, lng: -74.006 };
 export const DROPOFF = { lat: 40.758, lng: -73.9855 };
 
 export function baseUrl() {
-  return __ENV.BASE_URL || "http://localhost:4000";
+  return __ENV.BASE_URL || "http://localhost:4003";
 }
 
 export function jsonHeaders(token) {

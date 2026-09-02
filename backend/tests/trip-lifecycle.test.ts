@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from "vitest";
 import request from "supertest";
-import app from "../gateway/src/app.js";
+import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import {
   cleanupMarketplaceUsers,
