@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
+import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 
 type TxType = 'trip' | 'tip' | 'bonus' | 'cashout';
 
@@ -85,9 +86,9 @@ export default function Earnings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  const load = async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
-      setLoading(true);
+      if (!opts?.silent) setLoading(true);
       setError(false);
       const result = await getEarnings();
       setSummary(result.summary);
@@ -97,11 +98,13 @@ export default function Earnings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  const { refreshing, onRefresh } = usePullToRefresh(() => load({ silent: true }));
 
   const sections = useMemo(() => groupTripsIntoSections(recentTrips), [recentTrips]);
   const balance = summary?.lifetimeEarnings ?? 0;
@@ -123,6 +126,7 @@ export default function Earnings() {
         stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         ListHeaderComponent={
           <>
             {/* Wallet balance card */}

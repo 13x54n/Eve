@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { use, useEffect } from "react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
@@ -64,18 +65,14 @@ type Trip = {
 
 type DriverList = { items: { id: string; user: { name: string } }[] };
 
-function plot(lat: number, lng: number, a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
-  const minLat = Math.min(a.lat, b.lat);
-  const maxLat = Math.max(a.lat, b.lat);
-  const minLng = Math.min(a.lng, b.lng);
-  const maxLng = Math.max(a.lng, b.lng);
-  const latSpan = maxLat - minLat || 1;
-  const lngSpan = maxLng - minLng || 1;
-  return {
-    left: `${14 + ((lng - minLng) / lngSpan) * 72}%`,
-    top: `${18 + ((maxLat - lat) / latSpan) * 64}%`,
-  };
-}
+const TripRouteMap = dynamic(() => import("@/components/trip-route-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid h-full place-items-center text-[12px] text-muted-foreground">
+      Loading map…
+    </div>
+  ),
+});
 
 export default function TripDetailPage({
   params,
@@ -165,29 +162,18 @@ export default function TripDetailPage({
                   {data.etaMinutes ? `${data.etaMinutes} min` : "—"} · deviation{" "}
                   {data.routeDeviation ? "yes" : "no"}
                 </p>
-                <div className="relative mt-3 h-44 overflow-hidden rounded-md bg-[#111]">
-                  <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(#3a3a3a_1px,transparent_1px),linear-gradient(90deg,#3a3a3a_1px,transparent_1px)] [background-size:24px_24px]" />
-                  <span
-                    className="absolute h-2.5 w-2.5 rounded-full bg-live"
-                    style={plot(
-                      data.pickupLat,
-                      data.pickupLng,
-                      { lat: data.pickupLat, lng: data.pickupLng },
-                      { lat: data.dropoffLat, lng: data.dropoffLng },
-                    )}
-                    title="Pickup"
-                  />
-                  <span
-                    className="absolute h-2.5 w-2.5 rounded-full bg-amber-400"
-                    style={plot(
-                      data.dropoffLat,
-                      data.dropoffLng,
-                      { lat: data.pickupLat, lng: data.pickupLng },
-                      { lat: data.dropoffLat, lng: data.dropoffLng },
-                    )}
-                    title="Dropoff"
+                <div className="relative mt-3 h-72 overflow-hidden rounded-md bg-muted">
+                  <TripRouteMap
+                    pickupLat={Number(data.pickupLat)}
+                    pickupLng={Number(data.pickupLng)}
+                    dropoffLat={Number(data.dropoffLat)}
+                    dropoffLng={Number(data.dropoffLng)}
                   />
                 </div>
+                <p className="mt-2 text-[12px] text-muted-foreground">
+                  <span className="font-medium text-emerald-700">Green</span> pickup ·{" "}
+                  <span className="font-medium text-amber-700">Amber</span> dropoff
+                </p>
               </Panel>
               {data.rideType === "COURIER" ? (
                 <Panel title="Courier">

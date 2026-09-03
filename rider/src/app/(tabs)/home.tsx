@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,6 +19,7 @@ import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/service
 import { cancelTrip } from "@/services/trips";
 import { useRideSession } from "@/context/ride-session";
 import { useAuth } from "@/context/auth-context";
+import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 import { FindingBanner } from "@/components/finding-banner";
 import { MapLocationPicker } from "@/components/map-location-picker";
 import { FALLBACK_CENTER } from "@/components/map/config";
@@ -48,34 +50,46 @@ export default function HomeScreen() {
       void refreshActive();
       void getGreetingTemplate()
         .then(setGreetingTemplate)
-        .catch(() => {});
+        .catch(() => { });
       if (activeTrip?.status === "ASSIGNED" || activeTrip?.status === "ONGOING") {
         router.replace({ pathname: "/ride/tracking", params: { tripId: activeTrip.id } });
       }
     }, [activeTrip?.id, activeTrip?.status, refreshActive]),
   );
 
-  useEffect(() => {
-    async function loadLocation() {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          setLocationMessage("Location permission is off. Showing the default map area.");
-          return;
-        }
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        const { latitude, longitude } = location.coords;
-        setRegion({ latitude, longitude });
-      } catch {
-        setLocationMessage("Could not find your location. Showing the default map area.");
-      } finally {
-        setLoading(false);
+  const loadLocation = useCallback(async (isInitial = false) => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setLocationMessage("Location permission is off. Showing the default map area.");
+        return;
       }
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      const { latitude, longitude } = location.coords;
+      setRegion({ latitude, longitude });
+      setLocationMessage(null);
+    } catch {
+      setLocationMessage("Could not find your location. Showing the default map area.");
+    } finally {
+      if (isInitial) setLoading(false);
     }
-    loadLocation();
   }, []);
+
+  useEffect(() => {
+    void loadLocation(true);
+  }, [loadLocation]);
+
+  const reloadHome = useCallback(async () => {
+    await Promise.all([
+      refreshActive(),
+      getGreetingTemplate().then(setGreetingTemplate).catch(() => {}),
+      loadLocation(false),
+    ]);
+  }, [loadLocation, refreshActive]);
+
+  const { refreshing, onRefresh } = usePullToRefresh(reloadHome);
 
   // inside HomeScreen
   function handleDestinationChange(text: string) {
@@ -103,9 +117,9 @@ export default function HomeScreen() {
         dropoff: item.label,
         ...(coords
           ? {
-              dropoff_lat: String(coords.lat),
-              dropoff_lng: String(coords.lng),
-            }
+            dropoff_lat: String(coords.lat),
+            dropoff_lng: String(coords.lng),
+          }
           : {}),
       },
     });
@@ -173,16 +187,28 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: brand.canvas }]}>
-      <Animated.Text entering={FadeInDown.duration(420)} style={styles.title}>
-        {interpolateGreeting(greetingTemplate, user?.name)}
-      </Animated.Text>
+    <ScrollView
+      style={[styles.container, { backgroundColor: brand.canvas }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+      alwaysBounceVertical
+      keyboardShouldPersistTaps="handled"
+      refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+    >
+      <Image
+        source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
+        style={{ width: 66, height: 66, marginTop: 26, marginHorizontal: "auto" }}
+      />
+
+
+
       {locationMessage ? (
         <View style={styles.locationMessage}>
           <Feather name="alert-circle" size={16} color="#D97706" />
           <Text style={styles.locationMessageText}>{locationMessage}</Text>
         </View>
       ) : null}
+
       {activeTrip?.status === "SEARCHING" ? (
         <FindingBanner
           destination={activeTrip.dropoffAddress}
@@ -196,7 +222,7 @@ export default function HomeScreen() {
         <Feather name="search" size={24} color="#2e4ed2" />
         <TextInput
           style={styles.searchText}
-          placeholder="Enter destination"
+          placeholder="Where are you going?"
           placeholderTextColor="#9CA3AF"
           value={destination}
           onChangeText={handleDestinationChange}
@@ -287,6 +313,7 @@ export default function HomeScreen() {
           });
         }}
       />
+
       <Animated.View
         entering={FadeInDown.delay(160).duration(420)}
         style={{
@@ -326,18 +353,24 @@ export default function HomeScreen() {
         </Pressable>
       </Animated.View>
 
-
-    </View>
+      <Image
+        source={{ uri: "https://images.unsplash.com/vector-1786329675328-b975cece8a57?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }}
+        style={{ width: "90%", height: 230, marginBottom: 16, marginHorizontal: "auto" }}
+      />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f7f8ef",
+  },
+  content: {
+    flexGrow: 1,
     paddingVertical: 24,
     paddingHorizontal: 16,
-    backgroundColor: "#f7f8ef",
-    // justifyContent: "flex-end",
+    paddingTop: 31,
   },
   searchText: { fontSize: 16, color: "black", width: "100%", paddingVertical: 5 },
   title: { fontSize: 28, fontWeight: "700", marginTop: 45, marginBottom: 15 },
@@ -357,8 +390,8 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: "row",
-    borderColor: "#2e4ed2",
-    borderWidth: 2,
+    // borderColor: "#2e4ed2",
+    // borderWidth: 2,
     alignItems: "center",
     padding: 14,
     borderRadius: 18,

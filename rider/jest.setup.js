@@ -61,6 +61,7 @@ jest.mock('react-native-auth0', () => ({
   useAuth0: jest.fn(() => ({
     authorize: jest.fn(),
     clearSession: jest.fn(),
+    clearCredentials: jest.fn(),
     getCredentials: jest.fn(),
     user: null,
     error: null,

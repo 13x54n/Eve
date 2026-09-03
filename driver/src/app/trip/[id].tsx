@@ -317,32 +317,10 @@ export default function ActiveTripScreen() {
         {routeCoordinates.length >= 2 ? <EveRoute coordinates={routeCoordinates} color="#2e4ed2" /> : null}
       </EveMap>
 
-      <TouchableOpacity
-        style={[styles.fab, { top: insets.top + 8 }]}
-        onPress={() => router.replace('/(tabs)/home')}
-        activeOpacity={0.7}
-        accessibilityLabel="Back home"
-      >
-        <Ionicons name="chevron-down" size={22} color="#111827" />
-      </TouchableOpacity>
 
-      <View style={[styles.sheet, { paddingBottom: Math.max(20, insets.bottom + 10) }]}>
-        <View style={styles.handle} />
+      <View style={[styles.sheet, { paddingBottom: Math.max(20, insets.bottom + 10), paddingHorizontal: 25 }]}>
+        
         <Text style={styles.stageLabel}>{stageLabel.toUpperCase()}</Text>
-        <Text style={styles.bookingCode}>{trip.bookingCode}</Text>
-        <View style={styles.etaRow}>
-          {isHeadingToPickup && pickupEtaMin != null ? (
-            <View style={styles.etaItem}>
-              <Text style={styles.etaCaption}>Pickup</Text>
-              <Text style={styles.etaValue}>{pickupEtaMin} min</Text>
-            </View>
-          ) : null}
-          <View style={styles.etaItem}>
-            <Text style={styles.etaCaption}>{destEtaLabel}</Text>
-            <Text style={styles.etaValue}>{dropoffEtaMin} min</Text>
-          </View>
-        </View>
-
         <View style={styles.riderRow}>
           <View style={styles.riderAvatar}>
             <Text style={styles.riderInitial}>{trip.rider.user.name[0]?.toUpperCase() ?? '?'}</Text>
@@ -390,6 +368,21 @@ export default function ActiveTripScreen() {
             <Feather name="headphones" size={18} color="#2E4ED5" />
           </TouchableOpacity>
         </View>
+        <Text style={styles.bookingCode}>{trip.bookingCode}</Text>
+        <View style={styles.etaRow}>
+          {isHeadingToPickup && pickupEtaMin != null ? (
+            <View style={styles.etaItem}>
+              <Text style={styles.etaCaption}>Pickup</Text>
+              <Text style={styles.etaValue}>{pickupEtaMin} min</Text>
+            </View>
+          ) : null}
+          <View style={styles.etaItem}>
+            <Text style={styles.etaCaption}>{destEtaLabel}</Text>
+            <Text style={styles.etaValue}>{dropoffEtaMin} min</Text>
+          </View>
+        </View>
+
+        
 
         <View style={styles.addressRow}>
           <View style={[styles.addressDot, { backgroundColor: '#16A34A' }]} />
@@ -489,7 +482,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   handle: { alignSelf: 'center', width: 38, height: 4, marginBottom: 16, borderRadius: 2, backgroundColor: '#D1D5DB' },
-  stageLabel: { color: '#6B7280', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
+  stageLabel: { color: '#6B7280', fontSize: 10, fontWeight: '700', letterSpacing: 1, textAlign: "center" },
   bookingCode: { marginTop: 4, color: '#111827', fontSize: 22, fontWeight: '800' },
   etaRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 20, marginTop: 10 },
   etaItem: { minWidth: 88 },
@@ -525,7 +518,7 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 20,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 6,
     backgroundColor: '#111827',
   },
   navigateText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
@@ -534,7 +527,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 12,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 6,
     backgroundColor: '#2e4ed2',
   },
   primaryButtonText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },

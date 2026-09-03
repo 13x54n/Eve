@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, apiErrorMessage } from "@/lib/api";
 import {
@@ -20,6 +20,16 @@ import { can } from "@/lib/permissions";
 import { useApi } from "@/lib/use-api";
 import { EntityLink } from "@/components/entity-link";
 
+type DriverDocument = {
+  id: string;
+  type: string;
+  status: string;
+  expiresAt: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
 type Driver = {
   id: string;
   approvalStatus: string;
@@ -34,17 +44,111 @@ type Driver = {
   user: { name: string; email: string; phone: string | null; accountStatus: string };
   fleetCompany: { name: string } | null;
   vehicles: { id: string; plateNumber: string; make: string; model: string; vehicleType: "BIKE" | "CAR" }[];
-  documents: {
-    id: string;
-    type: string;
-    status: string;
-    expiresAt: string | null;
-  }[];
+  documents: DriverDocument[];
   trips: { id: string; bookingCode: string; status: string }[];
   tickets: { id: string; subject: string; status: string }[];
   incidents: { id: string; type: string; severity: string; tripId: string | null }[];
   incentives: { kind: string; amount: number; note: string | null }[];
 };
+
+function isPdfDocument(doc: Pick<DriverDocument, "fileUrl" | "fileName" | "mimeType">) {
+  const mime = (doc.mimeType ?? "").toLowerCase();
+  const name = (doc.fileName ?? doc.fileUrl ?? "").toLowerCase();
+  return mime.includes("pdf") || name.includes(".pdf");
+}
+
+function formatDocumentType(type: string) {
+  return type
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function DocumentThumb({
+  doc,
+  onOpen,
+}: {
+  doc: DriverDocument;
+  onOpen: (doc: DriverDocument) => void;
+}) {
+  const url = doc.fileUrl?.trim();
+  if (!url) {
+    return <span className="text-muted-foreground">No file</span>;
+  }
+
+  if (isPdfDocument(doc)) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex h-14 w-14 items-center justify-center rounded-md border border-border bg-muted text-[11px] font-bold tracking-wide text-foreground hover:bg-muted/80"
+      >
+        PDF
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(doc)}
+      className="block h-14 w-14 overflow-hidden rounded-md border border-border bg-muted"
+      aria-label={`Preview ${formatDocumentType(doc.type)}`}
+    >
+      <img src={url} alt="" className="h-full w-full object-cover" />
+    </button>
+  );
+}
+
+function DocumentLightbox({
+  doc,
+  onClose,
+}: {
+  doc: DriverDocument;
+  onClose: () => void;
+}) {
+  const url = doc.fileUrl?.trim();
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (!url) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${formatDocumentType(doc.type)} preview`}
+    >
+      <div className="flex max-h-full max-w-5xl flex-col gap-3" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between gap-4 text-white">
+          <p className="text-sm font-medium">
+            {formatDocumentType(doc.type)}
+            {doc.fileName ? ` · ${doc.fileName}` : ""}
+          </p>
+          <div className="flex items-center gap-3">
+            <a href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold underline">
+              Open original
+            </a>
+            <button type="button" onClick={onClose} className="text-sm font-semibold">
+              Close
+            </button>
+          </div>
+        </div>
+        <img src={url} alt={formatDocumentType(doc.type)} className="max-h-[80vh] max-w-full rounded-md bg-black object-contain" />
+      </div>
+    </div>
+  );
+}
 
 export default function DriverDetailPage({
   params,
@@ -55,6 +159,7 @@ export default function DriverDetailPage({
   const { user } = useAuth();
   const { data, reload, error, loading } = useApi<Driver>(`/admin/drivers/${id}`);
   const write = can(user, "drivers:approve");
+  const [preview, setPreview] = useState<DriverDocument | null>(null);
 
   async function review(body: Record<string, unknown>) {
     try {
@@ -95,10 +200,17 @@ export default function DriverDetailPage({
             <div className="space-y-5">
               <Panel title="Documents" flush>
                 <Table
-                  columns={["Type", "Status", "Expires", "Action"]}
+                  columns={["Preview", "Type", "Status", "Expires", "Action"]}
+                  empty="No documents uploaded yet."
                   rows={data.documents.map((doc) => [
-                    doc.type,
-                    <Badge key={doc.id} tone={statusTone(doc.status)}>
+                    <DocumentThumb key={doc.id} doc={doc} onOpen={setPreview} />,
+                    <div key="type">
+                      <p className="font-medium">{formatDocumentType(doc.type)}</p>
+                      {doc.fileName ? (
+                        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{doc.fileName}</p>
+                      ) : null}
+                    </div>,
+                    <Badge key={`${doc.id}-status`} tone={statusTone(doc.status)}>
                       {doc.status}
                     </Badge>,
                     doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "—",
@@ -223,6 +335,7 @@ export default function DriverDetailPage({
           </div>
         </div>
       )}
+      {preview ? <DocumentLightbox doc={preview} onClose={() => setPreview(null)} /> : null}
     </Guard>
   );
 }

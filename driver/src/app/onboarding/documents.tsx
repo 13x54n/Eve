@@ -1,17 +1,29 @@
 import * as DocumentPicker from 'expo-document-picker';
+import { Image } from 'expo-image';
 import { FileSystemUploadType, uploadAsync } from 'expo-file-system/legacy';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { openBrowserAsync, WebBrowserPresentationStyle } from 'expo-web-browser';
+import { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ActionButton } from '@/components/action-button';
-import { DriverDocumentType, getDocumentUploadAuth, submitDocument } from '@/services/driver';
-
-const documentTypes: { type: DriverDocumentType; label: string }[] = [
-  { type: 'IDENTITY', label: 'Identity' },
-  { type: 'LICENSE', label: 'Driving license' },
-  { type: 'INSURANCE', label: 'Insurance' },
-  { type: 'VEHICLE_REGISTRATION', label: 'Vehicle registration' },
-];
+import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
+import { REQUIRED_DOCUMENT_TYPES } from '@/lib/onboarding-steps';
+import {
+  DriverDocument,
+  DriverDocumentType,
+  ReviewStatus,
+  getDocumentUploadAuth,
+  getDriverProfile,
+  submitDocument,
+} from '@/services/driver';
 
 function fileNameFor(type: DriverDocumentType, name?: string | null, mime?: string | null) {
   if (name?.trim()) return name.trim();
@@ -49,13 +61,66 @@ function uploadErrorMessage(body: string, status: number) {
   return trimmed || `Image upload failed (${status})`;
 }
 
+function isPdfDocument(doc: Pick<DriverDocument, 'fileUrl' | 'fileName' | 'mimeType'> | undefined) {
+  const mime = (doc?.mimeType ?? '').toLowerCase();
+  const name = (doc?.fileName ?? doc?.fileUrl ?? '').toLowerCase();
+  return mime.includes('pdf') || name.endsWith('.pdf') || name.includes('.pdf?');
+}
+
+function statusCopy(status?: ReviewStatus) {
+  if (status === 'APPROVED') return 'Approved';
+  if (status === 'REJECTED') return 'Rejected — re-upload';
+  if (status === 'EXPIRED') return 'Expired — re-upload';
+  if (status === 'PENDING') return 'Pending review';
+  return null;
+}
+
 export default function DocumentsScreen() {
-  const [submitted, setSubmitted] = useState<Partial<Record<DriverDocumentType, true>>>({});
+  const [documents, setDocuments] = useState<Partial<Record<DriverDocumentType, DriverDocument>>>({});
+  const [loadingExisting, setLoadingExisting] = useState(true);
   const [uploadingType, setUploadingType] = useState<DriverDocumentType | null>(null);
+
+  const applyDocuments = useCallback((items: DriverDocument[] | undefined) => {
+    const next: Partial<Record<DriverDocumentType, DriverDocument>> = {};
+    for (const item of items ?? []) {
+      next[item.type] = item;
+    }
+    setDocuments(next);
+  }, []);
+
+  const loadDocuments = useCallback(async () => {
+    try {
+      const driver = await getDriverProfile();
+      applyDocuments(driver.documents);
+    } catch {
+      /* keep empty until a file is submitted */
+    } finally {
+      setLoadingExisting(false);
+    }
+  }, [applyDocuments]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadDocuments();
+    }, [loadDocuments]),
+  );
+
+  const { refreshing, onRefresh } = usePullToRefresh(loadDocuments);
+
+  async function openPreview(url: string) {
+    try {
+      await openBrowserAsync(url, { presentationStyle: WebBrowserPresentationStyle.AUTOMATIC });
+    } catch {
+      Alert.alert('Could not open document', 'Try again in a moment.');
+    }
+  }
 
   async function choose(type: DriverDocumentType, label: string) {
     if (uploadingType) return;
-    const result = await DocumentPicker.getDocumentAsync({ type: ['image/*', 'application/pdf'], copyToCacheDirectory: true });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*', 'application/pdf'],
+      copyToCacheDirectory: true,
+    });
     if (result.canceled) return;
     const file = result.assets[0];
     try {
@@ -87,7 +152,7 @@ export default function DocumentsScreen() {
       if (upload.status < 200 || upload.status >= 300 || !uploaded.fileId || !uploaded.url) {
         throw new Error(uploadErrorMessage(upload.body, upload.status));
       }
-      await submitDocument({
+      const driver = await submitDocument({
         type,
         notes: label,
         imageKitFileId: uploaded.fileId,
@@ -96,7 +161,7 @@ export default function DocumentsScreen() {
         mimeType,
         ...(file.size ? { fileSize: file.size } : {}),
       });
-      setSubmitted((current) => ({ ...current, [type]: true }));
+      applyDocuments(driver.documents);
       Alert.alert('Document submitted', 'Your document is pending admin review.');
     } catch (error: any) {
       Alert.alert(
@@ -109,44 +174,135 @@ export default function DocumentsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      alwaysBounceVertical
+      refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+    >
       <Text style={styles.title}>Documents</Text>
       <Text style={styles.subtitle}>Submit clear copies of each required document.</Text>
-      {documentTypes.map(({ type, label }) => (
-        <ActionButton
-          key={type}
-          style={styles.row}
-          replaceContentOnLoading={false}
-          loading={uploadingType === type}
-          disabled={uploadingType !== null}
-          spinnerColor="#2e4ed2"
-          contentStyle={styles.rowContent}
-          accessibilityLabel={label}
-          onPress={() => void choose(type, label)}
-        >
-          <Text style={styles.label}>{label}</Text>
-          {uploadingType === type ? (
-            <View style={styles.uploading}>
-              <ActivityIndicator color="#2e4ed2" />
-              <Text style={styles.action}>Uploading…</Text>
+      {loadingExisting ? (
+        <View style={styles.loadingExisting}>
+          <ActivityIndicator color="#2e4ed2" />
+          <Text style={styles.loadingExistingText}>Loading existing documents…</Text>
+        </View>
+      ) : null}
+      {REQUIRED_DOCUMENT_TYPES.map(({ type, label }) => {
+        const existing = documents[type];
+        const previewUrl = existing?.fileUrl?.trim() || null;
+        const review = statusCopy(existing?.status);
+        const uploading = uploadingType === type;
+        return (
+          <View key={type} style={styles.card}>
+            {previewUrl ? (
+              <Pressable
+                accessibilityRole="imagebutton"
+                accessibilityLabel={`Preview ${label}`}
+                onPress={() => void openPreview(previewUrl)}
+                style={styles.preview}
+              >
+                {isPdfDocument(existing) ? (
+                  <View style={styles.pdfPreview}>
+                    <Text style={styles.pdfMark}>PDF</Text>
+                  </View>
+                ) : (
+                  <Image source={{ uri: previewUrl }} style={styles.previewImage} contentFit="cover" />
+                )}
+              </Pressable>
+            ) : (
+              <View style={styles.previewPlaceholder} />
+            )}
+            <View style={styles.cardCopy}>
+              <Text style={styles.label}>{label}</Text>
+              {review ? (
+                <Text
+                  style={[
+                    styles.status,
+                    existing?.status === 'APPROVED' && styles.statusApproved,
+                    (existing?.status === 'REJECTED' || existing?.status === 'EXPIRED') && styles.statusRejected,
+                  ]}
+                >
+                  {review}
+                </Text>
+              ) : null}
             </View>
-          ) : (
-            <Text style={styles.action}>{submitted[type] ? 'Submitted' : 'Choose file'}</Text>
-          )}
-        </ActionButton>
-      ))}
-      <Pressable onPress={() => router.back()}><Text style={styles.back}>Done</Text></Pressable>
-    </View>
+            <ActionButton
+              style={styles.actionButton}
+              replaceContentOnLoading={false}
+              loading={uploading}
+              disabled={uploadingType !== null}
+              spinnerColor="#2e4ed2"
+              accessibilityLabel={previewUrl ? `Replace ${label}` : `Choose ${label} file`}
+              onPress={() => void choose(type, label)}
+            >
+              {uploading ? (
+                <View style={styles.uploading}>
+                  <ActivityIndicator color="#2e4ed2" />
+                  <Text style={styles.action}>Uploading…</Text>
+                </View>
+              ) : (
+                <Text style={styles.action}>{previewUrl ? 'Replace' : 'Choose file'}</Text>
+              )}
+            </ActionButton>
+          </View>
+        );
+      })}
+      <Pressable onPress={() => router.back()}>
+        <Text style={styles.back}>Done</Text>
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, paddingTop: 70, backgroundColor: '#f7f8ef' },
+  container: { flex: 1, backgroundColor: '#f7f8ef' },
+  content: { padding: 24, paddingTop: 70, paddingBottom: 40 },
   title: { fontSize: 30, fontWeight: '800', color: '#111827' },
   subtitle: { marginTop: 8, marginBottom: 24, color: '#6B7280' },
-  row: { padding: 16, marginBottom: 10, borderRadius: 12, backgroundColor: 'white', borderWidth: 1, borderColor: '#E5E7EB' },
-  rowContent: { justifyContent: 'space-between' },
-  label: { flex: 1, color: '#111827', fontWeight: '600', textAlign: 'left' },
+  loadingExisting: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  loadingExistingText: { color: '#6B7280' },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    marginBottom: 10,
+    borderRadius: 12,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  preview: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+  },
+  previewImage: { width: '100%', height: '100%' },
+  previewPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F9FAFB',
+  },
+  pdfPreview: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EEF2FF',
+  },
+  pdfMark: { color: '#2e4ed2', fontWeight: '800', fontSize: 12 },
+  cardCopy: { flex: 1, minWidth: 0 },
+  label: { color: '#111827', fontWeight: '600' },
+  status: { marginTop: 4, color: '#6B7280', fontWeight: '600', fontSize: 12 },
+  statusApproved: { color: '#047857' },
+  statusRejected: { color: '#B91C1C' },
+  actionButton: { paddingVertical: 8, paddingHorizontal: 4 },
   action: { color: '#2e4ed2', fontWeight: '700' },
   uploading: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   back: { marginTop: 18, textAlign: 'center', color: '#2563EB', fontWeight: '600' },

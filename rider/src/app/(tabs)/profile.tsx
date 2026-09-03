@@ -9,6 +9,8 @@ import { Brand, Spacing } from "@/constants/theme";
 import { useBrand } from "@/context/theme-context";
 import { lightImpact } from "@/lib/haptics";
 import { ActionButton } from "@/components/action-button";
+import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
+import { Image } from "expo-image";
 
 type MenuRow = {
   icon: keyof typeof Feather.glyphMap;
@@ -55,19 +57,25 @@ export default function ProfileScreen() {
   const [memberSince, setMemberSince] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
+  const loadProfile = useCallback(async () => {
+    try {
+      const sessionUser = await getSessionUser();
+      setName(sessionUser.name);
+      setEmail(sessionUser.email);
+      setPhone(sessionUser.phone ?? "");
+      setMemberSince(new Date(sessionUser.createdAt).getFullYear().toString());
+    } catch {
+      /* keep empty state on failure */
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      let mounted = true;
-      void getSessionUser().then((user) => {
-        if (!mounted) return;
-        setName(user.name);
-        setEmail(user.email);
-        setPhone(user.phone ?? "");
-        setMemberSince(new Date(user.createdAt).getFullYear().toString());
-      }).catch(() => { /* keep empty state on failure */ });
-      return () => { mounted = false; };
-    }, []),
+      void loadProfile();
+    }, [loadProfile]),
   );
+
+  const { refreshing, onRefresh } = usePullToRefresh(loadProfile);
 
   const initial = (name || "?").trim().charAt(0).toUpperCase() || "?";
 
@@ -86,8 +94,9 @@ export default function ProfileScreen() {
               lightImpact();
               router.replace("/(auth)/welcome");
             } catch {
-              setSigningOut(false);
               Alert.alert("Could not log out", "Please try again.");
+            } finally {
+              setSigningOut(false);
             }
           })();
         },
@@ -96,12 +105,6 @@ export default function ProfileScreen() {
   };
 
   const preferenceRows: MenuRow[] = [
-    {
-      icon: "user",
-      title: "Personal information",
-      detail: "Name, email, phone",
-      onPress: () => router.push("/profile/edit" as Href),
-    },
     {
       icon: "lock",
       title: "Security",
@@ -139,24 +142,29 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: brand.canvas }]} edges={["top"]}>
-      <Text style={styles.title}>Profile</Text>
-      <View style={styles.profileCard}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
-        <View style={styles.identity}>
-          <Text style={styles.name}>{name || "Loading..."}</Text>
-          <Text style={styles.email}>{email}</Text>
-          {phone ? <Text style={styles.email}>{phone}</Text> : null}
-          <Text style={styles.member}>{memberSince ? `Member since ${memberSince}` : ""}</Text>
-        </View>
-        <Pressable style={styles.editButton} accessibilityLabel="Edit profile" onPress={() => router.push("/profile/edit" as Href)}>
-          <Feather name="edit-2" size={16} color={Brand.accent} />
-        </Pressable>
-      </View>
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
       >
+        <Image
+          source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
+          style={{ width: 66, height: 66, marginHorizontal: "auto" }}
+        />
+        <View style={styles.profileCard}>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
+          <View style={styles.identity}>
+            <Text style={styles.name}>{name || "Loading..."}</Text>
+            <Text style={styles.email}>{email}</Text>
+            {phone ? <Text style={styles.email}>{phone}</Text> : null}
+            <Text style={styles.member}>{memberSince ? `Member since ${memberSince}` : ""}</Text>
+          </View>
+          <Pressable style={styles.editButton} accessibilityLabel="Edit profile" onPress={() => router.push("/profile/edit" as Href)}>
+            <Feather name="edit-2" size={16} color={Brand.accent} />
+          </Pressable>
+        </View>
         <SettingsSection title="Preferences" rows={preferenceRows} />
         <SettingsSection title="More" rows={moreRows} />
       </ScrollView>
@@ -183,7 +191,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "800",
   },
-  profileCard: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.four },
+  profileCard: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.four, backgroundColor: Brand.surface, padding: 12 },
   avatar: { alignItems: "center", justifyContent: "center", width: 58, height: 58, borderRadius: 29, backgroundColor: Brand.surface },
   avatarText: { color: Brand.text, fontSize: 22, fontWeight: "800" },
   identity: { flex: 1, marginLeft: 14 },
