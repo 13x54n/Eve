@@ -27,7 +27,7 @@ type AuthContextValue = {
   user: SessionUser | null;
   loading: boolean;
   isAuthenticated: boolean;
-  setUser: (user: SessionUser | null) => void;
+  setUser: (user: SessionUser | null) => void | Promise<void>;
   logout: () => Promise<void>;
 };
 

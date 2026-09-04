@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-import { useLoginWithSMS } from "@privy-io/expo";
+import { useLoginWithSMS, usePrivy } from "@privy-io/expo";
 import {
   useLoginWithPasskey,
   useSignupWithPasskey,
 } from "@privy-io/expo/passkey";
 import { ActionButton } from "@/components/action-button";
-import { formatPhoneForPrivy, requireRelyingParty } from "@/lib/privy";
+import {
+  formatPhoneForPrivy,
+  isAlreadyAuthenticatedPrivyError,
+  requireRelyingParty,
+} from "@/lib/privy";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
 import { useAuth } from "@/context/auth-context";
 import type { AuthResponse } from "@/services/auth";
@@ -23,6 +27,7 @@ export function PrivyAuthForm({
   disabled?: boolean;
 }) {
   const { setUser } = useAuth();
+  const { user: privyUser } = usePrivy();
   const completeSession = useCompletePrivySession();
   const { sendCode, loginWithCode, state } = useLoginWithSMS();
   const { loginWithPasskey } = useLoginWithPasskey();
@@ -34,7 +39,7 @@ export function PrivyAuthForm({
 
   async function finish() {
     const session = await completeSession();
-    setUser(session.user);
+    await setUser(session.user);
     onAuthenticated(session.user);
   }
 
@@ -59,11 +64,19 @@ export function PrivyAuthForm({
   async function handleLoginWithCode() {
     try {
       setBusy("otp");
-      await loginWithCode({
-        code: code.trim(),
-        phone: formatPhoneForPrivy(phone),
-        disableSignup: mode === "login" ? undefined : false,
-      });
+      if (!privyUser) {
+        try {
+          await loginWithCode({
+            code: code.trim(),
+            phone: formatPhoneForPrivy(phone),
+            disableSignup: mode === "login" ? undefined : false,
+          });
+        } catch (error) {
+          if (!isAlreadyAuthenticatedPrivyError(error)) {
+            throw error;
+          }
+        }
+      }
       await finish();
     } catch (error) {
       const message =

@@ -1,8 +1,10 @@
 import {
   formatPhoneForPrivy,
+  isAlreadyAuthenticatedPrivyError,
   requirePrivyConfig,
   requireRelyingParty,
   truncateWalletAddress,
+  waitForIdentityToken,
 } from '@/lib/privy';
 
 describe('requirePrivyConfig', () => {
@@ -47,5 +49,36 @@ describe('privy helpers', () => {
     expect(truncateWalletAddress('0x1234567890abcdef1234567890abcdef12345678')).toBe(
       '0x1234…5678',
     );
+  });
+});
+
+describe('isAlreadyAuthenticatedPrivyError', () => {
+  it('matches already-logged-in messages', () => {
+    expect(
+      isAlreadyAuthenticatedPrivyError(new Error('Already logged in with that number')),
+    ).toBe(true);
+    expect(isAlreadyAuthenticatedPrivyError(new Error('User is already authenticated'))).toBe(
+      true,
+    );
+    expect(isAlreadyAuthenticatedPrivyError(new Error('Invalid code'))).toBe(false);
+  });
+});
+
+describe('waitForIdentityToken', () => {
+  it('retries until a token is available', async () => {
+    const getIdentityToken = jest
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce('id-token');
+    await expect(
+      waitForIdentityToken(getIdentityToken, { attempts: 3, delayMs: 0 }),
+    ).resolves.toBe('id-token');
+    expect(getIdentityToken).toHaveBeenCalledTimes(2);
+  });
+
+  it('throws after exhausting retries', async () => {
+    await expect(
+      waitForIdentityToken(async () => null, { attempts: 2, delayMs: 0 }),
+    ).rejects.toThrow('Privy identity token is unavailable');
   });
 });
