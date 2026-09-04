@@ -1,20 +1,41 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { Tabs } from "expo-router";
+import Feather from "@expo/vector-icons/Feather";
 
 export default function TabsLayout() {
   return (
-    <NativeTabs minimizeBehavior="onScrollDown">
-      <NativeTabs.Trigger name="home">
-        <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} md="home" />
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="rides">
-        <NativeTabs.Trigger.Icon sf={{ default: "clock", selected: "clock.fill" }} md="schedule" />
-        <NativeTabs.Trigger.Label>Rides</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Icon sf={{ default: "person.crop.circle", selected: "person.crop.circle.fill" }} md="person" />
-        <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "#2E4ED5",
+        tabBarInactiveTintColor: "#6B7280",
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#E5E7EB",
+          borderTopWidth: 1,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="rides"
+        options={{
+          title: "Rides",
+          tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }
