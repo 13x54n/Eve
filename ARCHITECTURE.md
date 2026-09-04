@@ -37,7 +37,7 @@ graph TB
         RiderApp[Rider Mobile App<br/>Expo/React Native]
         DriverApp[Driver Mobile App<br/>Expo/React Native]
         AdminWeb[Admin Console<br/>Next.js]
-        MonitorWeb[Monitor Dashboard<br/>Next.js]
+        WWW[Marketing Site<br/>Next.js]
     end
 
     subgraph CDN["Edge & CDN"]
@@ -73,11 +73,6 @@ graph TB
     AdminWeb --> AdminApi
     AdminWeb --> Ride
     AdminWeb --> Notify
-    MonitorWeb --> Auth
-    MonitorWeb --> Location
-    MonitorWeb --> Ride
-    MonitorWeb --> Notify
-    MonitorWeb --> AdminApi
 
     Auth --> PG
     Location --> PG
@@ -97,7 +92,7 @@ graph TB
     DriverApp -.Upload.-> ImageKit
 
     AdminWeb --> CF
-    MonitorWeb --> CF
+    WWW --> CF
 ```
 
 ### Local development
