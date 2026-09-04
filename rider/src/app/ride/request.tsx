@@ -30,7 +30,7 @@ const vehicleOptions = [
 ] as const;
 const riderOptions = [
   ["For me", "Comfortable private ride", "car", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
-  ["For Others", "Book a ride for someone else", "user", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
+  ["For Others", "Book ride for someone", "user", "https://images.unsplash.com/vector-1738924826826-dcfeb80c5ef4?q=80&w=1480&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"],
 ] as const;
 
 export default function RequestRideScreen() {
@@ -278,8 +278,8 @@ export default function RequestRideScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Pressable 
-          onPress={() => router.back()} 
+        <Pressable
+          onPress={() => router.back()}
           accessibilityLabel="Go back"
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
@@ -324,20 +324,22 @@ export default function RequestRideScreen() {
       </View>
       {hasSuggestions && (
         <View style={styles.suggestionsCard}>
-          <Text style={styles.suggestionsTitle}>
-            {activeField === "pickup"
-              ? "Pickup suggestions"
-              : "Dropoff suggestions"}
-          </Text>
-          <Pressable
-            style={styles.mapChoiceButton}
-            onPress={openMapPicker}
-            accessibilityRole="button"
-            accessibilityLabel="Choose this address on map"
-          >
-            <Feather name="map" size={14} color="#2E4ED5" />
-            <Text style={styles.mapChoiceText}>Choose on map</Text>
-          </Pressable>
+          <View style={{flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
+            <Text style={styles.suggestionsTitle}>
+              {activeField === "pickup"
+                ? "Pickup suggestions"
+                : "Dropoff suggestions"}
+            </Text>
+            <Pressable
+              style={styles.mapChoiceButton}
+              onPress={openMapPicker}
+              accessibilityRole="button"
+              accessibilityLabel="Choose this address on map"
+            >
+              <Feather name="map" size={14} color="#2E4ED5" />
+              <Text style={styles.mapChoiceText}>Choose on map</Text>
+            </Pressable>
+          </View>
           {suggesting && <ActivityIndicator style={{ marginVertical: 8 }} />}
           {currentSuggestions.length === 0 && !suggesting ? (
             <Text style={{ padding: 10, color: "#6B7280" }}>No results found</Text>
@@ -526,11 +528,11 @@ export default function RequestRideScreen() {
         <View style={styles.validationMessage}>
           <Feather name="info" size={16} color="#D97706" />
           <Text style={styles.validationText}>
-            {!dropoff.trim() 
-              ? "Please enter a destination to continue" 
+            {!dropoff.trim()
+              ? "Please enter a destination to continue"
               : selectedRider === "For Others" && riderName.trim().length <= 1
-              ? "Please enter the recipient's name"
-              : "Please enter a valid phone number (7+ digits)"}
+                ? "Please enter the recipient's name"
+                : "Please enter a valid phone number (7+ digits)"}
           </Text>
         </View>
       ) : null}
@@ -571,6 +573,7 @@ const styles = StyleSheet.create({
   routeCard: {
     flexDirection: "row",
     padding: 16,
+    paddingBottom: 5,
     borderRadius: 16,
     backgroundColor: "#FFFFFF",
   },
@@ -613,6 +616,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: "#111827",
     fontSize: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#D1D5DB",
   },
   routeActions: {
     flexDirection: "row",
@@ -777,8 +782,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    alignSelf: "flex-end",
-    marginBottom: 6,
+    // alignSelf: "flex-end",
+    // marginBottom: 6,
     paddingVertical: 6,
     paddingHorizontal: 8,
     borderRadius: 8,

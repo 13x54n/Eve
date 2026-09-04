@@ -130,7 +130,7 @@ export default function CourierRequestScreen() {
           <Pressable onPress={() => router.back()} accessibilityLabel="Go back">
             <Feather name="chevron-left" size={24} color={brand.text} />
           </Pressable>
-          <Text style={styles.title}>Send a courier</Text>
+          <Text style={styles.title}>📦 Send Courier</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -256,8 +256,8 @@ export default function CourierRequestScreen() {
 function makeStyles(brand: ReturnType<typeof useBrand>) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: brand.canvas },
-    container: { padding: 20, paddingTop: 72, paddingBottom: 40 },
-    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
+    container: { padding: 20, paddingTop: 52, paddingBottom: 40 },
+    header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 14 },
     title: { color: brand.text, fontSize: 20, fontWeight: "800" },
     label: { marginTop: 14, marginBottom: 8, color: brand.textSecondary, fontSize: 12, fontWeight: "700" },
     input: {

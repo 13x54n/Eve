@@ -35,6 +35,7 @@ import { notifyRideEvent, requestRideNotificationPermission } from '@/services/n
 import { lightImpact, notifyImpact } from '@/lib/haptics';
 import { Brand } from '@/constants/theme';
 import { useAppTheme } from '@/context/theme-context';
+import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 
 export default function Home() {
   const { brand } = useAppTheme();
@@ -127,42 +128,49 @@ export default function Home() {
     return () => { mounted = false; removeSocket(); clearInterval(timer); locationSubscriptionRef.current?.remove(); disconnectDriverSocket(); };
   }, []);
 
+  const reloadHome = useCallback(async () => {
+    try {
+      const driver = await getDriverProfile();
+      setProfile(driver);
+      if (driver?.presence) {
+        presenceRef.current = driver.presence;
+        setPresence(driver.presence);
+      }
+      if (driver?.activeTrip?.id && pathnameRef.current === '/home') {
+        router.push(`/trip/${driver.activeTrip.id}`);
+      }
+      if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
+        try {
+          const incoming = await getIncomingTrips();
+          setIncomingTrips(incoming.trips);
+          setPendingOffer(incoming.pendingOffer);
+          setActiveDispatch(incoming.activeDispatch);
+          if (incoming.activeDispatch) {
+            openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
+          } else {
+            openingOfferRef.current = null;
+          }
+        } catch {
+          /* poller will retry */
+        }
+      } else {
+        openingOfferRef.current = null;
+        setIncomingTrips([]);
+        setPendingOffer(null);
+        setActiveDispatch(null);
+      }
+    } catch {
+      /* keep current screen */
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      let active = true;
-      void getDriverProfile()
-        .then((driver) => {
-          if (!active) return;
-          setProfile(driver);
-          if (driver?.presence) {
-            presenceRef.current = driver.presence;
-            setPresence(driver.presence);
-          }
-          if (driver?.activeTrip?.id && pathnameRef.current === '/home') {
-            router.push(`/trip/${driver.activeTrip.id}`);
-          }
-          if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
-            void getIncomingTrips()
-              .then((incoming) => {
-                if (!active) return;
-                setIncomingTrips(incoming.trips);
-                setPendingOffer(incoming.pendingOffer);
-                setActiveDispatch(incoming.activeDispatch);
-                if (incoming.activeDispatch) {
-                  openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
-                } else {
-                  openingOfferRef.current = null;
-                }
-              })
-              .catch(() => { /* poller will retry */ });
-          }
-        })
-        .catch(() => { /* keep default OFFLINE state */ });
-      return () => {
-        active = false;
-      };
-    }, []),
+      void reloadHome();
+    }, [reloadHome]),
   );
+
+  const { refreshing, onRefresh } = usePullToRefresh(reloadHome);
 
   async function togglePresence() {
     if (presenceBusy) return;
@@ -248,6 +256,8 @@ export default function Home() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
       >
         {/* Top bar */}
         <View style={styles.topBar}>
@@ -401,7 +411,7 @@ export default function Home() {
         pointerEvents="box-none"
         style={[
           styles.goOnlineWrapper,
-          { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) },
+          { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 26 : 12) },
         ]}
       >
         {presence === 'ONLINE' ? (

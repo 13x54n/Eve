@@ -9,7 +9,7 @@ Rider and driver apps sign in with **Auth0 Universal Login**. The API still auth
 3. `@eve/auth` verifies the JWT against Auth0 JWKS (`iss` = tenant, `aud` = Native Client ID), finds or creates a Prisma `User`, and returns `{ accessToken, user }` (Eve JWT).
 4. The app stores the Eve token in Secure Store and sends `Authorization: Bearer` on later API and socket calls, same as before.
 
-Logout: Auth0 `clearSession` with a dedicated `/logout` `returnTo` (not the login `/callback` URL), then delete the Eve token.
+Logout: the apps clear Auth0 credentials and the Eve JWT locally. They do not wait on Auth0 `clearSession` (in-app browser `/v2/logout` often never returns). The next Universal Login uses `prompt=login` so SSO does not silently sign the user back in. Allowed Logout URLs remain documented for the Native app.
 
 ## Auth service endpoints
 

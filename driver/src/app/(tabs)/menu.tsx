@@ -9,6 +9,7 @@ import { Brand, Spacing } from '@/constants/theme';
 import { useBrand } from '@/context/theme-context';
 import { lightImpact } from '@/lib/haptics';
 import { ActionButton } from '@/components/action-button';
+import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 
 type MenuRow = {
   icon: keyof typeof Feather.glyphMap;
@@ -52,13 +53,21 @@ export default function MenuScreen() {
   const [profile, setProfile] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
 
+  const loadProfile = useCallback(async () => {
+    try {
+      setProfile(await getDriverProfile());
+    } catch {
+      /* keep placeholder state */
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      let mounted = true;
-      void getDriverProfile().then((driver) => { if (mounted) setProfile(driver); }).catch(() => { /* keep placeholder state */ });
-      return () => { mounted = false; };
-    }, []),
+      void loadProfile();
+    }, [loadProfile]),
   );
+
+  const { refreshing, onRefresh } = usePullToRefresh(loadProfile);
 
   const vehicle = profile?.vehicles?.[0];
   const vehicleSublabel = vehicle
@@ -84,8 +93,9 @@ export default function MenuScreen() {
               lightImpact();
               router.replace('/(auth)/welcome');
             } catch {
-              setSigningOut(false);
               Alert.alert('Could not sign out', 'Please try again.');
+            } finally {
+              setSigningOut(false);
             }
           })();
         },
@@ -144,18 +154,13 @@ export default function MenuScreen() {
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+      >
         <Text style={styles.topBarTitle}>Menu</Text>
-        <Pressable style={styles.profileCard} onPress={() => router.push('/profile/edit' as Href)}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile?.user?.name ?? 'Loading...'}</Text>
-            <Text style={styles.tripsText}>
-              {profile?.rating ? `${Number(profile.rating).toFixed(2)} · ` : ''}
-              {profile?.city ?? 'No city set'}
-            </Text>
-          </View>
-        </Pressable>
+        
         <View
           style={styles.list}
         >

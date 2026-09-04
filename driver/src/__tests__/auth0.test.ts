@@ -1,5 +1,10 @@
 import { Platform } from 'react-native';
-import { auth0LogoutReturnTo, requireAuth0Config } from '@/lib/auth0';
+import {
+  auth0AuthorizeParameters,
+  auth0ClearSessionParameters,
+  auth0LogoutReturnTo,
+  requireAuth0Config,
+} from '@/lib/auth0';
 
 describe('requireAuth0Config', () => {
   const originalDomain = process.env.EXPO_PUBLIC_AUTH0_DOMAIN;
@@ -46,5 +51,20 @@ describe('auth0LogoutReturnTo', () => {
     expect(auth0LogoutReturnTo()).toBe(
       'evedriver://dev-example.us.auth0.com/android/ca.sherpafoods.evedriver/logout',
     );
+  });
+
+  it('passes returnToUrl (not returnTo) to clearSession', () => {
+    Platform.OS = 'ios';
+    expect(auth0ClearSessionParameters()).toEqual({
+      returnToUrl:
+        'evedriver://dev-example.us.auth0.com/ios/ca.sherpafoods.evedriver/logout',
+    });
+  });
+
+  it('forces a fresh Auth0 login after local logout', () => {
+    expect(auth0AuthorizeParameters('login')).toEqual({
+      scope: 'openid profile email offline_access',
+      additionalParameters: { prompt: 'login' },
+    });
   });
 });

@@ -77,6 +77,7 @@ Eve is a full-stack ride-matching platform featuring:
 
 ```
 Eve/
+  www/       Next.js 16 marketing site — open-source landing page (port 3020)
   rider/     Expo 57 rider app — Auth0, request, offers, tracking, history
   driver/    Expo 57 driver app — Auth0, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
@@ -198,6 +199,7 @@ Ensure these ports are available:
 - `6379` - Redis
 - `3000` - Admin console
 - `3010` - Monitor dashboard
+- `3020` - Marketing site (`www/`)
 - `8081` - Expo dev server
 
 ### Verify Prerequisites
@@ -362,6 +364,14 @@ cd monitor && npm install && npm run dev
 
 Liveness board: [http://localhost:3010](http://localhost:3010). Probes auth/location/ride/notify/admin `/health` and frontend origins. See `monitor/.env.example`.
 
+Marketing site (open-source landing page, no backend required):
+
+```bash
+cd www && npm install && npm run dev
+```
+
+Landing page: [http://localhost:3020](http://localhost:3020). Set `NEXT_PUBLIC_GITHUB_URL` in `www/.env.local` for GitHub links.
+
 Restart Expo after changing `EXPO_PUBLIC_*` env vars.
 
 Store release (App Store / Play, TestFlight, EAS identifiers): see [`STORE.md`](STORE.md).
@@ -509,7 +519,7 @@ npm run load:smoke
 
 ## License
 
-Private - All rights reserved
+[MIT](LICENSE)
 
 ## Support
 
@@ -520,4 +530,4 @@ For issues and questions:
 
 ---
 
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-02

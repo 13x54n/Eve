@@ -30,6 +30,19 @@ export function auth0LogoutReturnTo() {
   return `${AUTH0_CUSTOM_SCHEME}://${domain}/${platform}/${AUTH0_BUNDLE_ID}/logout`;
 }
 
+/** react-native-auth0 v5: `/v2/logout` uses `returnToUrl`. `returnTo` is ignored and Auth0 then uses the login callback, which opens Universal Login. */
+export function auth0ClearSessionParameters() {
+  return { returnToUrl: auth0LogoutReturnTo() };
+}
+
+export function auth0AuthorizeParameters(mode: "login" | "signup") {
+  return {
+    scope: AUTH0_SCOPE,
+    additionalParameters:
+      mode === "signup" ? { screen_hint: "signup" } : { prompt: "login" },
+  };
+}
+
 export function isAuth0Cancelled(error: unknown) {
   return (
     error instanceof WebAuthError &&
@@ -41,15 +54,9 @@ export function useAuth0Authorize() {
   const { authorize, getCredentials } = useAuth0();
 
   return async function authorizeAndGetIdToken(mode: "login" | "signup") {
-    await authorize(
-      {
-        scope: AUTH0_SCOPE,
-        ...(mode === "signup"
-          ? { additionalParameters: { screen_hint: "signup" } }
-          : {}),
-      },
-      { customScheme: AUTH0_CUSTOM_SCHEME },
-    );
+    await authorize(auth0AuthorizeParameters(mode), {
+      customScheme: AUTH0_CUSTOM_SCHEME,
+    });
     const credentials = await getCredentials();
     if (!credentials?.idToken) {
       throw new Error("Auth0 did not return an ID token");

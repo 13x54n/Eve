@@ -15,7 +15,6 @@ import {
   logout as clearStoredSession,
   type AuthResponse,
 } from "@/services/auth";
-import { AUTH0_CUSTOM_SCHEME, auth0LogoutReturnTo } from "@/lib/auth0";
 import { setPushNotificationsEnabled } from "@/services/notifications";
 import { OfflineStorage } from "@/lib/offline-storage";
 import { useNetwork } from "@/context/network-context";
@@ -39,18 +38,18 @@ function isUnauthorized(error: unknown) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { clearSession, isLoading: auth0Loading } = useAuth0();
+  const { clearCredentials, isLoading: auth0Loading } = useAuth0();
   const { isOnline } = useNetwork();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [hasStoredSession, setHasStoredSession] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
+    // Do not await Auth0 webAuth.clearSession. Custom Tabs / ASWebAuthenticationSession
+    // often never return from /v2/logout, which freezes Log out on "Logging out...".
+    // Local credentials + Eve token are enough; the next authorize() uses prompt=login.
     try {
-      await clearSession(
-        { returnTo: auth0LogoutReturnTo() },
-        { customScheme: AUTH0_CUSTOM_SCHEME },
-      );
+      await clearCredentials();
     } catch {
     }
     await clearStoredSession();
@@ -58,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await actionQueue.clear();
     setUser(null);
     setHasStoredSession(false);
-  }, [clearSession]);
+  }, [clearCredentials]);
 
   useEffect(() => {
     if (auth0Loading) return;

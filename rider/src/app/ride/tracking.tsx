@@ -289,24 +289,10 @@ export default function TrackingScreen() {
 
       <View style={styles.overlay} pointerEvents="box-none">
         <View style={[styles.card, { paddingBottom: Math.max(20, insets.bottom + 10) }]} pointerEvents="auto">
-          <View style={styles.handle} />
+          {/* <View style={styles.handle} /> */}
           <View style={styles.statusRow}>
             <Text style={styles.eyebrow}>{stageLabel.toUpperCase()}</Text>
-            <View style={styles.etaRow}>
-              {headingToPickup && pickupEtaMin != null ? (
-                <View style={styles.etaItem}>
-                  <Text style={styles.etaCaption}>Pickup</Text>
-                  <Text style={styles.time}>{pickupEtaMin} min</Text>
-                </View>
-              ) : null}
-              <View style={styles.etaItem}>
-                <Text style={styles.etaCaption}>{destEtaLabel}</Text>
-                <Text style={styles.time}>{dropoffEtaMin} min</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.driverRow}>
+            <View style={styles.driverRow}>
             <View style={styles.driverAvatar}>
               <Text style={styles.driverInitial}>{driverName[0]?.toUpperCase() ?? "?"}</Text>
             </View>
@@ -325,6 +311,21 @@ export default function TrackingScreen() {
             </View>
             {plate ? <Text style={styles.plate}>{plate}</Text> : null}
           </View>
+            <View style={styles.etaRow}>
+              {headingToPickup && pickupEtaMin != null ? (
+                <View style={styles.etaItem}>
+                  <Text style={styles.etaCaption}>Pickup</Text>
+                  <Text style={styles.time}>{pickupEtaMin} min</Text>
+                </View>
+              ) : null}
+              <View style={styles.etaItem}>
+                <Text style={styles.etaCaption}>{destEtaLabel}</Text>
+                <Text style={styles.time}>{dropoffEtaMin} min</Text>
+              </View>
+            </View>
+          </View>
+
+          
 
           {isRecipient ? null : (
           <View style={styles.actions}>
@@ -435,14 +436,7 @@ export default function TrackingScreen() {
         onConfirm={(location) => void confirmRouteEdit(location)}
       />
 
-      <Pressable
-        style={[styles.fab, { top: insets.top + 8 }]}
-        onPress={() => router.replace("/(tabs)/home")}
-        accessibilityRole="button"
-        accessibilityLabel="Back home"
-      >
-        <Feather name="chevron-down" size={22} color={Brand.text} />
-      </Pressable>
+      
     </View>
   );
 }
@@ -476,8 +470,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   card: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: 30,
+    paddingTop: 20,
     backgroundColor: Brand.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -498,7 +492,7 @@ const styles = StyleSheet.create({
   statusRow: {
     gap: 8,
   },
-  eyebrow: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1 },
+  eyebrow: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700", letterSpacing: 1, textAlign: "center" },
   etaRow: { flexDirection: "row", alignItems: "flex-end", gap: 20 },
   etaItem: { minWidth: 88 },
   etaCaption: { color: Brand.textSecondary, fontSize: 11, fontWeight: "700" },
@@ -569,7 +563,7 @@ const styles = StyleSheet.create({
   routeCopy: { flex: 1, minWidth: 0, justifyContent: "space-between", gap: 14 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { color: Brand.text, fontSize: 13 },
-  cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8 },
+  cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8, backgroundColor: Brand.danger },
   routeActions: { flexDirection: "row", gap: 8, marginTop: 12 },
   routeAction: {
     flex: 1,
@@ -581,5 +575,5 @@ const styles = StyleSheet.create({
   routeActionText: { color: Brand.accent, fontWeight: "700", fontSize: 13 },
   share: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 10, paddingVertical: 10 },
   shareText: { color: Brand.accent, fontWeight: "700", fontSize: 13 },
-  cancelText: { color: Brand.danger, fontWeight: "700", fontSize: 14 },
+  cancelText: { color: "#ffffff", fontWeight: "700", fontSize: 14 },
 });

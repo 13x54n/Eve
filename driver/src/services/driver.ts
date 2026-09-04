@@ -33,6 +33,8 @@ export type DriverDocument = {
   type: DriverDocumentType;
   status: ReviewStatus;
   fileUrl?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
 };
 
 export type DriverProfile = {

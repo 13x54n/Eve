@@ -5,12 +5,13 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createSupportTicket, listSupportTickets, SupportTicket } from "@/services/support";
 import { ActionButton } from "@/components/action-button";
+import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 
 export default function SupportListScreen() {
   const { tripId } = useLocalSearchParams<{ tripId?: string }>();
   const insets = useSafeAreaInsets();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
-  const [subject, setSubject] = useState(tripId ? "Help with my trip" : "Help with Eve");
+  const [subject, setSubject] = useState(tripId ? "" : "");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
 
@@ -25,6 +26,8 @@ export default function SupportListScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const { refreshing, onRefresh } = usePullToRefresh(load);
 
   async function startTicket() {
     if (!body.trim()) {
@@ -50,7 +53,11 @@ export default function SupportListScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { paddingTop: insets.top + 12 }]}>
+    <ScrollView
+      contentContainerStyle={[styles.container, { paddingTop: insets.top + 12 }]}
+      alwaysBounceVertical
+      refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+    >
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} accessibilityLabel="Go back">
           <Feather name="arrow-left" size={22} color="#111827" />
