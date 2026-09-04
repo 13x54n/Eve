@@ -1,5 +1,6 @@
 **/node_modules
 **/.expo
+**/.next/
 **/.env
 **/.env*.local
 **/*.jks
