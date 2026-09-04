@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TabScreen } from '@/components/tab-screen';
 import Feather from '@expo/vector-icons/Feather';
 import { router, useFocusEffect, type Href } from 'expo-router';
 import { getDriverProfile } from '@/services/driver';
@@ -153,22 +154,22 @@ export default function MenuScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
+    <TabScreen style={[styles.safeArea, { backgroundColor: brand.canvas }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         alwaysBounceVertical
         refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+        style={styles.scroll}
+        contentContainerStyle={styles.listContent}
       >
         <Text style={styles.topBarTitle}>Menu</Text>
         
-        <View
-          style={styles.list}
-        >
+        <View>
           <SettingsSection title="Account" rows={accountRows} />
           <SettingsSection title="Resources" rows={resourceRows} />
           <SettingsSection title="Preferences" rows={preferenceRows} />
         </View>
-        <View style={{ paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 64 : 12) }}>
+        <View style={{ paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 6 : 12) }}>
           <ActionButton
             style={styles.signOutButton}
             textStyle={styles.signOutText}
@@ -180,11 +181,14 @@ export default function MenuScreen() {
           <Text style={styles.versionText}>Eve Driver · v1.0.0</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </TabScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: Brand.canvas,
@@ -230,8 +234,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Brand.textSecondary,
   },
-  list: { flex: 1 },
-  listContent: { paddingBottom: Spacing.three },
+  listContent: { flexGrow: 1, paddingBottom: Spacing.three },
   section: { marginBottom: Spacing.three },
   sectionTitle: {
     marginBottom: 8,

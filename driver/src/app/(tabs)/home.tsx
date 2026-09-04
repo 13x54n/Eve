@@ -10,7 +10,8 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TabScreen } from '@/components/tab-screen';
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect, usePathname, type Href } from 'expo-router';
 import BusyHoursChart from '@/components/busyHourChart';
@@ -250,10 +251,12 @@ export default function Home() {
   }
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={['top']}>
+    <TabScreen style={[styles.safeArea, { backgroundColor: brand.canvas }]}>
       <StatusBar barStyle="dark-content" />
 
+      <View style={styles.scrollHost} collapsable={false}>
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         alwaysBounceVertical
@@ -315,7 +318,7 @@ export default function Home() {
                 ) : null}
                 <Text style={styles.requestRoute}>{trip.pickupAddress}</Text>
                 <Text style={styles.requestRoute}>to {trip.dropoffAddress}</Text>
-                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · suggested ${trip.fareTotal.toFixed(2)} (cash on arrival)</Text>
+                <Text style={styles.requestMeta}>{trip.distanceKm.toFixed(1)} km · suggested ${trip.fareTotal.toFixed(2)} USDC</Text>
                 <View style={styles.offerRow}>
                   <TextInput
                     style={styles.offerInput}
@@ -401,6 +404,7 @@ export default function Home() {
         {/* Spacer so content isn't hidden behind the fixed button */}
         <View style={{ height: insets.bottom + 140 }} />
       </ScrollView>
+      </View>
 
       {/* Fixed "Go Online" button — pinned above the bottom tab bar.
           Sits outside the ScrollView so it stays put while scrolling.
@@ -436,7 +440,7 @@ export default function Home() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </TabScreen>
   );
 }
 
@@ -444,6 +448,12 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Brand.canvas,
+  },
+  scrollHost: {
+    flex: 1,
+  },
+  scroll: {
+    flex: 1,
   },
   scrollContent: {
     paddingBottom: 2,

@@ -30,17 +30,27 @@ import {
 
 const skipInVitest = () => Boolean(process.env.VITEST);
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
+const WINDOW_MS = 15 * 60 * 1000;
+
+const credentialLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  limit: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInVitest,
+});
+
+const sessionLimiter = rateLimit({
+  windowMs: WINDOW_MS,
+  limit: 400,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInVitest,
 });
 
 const driverLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30,
+  windowMs: WINDOW_MS,
+  limit: 400,
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInVitest,
@@ -48,7 +58,7 @@ const driverLimiter = rateLimit({
 
 export const authRouter = Router();
 
-authRouter.post("/register", limiter, async (req, res, next) => {
+authRouter.post("/register", credentialLimiter, async (req, res, next) => {
   try {
     res.status(201).json(await registerRider(registerSchema.parse(req.body)));
   } catch (error) {
@@ -56,7 +66,7 @@ authRouter.post("/register", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/login", limiter, async (req, res, next) => {
+authRouter.post("/login", credentialLimiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginRider(loginSchema.parse(req.body)));
   } catch (error) {
@@ -64,7 +74,7 @@ authRouter.post("/login", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/auth0", limiter, async (req, res, next) => {
+authRouter.post("/auth0", sessionLimiter, async (req, res, next) => {
   try {
     res.status(200).json(
       await exchangeAuth0Session("RIDER", auth0ExchangeSchema.parse(req.body).idToken),
@@ -74,7 +84,7 @@ authRouter.post("/auth0", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/driver/register", limiter, async (req, res, next) => {
+authRouter.post("/driver/register", credentialLimiter, async (req, res, next) => {
   try {
     res.status(201).json(await registerDriver(driverRegisterSchema.parse(req.body)));
   } catch (error) {
@@ -82,7 +92,7 @@ authRouter.post("/driver/register", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/driver/login", limiter, async (req, res, next) => {
+authRouter.post("/driver/login", credentialLimiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginDriver(driverLoginSchema.parse(req.body)));
   } catch (error) {
@@ -90,7 +100,7 @@ authRouter.post("/driver/login", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/driver/auth0", limiter, async (req, res, next) => {
+authRouter.post("/driver/auth0", sessionLimiter, async (req, res, next) => {
   try {
     res.status(200).json(
       await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
@@ -100,7 +110,7 @@ authRouter.post("/driver/auth0", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/admin/login", limiter, async (req, res, next) => {
+authRouter.post("/admin/login", credentialLimiter, async (req, res, next) => {
   try {
     res.status(200).json(await loginAdmin(loginSchema.parse(req.body), {
       ip: req.ip,
@@ -111,7 +121,7 @@ authRouter.post("/admin/login", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/admin/refresh", limiter, async (req, res, next) => {
+authRouter.post("/admin/refresh", sessionLimiter, async (req, res, next) => {
   try {
     res.status(200).json(
       await refreshAdminSession(refreshTokenSchema.parse(req.body).refreshToken),
@@ -133,7 +143,7 @@ authRouter.post("/admin/logout", async (req, res, next) => {
   }
 });
 
-authRouter.post("/forgot-password", limiter, async (req, res, next) => {
+authRouter.post("/forgot-password", credentialLimiter, async (req, res, next) => {
   try {
     const { email } = forgotPasswordSchema.parse(req.body);
     await requestPasswordReset(email);
@@ -145,7 +155,7 @@ authRouter.post("/forgot-password", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/reset-password", limiter, async (req, res, next) => {
+authRouter.post("/reset-password", credentialLimiter, async (req, res, next) => {
   try {
     await resetPassword(resetPasswordSchema.parse(req.body));
     res.status(200).json({ message: "Password reset successfully" });
@@ -154,7 +164,7 @@ authRouter.post("/reset-password", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
+authRouter.get("/me", sessionLimiter, requireAuth, async (req, res, next) => {
   try {
     const session = (req as AuthenticatedRequest).user;
     const user = await getUserById(session.id, session.role);
@@ -164,7 +174,7 @@ authRouter.get("/me", limiter, requireAuth, async (req, res, next) => {
   }
 });
 
-authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
+authRouter.patch("/me", sessionLimiter, requireAuth, async (req, res, next) => {
   try {
     const session = (req as AuthenticatedRequest).user;
     const user = await updateProfile(
@@ -178,7 +188,7 @@ authRouter.patch("/me", limiter, requireAuth, async (req, res, next) => {
   }
 });
 
-authRouter.post("/change-password", limiter, requireAuth, async (req, res, next) => {
+authRouter.post("/change-password", credentialLimiter, requireAuth, async (req, res, next) => {
   try {
     await changePassword(
       (req as AuthenticatedRequest).user.id,

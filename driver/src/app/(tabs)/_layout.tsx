@@ -1,20 +1,40 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import Feather from "@expo/vector-icons/Feather";
+import { Tabs } from "expo-router";
+
+const ACCENT = "#2E4ED5";
+const CANVAS = "#F7F8EF";
 
 export default function TabsLayout() {
   return (
-    <NativeTabs backBehavior="history">
-      <NativeTabs.Trigger name="home" disablePopToTop>
-        <NativeTabs.Trigger.Icon sf={{ default: "house", selected: "house.fill" }} md="home" />
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="earnings" disablePopToTop>
-        <NativeTabs.Trigger.Icon sf={{ default: "creditcard", selected: "creditcard.fill" }} md="account_balance_wallet" />
-        <NativeTabs.Trigger.Label>Earnings</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="menu" disablePopToTop>
-        <NativeTabs.Trigger.Icon sf={{ default: "line.3.horizontal", selected: "line.3.horizontal" }} md="menu" />
-        <NativeTabs.Trigger.Label>Menu</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
+    <Tabs
+      detachInactiveScreens={false}
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: ACCENT,
+        sceneStyle: { flex: 1, height: "100%", width: "100%", backgroundColor: CANVAS },
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color, size }) => <Feather name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="earnings"
+        options={{
+          title: "Earnings",
+          tabBarIcon: ({ color, size }) => <Feather name="credit-card" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="menu"
+        options={{
+          title: "Menu",
+          tabBarIcon: ({ color, size }) => <Feather name="menu" size={size} color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }

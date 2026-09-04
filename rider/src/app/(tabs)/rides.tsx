@@ -2,7 +2,8 @@ import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TabScreen } from "@/components/tab-screen";
 import { getTrips, Trip } from "@/services/trips";
 import { Image } from "expo-image";
 import { ActionButton } from "@/components/action-button";
@@ -53,9 +54,10 @@ export default function RidesScreen() {
   const visibleRides = trips.filter((trip) => filter === "All" || displayStatus(trip.status) === filter);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <TabScreen style={styles.safeArea}>
 
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={[
           styles.container,
           { paddingBottom: insets.bottom + (Platform.OS === "ios" ? 18 : 36) },
@@ -122,13 +124,14 @@ export default function RidesScreen() {
           onPress={() => router.push("/(tabs)/home")}
         />
       </ScrollView>
-    </SafeAreaView>
+    </TabScreen>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#F7F8EF" },
-  container: { flexGrow: 1, padding:20, backgroundColor: "#F7F8EF", paddingTop: 0 },
+  scroll: { flex: 1 },
+  container: { padding:20, backgroundColor: "#F7F8EF", paddingTop: 0 },
   header: { flexDirection: "row", alignItems: "center", marginBottom: 4, justifyContent: "center" },
   eyebrow: { color: "#6B7280", fontSize: 11, fontWeight: "700", letterSpacing: 1 },
   title: { color: "#111827", fontSize: 30, fontWeight: "800" },

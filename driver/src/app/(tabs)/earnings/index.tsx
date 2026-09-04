@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,17 @@ import {
   StatusBar,
   SectionList,
   Platform,
+  Alert,
+  Linking,
+  Share,
+  ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { TabScreen } from '@/components/tab-screen';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
+import { getDriverWallet, type UsdcWallet } from '@/services/wallet';
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 
 type TxType = 'trip' | 'tip' | 'bonus' | 'cashout';
@@ -80,37 +85,57 @@ function formatMoney(n: number) {
   return `${sign}$${Math.abs(n).toFixed(2)}`;
 }
 
+function formatUsdc(balance: string) {
+  const value = Number(balance);
+  return Number.isFinite(value) ? value.toFixed(6) : balance;
+}
+
 export default function Earnings() {
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
+  const [wallet, setWallet] = useState<UsdcWallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
-    try {
-      if (!opts?.silent) setLoading(true);
+    if (!opts?.silent) setLoading(true);
+    const [earningsResult, walletResult] = await Promise.allSettled([
+      getEarnings(),
+      getDriverWallet(),
+    ]);
+
+    if (earningsResult.status === 'fulfilled') {
+      setSummary(earningsResult.value.summary);
+      setRecentTrips(earningsResult.value.recentTrips);
       setError(false);
-      const result = await getEarnings();
-      setSummary(result.summary);
-      setRecentTrips(result.recentTrips);
-    } catch {
+    } else {
       setError(true);
-    } finally {
-      setLoading(false);
     }
+
+    if (walletResult.status === 'fulfilled') {
+      setWallet(walletResult.value);
+      setWalletError(null);
+    } else {
+      setWallet(null);
+      setWalletError('Could not load your USDC wallet.');
+    }
+
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load({ silent: true });
+    }, [load]),
+  );
 
   const { refreshing, onRefresh } = usePullToRefresh(() => load({ silent: true }));
 
   const sections = useMemo(() => groupTripsIntoSections(recentTrips), [recentTrips]);
-  const balance = summary?.lifetimeEarnings ?? 0;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <TabScreen style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
 
       {/* Top bar */}
@@ -121,6 +146,7 @@ export default function Earnings() {
       </View>
 
       <SectionList
+        style={styles.list}
         sections={sections}
         keyExtractor={(item) => item.id}
         stickySectionHeadersEnabled={false}
@@ -129,7 +155,6 @@ export default function Earnings() {
         refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         ListHeaderComponent={
           <>
-            {/* Wallet balance card */}
             <LinearGradient
               colors={['#2E4ED2', '#3B82F6']}
               start={{ x: 0, y: 0 }}
@@ -139,20 +164,58 @@ export default function Earnings() {
               <View style={styles.walletCardTopRow}>
                 <View style={styles.walletChip}>
                   <MaterialCommunityIcons name="wallet" size={14} color="#FFFFFF" />
-                  <Text style={styles.walletChipText}>Total Earnings</Text>
+                  <Text style={styles.walletChipText}>USDC balance</Text>
                 </View>
-                <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
               </View>
 
-              <Text style={styles.balanceText}>${balance.toFixed(2)}</Text>
+              {wallet ? (
+                <Text style={styles.balanceText}>{formatUsdc(wallet.balance)} USDC</Text>
+              ) : walletError ? (
+                <Text style={styles.walletCardError}>{walletError}</Text>
+              ) : (
+                <ActivityIndicator color="#FFFFFF" style={styles.walletSpinner} />
+              )}
 
+              <Text style={styles.walletDisclaimer}>
+                Arc Testnet USDC. Completed trip fares are released here. This is testnet value, not mainnet dollars.
+              </Text>
 
-              {/* Decorative card texture */}
               <View pointerEvents="none" style={styles.cardGlowOne} />
               <View pointerEvents="none" style={styles.cardGlowTwo} />
             </LinearGradient>
 
-            {/* Quick stats */}
+            {/* {wallet ? (
+              <View style={styles.addressCard}>
+                <Text style={styles.addressLabel}>Address</Text>
+                <Text selectable style={styles.addressText}>{wallet.address}</Text>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Copy wallet address"
+                  onPress={() => {
+                    void Share.share({ message: wallet.address }).catch(() => {
+                      Alert.alert('Wallet address', wallet.address);
+                    });
+                  }}
+                >
+                  <Text style={styles.addressLink}>Copy address</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="View wallet on Arcscan"
+                  onPress={() => void Linking.openURL(wallet.explorerUrl)}
+                >
+                  <Text style={styles.addressLink}>View on Arcscan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  accessibilityLabel="Get testnet USDC from Circle faucet"
+                  onPress={() => void Linking.openURL('https://faucet.circle.com')}
+                >
+                  <Text style={[styles.addressLink, styles.addressLinkLast]}>Get testnet USDC from Circle faucet</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null} */}
+
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Today</Text>
@@ -168,7 +231,7 @@ export default function Earnings() {
               </View>
             </View>
 
-            <Text style={styles.historyTitle}>Transaction history</Text>
+            <Text style={styles.historyTitle}>Payout history</Text>
           </>
         }
         renderItem={({ item }) => (
@@ -213,7 +276,7 @@ export default function Earnings() {
           )
         }
       />
-    </SafeAreaView>
+    </TabScreen>
   );
 }
 
@@ -221,6 +284,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f7f8ef',
+  },
+  list: {
+    flex: 1,
   },
 
   // --- Top bar ---
@@ -289,11 +355,57 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
   },
   balanceText: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: -1,
     marginTop: 14,
+  },
+  walletCardError: {
+    marginTop: 14,
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  walletSpinner: {
+    marginTop: 18,
+    alignSelf: 'flex-start',
+  },
+  walletDisclaimer: {
+    marginTop: 12,
+    fontSize: 12,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 18,
+  },
+  addressCard: {
+    marginTop: 14,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F0F1EC',
+  },
+  addressLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginBottom: 6,
+  },
+  addressText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  addressLink: {
+    marginBottom: 10,
+    color: '#2E4ED2',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  addressLinkLast: {
+    marginBottom: 0,
   },
   walletCardFooter: {
     flexDirection: 'row',

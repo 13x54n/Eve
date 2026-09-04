@@ -2,7 +2,8 @@ import Feather from "@expo/vector-icons/Feather";
 import { router, useFocusEffect, type Href } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { TabScreen } from "@/components/tab-screen";
 import { getSessionUser } from "@/services/auth";
 import { useAuth } from "@/context/auth-context";
 import { Brand, Spacing } from "@/constants/theme";
@@ -106,6 +107,12 @@ export default function ProfileScreen() {
 
   const preferenceRows: MenuRow[] = [
     {
+      icon: "credit-card",
+      title: "USDC wallet",
+      detail: "Arc Testnet balance and deposit address",
+      onPress: () => router.push("/profile/wallet" as Href),
+    },
+    {
       icon: "lock",
       title: "Security",
       detail: "Auth0 sign-in",
@@ -141,7 +148,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: brand.canvas }]} edges={["top"]}>
+    <TabScreen style={[styles.container, { backgroundColor: brand.canvas }]}>
       <ScrollView
         style={styles.list}
         contentContainerStyle={styles.listContent}
@@ -178,7 +185,7 @@ export default function ProfileScreen() {
           onPress={handleLogOut}
         />
       </View>
-    </SafeAreaView>
+    </TabScreen>
   );
 }
 

@@ -3,7 +3,6 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -13,6 +12,7 @@ import {
   View,
   FlatList,
 } from "react-native";
+import { TabScreen } from "@/components/tab-screen";
 import { Image } from "expo-image";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
@@ -36,7 +36,6 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const [greetingTemplate, setGreetingTemplate] = useState(DEFAULT_GREETING_TEMPLATE);
   const [region, setRegion] = useState(FALLBACK_CENTER);
-  const [loading, setLoading] = useState(true);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [destination, setDestination] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -57,7 +56,7 @@ export default function HomeScreen() {
     }, [activeTrip?.id, activeTrip?.status, refreshActive]),
   );
 
-  const loadLocation = useCallback(async (isInitial = false) => {
+  const loadLocation = useCallback(async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -72,20 +71,18 @@ export default function HomeScreen() {
       setLocationMessage(null);
     } catch {
       setLocationMessage("Could not find your location. Showing the default map area.");
-    } finally {
-      if (isInitial) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    void loadLocation(true);
+    void loadLocation();
   }, [loadLocation]);
 
   const reloadHome = useCallback(async () => {
     await Promise.all([
       refreshActive(),
       getGreetingTemplate().then(setGreetingTemplate).catch(() => {}),
-      loadLocation(false),
+      loadLocation(),
     ]);
   }, [loadLocation, refreshActive]);
 
@@ -177,18 +174,10 @@ export default function HomeScreen() {
     ]);
   }
 
-  if (loading) {
-    return (
-      <View>
-        <ActivityIndicator size="large" />
-        <Text>Finding your location...</Text>
-      </View>
-    );
-  }
-
   return (
+    <TabScreen style={[styles.container, { backgroundColor: brand.canvas }]}>
     <ScrollView
-      style={[styles.container, { backgroundColor: brand.canvas }]}
+      style={styles.scroll}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
       alwaysBounceVertical
@@ -197,7 +186,7 @@ export default function HomeScreen() {
     >
       <Image
         source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
-        style={{ width: 66, height: 66, marginTop: 26, marginHorizontal: "auto" }}
+        style={{ width: 66, height: 66,  alignSelf: "center" }}
       />
 
 
@@ -355,9 +344,10 @@ export default function HomeScreen() {
 
       <Image
         source={{ uri: "https://images.unsplash.com/vector-1786329675328-b975cece8a57?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }}
-        style={{ width: "90%", height: 230, marginBottom: 16, marginHorizontal: "auto" }}
+        style={{ width: "90%", height: 230, marginBottom: 16, alignSelf: "center" }}
       />
     </ScrollView>
+    </TabScreen>
   );
 }
 
@@ -366,11 +356,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f7f8ef",
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
-    flexGrow: 1,
     paddingVertical: 24,
     paddingHorizontal: 16,
-    paddingTop: 31,
+    paddingTop: 0,
   },
   searchText: { fontSize: 16, color: "black", width: "100%", paddingVertical: 5 },
   title: { fontSize: 28, fontWeight: "700", marginTop: 45, marginBottom: 15 },

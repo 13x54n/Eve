@@ -39,6 +39,7 @@ function RootNavigator() {
     <Stack
       screenOptions={{
         headerShown: false,
+        contentStyle: { flex: 1 },
       }}
     >
       <Stack.Protected guard={isAuthenticated}>

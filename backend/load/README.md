@@ -59,7 +59,7 @@ Start at **20 VUs / 1m**, then **50 VUs / 2m**.
 | File | Purpose |
 |---|---|
 | `health.js` | Smoke `GET /api/health` |
-| `auth.js` | Login/me bursts; **429 is expected** (auth limiter is 20/15m) |
+| `auth.js` | Login/me bursts; **429 is expected** (credential limiter is 100/15m; session/Auth0 limiter is 400/15m) |
 | `search-storm.js` | Many `POST /api/rider/trips` |
 | `offer-market.js` | Incoming + offers; **409 is expected** (one pending offer) |
 | `lifecycle.js` | Create → offer → accept → start → complete |
