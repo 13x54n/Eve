@@ -63,7 +63,7 @@ Eve can be deployed in several configurations:
 
 ### External Services
 
-- Auth0 tenant (production)
+- Privy app (SMS, passkeys, identity tokens, Ethereum + Solana wallets)
 - Mapbox account
 - ImageKit account
 - Email provider (SendGrid, AWS SES, etc.)
@@ -108,7 +108,7 @@ nano .env.prod
 **Required values** (see [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md)):
 - Strong `JWT_ACCESS_SECRET` (64+ chars)
 - Production `DATABASE_URL`
-- Production `AUTH0_DOMAIN` and `AUTH0_CLIENT_ID`
+- Production `PRIVY_APP_ID` and `PRIVY_APP_SECRET`
 - `INTERNAL_SERVICE_SECRET` (96+ chars)
 - ImageKit credentials
 - SMTP configuration
@@ -262,8 +262,8 @@ kubectl create namespace eve-production
 kubectl create secret generic eve-secrets -n eve-production \
   --from-literal=database-url="postgresql://..." \
   --from-literal=jwt-access-secret="..." \
-  --from-literal=auth0-domain="..." \
-  --from-literal=auth0-client-id="..." \
+  --from-literal=privy-app-id="..." \
+  --from-literal=privy-app-secret="..." \
   --from-literal=internal-service-secret="..."
 
 # Create ImageKit secrets
@@ -921,7 +921,7 @@ proxy_send_timeout 3600s;
 ### Pre-Deployment
 
 - [ ] All secrets generated and stored securely
-- [ ] Auth0 production tenant configured
+- [ ] Privy production app configured (SMS, passkeys, two app clients)
 - [ ] Domain DNS records configured
 - [ ] SSL certificates obtained
 - [ ] Database backups configured

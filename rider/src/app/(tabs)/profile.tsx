@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth-context";
 import { Brand, Spacing } from "@/constants/theme";
 import { useBrand } from "@/context/theme-context";
 import { lightImpact } from "@/lib/haptics";
+import { truncateWalletAddress } from "@/lib/privy";
 import { ActionButton } from "@/components/action-button";
 import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 import { Image } from "expo-image";
@@ -54,6 +55,8 @@ export default function ProfileScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [ethereumWallet, setEthereumWallet] = useState("");
+  const [solanaWallet, setSolanaWallet] = useState("");
   const [memberSince, setMemberSince] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
@@ -61,8 +64,10 @@ export default function ProfileScreen() {
     try {
       const sessionUser = await getSessionUser();
       setName(sessionUser.name);
-      setEmail(sessionUser.email);
+      setEmail(sessionUser.email ?? "");
       setPhone(sessionUser.phone ?? "");
+      setEthereumWallet(sessionUser.ethereumWallet ?? "");
+      setSolanaWallet(sessionUser.solanaWallet ?? "");
       setMemberSince(new Date(sessionUser.createdAt).getFullYear().toString());
     } catch {
       /* keep empty state on failure */
@@ -108,7 +113,7 @@ export default function ProfileScreen() {
     {
       icon: "lock",
       title: "Security",
-      detail: "Auth0 sign-in",
+      detail: "SMS and passkey",
       onPress: () => router.push("/profile/security" as Href),
     },
     {
@@ -157,7 +162,7 @@ export default function ProfileScreen() {
           <View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View>
           <View style={styles.identity}>
             <Text style={styles.name}>{name || "Loading..."}</Text>
-            <Text style={styles.email}>{email}</Text>
+            <Text style={styles.email}>{email || "No email on file"}</Text>
             {phone ? <Text style={styles.email}>{phone}</Text> : null}
             <Text style={styles.member}>{memberSince ? `Member since ${memberSince}` : ""}</Text>
           </View>
@@ -165,6 +170,31 @@ export default function ProfileScreen() {
             <Feather name="edit-2" size={16} color={Brand.accent} />
           </Pressable>
         </View>
+        <SettingsSection
+          title="Embedded wallets"
+          rows={[
+            {
+              icon: "credit-card",
+              title: "Ethereum",
+              detail: ethereumWallet ? truncateWalletAddress(ethereumWallet) : "Created on sign-in",
+              onPress: () =>
+                Alert.alert(
+                  "Ethereum wallet",
+                  ethereumWallet || "Your Privy embedded Ethereum wallet is created when you sign in.",
+                ),
+            },
+            {
+              icon: "credit-card",
+              title: "Solana",
+              detail: solanaWallet ? truncateWalletAddress(solanaWallet) : "Created on sign-in",
+              onPress: () =>
+                Alert.alert(
+                  "Solana wallet",
+                  solanaWallet || "Your Privy embedded Solana wallet is created when you sign in.",
+                ),
+            },
+          ]}
+        />
         <SettingsSection title="Preferences" rows={preferenceRows} />
         <SettingsSection title="More" rows={moreRows} />
       </ScrollView>

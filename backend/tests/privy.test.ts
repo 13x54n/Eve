@@ -3,20 +3,21 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { hashPassword, verifyAccessToken } from "@eve/shared";
-import { verifyAuth0IdToken } from "../services/auth/src/auth0.js";
+import { verifyPrivyIdentityToken } from "../services/auth/src/privy.js";
 
-vi.mock("../services/auth/src/auth0.js", () => ({
-  verifyAuth0IdToken: vi.fn(),
+vi.mock("../services/auth/src/privy.js", () => ({
+  verifyPrivyIdentityToken: vi.fn(),
 }));
 
-const mockedVerify = vi.mocked(verifyAuth0IdToken);
+const mockedVerify = vi.mocked(verifyPrivyIdentityToken);
 
-describe("Auth0 token exchange", () => {
-  const riderEmail = `auth0-rider-${Date.now()}@example.com`;
-  const driverEmail = `auth0-driver-${Date.now()}@example.com`;
-  const linkedEmail = `auth0-link-${Date.now()}@example.com`;
-  const dualRiderEmail = `auth0-dual-rider-${Date.now()}@example.com`;
-  const dualDriverEmail = `auth0-dual-driver-${Date.now()}@example.com`;
+describe("Privy token exchange", () => {
+  const riderEmail = `privy-rider-${Date.now()}@example.com`;
+  const driverEmail = `privy-driver-${Date.now()}@example.com`;
+  const linkedEmail = `privy-link-${Date.now()}@example.com`;
+  const dualRiderEmail = `privy-dual-rider-${Date.now()}@example.com`;
+  const dualDriverEmail = `privy-dual-driver-${Date.now()}@example.com`;
+  const riderPhone = `+1555${Date.now().toString().slice(-7)}`;
 
   beforeEach(() => {
     mockedVerify.mockReset();
@@ -24,47 +25,55 @@ describe("Auth0 token exchange", () => {
 
   afterAll(async () => {
     await prisma.user.deleteMany({
-      where: { email: { in: [riderEmail, driverEmail, linkedEmail, dualRiderEmail, dualDriverEmail] } },
+      where: {
+        OR: [
+          { email: { in: [riderEmail, driverEmail, linkedEmail, dualRiderEmail, dualDriverEmail] } },
+          { phone: riderPhone },
+        ],
+      },
     });
   });
 
-  it("creates a rider from a verified Auth0 ID token", async () => {
+  it("creates a rider from a verified Privy identity token", async () => {
     mockedVerify.mockResolvedValue({
-      sub: "auth0|rider-new",
+      privyDid: "did:privy:rider-new",
       email: riderEmail,
-      emailVerified: true,
-      name: "Auth0 Rider",
+      phone: riderPhone,
+      name: "Privy Rider",
+      ethereumWallet: "0x1111111111111111111111111111111111111111",
+      solanaWallet: "SoL111111111111111111111111111111111111111",
     });
 
     const response = await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(response.body.accessToken).toEqual(expect.any(String));
     expect(response.body.user).toMatchObject({
       email: riderEmail,
-      name: "Auth0 Rider",
+      name: "Privy Rider",
       role: "RIDER",
+      ethereumWallet: "0x1111111111111111111111111111111111111111",
+      solanaWallet: "SoL111111111111111111111111111111111111111",
     });
     expect(response.body.user.passwordHash).toBeUndefined();
 
     const stored = await prisma.user.findUnique({ where: { email: riderEmail } });
-    expect(stored?.auth0Sub).toBe("auth0|rider-new");
+    expect(stored?.privyDid).toBe("did:privy:rider-new");
     expect(stored?.passwordHash).toBeNull();
   });
 
-  it("creates a driver from Auth0 and returns a driver profile", async () => {
+  it("creates a driver from Privy and returns a driver profile", async () => {
     mockedVerify.mockResolvedValue({
-      sub: "auth0|driver-new",
+      privyDid: "did:privy:driver-new",
       email: driverEmail,
-      emailVerified: true,
-      name: "Auth0 Driver",
+      name: "Privy Driver",
     });
 
     const response = await request(app)
-      .post("/api/auth/driver/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/driver/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(response.body.user).toMatchObject({
@@ -75,7 +84,7 @@ describe("Auth0 token exchange", () => {
     expect(response.body.driverProfile).toBeTruthy();
   });
 
-  it("links an existing password rider when the Auth0 email is verified", async () => {
+  it("links an existing password rider when the Privy email matches", async () => {
     await prisma.user.create({
       data: {
         name: "Legacy Rider",
@@ -87,45 +96,42 @@ describe("Auth0 token exchange", () => {
     });
 
     mockedVerify.mockResolvedValue({
-      sub: "auth0|legacy-link",
+      privyDid: "did:privy:legacy-link",
       email: linkedEmail,
-      emailVerified: true,
       name: "Legacy Rider",
     });
 
     const response = await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(response.body.user.email).toBe(linkedEmail);
     const stored = await prisma.user.findUnique({ where: { email: linkedEmail } });
-    expect(stored?.auth0Sub).toBe("auth0|legacy-link");
+    expect(stored?.privyDid).toBe("did:privy:legacy-link");
   });
 
   it("lets a rider attach a driver profile on the driver exchange", async () => {
     mockedVerify.mockResolvedValue({
-      sub: "auth0|rider-dual",
+      privyDid: "did:privy:rider-dual",
       email: dualRiderEmail,
-      emailVerified: true,
-      name: "Auth0 Rider",
+      name: "Privy Rider",
     });
 
     await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     mockedVerify.mockResolvedValue({
-      sub: "auth0|rider-dual",
+      privyDid: "did:privy:rider-dual",
       email: dualRiderEmail,
-      emailVerified: true,
-      name: "Auth0 Rider",
+      name: "Privy Rider",
     });
 
     const driverExchange = await request(app)
-      .post("/api/auth/driver/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/driver/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(driverExchange.body.user).toMatchObject({
@@ -149,15 +155,14 @@ describe("Auth0 token exchange", () => {
     expect(payload.sub).toBe(stored?.id);
 
     mockedVerify.mockResolvedValue({
-      sub: "auth0|rider-dual",
+      privyDid: "did:privy:rider-dual",
       email: dualRiderEmail,
-      emailVerified: true,
-      name: "Auth0 Rider",
+      name: "Privy Rider",
     });
 
     const riderExchange = await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(riderExchange.body.user.role).toBe("RIDER");
@@ -166,27 +171,25 @@ describe("Auth0 token exchange", () => {
 
   it("lets a driver attach a rider profile on the rider exchange", async () => {
     mockedVerify.mockResolvedValue({
-      sub: "auth0|driver-dual",
+      privyDid: "did:privy:driver-dual",
       email: dualDriverEmail,
-      emailVerified: true,
-      name: "Auth0 Driver",
+      name: "Privy Driver",
     });
 
     await request(app)
-      .post("/api/auth/driver/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/driver/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     mockedVerify.mockResolvedValue({
-      sub: "auth0|driver-dual",
+      privyDid: "did:privy:driver-dual",
       email: dualDriverEmail,
-      emailVerified: true,
-      name: "Auth0 Driver",
+      name: "Privy Driver",
     });
 
     const riderExchange = await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(200);
 
     expect(riderExchange.body.user.role).toBe("RIDER");
@@ -200,14 +203,14 @@ describe("Auth0 token exchange", () => {
     expect(stored?.driverProfile).toBeTruthy();
   });
 
-  it("rejects an invalid Auth0 token", async () => {
+  it("rejects an invalid Privy token", async () => {
     mockedVerify.mockRejectedValue(
-      Object.assign(new Error("Invalid Auth0 token"), { name: "UnauthorizedError" }),
+      Object.assign(new Error("Invalid Privy token"), { name: "UnauthorizedError" }),
     );
 
     await request(app)
-      .post("/api/auth/auth0")
-      .send({ idToken: "header.payload.signature" })
+      .post("/api/auth/privy")
+      .send({ identityToken: "header.payload.signaturexxxx" })
       .expect(401);
   });
 });

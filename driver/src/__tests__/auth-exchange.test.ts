@@ -1,5 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
-import { ACCESS_TOKEN_KEY, exchangeAuth0 } from '@/services/auth';
+import { ACCESS_TOKEN_KEY, exchangePrivy } from '@/services/auth';
 import { api } from '@/services/api';
 
 jest.mock('@/services/api', () => ({
@@ -10,12 +10,12 @@ jest.mock('@/services/api', () => ({
 
 const mockedApi = api as jest.Mocked<typeof api>;
 
-describe('exchangeAuth0', () => {
+describe('exchangePrivy', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('posts the ID token to /auth/driver/auth0 and stores the access token', async () => {
+  it('posts the identity token to /auth/driver/privy and stores the access token', async () => {
     mockedApi.post.mockResolvedValueOnce({
       data: {
         accessToken: 'eve-jwt',
@@ -23,11 +23,9 @@ describe('exchangeAuth0', () => {
       },
     } as never);
 
-    const result = await exchangeAuth0('id-token');
+    const result = await exchangePrivy({ identityToken: 'id-token' });
 
-    expect(mockedApi.post).toHaveBeenCalledWith('/auth/driver/auth0', {
-      idToken: 'id-token',
-    });
+    expect(mockedApi.post).toHaveBeenCalledWith('/auth/driver/privy', { identityToken: 'id-token' });
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
       ACCESS_TOKEN_KEY,
       'eve-jwt',

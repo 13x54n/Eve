@@ -109,7 +109,7 @@ Follow the **Conventional Commits** specification:
 **Examples**:
 ```bash
 # Good commit messages
-git commit -m "feat(auth): add Auth0 integration"
+git commit -m "feat(auth): add Privy SMS and passkey login"
 git commit -m "fix(ride): prevent duplicate offers"
 git commit -m "docs(api): update endpoint documentation"
 git commit -m "test(location): add H3 matching tests"

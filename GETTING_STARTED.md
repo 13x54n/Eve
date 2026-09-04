@@ -146,9 +146,9 @@ REDIS_URL=redis://localhost:6379
 # JWT Secret (REQUIRED - generate a secure secret)
 JWT_ACCESS_SECRET=<generate-a-long-random-secret>
 
-# Auth0 Configuration (REQUIRED for mobile apps)
-AUTH0_DOMAIN=your-tenant.us.auth0.com
-AUTH0_CLIENT_ID=your_native_app_client_id
+# Privy Configuration (REQUIRED for mobile apps)
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 ```
 
 #### Generate Secure Secrets
@@ -166,16 +166,16 @@ openssl rand -base64 48
 
 Copy the generated values into your `.env` file.
 
-### 3.3 Auth0 Setup (Optional for Backend Only)
+### 3.3 Privy Setup (Optional for Backend Only)
 
-If you want to test mobile apps, you'll need Auth0:
+If you want to test mobile apps, you'll need Privy:
 
-1. Sign up at [auth0.com](https://auth0.com)
-2. Create a **Native** application
-3. Copy Domain and Client ID to `.env`
-4. Configure callback URLs (see [backend/docs/auth.md](backend/docs/auth.md))
+1. Sign up at [dashboard.privy.io](https://dashboard.privy.io)
+2. Create an app and two App Clients (rider and driver)
+3. Enable SMS, passkeys, identity tokens, and Ethereum + Solana wallets
+4. Copy App ID and secret to backend `.env`
 
-**Note**: You can skip Auth0 for now and use the admin console with seeded users.
+**Note**: You can skip Privy for now and use the admin console with seeded users.
 
 ## Step 4: Database Setup
 
@@ -327,12 +327,12 @@ Open http://localhost:3020. Optionally set `NEXT_PUBLIC_GITHUB_URL` in `.env.loc
 
 ## Step 8: Mobile Apps Setup
 
-Mobile apps require additional setup for Mapbox and Auth0.
+Mobile apps require additional setup for Mapbox and Privy.
 
 ### Prerequisites for Mobile Development
 
 - **Xcode** 15+ (for iOS) or **Android Studio** (for Android)
-- **Auth0 account** configured
+- **Privy app** configured
 - **Mapbox account** for maps
 
 ### 8.1 Rider App Setup
@@ -350,8 +350,9 @@ cp .env.example .env
 # EXPO_PUBLIC_AUTH_URL=http://<YOUR_LAN_IP>:4001/api
 # EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:4003/api
 # EXPO_PUBLIC_WS_URL=http://<YOUR_LAN_IP>:4004
-# EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
-# EXPO_PUBLIC_AUTH0_CLIENT_ID=your_client_id
+# EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+# EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
+# EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 # EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token
 ```
 
@@ -376,7 +377,7 @@ npx expo run:ios
 npx expo run:android
 ```
 
-This builds a development client with Auth0 and Mapbox integrated.
+This builds a development client with Privy and Mapbox integrated.
 
 ### 8.3 Driver App Setup
 
@@ -459,7 +460,7 @@ Now that Eve is running:
    ```
 
 5. **Set Up Mobile Apps**
-   - Configure Auth0 properly
+   - Configure Privy properly
    - Get Mapbox token
    - Build development clients
 
@@ -527,13 +528,13 @@ npm install
 npm run db:generate
 ```
 
-### Auth0 Configuration Issues
+### Privy Configuration Issues
 
-**Error**: `Invalid callback URL`
+**Error**: identity token unavailable or 401 on `/auth/privy`
 
 **Solution**:
-- Verify callback URLs in Auth0 dashboard match exactly
-- Check `AUTH0_DOMAIN` has no `https://` or trailing slash
+- Enable identity tokens, SMS, and passkeys in the Privy Dashboard
+- Check `PRIVY_APP_ID` / `EXPO_PUBLIC_PRIVY_CLIENT_ID`
 - See [backend/docs/auth.md](backend/docs/auth.md) for details
 
 ### Expo Development Client Issues

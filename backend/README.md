@@ -28,7 +28,7 @@ See **[docs/docker.md](docs/docker.md)** for health URLs, logs, and seed.
 
 ### Without Docker
 
-Run Postgres and Redis, then from `backend/`: `npm run dev` (starts all five services). See **[docs/auth.md](docs/auth.md)** for Auth0 (rider/driver) and admin password login.
+Run Postgres and Redis, then from `backend/`: `npm run dev` (starts all five services). See **[docs/auth.md](docs/auth.md)** for Privy (rider/driver) and admin password login.
 
 ## Scripts (from `backend/`)
 

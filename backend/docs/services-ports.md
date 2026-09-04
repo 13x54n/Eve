@@ -4,7 +4,7 @@ Auth, location, ride, notify, and admin each run as their own Node process. Ther
 
 | Package | Port | Role |
 | --- | --- | --- |
-| `@eve/auth` | 4001 | Auth0, admin login, `/api/auth`, driver `/register` `/login` `/auth0` |
+| `@eve/auth` | 4001 | Privy, admin login, `/api/auth`, driver `/register` `/login` `/privy` |
 | `@eve/location` | 4002 HTTP, 50051 gRPC | Matchmaking geo |
 | `@eve/ride` | 4003 | Rider/driver/public HTTP, including `PATCH /api/driver/presence` |
 | `@eve/notify` | 4004 HTTP + Socket.IO, 50052 gRPC | Realtime |

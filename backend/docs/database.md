@@ -67,9 +67,11 @@ Central authentication model. All users (riders, drivers, admin) have a User rec
 ```prisma
 model User {
   id            Int           @id @default(autoincrement())
-  email         String        @unique
-  passwordHash  String?       // Null for Auth0-only users
-  auth0Sub      String?       @unique
+  email         String?       @unique
+  passwordHash  String?       // Null for Privy-only users
+  privyDid      String?       @unique
+  ethereumWallet String?
+  solanaWallet   String?
   phoneNumber   String?
   role          UserRole      // RIDER, DRIVER, ADMIN
   accountStatus AccountStatus // ACTIVE, SUSPENDED, PENDING, DELETED
@@ -96,8 +98,8 @@ enum AccountStatus {
 ```
 
 **Key Points**:
-- `auth0Sub` links to Auth0 identity
-- `passwordHash` is null for Auth0 users
+- `privyDid` links to Privy identity
+- `passwordHash` is null for Privy users
 - `role` is the primary user type (RIDER or DRIVER)
 - Each user can have one of each profile type
 

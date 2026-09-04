@@ -28,7 +28,7 @@ Eve is a full-stack ride-matching platform featuring:
 - **Microservices architecture** with optional gRPC support
 - **Native mobile apps** for riders and drivers (iOS/Android)
 - **Admin dashboard** for operations and support
-- **Auth0 integration** for secure authentication
+- **Privy integration** for SMS, passkeys, and embedded wallets
 - **WebSocket** real-time updates for live tracking
 
 ## Technology Stack
@@ -50,7 +50,7 @@ Eve is a full-stack ride-matching platform featuring:
 |------------|---------|---------|
 | Expo | 57 | React Native framework |
 | React Native | 0.76+ | Mobile UI framework |
-| Auth0 | react-native-auth0 | Authentication |
+| Privy | @privy-io/expo | Authentication and embedded wallets |
 | Mapbox | @rnmapbox/maps | Maps and navigation |
 | TypeScript | 5.9+ | Type-safe development |
 
@@ -77,8 +77,8 @@ Eve is a full-stack ride-matching platform featuring:
 
 ```
 Eve/
-  rider/     Expo 57 rider app — Auth0, request, offers, tracking, history
-  driver/    Expo 57 driver app — Auth0, onboarding, presence, offers, trip lifecycle, earnings
+  rider/     Expo 57 rider app — Privy SMS/passkey, request, offers, tracking, history
+  driver/    Expo 57 driver app — Privy SMS/passkey, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
   www/       Next.js 16 marketing site — open-source landing page (port 3020)
   backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
@@ -145,8 +145,8 @@ Public prefixes:
 | Prefix | Service | Purpose |
 | --- | --- | --- |
 | `/health` | each service | Health check |
-| `/api/auth` | auth :4001 | Auth0 exchange, admin login, `/me` |
-| `/api/driver/login` `register` `auth0` | auth :4001 | Driver auth |
+| `/api/auth` | auth :4001 | Privy exchange, admin login, `/me` |
+| `/api/driver/login` `register` `privy` | auth :4001 | Driver auth |
 | `/api/driver` | ride :4003 | Presence, trips, earnings |
 | `/api/rider` | ride :4003 | Rider trips and offer accept |
 | `/api/admin` | admin :4005 | Staff console (RBAC) |
@@ -159,7 +159,7 @@ Public prefixes:
 | `@eve/db` | Prisma client |
 | `@eve/http` | Express app, CORS, auth middleware |
 | `@eve/shared` | JWT, passwords, permissions |
-| `@eve/auth` | Auth0 ID-token exchange, admin login (`AUTH_PORT`, default 4001) |
+| `@eve/auth` | Privy identity-token exchange, admin login (`AUTH_PORT`, default 4001) |
 | `@eve/location` | Matchmaking geo / gRPC (`LOCATION_PORT`, default 4002) |
 | `@eve/ride` | Matching, offers, trip lifecycle, presence (`RIDE_PORT`, default 4003) |
 | `@eve/notify` | Notifications + Socket.IO (`NOTIFY_PORT`, default 4004) |
@@ -227,7 +227,7 @@ docker compose up postgres redis -d
 
 # 3. Set up backend
 cp .env.example .env
-# Edit .env and set JWT_ACCESS_SECRET and AUTH0_* variables
+# Edit .env and set JWT_ACCESS_SECRET and PRIVY_* variables
 npm install
 npm run db:generate
 npm run db:migrate
@@ -274,8 +274,8 @@ Create `backend/.env` (not in git). Required:
 ```
 DATABASE_URL=postgresql://eve:eve@localhost:5432/eve
 JWT_ACCESS_SECRET=replace-with-a-long-random-secret
-AUTH0_DOMAIN=your-tenant.us.auth0.com
-AUTH0_CLIENT_ID=your_native_app_client_id
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 ```
 
 Optional:
@@ -324,11 +324,12 @@ Point rider/driver at auth, ride, and notify. On a phone or simulator, use your 
 EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api
 EXPO_PUBLIC_API_URL=http://localhost:4003/api
 EXPO_PUBLIC_WS_URL=http://localhost:4004
-EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
-EXPO_PUBLIC_AUTH0_CLIENT_ID=your_native_app_client_id
+EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
+EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 ```
 
-Copy from `.env.example`. Rider and driver use Auth0 Universal Login, then exchange an ID token for an Eve API JWT. See **[backend/docs/auth.md](backend/docs/auth.md)** for callback URLs and the Native app settings. Rebuild a **development client** after changing the Auth0 config plugin (`npx expo run:ios` / `run:android`). `npx expo start` / Expo Go cannot run Auth0.
+Copy from `.env.example`. Rider and driver use Privy SMS or passkeys, then exchange an identity token for an Eve API JWT. See **[backend/docs/auth.md](backend/docs/auth.md)**. Rebuild a **development client** after changing native Privy/passkey config (`npx expo run:ios` / `run:android`). `npx expo start` / Expo Go cannot run this auth stack.
 
 `admin/.env.local`:
 
@@ -363,7 +364,7 @@ Store release (App Store / Play, TestFlight, EAS identifiers): see [`STORE.md`](
 
 ## Seed users (local only)
 
-After `npm run db:seed`, password for all seeded accounts is `Admin123!`. Use those emails only in the **admin** console and against leftover password API routes (tests/load). Rider and driver apps sign in with Auth0, not these passwords.
+After `npm run db:seed`, password for all seeded accounts is `Admin123!`. Use those emails only in the **admin** console and against leftover password API routes (tests/load). Rider and driver apps sign in with Privy, not these passwords.
 
 | Role | Email |
 | --- | --- |
@@ -379,9 +380,9 @@ Do not use these credentials outside local development.
 
 ## Apps in more detail
 
-**Rider** — Auth0 sign-in, request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
+**Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
 
-**Driver** — Auth0 sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, earnings.
+**Driver** — Privy SMS/passkey sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, earnings.
 
 **Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; safety and support. No in-app commission or rider payment collection.
 
@@ -397,7 +398,7 @@ Do not use these credentials outside local development.
 
 ### Backend Documentation
 - [Backend services](backend/docs/services-ports.md) - Ports and process layout
-- [Authentication](backend/docs/auth.md) - Auth0 integration
+- [Authentication](backend/docs/auth.md) - Privy integration
 - [Docker Setup](backend/docs/docker.md) - Container orchestration
 - [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
 - [gRPC Implementation](backend/docs/grpc.md) - Inter-service communication
@@ -445,10 +446,9 @@ cd backend
 npm run db:generate
 ```
 
-#### Auth0 Configuration Issues
-- Verify `AUTH0_DOMAIN` does not include `https://` or trailing slash
-- Check callback URLs match exactly (case-sensitive)
-- Ensure Native app type is selected in Auth0 dashboard
+#### Privy Configuration Issues
+- Enable identity tokens, SMS, and passkeys in the Privy Dashboard
+- Use a different App Client ID for rider vs driver
 - See [backend/docs/auth.md](backend/docs/auth.md) for details
 
 #### Mobile App Won't Start

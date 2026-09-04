@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       { source: "/api/admin/:path*", destination: `${admin}/api/admin/:path*` },
       { source: "/api/driver/login", destination: `${auth}/api/driver/login` },
       { source: "/api/driver/register", destination: `${auth}/api/driver/register` },
-      { source: "/api/driver/auth0", destination: `${auth}/api/driver/auth0` },
+      { source: "/api/driver/privy", destination: `${auth}/api/driver/privy` },
       { source: "/api/driver/:path*", destination: `${ride}/api/driver/:path*` },
       { source: "/api/rider/:path*", destination: `${ride}/api/rider/:path*` },
       { source: "/api/public/:path*", destination: `${ride}/api/public/:path*` },

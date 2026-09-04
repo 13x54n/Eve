@@ -8,7 +8,7 @@ Stress ride (`npm run dev`, port 4003) against the same Postgres you use locally
 - [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed (`brew install k6`)
 - Ride running: `npm run dev` in `backend/`
 - `JWT_ACCESS_SECRET` in `.env` (seed writes JWTs with that secret)
-- Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Auth0 instead; see [docs/auth.md](../docs/auth.md).
+- Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Privy instead; see [docs/auth.md](../docs/auth.md).
 
 ## Commands
 

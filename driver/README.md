@@ -35,7 +35,7 @@ The Driver app enables drivers to:
 ## Features
 
 ### Authentication & Onboarding
-- Auth0 Universal Login
+- Privy SMS / passkeys
 - Multi-step onboarding wizard
 - Vehicle registration (type, year, color, plate)
 - Document upload (license, insurance, vehicle registration)
@@ -81,7 +81,7 @@ The Driver app enables drivers to:
 | Expo | 57 | React Native framework |
 | React Native | 0.76+ | Mobile UI |
 | TypeScript | 5.9+ | Type safety |
-| Auth0 | react-native-auth0 | Authentication |
+| Privy | @privy-io/expo | Authentication and wallets |
 | Mapbox | @rnmapbox/maps | Maps & navigation |
 | Socket.IO | socket.io-client | Real-time events |
 | Zustand | 4.x | State management |
@@ -94,7 +94,7 @@ File-based routing:
 ```
 src/app/
   (auth)/
-    login.tsx           # Auth0 login
+    login.tsx           # SMS / passkey login
     onboarding/
       vehicle.tsx       # Vehicle info
       documents.tsx     # Upload docs
@@ -119,7 +119,7 @@ src/app/
 
 ```typescript
 // src/services/
-auth.ts         // Auth0, token management
+auth.ts         // Privy exchange, token management
 api.ts          // HTTP client
 socket.ts       // WebSocket connection
 location.ts     // GPS tracking, background location
@@ -138,7 +138,7 @@ notifications.ts // Push notifications
 
 ### Accounts
 
-- **Auth0**: Authentication
+- **Privy**: Authentication and embedded wallets
 - **Mapbox**: Maps (same token as rider app)
 - **ImageKit**: Document uploads
 - **Apple Developer**: iOS ($99/year)
@@ -167,9 +167,10 @@ EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
-# Auth0 (same client as rider app)
-EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
-EXPO_PUBLIC_AUTH0_CLIENT_ID=your_client_id
+# Privy (separate client from rider)
+EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+EXPO_PUBLIC_PRIVY_CLIENT_ID=your-driver-privy-client-id
+EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 
 # Mapbox
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
@@ -193,7 +194,7 @@ npx expo start
 
 ### 5. Test Onboarding
 
-1. Sign in with Auth0
+1. Sign in with SMS or passkey
 2. Complete vehicle registration
 3. Upload documents (use test images)
 4. Submit for approval
@@ -204,9 +205,9 @@ npx expo start
 
 New drivers must complete onboarding before going online:
 
-### 1. Auth0 Sign-Up
+### 1. Privy Sign-Up
 
-- Email/password or social login
+- SMS OTP or passkey
 - Creates user account with `DRIVER` role
 - Creates `DriverProfile` with `PENDING` approval status
 
@@ -278,23 +279,14 @@ driver/
 
 ## Configuration
 
-### Auth0 Setup
+### Privy Setup
 
-**Important**: Driver uses **different** callback scheme than rider!
+**Important**: Driver uses a **different Privy App Client** than rider.
 
-1. Create or use existing **Native** app
-2. Configure **Allowed Callback URLs**:
-   ```
-   evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/callback
-   evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/callback
-   ```
-   **Note**: `evedriver` (no hyphen) - Auth0 schemes cannot include hyphens
-3. Configure **Allowed Logout URLs** (`/logout`, not `/callback`):
-   ```
-   evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/logout
-   evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/logout
-   ```
-4. Expo `scheme` in app.json remains `eve-driver` (with hyphen)
+1. Create a driver App Client with bundle ID `ca.sherpafoods.evedriver`
+2. Enable SMS, passkeys, identity tokens, and Ethereum + Solana wallets
+3. Copy that Client ID into the driver `.env` (`EXPO_PUBLIC_PRIVY_CLIENT_ID`)
+4. Use the same App ID and relying-party origin as rider
 
 ### ImageKit Setup
 
@@ -411,14 +403,14 @@ npm run dev
 4. Create test trip from rider app
 5. Check distance (must be within 15km)
 
-### Auth0 scheme mismatch
+### Privy client mismatch
 
-**Problem**: Callback URL error
+**Problem**: Login works in rider but not driver, or identity-token exchange fails
 
 **Solution**:
-1. Verify scheme in Auth0 is `evedriver` (no hyphen)
-2. Verify scheme in app.json is `eve-driver` (with hyphen)
-3. Rebuild dev client after changes
+1. Verify the driver Privy App Client uses bundle ID `ca.sherpafoods.evedriver`
+2. Confirm `EXPO_PUBLIC_PRIVY_CLIENT_ID` is the driver client, not the rider client
+3. Rebuild the development client after env changes
 
 ## Related Documentation
 

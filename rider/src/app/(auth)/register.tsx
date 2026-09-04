@@ -3,39 +3,10 @@ import { router, type Href } from "expo-router";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Checkbox } from "expo-checkbox";
 import { useState } from "react";
-import { exchangeAuth0 } from "@/services/auth";
-import { useAuth } from "@/context/auth-context";
-import { ActionButton } from "@/components/action-button";
-import { isAuth0Cancelled, useAuth0Authorize } from "@/lib/auth0";
+import { PrivyAuthForm } from "@/components/privy-auth-form";
 
 export default function RegisterScreen() {
-  const { setUser } = useAuth();
-  const authorizeAndGetIdToken = useAuth0Authorize();
   const [isChecked, setChecked] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  async function handleRegister() {
-    if (!isChecked) {
-      Alert.alert("Terms required", "You must agree to the Terms of Use and Privacy Policy.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const idToken = await authorizeAndGetIdToken("signup");
-      const session = await exchangeAuth0(idToken);
-      setUser(session.user);
-      router.replace("/(tabs)/home");
-    } catch (error) {
-      if (isAuth0Cancelled(error)) return;
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ?? "Registration failed. Please try again.";
-      Alert.alert("Registration error", message);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <View style={styles.container}>
@@ -64,13 +35,16 @@ export default function RegisterScreen() {
         </Text>
       </View>
 
-      <ActionButton
-        style={styles.button}
-        textStyle={styles.buttonText}
-        label="Continue with Auth0"
-        loadingLabel="Opening sign-up..."
-        loading={loading}
-        onPress={() => void handleRegister()}
+      <PrivyAuthForm
+        mode="signup"
+        disabled={!isChecked}
+        onAuthenticated={() => {
+          if (!isChecked) {
+            Alert.alert("Terms required", "You must agree to the Terms of Use and Privacy Policy.");
+            return;
+          }
+          router.replace("/(tabs)/home");
+        }}
       />
 
       <Pressable onPress={() => router.push("/(auth)/login")}>
@@ -87,21 +61,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#f7f8ef",
   },
   title: {
-    marginBottom: 28,
+    marginBottom: 8,
     fontSize: 30,
     fontWeight: "800",
     color: "#111827",
-  },
-  button: {
-    padding: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    backgroundColor: "#2e4ed2",
-  },
-  buttonText: {
-    color: "white",
-    textAlign: "center",
-    fontWeight: "700",
   },
   link: {
     marginTop: 20,

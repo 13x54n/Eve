@@ -44,7 +44,7 @@ See [services-ports.md](services-ports.md) for ports. Clients call services dire
 
 ### Responsibilities
 
-- Auth0 ID token verification
+- Privy identity token verification
 - Eve JWT issuance
 - Admin email/password authentication
 - User profile management
@@ -54,30 +54,28 @@ See [services-ports.md](services-ports.md) for ports. Clients call services dire
 
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/auth/auth0` | POST | Rider Auth0 exchange |
-| `/api/auth/driver/auth0` | POST | Driver Auth0 exchange |
+| `/api/auth/privy` | POST | Rider Privy exchange |
+| `/api/auth/driver/privy` | POST | Driver Privy exchange |
 | `/api/auth/me` | GET | Current user profile |
 | `/api/auth/me` | PATCH | Update profile |
 | `/api/auth/admin/login` | POST | Admin login |
 | `/health` | GET | Service health |
 
-### Auth0 Integration
+### Privy Integration
 
 **Flow**:
-1. Mobile app opens Auth0 Universal Login
-2. User authenticates with Auth0
-3. App receives Auth0 ID token
-4. App exchanges ID token for Eve JWT
-5. Eve JWT used for all API calls
+1. Mobile app authenticates with Privy (SMS OTP or passkey)
+2. App receives a Privy identity token
+3. App exchanges the identity token for an Eve JWT
+4. Eve JWT used for all API calls
 
 **Verification**:
-- Fetch JWKS from Auth0
-- Verify signature, issuer, audience
-- Extract claims (email, sub)
+- `@privy-io/node` `users().get({ id_token })`
+- Extract Privy DID, phone, email, and embedded wallet addresses
 
 **User Resolution**:
-- Match by `auth0Sub` (preferred)
-- Fallback: match by verified email
+- Match by `privyDid` (preferred)
+- Fallback: match by phone, then email
 - Create new user if not found
 - Create rider/driver profile as needed
 

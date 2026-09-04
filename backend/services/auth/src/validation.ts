@@ -49,7 +49,13 @@ export const driverLoginSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  email: z.string().trim().toLowerCase().email(),
+  email: z.preprocess((value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim().toLowerCase();
+    return trimmed.length === 0 ? null : trimmed;
+  }, z.union([z.string().email(), z.null()]).optional()),
   phone: z.preprocess((value) => {
     if (value === undefined) return undefined;
     if (value === null) return null;
@@ -65,6 +71,8 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(8).max(128),
 });
 
-export const auth0ExchangeSchema = z.object({
-  idToken: z.string().min(20).max(8192),
+export const privyExchangeSchema = z.object({
+  identityToken: z.string().min(20).max(16384),
+  ethereumWallet: z.string().trim().min(20).max(128).optional(),
+  solanaWallet: z.string().trim().min(20).max(128).optional(),
 });

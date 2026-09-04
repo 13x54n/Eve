@@ -4,8 +4,10 @@ import { money, startOfDay } from "@eve/shared";
 export function sanitizeDriverUser(user: {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
+  ethereumWallet?: string | null;
+  solanaWallet?: string | null;
   role: string;
   city: string | null;
   accountStatus: string;
@@ -17,6 +19,8 @@ export function sanitizeDriverUser(user: {
     name: user.name,
     email: user.email,
     phone: user.phone,
+    ethereumWallet: user.ethereumWallet ?? null,
+    solanaWallet: user.solanaWallet ?? null,
     role: user.role,
     city: user.city,
     accountStatus: user.accountStatus,

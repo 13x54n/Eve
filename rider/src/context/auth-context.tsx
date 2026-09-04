@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import axios from "axios";
-import { useAuth0 } from "react-native-auth0";
+import { usePrivy } from "@privy-io/expo";
 import {
   getAccessToken,
   getSessionUser,
@@ -41,17 +41,14 @@ function isUnauthorized(error: unknown) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { clearCredentials, isLoading: auth0Loading } = useAuth0();
+  const { logout: logoutPrivy, isReady } = usePrivy();
   const { isOnline } = useNetwork();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [hasStoredSession, setHasStoredSession] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const logout = useCallback(async () => {
-    // Do not await Auth0 webAuth.clearSession. Custom Tabs / ASWebAuthenticationSession
-    // often never return from /v2/logout, which freezes Log out on "Logging out...".
-    // Local credentials + Eve token are enough; the next authorize() uses prompt=login.
-    void clearCredentials().catch(() => {});
+    void logoutPrivy().catch(() => {});
     await Promise.allSettled([
       clearStoredSession(),
       OfflineStorage.clear(),
@@ -59,10 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
     setUser(null);
     setHasStoredSession(false);
-  }, [clearCredentials]);
+  }, [logoutPrivy]);
 
   useEffect(() => {
-    if (auth0Loading) return;
+    if (!isReady) return;
 
     let cancelled = false;
 
@@ -110,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [auth0Loading, logout, isOnline]);
+  }, [isReady, logout, isOnline]);
 
   useEffect(() => {
     void actionQueue.initialize();
@@ -130,7 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      loading: loading || auth0Loading,
+      loading: loading || !isReady,
       isAuthenticated: Boolean(user) || hasStoredSession,
       setUser: async (nextUser) => {
         setUser(nextUser);
@@ -141,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       logout,
     }),
-    [user, loading, auth0Loading, hasStoredSession, logout],
+    [user, loading, isReady, hasStoredSession, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

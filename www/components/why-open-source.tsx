@@ -1,7 +1,7 @@
 const points = [
   {
     title: "Self-host",
-    body: "Run the stack on your own Postgres, Redis, and Auth0 tenant. Alpha path is local Docker plus Node 22.",
+    body: "Run the stack on your own Postgres, Redis, and Privy app. Alpha path is local Docker plus Node 22.",
   },
   {
     title: "No commission",

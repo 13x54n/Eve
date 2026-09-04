@@ -1,8 +1,9 @@
 process.env.EXPO_PUBLIC_AUTH_URL = 'http://localhost:4001/api';
 process.env.EXPO_PUBLIC_API_URL = 'http://localhost:4003/api';
 process.env.EXPO_PUBLIC_WS_URL = 'http://localhost:4004';
-process.env.EXPO_PUBLIC_AUTH0_DOMAIN = 'dev-example.us.auth0.com';
-process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID = 'test-client-id';
+process.env.EXPO_PUBLIC_PRIVY_APP_ID = 'test-privy-app-id';
+process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID = 'test-client-id';
+process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY = 'https://example.com';
 
 import '@testing-library/jest-native/extend-expect';
 
@@ -50,23 +51,38 @@ jest.mock('expo-secure-store', () => ({
   WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
 }));
 
-jest.mock('react-native-auth0', () => ({
-  WebAuthError: class WebAuthError extends Error {
-    constructor(type) {
-      super(type);
-      this.type = type;
-    }
-  },
-  WebAuthErrorCodes: { USER_CANCELLED: 'USER_CANCELLED' },
-  useAuth0: jest.fn(() => ({
-    authorize: jest.fn(),
-    clearSession: jest.fn(),
-    clearCredentials: jest.fn(),
-    getCredentials: jest.fn(),
+jest.mock('@privy-io/expo', () => ({
+  usePrivy: jest.fn(() => ({
     user: null,
+    isReady: true,
     error: null,
-    isLoading: false,
+    logout: jest.fn(),
+    getAccessToken: jest.fn(),
+    refreshUser: jest.fn(),
   })),
+  useLoginWithSMS: jest.fn(() => ({
+    sendCode: jest.fn(),
+    loginWithCode: jest.fn(),
+    state: { status: 'initial' },
+  })),
+  useIdentityToken: jest.fn(() => ({
+    getIdentityToken: jest.fn(),
+  })),
+  useEmbeddedEthereumWallet: jest.fn(() => ({
+    wallets: [],
+    create: jest.fn(),
+  })),
+  useEmbeddedSolanaWallet: jest.fn(() => ({
+    wallets: [],
+    create: jest.fn(),
+  })),
+  PrivyProvider: ({ children }) => children,
+}));
+
+jest.mock('@privy-io/expo/passkey', () => ({
+  useLoginWithPasskey: jest.fn(() => ({ loginWithPasskey: jest.fn(), state: { status: 'initial' } })),
+  useSignupWithPasskey: jest.fn(() => ({ signupWithPasskey: jest.fn(), state: { status: 'initial' } })),
+  useLinkWithPasskey: jest.fn(() => ({ linkWithPasskey: jest.fn(), state: { status: 'initial' } })),
 }));
 
 jest.mock('react-native-reanimated', () => {

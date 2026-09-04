@@ -24,7 +24,7 @@ Eve is a **microservices-based** ride-matching platform designed for scalability
 2. **Direct client-to-service HTTP**: Rider/driver call auth, ride, and notify (no API gateway)
 3. **Real-time Communication**: WebSocket on notify `:4004`
 4. **Geospatial Optimization**: H3 hexagonal indexing for fast matching
-5. **Auth0 Integration**: Secure, managed authentication
+5. **Privy Integration**: SMS, passkeys, and embedded wallets
 6. **Type Safety**: TypeScript across the entire stack
 
 ## System Architecture
@@ -58,7 +58,7 @@ graph TB
     end
 
     subgraph External["External Services"]
-        Auth0[Auth0<br/>Identity Provider]
+        Privy[Privy<br/>Identity and wallets]
         Mapbox[Mapbox<br/>Maps & Geocoding]
         ImageKit[ImageKit<br/>Image Storage]
     end
@@ -85,8 +85,8 @@ graph TB
     Ride -.gRPC.-> Notify
     AdminApi --> PG
 
-    RiderApp -.Auth.-> Auth0
-    DriverApp -.Auth.-> Auth0
+    RiderApp -.Auth.-> Privy
+    DriverApp -.Auth.-> Privy
     RiderApp -.Maps.-> Mapbox
     DriverApp -.Maps.-> Mapbox
     DriverApp -.Upload.-> ImageKit
@@ -106,15 +106,15 @@ From `backend/`, `npm run dev` starts five Node processes (auth, location, ride,
 #### Auth Service (Port 4001)
 
 **Responsibilities**:
-- Auth0 ID token verification
+- Privy identity token verification
 - Eve JWT issuance
 - Admin email/password authentication
 - Session management
 - User profile retrieval
 
 **Key Operations**:
-- `POST /api/auth/auth0` - Rider Auth0 exchange
-- `POST /api/auth/driver/auth0` - Driver Auth0 exchange
+- `POST /api/auth/privy` - Rider Privy exchange
+- `POST /api/auth/driver/privy` - Driver Privy exchange
 - `POST /api/auth/admin/login` - Admin login
 - `GET /api/auth/me` - Current user info
 
@@ -232,7 +232,7 @@ erDiagram
     User {
         int id PK
         string email UK
-        string auth0Sub UK
+        string privyDid UK
         enum role
         enum accountStatus
         timestamp createdAt
@@ -441,17 +441,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant App as Mobile App
-    participant Auth0
+    participant Privy
     participant Gateway
     participant AuthSvc as Auth Service
     participant DB as PostgreSQL
 
-    App->>Auth0: Universal Login
-    Auth0-->>App: ID Token
-    App->>Gateway: POST /api/auth/auth0<br/>{idToken}
+    App->>Privy: SMS or passkey
+    Privy-->>App: Identity token
+    App->>Gateway: POST /api/auth/privy<br/>{identityToken}
     Gateway->>AuthSvc: Forward Request
-    AuthSvc->>Auth0: Verify ID Token (JWKS)
-    Auth0-->>AuthSvc: Valid
+    AuthSvc->>Privy: Verify identity token
+    Privy-->>AuthSvc: Valid
     AuthSvc->>DB: Find/Create User
     DB-->>AuthSvc: User Record
     AuthSvc->>AuthSvc: Generate Eve JWT
@@ -466,8 +466,8 @@ sequenceDiagram
 ```
 
 **Security**:
-- Auth0 handles password management
-- Eve never stores Auth0 passwords
+- Privy handles SMS and passkeys
+- Eve never stores Privy secrets in the apps
 - JWT expires in 30 days (configurable)
 - Tokens stored in device SecureStore
 
@@ -637,14 +637,14 @@ sequenceDiagram
 - PostGIS: 50-100ms for 10k drivers
 - H3 + Redis: 3-10ms for 10k drivers
 
-### Why Auth0?
+### Why Privy?
 
 **Alternatives**:
 - Roll our own (password hashing, email verification, etc.)
 - Firebase Auth
 - AWS Cognito
 
-**Why Auth0**:
+**Why Privy**:
 - ✅ Security best practices built-in
 - ✅ Universal Login (web view)
 - ✅ MFA support
@@ -759,9 +759,9 @@ graph TB
 
 ```mermaid
 graph LR
-    Client[Client] --> |1. Auth0 Token| Auth0Check{Valid?}
-    Auth0Check -->|Yes| GetEveToken[Get Eve JWT]
-    Auth0Check -->|No| Reject[401 Unauthorized]
+    Client[Client] --> |1. Privy Token| PrivyCheck{Valid?}
+    PrivyCheck -->|Yes| GetEveToken[Get Eve JWT]
+    PrivyCheck -->|No| Reject[401 Unauthorized]
     GetEveToken --> EveToken[Eve JWT Token]
     
     EveToken --> |2. API Request| GatewayAuth{Valid JWT?}
@@ -774,7 +774,7 @@ graph LR
 ### Security Features
 
 1. **Authentication**
-   - Auth0 for mobile apps (OIDC/OAuth2)
+   - Privy for mobile apps (SMS, passkeys, embedded wallets)
    - Email/password for admin (bcrypt hashing)
    - JWT for API authorization
    - Secure token storage (device SecureStore)

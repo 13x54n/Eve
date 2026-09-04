@@ -9,16 +9,22 @@ export interface AuthResponse {
     id: string;
     role: 'RIDER' | 'DRIVER' | 'ADMIN';
     name: string;
-    email: string;
+    email: string | null;
     phone: string | null;
+    ethereumWallet?: string | null;
+    solanaWallet?: string | null;
     isActive: boolean;
     createdAt: string;
     pushNotificationsEnabled?: boolean;
   };
 }
 
-export async function exchangeAuth0(idToken: string): Promise<AuthResponse> {
-  const { data } = await api.post<AuthResponse>('/auth/auth0', { idToken });
+export async function exchangePrivy(input: {
+  identityToken: string;
+  ethereumWallet?: string;
+  solanaWallet?: string;
+}): Promise<AuthResponse> {
+  const { data } = await api.post<AuthResponse>('/auth/privy', input);
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, data.accessToken, {
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   });
@@ -42,7 +48,7 @@ export async function getSessionUser() {
 
 export async function updateProfile(payload: {
   name: string;
-  email: string;
+  email?: string | null;
   phone: string | null;
   pushNotificationsEnabled?: boolean;
 }) {

@@ -33,7 +33,7 @@ The Rider app enables passengers to:
 ## Features
 
 ### Authentication
-- Auth0 Universal Login (email/password, social)
+- Privy SMS / passkeys
 - Biometric authentication (Face ID, Touch ID)
 - JWT token management
 - Secure token storage (SecureStore)
@@ -72,7 +72,7 @@ The Rider app enables passengers to:
 | Expo | 57 | React Native framework |
 | React Native | 0.76+ | Mobile UI |
 | TypeScript | 5.9+ | Type safety |
-| Auth0 | react-native-auth0 | Authentication |
+| Privy | @privy-io/expo | Authentication and wallets |
 | Mapbox | @rnmapbox/maps | Maps & navigation |
 | Socket.IO | socket.io-client | Real-time events |
 | Zustand | 4.x | State management |
@@ -84,7 +84,7 @@ File-based routing with Expo Router:
 ```
 src/app/
   (auth)/
-    login.tsx           # Auth0 login
+    login.tsx           # SMS / passkey login
     onboarding.tsx      # First-time user flow
   (tabs)/
     index.tsx           # Home / Request ride
@@ -105,7 +105,7 @@ src/app/
 
 ```typescript
 // src/services/
-auth.ts         // Auth0 integration, token management
+auth.ts         // Privy exchange, token management
 api.ts          // HTTP client, API calls
 socket.ts       // WebSocket connection
 location.ts     // GPS tracking
@@ -124,7 +124,7 @@ notifications.ts // Push notifications
 
 ### Accounts
 
-- **Auth0**: Free account for authentication
+- **Privy**: App and App Client for SMS + passkeys
 - **Mapbox**: Free tier for maps
 - **Apple Developer**: For iOS builds ($99/year)
 - **Google Play**: For Android builds ($25 one-time)
@@ -166,9 +166,10 @@ EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
-# Auth0 Configuration
-EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
-EXPO_PUBLIC_AUTH0_CLIENT_ID=your_native_app_client_id
+# Privy Configuration
+EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+EXPO_PUBLIC_PRIVY_CLIENT_ID=your-rider-privy-client-id
+EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 
 # Mapbox Access Token
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token
@@ -185,7 +186,7 @@ ipconfig | findstr IPv4
 
 ### 3. Build Development Client
 
-**Important**: This app requires a custom development build (not Expo Go) due to Auth0 and Mapbox native modules.
+**Important**: This app requires a custom development build (not Expo Go) due to Privy and Mapbox native modules.
 
 ```bash
 # iOS (requires macOS + Xcode)
@@ -211,7 +212,7 @@ Press:
 ### 5. Verify Setup
 
 1. App should open to login screen
-2. Tap "Sign In" → Auth0 login should open
+2. Tap "Sign In" → SMS / passkey login should open
 3. After login, home screen should appear
 4. Check that map loads (Mapbox working)
 
@@ -249,20 +250,12 @@ rider/
 
 ## Configuration
 
-### Auth0 Setup
+### Privy Setup
 
-1. Create **Native** application in Auth0 dashboard
-2. Configure **Allowed Callback URLs**:
-   ```
-   eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/callback
-   eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/callback
-   ```
-3. Configure **Allowed Logout URLs** (`/logout`, not `/callback`):
-   ```
-   eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/logout
-   eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/logout
-   ```
-4. Copy Domain and Client ID to `.env`
+1. Create a Privy app and a rider **App Client** with bundle ID `ca.sherpafoods.eve`
+2. Enable SMS, passkeys, identity tokens, and Ethereum + Solana embedded wallets
+3. Copy App ID and Client ID into `.env` (`EXPO_PUBLIC_PRIVY_APP_ID`, `EXPO_PUBLIC_PRIVY_CLIENT_ID`)
+4. Set `EXPO_PUBLIC_PRIVY_RELYING_PARTY` to the HTTPS origin that hosts AASA / assetlinks
 
 **See**: [../backend/docs/auth.md](../backend/docs/auth.md) for details.
 
@@ -337,7 +330,7 @@ Detox E2E tests planned.
 
 ### Manual Testing Checklist
 
-- [ ] Login with Auth0
+- [ ] Login with SMS or passkey
 - [ ] Request a trip
 - [ ] Receive driver offers
 - [ ] Accept an offer
@@ -365,12 +358,12 @@ EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 ```
 
-### Auth0 callback not working
+### Privy SMS / passkey not working
 
 **Solution**: 
-1. Verify **Allowed Callback URLs** use `/callback` and **Allowed Logout URLs** use `/logout`
+1. Confirm Privy Dashboard toggles (SMS, passkeys, identity tokens) and associated-domain files
 2. Rebuild development client: `npx expo run:ios`
-3. Check custom scheme in `app.json` (`eve`)
+3. Confirm `EXPO_PUBLIC_PRIVY_RELYING_PARTY` matches the hosted well-known origin
 
 ### Maps not showing
 

@@ -98,8 +98,8 @@ describe('Login Flow', () => {
 ### Rider App Critical Paths
 
 1. **Authentication Flow**
-   - Sign up with Auth0
-   - Login with Auth0
+   - Sign up with SMS or passkey
+   - Login with SMS or passkey
    - Logout
 
 2. **Request Ride Flow**
@@ -253,14 +253,11 @@ jobs:
    await device.setLocation(40.7128, -74.0060); // NYC
    ```
 
-3. **Handle Auth0**: Use test credentials or mock Auth0 responses
+3. **Handle Privy**: Mock SMS / passkey hooks in unit tests
    ```typescript
-   // Mock Auth0 in tests
-   jest.mock('react-native-auth0', () => ({
-     useAuth0: () => ({
-       authorize: jest.fn(),
-       user: mockUser,
-     }),
+   jest.mock('@privy-io/expo', () => ({
+     usePrivy: () => ({ isReady: true, user: mockUser, logout: jest.fn() }),
+     useLoginWithSMS: () => ({ sendCode: jest.fn(), loginWithCode: jest.fn() }),
    }));
    ```
 

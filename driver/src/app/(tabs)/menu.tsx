@@ -8,6 +8,7 @@ import { useAuth } from '@/context/auth-context';
 import { Brand, Spacing } from '@/constants/theme';
 import { useBrand } from '@/context/theme-context';
 import { lightImpact } from '@/lib/haptics';
+import { truncateWalletAddress } from '@/lib/privy';
 import { ActionButton } from '@/components/action-button';
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 
@@ -49,7 +50,7 @@ function SettingsSection({ title, rows }: { title: string; rows: MenuRow[] }) {
 export default function MenuScreen() {
   const brand = useBrand();
   const insets = useSafeAreaInsets();
-  const { logout } = useAuth();
+  const { logout, user: sessionUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -122,6 +123,26 @@ export default function MenuScreen() {
       detail: 'License, insurance, background check',
       onPress: () => router.push('/onboarding/documents' as Href),
     },
+    {
+      icon: 'credit-card',
+      title: 'Ethereum wallet',
+      detail: truncateWalletAddress(sessionUser?.ethereumWallet) || 'Created on sign-in',
+      onPress: () =>
+        Alert.alert(
+          'Ethereum wallet',
+          sessionUser?.ethereumWallet || 'Your Privy embedded Ethereum wallet is created when you sign in.',
+        ),
+    },
+    {
+      icon: 'credit-card',
+      title: 'Solana wallet',
+      detail: truncateWalletAddress(sessionUser?.solanaWallet) || 'Created on sign-in',
+      onPress: () =>
+        Alert.alert(
+          'Solana wallet',
+          sessionUser?.solanaWallet || 'Your Privy embedded Solana wallet is created when you sign in.',
+        ),
+    },
   ];
 
   const resourceRows: MenuRow[] = [
@@ -147,7 +168,7 @@ export default function MenuScreen() {
     {
       icon: 'lock',
       title: 'Security',
-      detail: 'Auth0 sign-in',
+      detail: 'SMS and passkey',
       onPress: () => router.push('/profile/security' as Href),
     },
   ];

@@ -45,14 +45,14 @@ https://api.example.com/api
 
 ## Authentication
 
-### Auth0 Exchange (Mobile Apps)
+### Privy Exchange (Mobile Apps)
 
-**Endpoint**: `POST /auth/auth0` (Rider) or `POST /auth/driver/auth0` (Driver)
+**Endpoint**: `POST /auth/privy` (Rider) or `POST /auth/driver/privy` (Driver)
 
 **Request**:
 ```json
 {
-  "idToken": "<auth0-id-token>"
+  "identityToken": "<privy-identity-token>"
 }
 ```
 

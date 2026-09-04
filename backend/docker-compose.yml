@@ -72,8 +72,8 @@ services:
       DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
-      AUTH0_DOMAIN: ${AUTH0_DOMAIN}
-      AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      PRIVY_APP_ID: ${PRIVY_APP_ID}
+      PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
     ports:
       - "4001:4001"
     depends_on:

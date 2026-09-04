@@ -10,7 +10,7 @@ import {
   type AdminStaffTitle,
   type UserRole,
 } from "@eve/shared";
-import { verifyAuth0IdToken } from "./auth0.js";
+import { verifyPrivyIdentityToken } from "./privy.js";
 import { verificationCodeSender } from "./verification-code.js";
 
 const resetCodeLifetimeMs = 10 * 60 * 1000;
@@ -37,8 +37,10 @@ function unauthorized(message = "Invalid or expired token"): never {
 type UserRecord = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
+  ethereumWallet?: string | null;
+  solanaWallet?: string | null;
   role: UserRole;
   adminStaffRole?: AdminStaffRole | null;
   adminStaffTitle?: AdminStaffTitle | null;
@@ -60,6 +62,8 @@ export function sanitizeUser(user: UserRecord) {
     name: user.name,
     email: user.email,
     phone: user.phone,
+    ethereumWallet: user.ethereumWallet ?? null,
+    solanaWallet: user.solanaWallet ?? null,
     role: user.role,
     adminStaffRole: staffRole,
     adminStaffTitle: user.adminStaffTitle ?? null,
@@ -335,7 +339,12 @@ export async function getUserById(userId: string, sessionRole?: UserRole) {
 
 export async function updateProfile(
   userId: string,
-  input: { name: string; email: string; phone?: string | null; pushNotificationsEnabled?: boolean },
+  input: {
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    pushNotificationsEnabled?: boolean;
+  },
   sessionRole?: UserRole,
 ) {
   const user = await prisma.user.findFirst({
@@ -348,10 +357,10 @@ export async function updateProfile(
     throw error;
   }
 
-  const email = input.email.trim().toLowerCase();
+  const email = input.email === undefined ? user.email : input.email;
   const phone = input.phone === undefined ? user.phone : input.phone;
 
-  if (email !== user.email) {
+  if (email && email !== user.email) {
     const existingEmail = await prisma.user.findUnique({ where: { email } });
     if (existingEmail) conflict("An account with this email already exists");
   }
@@ -389,7 +398,7 @@ export async function changePassword(
     throw error;
   }
   if (!user.passwordHash) {
-    fail("Password is managed by Auth0", "UnauthorizedError");
+    fail("This account does not have a password to change", "UnauthorizedError");
   }
   const valid = await verifyPassword(user.passwordHash, input.currentPassword);
   if (!valid) {
@@ -420,6 +429,10 @@ export async function requestPasswordReset(email: string) {
       expiresAt: new Date(Date.now() + resetCodeLifetimeMs),
     },
   });
+
+  if (!user.email) {
+    return;
+  }
 
   await verificationCodeSender.sendCode({ email: user.email, code });
 }
@@ -461,14 +474,17 @@ export async function resetPassword(input: {
   ]);
 }
 
-function displayNameFromAuth0(claims: {
-  email: string;
+function displayNameFromPrivy(input: {
   name?: string;
-  nickname?: string;
+  email?: string;
+  phone?: string;
+  fallback: string;
 }) {
-  const named = claims.name?.trim() || claims.nickname?.trim();
+  const named = input.name?.trim();
   if (named) return named;
-  return claims.email.split("@")[0] || "Eve user";
+  if (input.email) return input.email.split("@")[0] || input.fallback;
+  if (input.phone) return input.phone;
+  return input.fallback;
 }
 
 const pendingDriverProfile = {
@@ -481,16 +497,22 @@ const pendingDriverProfile = {
   earningsTotal: 0,
 };
 
-async function createAuth0Driver(input: {
+async function createPrivyDriver(input: {
   name: string;
-  email: string;
-  auth0Sub: string;
+  email?: string | null;
+  phone?: string | null;
+  privyDid: string;
+  ethereumWallet?: string | null;
+  solanaWallet?: string | null;
 }) {
   return prisma.user.create({
     data: {
       name: input.name,
-      email: input.email,
-      auth0Sub: input.auth0Sub,
+      email: input.email ?? null,
+      phone: input.phone ?? null,
+      privyDid: input.privyDid,
+      ethereumWallet: input.ethereumWallet ?? null,
+      solanaWallet: input.solanaWallet ?? null,
       role: "DRIVER",
       accountStatus: "PENDING",
       driverProfile: { create: pendingDriverProfile },
@@ -529,44 +551,91 @@ function sessionUser<T extends { role: string }>(user: T, role: "RIDER" | "DRIVE
   return { ...user, role };
 }
 
-export async function exchangeAuth0Session(
+export async function exchangePrivySession(
   role: "RIDER" | "DRIVER",
-  idToken: string,
+  identityToken: string,
+  wallets?: { ethereumWallet?: string; solanaWallet?: string },
 ) {
-  const claims = await verifyAuth0IdToken(idToken);
+  const claims = await verifyPrivyIdentityToken(identityToken);
   const email = claims.email?.trim().toLowerCase();
-  if (!email) {
-    fail("Auth0 account is missing an email", "UnauthorizedError");
+  const phone = claims.phone?.trim() || null;
+  const ethereumWallet = claims.ethereumWallet ?? wallets?.ethereumWallet ?? null;
+  const solanaWallet = claims.solanaWallet ?? wallets?.solanaWallet ?? null;
+
+  let user = await prisma.user.findUnique({ where: { privyDid: claims.privyDid } });
+
+  if (!user && phone) {
+    const byPhone = await prisma.user.findUnique({ where: { phone } });
+    if (byPhone) {
+      rejectAdminOnMobile(byPhone);
+      user = await prisma.user.update({
+        where: { id: byPhone.id },
+        data: {
+          privyDid: claims.privyDid,
+          lastLoginAt: new Date(),
+          ...(email && !byPhone.email ? { email } : {}),
+          ...(ethereumWallet ? { ethereumWallet } : {}),
+          ...(solanaWallet ? { solanaWallet } : {}),
+        },
+      });
+    }
   }
 
-  let user = await prisma.user.findUnique({ where: { auth0Sub: claims.sub } });
-
-  if (!user && claims.emailVerified) {
+  if (!user && email) {
     const byEmail = await prisma.user.findUnique({ where: { email } });
     if (byEmail) {
       rejectAdminOnMobile(byEmail);
       user = await prisma.user.update({
         where: { id: byEmail.id },
-        data: { auth0Sub: claims.sub, lastLoginAt: new Date() },
+        data: {
+          privyDid: claims.privyDid,
+          lastLoginAt: new Date(),
+          ...(phone && !byEmail.phone ? { phone } : {}),
+          ...(ethereumWallet ? { ethereumWallet } : {}),
+          ...(solanaWallet ? { solanaWallet } : {}),
+        },
       });
     }
   }
 
   if (!user) {
-    const existingEmail = await prisma.user.findUnique({ where: { email } });
-    if (existingEmail) {
-      fail("An account with this email already exists", "ConflictError");
+    if (email) {
+      const existingEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingEmail) {
+        fail("An account with this email already exists", "ConflictError");
+      }
+    }
+    if (phone) {
+      const existingPhone = await prisma.user.findUnique({ where: { phone } });
+      if (existingPhone) {
+        fail("An account with this phone number already exists", "ConflictError");
+      }
     }
 
-    const name = displayNameFromAuth0({ ...claims, email });
+    const name = displayNameFromPrivy({
+      name: claims.name,
+      email,
+      phone: phone ?? undefined,
+      fallback: role === "DRIVER" ? "Driver" : "Rider",
+    });
     user =
       role === "DRIVER"
-        ? await createAuth0Driver({ name, email, auth0Sub: claims.sub })
+        ? await createPrivyDriver({
+            name,
+            email,
+            phone,
+            privyDid: claims.privyDid,
+            ethereumWallet,
+            solanaWallet,
+          })
         : await prisma.user.create({
             data: {
               name,
               email,
-              auth0Sub: claims.sub,
+              phone,
+              privyDid: claims.privyDid,
+              ethereumWallet,
+              solanaWallet,
               role: "RIDER",
               riderProfile: { create: {} },
             },
@@ -578,7 +647,15 @@ export async function exchangeAuth0Session(
     }
     user = await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        lastLoginAt: new Date(),
+        ...(ethereumWallet && ethereumWallet !== user.ethereumWallet
+          ? { ethereumWallet }
+          : {}),
+        ...(solanaWallet && solanaWallet !== user.solanaWallet
+          ? { solanaWallet }
+          : {}),
+      },
     });
     await ensureMobileProfile(user.id, role, user.city);
   }
@@ -589,7 +666,11 @@ export async function exchangeAuth0Session(
     const fullProfile = await getDriverProfile(user.id);
     return {
       accessToken: createAccessToken(session),
-      user: sanitizeDriverUser(session),
+      user: sanitizeDriverUser({
+        ...session,
+        ethereumWallet: user.ethereumWallet,
+        solanaWallet: user.solanaWallet,
+      }),
       driverProfile: fullProfile,
     };
   }

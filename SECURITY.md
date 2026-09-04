@@ -58,8 +58,8 @@ We aim to acknowledge security reports within 48 hours and provide a detailed re
 - **Impact**: Tokens only accessible when device is unlocked
 
 #### 9. 401 Error Handling
-- **Issue**: 401 responses only cleared Eve token, not Auth0 session
-- **Fix**: Added navigation to auth screen, allowing logout hook to clear Auth0 session
+- **Issue**: 401 responses only cleared Eve token, not the identity-provider session
+- **Fix**: Added navigation to auth screen, allowing logout hook to clear the Privy session
 - **Impact**: Proper session cleanup on token expiry
 
 ## Environment Variables
@@ -73,9 +73,9 @@ INTERNAL_SERVICE_SECRET=<generate-a-long-random-secret>
 # Backend - JWT Secret
 JWT_ACCESS_SECRET=<long-random-secret>
 
-# Backend - Auth0
-AUTH0_DOMAIN=your-tenant.us.auth0.com
-AUTH0_CLIENT_ID=your_auth0_client_id
+# Backend - Privy
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 
 # Backend - Database
 DATABASE_URL=postgresql://user:pass@host:5432/eve
@@ -105,8 +105,8 @@ openssl rand -base64 64
 
 ### Medium Priority (Configuration & Development)
 
-1. **Auth0 Universal Links**: Migrate from custom schemes to HTTPS App Links/Universal Links
-2. **Separate Auth0 Clients**: Create distinct Auth0 applications for rider and driver apps
+1. **Passkey associated domains**: Keep AASA and Digital Asset Links in sync with Apple Team ID and Play/App Store cert fingerprints
+2. **Separate Privy App Clients**: Distinct rider (`ca.sherpafoods.eve`) and driver (`ca.sherpafoods.evedriver`) clients
 3. **GDPR Compliance**: Implement data export, account deletion, and consent management
 4. **Centralized Logging**: Set up CloudWatch/DataDog with security alerts
 5. **CI Security Testing**: Add npm audit, SAST, and secret scanning to GitHub Actions

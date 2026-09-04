@@ -45,14 +45,14 @@ lsof -i :4003  # macOS/Linux
 netstat -ano | findstr :4003  # Windows
 ```
 
-### Q: Do I need Auth0 to run the backend?
+### Q: Do I need Privy to run the backend?
 
 **A:** Not initially. You can:
-- Run backend without Auth0 for testing
+- Run backend without Privy for testing
 - Use seeded admin users (password-based)
-- Add Auth0 later for mobile apps
+- Add Privy later for mobile apps
 
-Auth0 is **required** for rider and driver mobile apps.
+Privy is **required** for rider and driver mobile apps.
 
 ### Q: Can I run Eve on Windows?
 
@@ -271,22 +271,16 @@ npm run db:studio
 
 ## Authentication Issues
 
-### Q: "Invalid callback URL" error in Auth0
+### Q: Passkey or SMS login fails in the mobile apps
 
-**A:** Callback URLs in Auth0 dashboard don't match your configuration.
+**A:** Privy Dashboard toggles or associated-domain files are missing.
 
 **Solution**:
-1. Go to Auth0 Dashboard → Applications → Your App
-2. Check **Allowed Callback URLs**
-3. Must include:
-   ```
-   eve://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.eve/callback
-   eve://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.eve/callback
-   evedriver://YOUR_TENANT_DOMAIN/ios/ca.sherpafoods.evedriver/callback
-   evedriver://YOUR_TENANT_DOMAIN/android/ca.sherpafoods.evedriver/callback
-   ```
-4. **No `https://`**, no trailing slash
-5. Save changes and try again
+1. In the Privy Dashboard, enable SMS (or WhatsApp — not both), passkeys, identity tokens, and Ethereum + Solana wallets
+2. Create **two App Clients**: rider `ca.sherpafoods.eve` and driver `ca.sherpafoods.evedriver`
+3. Set `EXPO_PUBLIC_PRIVY_APP_ID`, `EXPO_PUBLIC_PRIVY_CLIENT_ID`, and `EXPO_PUBLIC_PRIVY_RELYING_PARTY` in each app `.env`
+4. Host AASA and `assetlinks.json` at the relying-party origin (see `www/app/.well-known/`)
+5. Rebuild the development client after env changes
 
 See [backend/docs/auth.md](backend/docs/auth.md) for details.
 
@@ -323,24 +317,22 @@ npm run db:studio
 # Add user in Prisma Studio
 ```
 
-### Q: "AUTH0_DOMAIN must not include https://"
+### Q: Privy identity-token exchange returns 401
 
-**A:** Remove protocol from Auth0 domain.
+**A:** The backend cannot verify the Privy identity token.
 
 **Solution**:
 ```bash
-# Bad
-AUTH0_DOMAIN=https://tenant.us.auth0.com/
-
-# Good
-AUTH0_DOMAIN=tenant.us.auth0.com
+# Backend must use the same Privy app as the mobile client
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 ```
 
 ## Mobile App Issues
 
 ### Q: "No development client found" in Expo
 
-**A:** Auth0 requires a custom development client.
+**A:** Privy requires a custom development client.
 
 **Solution**:
 ```bash
@@ -407,12 +399,12 @@ npm install
 npx expo run:ios  # or run:android
 ```
 
-### Q: Auth0 login not working on mobile
+### Q: Privy login not working on mobile
 
 **A:** Check:
 1. Development client built (not using Expo Go)
-2. Callback URLs configured correctly
-3. Auth0 domain/client ID in `.env`
+2. SMS and passkeys enabled in the Privy Dashboard
+3. Privy app ID / client ID / relying party in `.env`
 4. Metro bundler restarted after env changes
 
 **Solution**:
@@ -725,7 +717,7 @@ docker compose -f docker-compose.prod.yml up -d --scale location=3
 2. **Search existing issues**:
    - GitHub Issues
    - Stack Overflow
-   - Auth0 Community
+   - Privy Discord / docs
 
 3. **Consult documentation**:
    - [Getting Started](GETTING_STARTED.md)

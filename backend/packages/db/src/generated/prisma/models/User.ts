@@ -31,6 +31,9 @@ export type UserMinAggregateOutputType = {
   phone: string | null
   passwordHash: string | null
   auth0Sub: string | null
+  privyDid: string | null
+  ethereumWallet: string | null
+  solanaWallet: string | null
   role: $Enums.UserRole | null
   adminStaffRole: $Enums.AdminStaffRole | null
   adminStaffTitle: $Enums.AdminStaffTitle | null
@@ -52,6 +55,9 @@ export type UserMaxAggregateOutputType = {
   phone: string | null
   passwordHash: string | null
   auth0Sub: string | null
+  privyDid: string | null
+  ethereumWallet: string | null
+  solanaWallet: string | null
   role: $Enums.UserRole | null
   adminStaffRole: $Enums.AdminStaffRole | null
   adminStaffTitle: $Enums.AdminStaffTitle | null
@@ -73,6 +79,9 @@ export type UserCountAggregateOutputType = {
   phone: number
   passwordHash: number
   auth0Sub: number
+  privyDid: number
+  ethereumWallet: number
+  solanaWallet: number
   role: number
   adminStaffRole: number
   adminStaffTitle: number
@@ -96,6 +105,9 @@ export type UserMinAggregateInputType = {
   phone?: true
   passwordHash?: true
   auth0Sub?: true
+  privyDid?: true
+  ethereumWallet?: true
+  solanaWallet?: true
   role?: true
   adminStaffRole?: true
   adminStaffTitle?: true
@@ -117,6 +129,9 @@ export type UserMaxAggregateInputType = {
   phone?: true
   passwordHash?: true
   auth0Sub?: true
+  privyDid?: true
+  ethereumWallet?: true
+  solanaWallet?: true
   role?: true
   adminStaffRole?: true
   adminStaffTitle?: true
@@ -138,6 +153,9 @@ export type UserCountAggregateInputType = {
   phone?: true
   passwordHash?: true
   auth0Sub?: true
+  privyDid?: true
+  ethereumWallet?: true
+  solanaWallet?: true
   role?: true
   adminStaffRole?: true
   adminStaffTitle?: true
@@ -228,10 +246,13 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type UserGroupByOutputType = {
   id: string
   name: string
-  email: string
+  email: string | null
   phone: string | null
   passwordHash: string | null
   auth0Sub: string | null
+  privyDid: string | null
+  ethereumWallet: string | null
+  solanaWallet: string | null
   role: $Enums.UserRole
   adminStaffRole: $Enums.AdminStaffRole | null
   adminStaffTitle: $Enums.AdminStaffTitle | null
@@ -270,10 +291,13 @@ export type UserWhereInput = {
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   id?: Prisma.StringFilter<"User"> | string
   name?: Prisma.StringFilter<"User"> | string
-  email?: Prisma.StringFilter<"User"> | string
+  email?: Prisma.StringNullableFilter<"User"> | string | null
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
   auth0Sub?: Prisma.StringNullableFilter<"User"> | string | null
+  privyDid?: Prisma.StringNullableFilter<"User"> | string | null
+  ethereumWallet?: Prisma.StringNullableFilter<"User"> | string | null
+  solanaWallet?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableFilter<"User"> | $Enums.AdminStaffTitle | null
@@ -302,10 +326,13 @@ export type UserWhereInput = {
 export type UserOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  email?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   auth0Sub?: Prisma.SortOrderInput | Prisma.SortOrder
+  privyDid?: Prisma.SortOrderInput | Prisma.SortOrder
+  ethereumWallet?: Prisma.SortOrderInput | Prisma.SortOrder
+  solanaWallet?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
   adminStaffTitle?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -336,11 +363,14 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   email?: string
   phone?: string
   auth0Sub?: string
+  privyDid?: string
   AND?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   OR?: Prisma.UserWhereInput[]
   NOT?: Prisma.UserWhereInput | Prisma.UserWhereInput[]
   name?: Prisma.StringFilter<"User"> | string
   passwordHash?: Prisma.StringNullableFilter<"User"> | string | null
+  ethereumWallet?: Prisma.StringNullableFilter<"User"> | string | null
+  solanaWallet?: Prisma.StringNullableFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableFilter<"User"> | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableFilter<"User"> | $Enums.AdminStaffTitle | null
@@ -364,15 +394,18 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   notifications?: Prisma.NotificationListRelationFilter
   tripMessages?: Prisma.TripMessageListRelationFilter
   receivedCouriers?: Prisma.TripListRelationFilter
-}, "id" | "email" | "phone" | "auth0Sub">
+}, "id" | "email" | "phone" | "auth0Sub" | "privyDid">
 
 export type UserOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
-  email?: Prisma.SortOrder
+  email?: Prisma.SortOrderInput | Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   passwordHash?: Prisma.SortOrderInput | Prisma.SortOrder
   auth0Sub?: Prisma.SortOrderInput | Prisma.SortOrder
+  privyDid?: Prisma.SortOrderInput | Prisma.SortOrder
+  ethereumWallet?: Prisma.SortOrderInput | Prisma.SortOrder
+  solanaWallet?: Prisma.SortOrderInput | Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrderInput | Prisma.SortOrder
   adminStaffTitle?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -396,10 +429,13 @@ export type UserScalarWhereWithAggregatesInput = {
   NOT?: Prisma.UserScalarWhereWithAggregatesInput | Prisma.UserScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"User"> | string
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
-  email?: Prisma.StringWithAggregatesFilter<"User"> | string
+  email?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   phone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   passwordHash?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   auth0Sub?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  privyDid?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  ethereumWallet?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  solanaWallet?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
   adminStaffRole?: Prisma.EnumAdminStaffRoleNullableWithAggregatesFilter<"User"> | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.EnumAdminStaffTitleNullableWithAggregatesFilter<"User"> | $Enums.AdminStaffTitle | null
@@ -417,10 +453,13 @@ export type UserScalarWhereWithAggregatesInput = {
 export type UserCreateInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -449,10 +488,13 @@ export type UserCreateInput = {
 export type UserUncheckedCreateInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -481,10 +523,13 @@ export type UserUncheckedCreateInput = {
 export type UserUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -513,10 +558,13 @@ export type UserUpdateInput = {
 export type UserUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -545,10 +593,13 @@ export type UserUncheckedUpdateInput = {
 export type UserCreateManyInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -566,10 +617,13 @@ export type UserCreateManyInput = {
 export type UserUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -587,10 +641,13 @@ export type UserUpdateManyMutationInput = {
 export type UserUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -612,6 +669,9 @@ export type UserCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   auth0Sub?: Prisma.SortOrder
+  privyDid?: Prisma.SortOrder
+  ethereumWallet?: Prisma.SortOrder
+  solanaWallet?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
   adminStaffTitle?: Prisma.SortOrder
@@ -633,6 +693,9 @@ export type UserMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   auth0Sub?: Prisma.SortOrder
+  privyDid?: Prisma.SortOrder
+  ethereumWallet?: Prisma.SortOrder
+  solanaWallet?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
   adminStaffTitle?: Prisma.SortOrder
@@ -654,6 +717,9 @@ export type UserMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   passwordHash?: Prisma.SortOrder
   auth0Sub?: Prisma.SortOrder
+  privyDid?: Prisma.SortOrder
+  ethereumWallet?: Prisma.SortOrder
+  solanaWallet?: Prisma.SortOrder
   role?: Prisma.SortOrder
   adminStaffRole?: Prisma.SortOrder
   adminStaffTitle?: Prisma.SortOrder
@@ -881,10 +947,13 @@ export type UserUpdateOneRequiredWithoutSessionsNestedInput = {
 export type UserCreateWithoutResetCodesInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -912,10 +981,13 @@ export type UserCreateWithoutResetCodesInput = {
 export type UserUncheckedCreateWithoutResetCodesInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -959,10 +1031,13 @@ export type UserUpdateToOneWithWhereWithoutResetCodesInput = {
 export type UserUpdateWithoutResetCodesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -990,10 +1065,13 @@ export type UserUpdateWithoutResetCodesInput = {
 export type UserUncheckedUpdateWithoutResetCodesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1021,10 +1099,13 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
 export type UserCreateWithoutRiderProfileInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1052,10 +1133,13 @@ export type UserCreateWithoutRiderProfileInput = {
 export type UserUncheckedCreateWithoutRiderProfileInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1099,10 +1183,13 @@ export type UserUpdateToOneWithWhereWithoutRiderProfileInput = {
 export type UserUpdateWithoutRiderProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1130,10 +1217,13 @@ export type UserUpdateWithoutRiderProfileInput = {
 export type UserUncheckedUpdateWithoutRiderProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1161,10 +1251,13 @@ export type UserUncheckedUpdateWithoutRiderProfileInput = {
 export type UserCreateWithoutDriverProfileInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1192,10 +1285,13 @@ export type UserCreateWithoutDriverProfileInput = {
 export type UserUncheckedCreateWithoutDriverProfileInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1239,10 +1335,13 @@ export type UserUpdateToOneWithWhereWithoutDriverProfileInput = {
 export type UserUpdateWithoutDriverProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1270,10 +1369,13 @@ export type UserUpdateWithoutDriverProfileInput = {
 export type UserUncheckedUpdateWithoutDriverProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1301,10 +1403,13 @@ export type UserUncheckedUpdateWithoutDriverProfileInput = {
 export type UserCreateWithoutReceivedCouriersInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1332,10 +1437,13 @@ export type UserCreateWithoutReceivedCouriersInput = {
 export type UserUncheckedCreateWithoutReceivedCouriersInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1379,10 +1487,13 @@ export type UserUpdateToOneWithWhereWithoutReceivedCouriersInput = {
 export type UserUpdateWithoutReceivedCouriersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1410,10 +1521,13 @@ export type UserUpdateWithoutReceivedCouriersInput = {
 export type UserUncheckedUpdateWithoutReceivedCouriersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1441,10 +1555,13 @@ export type UserUncheckedUpdateWithoutReceivedCouriersInput = {
 export type UserCreateWithoutTripMessagesInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1472,10 +1589,13 @@ export type UserCreateWithoutTripMessagesInput = {
 export type UserUncheckedCreateWithoutTripMessagesInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1519,10 +1639,13 @@ export type UserUpdateToOneWithWhereWithoutTripMessagesInput = {
 export type UserUpdateWithoutTripMessagesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1550,10 +1673,13 @@ export type UserUpdateWithoutTripMessagesInput = {
 export type UserUncheckedUpdateWithoutTripMessagesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1581,10 +1707,13 @@ export type UserUncheckedUpdateWithoutTripMessagesInput = {
 export type UserCreateWithoutAssignedTicketsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1612,10 +1741,13 @@ export type UserCreateWithoutAssignedTicketsInput = {
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1659,10 +1791,13 @@ export type UserUpdateToOneWithWhereWithoutAssignedTicketsInput = {
 export type UserUpdateWithoutAssignedTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1690,10 +1825,13 @@ export type UserUpdateWithoutAssignedTicketsInput = {
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1721,10 +1859,13 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
 export type UserCreateWithoutAssignedIncidentsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1752,10 +1893,13 @@ export type UserCreateWithoutAssignedIncidentsInput = {
 export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1799,10 +1943,13 @@ export type UserUpdateToOneWithWhereWithoutAssignedIncidentsInput = {
 export type UserUpdateWithoutAssignedIncidentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1830,10 +1977,13 @@ export type UserUpdateWithoutAssignedIncidentsInput = {
 export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1861,10 +2011,13 @@ export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
 export type UserCreateWithoutNotificationsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1892,10 +2045,13 @@ export type UserCreateWithoutNotificationsInput = {
 export type UserUncheckedCreateWithoutNotificationsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -1939,10 +2095,13 @@ export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
 export type UserUpdateWithoutNotificationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -1970,10 +2129,13 @@ export type UserUpdateWithoutNotificationsInput = {
 export type UserUncheckedUpdateWithoutNotificationsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2001,10 +2163,13 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
 export type UserCreateWithoutAuditLogsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2032,10 +2197,13 @@ export type UserCreateWithoutAuditLogsInput = {
 export type UserUncheckedCreateWithoutAuditLogsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2079,10 +2247,13 @@ export type UserUpdateToOneWithWhereWithoutAuditLogsInput = {
 export type UserUpdateWithoutAuditLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2110,10 +2281,13 @@ export type UserUpdateWithoutAuditLogsInput = {
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2141,10 +2315,13 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
 export type UserCreateWithoutLoginEventsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2172,10 +2349,13 @@ export type UserCreateWithoutLoginEventsInput = {
 export type UserUncheckedCreateWithoutLoginEventsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2219,10 +2399,13 @@ export type UserUpdateToOneWithWhereWithoutLoginEventsInput = {
 export type UserUpdateWithoutLoginEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2250,10 +2433,13 @@ export type UserUpdateWithoutLoginEventsInput = {
 export type UserUncheckedUpdateWithoutLoginEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2281,10 +2467,13 @@ export type UserUncheckedUpdateWithoutLoginEventsInput = {
 export type UserCreateWithoutSessionsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2312,10 +2501,13 @@ export type UserCreateWithoutSessionsInput = {
 export type UserUncheckedCreateWithoutSessionsInput = {
   id?: string
   name: string
-  email: string
+  email?: string | null
   phone?: string | null
   passwordHash?: string | null
   auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  solanaWallet?: string | null
   role?: $Enums.UserRole
   adminStaffRole?: $Enums.AdminStaffRole | null
   adminStaffTitle?: $Enums.AdminStaffTitle | null
@@ -2359,10 +2551,13 @@ export type UserUpdateToOneWithWhereWithoutSessionsInput = {
 export type UserUpdateWithoutSessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2390,10 +2585,13 @@ export type UserUpdateWithoutSessionsInput = {
 export type UserUncheckedUpdateWithoutSessionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
-  email?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
   adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
   adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
@@ -2528,6 +2726,9 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   phone?: boolean
   passwordHash?: boolean
   auth0Sub?: boolean
+  privyDid?: boolean
+  ethereumWallet?: boolean
+  solanaWallet?: boolean
   role?: boolean
   adminStaffRole?: boolean
   adminStaffTitle?: boolean
@@ -2561,6 +2762,9 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   phone?: boolean
   passwordHash?: boolean
   auth0Sub?: boolean
+  privyDid?: boolean
+  ethereumWallet?: boolean
+  solanaWallet?: boolean
   role?: boolean
   adminStaffRole?: boolean
   adminStaffTitle?: boolean
@@ -2582,6 +2786,9 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   phone?: boolean
   passwordHash?: boolean
   auth0Sub?: boolean
+  privyDid?: boolean
+  ethereumWallet?: boolean
+  solanaWallet?: boolean
   role?: boolean
   adminStaffRole?: boolean
   adminStaffTitle?: boolean
@@ -2603,6 +2810,9 @@ export type UserSelectScalar = {
   phone?: boolean
   passwordHash?: boolean
   auth0Sub?: boolean
+  privyDid?: boolean
+  ethereumWallet?: boolean
+  solanaWallet?: boolean
   role?: boolean
   adminStaffRole?: boolean
   adminStaffTitle?: boolean
@@ -2617,7 +2827,7 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "auth0Sub" | "role" | "adminStaffRole" | "adminStaffTitle" | "accountStatus" | "isActive" | "flagged" | "city" | "mfaEnabled" | "pushNotificationsEnabled" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "phone" | "passwordHash" | "auth0Sub" | "privyDid" | "ethereumWallet" | "solanaWallet" | "role" | "adminStaffRole" | "adminStaffTitle" | "accountStatus" | "isActive" | "flagged" | "city" | "mfaEnabled" | "pushNotificationsEnabled" | "lastLoginAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   resetCodes?: boolean | Prisma.User$resetCodesArgs<ExtArgs>
   riderProfile?: boolean | Prisma.User$riderProfileArgs<ExtArgs>
@@ -2653,10 +2863,13 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
-    email: string
+    email: string | null
     phone: string | null
     passwordHash: string | null
     auth0Sub: string | null
+    privyDid: string | null
+    ethereumWallet: string | null
+    solanaWallet: string | null
     role: $Enums.UserRole
     adminStaffRole: $Enums.AdminStaffRole | null
     adminStaffTitle: $Enums.AdminStaffTitle | null
@@ -3109,6 +3322,9 @@ export interface UserFieldRefs {
   readonly phone: Prisma.FieldRef<"User", 'String'>
   readonly passwordHash: Prisma.FieldRef<"User", 'String'>
   readonly auth0Sub: Prisma.FieldRef<"User", 'String'>
+  readonly privyDid: Prisma.FieldRef<"User", 'String'>
+  readonly ethereumWallet: Prisma.FieldRef<"User", 'String'>
+  readonly solanaWallet: Prisma.FieldRef<"User", 'String'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
   readonly adminStaffRole: Prisma.FieldRef<"User", 'AdminStaffRole'>
   readonly adminStaffTitle: Prisma.FieldRef<"User", 'AdminStaffTitle'>

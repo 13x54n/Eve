@@ -1,27 +1,36 @@
 import "@/components/map/mapbox-token";
 import { Stack } from "expo-router/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Auth0Provider } from "react-native-auth0";
+import { PrivyProvider } from "@privy-io/expo";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { DriverNotificationsProvider } from "@/context/driver-notifications";
 import { ThemeProvider } from "@/context/theme-context";
 import { NetworkProvider } from "@/context/network-context";
-import { requireAuth0Config } from "@/lib/auth0";
+import { requirePrivyConfig } from "@/lib/privy";
 
 export default function RootLayout() {
-  const { domain, clientId } = requireAuth0Config();
+  const { appId, clientId } = requirePrivyConfig();
 
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <NetworkProvider>
-          <Auth0Provider domain={domain} clientId={clientId}>
+          <PrivyProvider
+            appId={appId}
+            clientId={clientId}
+            config={{
+              embedded: {
+                ethereum: { createOnLogin: "users-without-wallets" },
+                solana: { createOnLogin: "users-without-wallets" },
+              },
+            }}
+          >
             <AuthProvider>
               <DriverNotificationsProvider>
                 <RootNavigator />
               </DriverNotificationsProvider>
             </AuthProvider>
-          </Auth0Provider>
+          </PrivyProvider>
         </NetworkProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -25,24 +25,32 @@ function applyDotEnv() {
 
 applyDotEnv();
 
-function auth0Host(value) {
-  return value.replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase();
+function relyingPartyHost() {
+  const raw = process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY?.trim() ?? "";
+  return raw.replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase();
 }
 
 /** @param {{ config: import("expo/config").ExpoConfig }} ctx */
 module.exports = ({ config }) => {
-  const domain = auth0Host(process.env.EXPO_PUBLIC_AUTH0_DOMAIN?.trim() ?? "");
-  if (!domain) {
-    throw new Error(
-      "EXPO_PUBLIC_AUTH0_DOMAIN is required for the Auth0 native plugin. Set it in rider/.env.",
-    );
-  }
+  const passkeyHost = relyingPartyHost();
+  const associatedDomains = passkeyHost ? [`webcredentials:${passkeyHost}`] : [];
 
   return {
     ...config,
+    ios: {
+      ...config.ios,
+      associatedDomains: [
+        ...new Set([...(config.ios?.associatedDomains ?? []), ...associatedDomains]),
+      ],
+    },
     plugins: [
       ...(config.plugins ?? []),
-      ["react-native-auth0", { domain, customScheme: "eve" }],
+      [
+        "expo-build-properties",
+        {
+          ios: { deploymentTarget: "15.0" },
+        },
+      ],
     ],
   };
 };

@@ -22,8 +22,8 @@ These variables **must** be set for the backend to function:
 |----------|-------------|---------|------------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://eve:eve@localhost:5432/eve` | All services |
 | `JWT_ACCESS_SECRET` | Secret for signing access tokens | Generate with `openssl rand -base64 32` | Auth service |
-| `AUTH0_DOMAIN` | Auth0 tenant domain (no https://) | `your-tenant.us.auth0.com` | Auth service |
-| `AUTH0_CLIENT_ID` | Auth0 Native application client ID | `abc123...` | Auth service |
+| `PRIVY_APP_ID` | Privy application ID | `clxxxxxxxx` | Auth service |
+| `PRIVY_APP_SECRET` | Privy application secret | `xxxxx` | Auth service |
 
 ### Database Configuration
 
@@ -77,8 +77,8 @@ REDIS_SENTINEL_NAME=mymaster
 | `JWT_ACCESS_SECRET` | Secret for access tokens | 32+ char random string | ✅ Yes |
 | `JWT_REFRESH_SECRET` | Secret for refresh tokens | 32+ char random string | No |
 | `PASSWORD_RESET_SECRET` | Secret for reset tokens | 32+ char random string | Yes |
-| `AUTH0_DOMAIN` | Auth0 tenant domain | `tenant.us.auth0.com` | ✅ Yes (for mobile) |
-| `AUTH0_CLIENT_ID` | Auth0 client ID | `abc123...` | ✅ Yes (for mobile) |
+| `PRIVY_APP_ID` | Privy application ID | `clxxxxxxxx` | ✅ Yes (for mobile) |
+| `PRIVY_APP_SECRET` | Privy application secret | `xxxxx` | ✅ Yes (for mobile) |
 
 **Generate secrets**:
 ```bash
@@ -257,15 +257,16 @@ CORS_ORIGINS=https://admin.example.com
 | `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | `http://192.168.1.100:4001/api` | ✅ Yes |
 | `EXPO_PUBLIC_API_URL` | Ride HTTP base | `http://192.168.1.100:4003/api` | ✅ Yes |
 | `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | `http://192.168.1.100:4004` | ✅ Yes |
-| `EXPO_PUBLIC_AUTH0_DOMAIN` | Auth0 domain | `tenant.us.auth0.com` | ✅ Yes |
-| `EXPO_PUBLIC_AUTH0_CLIENT_ID` | Auth0 client ID | `abc123...` | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_APP_ID` | Privy application ID | `clxxxxxxxx` | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_CLIENT_ID` | Privy app client ID | `client_xxx` | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_RELYING_PARTY` | Passkey origin (https) | `https://your-domain.com` | ✅ Yes |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox public token | `pk.abc123...` | ✅ Yes |
 
 **Important Notes**:
 - Use your machine's **LAN IP**, not `localhost`, for mobile devices
 - Prefix all variables with `EXPO_PUBLIC_` to expose to client
 - Restart Metro bundler after changing env vars: `npx expo start --clear`
-- Rebuild dev client after changing Auth0 config: `npx expo run:ios`
+- Rebuild dev client after changing Privy native config: `npx expo run:ios`
 
 **Find your LAN IP**:
 ```bash
@@ -281,8 +282,9 @@ ipconfig | findstr IPv4
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
-EXPO_PUBLIC_AUTH0_DOMAIN=eve-dev.us.auth0.com
-EXPO_PUBLIC_AUTH0_CLIENT_ID=abc123xyz
+EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
+EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.eyJ1Ijoibm...
 ```
 
@@ -295,11 +297,12 @@ Same variables as Rider app:
 | `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | ✅ Yes |
 | `EXPO_PUBLIC_API_URL` | Ride HTTP base | ✅ Yes |
 | `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | ✅ Yes |
-| `EXPO_PUBLIC_AUTH0_DOMAIN` | Auth0 domain | ✅ Yes |
-| `EXPO_PUBLIC_AUTH0_CLIENT_ID` | Auth0 client ID | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_APP_ID` | Privy application ID | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_CLIENT_ID` | Privy app client ID | ✅ Yes |
+| `EXPO_PUBLIC_PRIVY_RELYING_PARTY` | Passkey relying party URL | ✅ Yes |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox token | ✅ Yes |
 
-**Note**: Rider and driver apps use the **same** Auth0 client.
+**Note**: Rider and driver apps should use **different** Privy app clients.
 
 ## Web Applications
 
@@ -342,7 +345,7 @@ NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 **Production** (`.env.prod`):
 - Strong, random secrets ✅
 - HTTPS URLs only ✅
-- Production Auth0 tenant ✅
+- Production Privy app ✅
 - Email delivery required ✅
 - Internal service secret set ✅
 - Rate limits configured ✅
@@ -392,8 +395,8 @@ DATABASE_URL=postgresql://eve:eve@localhost:5432/eve
 REDIS_URL=redis://localhost:6379
 JWT_ACCESS_SECRET=dev-secret-change-in-production
 PASSWORD_RESET_SECRET=reset-dev-secret
-AUTH0_DOMAIN=your-tenant.us.auth0.com
-AUTH0_CLIENT_ID=your_client_id
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 AUTH_PORT=4001
 RIDE_PORT=4003
 LOCATION_GRPC_URL=127.0.0.1:50051
@@ -415,8 +418,9 @@ NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
-EXPO_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
-EXPO_PUBLIC_AUTH0_CLIENT_ID=your_client_id
+EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
+EXPO_PUBLIC_PRIVY_CLIENT_ID=your_client_id
+EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 ```
 
@@ -428,8 +432,8 @@ NODE_ENV=development
 DATABASE_URL=postgresql://eve:eve@postgres:5432/eve
 REDIS_URL=redis://redis:6379
 JWT_ACCESS_SECRET=dev-secret
-AUTH0_DOMAIN=your-tenant.us.auth0.com
-AUTH0_CLIENT_ID=your_client_id
+PRIVY_APP_ID=your-privy-app-id
+PRIVY_APP_SECRET=your-privy-app-secret
 LOCATION_GRPC_URL=location:50051
 NOTIFY_GRPC_URL=notify:50052
 ```
@@ -444,8 +448,8 @@ REDIS_URL=redis://:redispass@redis-host:6379
 JWT_ACCESS_SECRET=<64-char-random-string>
 PASSWORD_RESET_SECRET=<64-char-random-string>
 INTERNAL_SERVICE_SECRET=<96-char-random-string>
-AUTH0_DOMAIN=prod-tenant.auth0.com
-AUTH0_CLIENT_ID=prod_client_id
+PRIVY_APP_ID=prod-privy-app-id
+PRIVY_APP_SECRET=prod-privy-app-secret
 LOCATION_GRPC_URL=location:50051
 NOTIFY_GRPC_URL=notify:50052
 IMAGEKIT_PRIVATE_KEY=<private-key>
@@ -473,8 +477,8 @@ NOTIFY_GRPC_URL=notify-internal:50052
 **Error**: `Cannot connect to database`
 - **Solution**: Check `DATABASE_URL` format and PostgreSQL is running
 
-**Error**: `Auth0 domain must not include https://`
-- **Solution**: Use `tenant.us.auth0.com` not `https://tenant.us.auth0.com`
+**Error**: Privy identity token rejected
+- **Solution**: Enable identity tokens in the Privy Dashboard and set `PRIVY_APP_ID` / `PRIVY_APP_SECRET`
 
 **Error**: `CORS error from browser`
 - **Solution**: Add your origin to `CORS_ORIGINS` or use `/api` proxy in Next.js
@@ -487,7 +491,7 @@ NOTIFY_GRPC_URL=notify-internal:50052
 ```bash
 # Backend
 cd backend
-grep -E "^(DATABASE_URL|JWT_ACCESS_SECRET|AUTH0_DOMAIN)=" .env
+grep -E "^(DATABASE_URL|JWT_ACCESS_SECRET|PRIVY_APP_ID)=" .env
 
 # Admin
 cd admin
@@ -501,7 +505,7 @@ grep -E "^EXPO_PUBLIC_" .env
 ## Related Documentation
 
 - [Getting Started Guide](GETTING_STARTED.md) - Setup instructions
-- [Backend Auth Documentation](backend/docs/auth.md) - Auth0 setup
+- [Backend Auth Documentation](backend/docs/auth.md) - Privy setup
 - [Security Policy](SECURITY.md) - Security best practices
 - [Deployment Guide](DEPLOYMENT.md) - Production configuration
 

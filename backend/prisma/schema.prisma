@@ -202,10 +202,13 @@ enum AlertKind {
 model User {
   id             String          @id @default(cuid())
   name           String
-  email          String          @unique
+  email          String?         @unique
   phone          String?         @unique
   passwordHash   String?
   auth0Sub       String?         @unique
+  privyDid       String?         @unique
+  ethereumWallet String?
+  solanaWallet   String?
   role            UserRole         @default(RIDER)
   adminStaffRole  AdminStaffRole?
   adminStaffTitle AdminStaffTitle?

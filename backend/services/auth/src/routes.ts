@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 import { requireAuth, type AuthenticatedRequest } from "@eve/http";
 import {
   changePassword,
-  exchangeAuth0Session,
+  exchangePrivySession,
   getUserById,
   loginAdmin,
   loginRider,
@@ -16,7 +16,7 @@ import {
 } from "./auth.service.js";
 import { loginDriver, registerDriver } from "./driver-auth.js";
 import {
-  auth0ExchangeSchema,
+  privyExchangeSchema,
   changePasswordSchema,
   driverLoginSchema,
   driverRegisterSchema,
@@ -64,10 +64,14 @@ authRouter.post("/login", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/auth0", limiter, async (req, res, next) => {
+authRouter.post("/privy", limiter, async (req, res, next) => {
   try {
+    const body = privyExchangeSchema.parse(req.body);
     res.status(200).json(
-      await exchangeAuth0Session("RIDER", auth0ExchangeSchema.parse(req.body).idToken),
+      await exchangePrivySession("RIDER", body.identityToken, {
+        ethereumWallet: body.ethereumWallet,
+        solanaWallet: body.solanaWallet,
+      }),
     );
   } catch (error) {
     next(error);
@@ -90,10 +94,14 @@ authRouter.post("/driver/login", limiter, async (req, res, next) => {
   }
 });
 
-authRouter.post("/driver/auth0", limiter, async (req, res, next) => {
+authRouter.post("/driver/privy", limiter, async (req, res, next) => {
   try {
+    const body = privyExchangeSchema.parse(req.body);
     res.status(200).json(
-      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+      await exchangePrivySession("DRIVER", body.identityToken, {
+        ethereumWallet: body.ethereumWallet,
+        solanaWallet: body.solanaWallet,
+      }),
     );
   } catch (error) {
     next(error);
@@ -208,10 +216,14 @@ driverAuthRouter.post("/login", driverLimiter, async (req, res, next) => {
   }
 });
 
-driverAuthRouter.post("/auth0", driverLimiter, async (req, res, next) => {
+driverAuthRouter.post("/privy", driverLimiter, async (req, res, next) => {
   try {
+    const body = privyExchangeSchema.parse(req.body);
     res.status(200).json(
-      await exchangeAuth0Session("DRIVER", auth0ExchangeSchema.parse(req.body).idToken),
+      await exchangePrivySession("DRIVER", body.identityToken, {
+        ethereumWallet: body.ethereumWallet,
+        solanaWallet: body.solanaWallet,
+      }),
     );
   } catch (error) {
     next(error);

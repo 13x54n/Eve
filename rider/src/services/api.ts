@@ -46,7 +46,7 @@ export function isAuthRequest(url?: string) {
   if (path === "auth" || path.startsWith("auth/")) {
     return true;
   }
-  return /^(driver\/(login|register|auth0))(\/|$)/.test(path);
+  return /^(driver\/(login|register|privy))(\/|$)/.test(path);
 }
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {

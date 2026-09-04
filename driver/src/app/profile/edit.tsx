@@ -27,7 +27,7 @@ export default function EditProfileScreen() {
     void getSessionUser()
       .then((user) => {
         setName(user.name);
-        setEmail(user.email);
+        setEmail(user.email ?? "");
         setPhone(user.phone ?? "");
       })
       .catch(() => {});
@@ -38,8 +38,8 @@ export default function EditProfileScreen() {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = phone.trim();
 
-    if (!normalizedName || !normalizedEmail) {
-      Alert.alert("Missing fields", "Name and email are required.");
+    if (!normalizedName) {
+      Alert.alert("Missing fields", "Name is required.");
       return;
     }
     if (normalizedPhone && (normalizedPhone.length < 7 || normalizedPhone.length > 25)) {
@@ -51,7 +51,7 @@ export default function EditProfileScreen() {
       setLoading(true);
       const user = await updateProfile({
         name: normalizedName,
-        email: normalizedEmail,
+        email: normalizedEmail || null,
         phone: normalizedPhone || null,
       });
       setUser(user);
