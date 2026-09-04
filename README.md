@@ -96,7 +96,7 @@ graph TB
         Rider[Rider App<br/>iOS/Android]
         Driver[Driver App<br/>iOS/Android]
         Admin[Admin Console<br/>Next.js]
-        Monitor[Monitor Dashboard<br/>Next.js]
+        WWW[Marketing Site<br/>Next.js]
     end
 
     subgraph Services["Microservices"]
@@ -122,11 +122,6 @@ graph TB
     Admin --> AdminApi
     Admin --> Ride
     Admin --> Notify
-    Monitor --> Auth
-    Monitor --> Location
-    Monitor --> Ride
-    Monitor --> Notify
-    Monitor --> AdminApi
 
     Auth --> PG
     Location --> PG
@@ -197,7 +192,6 @@ Ensure these ports are available:
 - `5432` - PostgreSQL
 - `6379` - Redis
 - `3000` - Admin console
-- `3010` - Monitor dashboard
 - `3020` - Marketing site (`www/`)
 - `8081` - Expo dev server
 
@@ -354,8 +348,6 @@ cd admin && npm install && npm run dev
 ```
 
 Admin console: [http://localhost:3000](http://localhost:3000).
-
-Monitor (separate from admin):
 
 Marketing site (open-source landing page, no backend required):
 
