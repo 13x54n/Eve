@@ -1,4 +1,5 @@
 import { View, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { useBrand } from "@/context/theme-context";
 
@@ -6,31 +7,36 @@ export function HomeSkeleton() {
   const brand = useBrand();
 
   return (
-    <View style={[styles.container, { backgroundColor: brand.canvas }]}>
-      <Image
-        source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
-        style={styles.logo}
-      />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: brand.canvas }]} edges={["top"]}>
+      <View style={styles.container}>
+        <Image
+          source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
+          style={styles.logo}
+        />
 
-      {/* Greeting placeholder */}
-      <View style={[styles.placeholder, styles.greetingPlaceholder]} />
+        {/* Greeting placeholder */}
+        <View style={[styles.placeholder, styles.greetingPlaceholder]} />
 
-      {/* Search bar placeholder */}
-      <View style={[styles.placeholder, styles.searchPlaceholder]} />
+        {/* Search bar placeholder */}
+        <View style={[styles.placeholder, styles.searchPlaceholder]} />
 
-      {/* Feature buttons placeholder */}
-      <View style={styles.featuresRow}>
-        <View style={[styles.placeholder, styles.featurePlaceholder]} />
-        <View style={[styles.placeholder, styles.featurePlaceholder]} />
+        {/* Feature buttons placeholder */}
+        <View style={styles.featuresRow}>
+          <View style={[styles.placeholder, styles.featurePlaceholder]} />
+          <View style={[styles.placeholder, styles.featurePlaceholder]} />
+        </View>
+
+        {/* Map/Image placeholder */}
+        <View style={[styles.placeholder, styles.mapPlaceholder]} />
       </View>
-
-      {/* Map/Image placeholder */}
-      <View style={[styles.placeholder, styles.mapPlaceholder]} />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     paddingVertical: 24,
@@ -44,9 +50,9 @@ const styles = StyleSheet.create({
     marginHorizontal: "auto",
   },
   placeholder: {
-    backgroundColor: "#E5E7EB",
+    backgroundColor: "#9CA3AF",
     borderRadius: 12,
-    opacity: 0.6,
+    opacity: 0.3,
   },
   greetingPlaceholder: {
     height: 24,

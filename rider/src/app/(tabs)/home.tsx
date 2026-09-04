@@ -12,6 +12,7 @@ import {
   View,
   FlatList,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
@@ -62,6 +63,7 @@ export default function HomeScreen() {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setLocationMessage("Location permission is off. Showing the default map area.");
+        if (isInitial) setLoading(false);
         return;
       }
 
@@ -90,6 +92,7 @@ export default function HomeScreen() {
           } else {
             setLocationMessage("Could not find your location. Showing the default map area.");
           }
+          if (isInitial) setLoading(false);
           return;
         }
       }
@@ -108,6 +111,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     void loadLocation(true);
+    // Hard max timeout: ensure loading clears even if everything hangs
+    const maxLoadTimeout = setTimeout(() => {
+      setLoading(false);
+    }, 8000);
+    return () => clearTimeout(maxLoadTimeout);
   }, [loadLocation]);
 
   const reloadHome = useCallback(async () => {
@@ -234,14 +242,15 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: brand.canvas }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      alwaysBounceVertical
-      keyboardShouldPersistTaps="handled"
-      refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-    >
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ScrollView
+        style={[styles.container, { backgroundColor: brand.canvas }]}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        alwaysBounceVertical
+        keyboardShouldPersistTaps="handled"
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+      >
       <Image
         source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png?updatedAt=1787590363742" }}
         style={{ width: 66, height: 66, marginTop: 26, marginHorizontal: "auto" }}
@@ -404,11 +413,16 @@ export default function HomeScreen() {
         source={{ uri: "https://images.unsplash.com/vector-1786329675328-b975cece8a57?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }}
         style={{ width: "90%", height: 230, marginBottom: 16, marginHorizontal: "auto" }}
       />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f7f8ef",
+  },
   container: {
     flex: 1,
     backgroundColor: "#f7f8ef",
