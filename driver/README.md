@@ -177,21 +177,63 @@ EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 
 ### 3. Build Development Client
 
+**Important**: This app requires a custom development build (not Expo Go) due to Auth0, Mapbox, and document picker native modules.
+
 ```bash
-# iOS
+# iOS (requires macOS + Xcode)
 npx expo run:ios
 
-# Android
+# Android (requires Android Studio + Android SDK)
 npx expo run:android
 ```
 
-### 4. Start Metro
+**This takes 5-10 minutes** and builds the dev client with all native modules. You only need to rebuild when:
+- First time setup
+- After installing/updating native dependencies (expo-*, react-native-*)
+- After changing app.json plugins
+- When you see native errors like `NoClassDefFoundError`
+
+**See [ANDROID_TROUBLESHOOTING.md](../../ANDROID_TROUBLESHOOTING.md) for common native build issues.**
+
+### 4. Android Emulator Setup (IMPORTANT)
+
+**If using Android emulator**, you MUST set up adb reverse before starting the app, or you'll get:
+```
+Failed to connect to /10.0.2.2:8081 (ECONNREFUSED)
+```
+
+**Use the automated script**:
+```bash
+# macOS/Linux
+npm run android:dev
+
+# Windows
+npm run android:dev:win
+```
+
+**Or manually**:
+```bash
+# Ensure emulator is running first
+adb devices  # Should show your emulator
+
+# Set up port forwarding
+adb reverse tcp:8081 tcp:8081
+
+# Start Metro
+npx expo start --android
+```
+
+**Why this is needed**: The Android emulator tries to connect to Metro at `10.0.2.2:8081` (the host IP from the emulator's perspective), but without `adb reverse`, the connection fails. The reverse proxy forwards port 8081 from the emulator to your host machine's Metro bundler.
+
+**iOS simulator and physical devices** don't need this setup.
+
+### 5. Start Metro
 
 ```bash
 npx expo start
 ```
 
-### 5. Test Onboarding
+### 6. Test Onboarding
 
 1. Sign in with Auth0
 2. Complete vehicle registration
@@ -199,6 +241,10 @@ npx expo start
 4. Submit for approval
 5. Manually approve in admin console
 6. Return to app (should show home screen)
+
+**If you see native errors** (NoClassDefFoundError, etc.): You need a full rebuild. Run `npm run android:rebuild` (or `:rebuild:win`).
+
+**For detailed troubleshooting, see [ANDROID_TROUBLESHOOTING.md](../../ANDROID_TROUBLESHOOTING.md)**
 
 ## Onboarding Flow
 

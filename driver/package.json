@@ -57,6 +57,10 @@
   },
   "scripts": {
     "start": "expo start",
+    "android:dev": "bash scripts/android-dev.sh",
+    "android:dev:win": "powershell -ExecutionPolicy Bypass -File scripts/android-dev.ps1",
+    "android:rebuild": "bash scripts/android-rebuild.sh",
+    "android:rebuild:win": "powershell -ExecutionPolicy Bypass -File scripts/android-rebuild.ps1",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",

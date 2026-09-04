@@ -191,13 +191,51 @@ ipconfig | findstr IPv4
 # iOS (requires macOS + Xcode)
 npx expo run:ios
 
-# Android
+# Android (requires Android Studio + Android SDK)
 npx expo run:android
 ```
 
-This builds and installs the development client on your device/simulator.
+**This takes 5-10 minutes** and builds the dev client with all native modules. You only need to rebuild when:
+- First time setup
+- After installing/updating native dependencies (expo-*, react-native-*)
+- After changing app.json plugins
+- When you see native errors like `NoClassDefFoundError`
 
-### 4. Start Metro Bundler
+**See [ANDROID_TROUBLESHOOTING.md](../../ANDROID_TROUBLESHOOTING.md) for common native build issues.**
+
+### 4. Android Emulator Setup (IMPORTANT)
+
+**If using Android emulator**, you MUST set up adb reverse before starting the app, or you'll get:
+```
+Failed to connect to /10.0.2.2:8081 (ECONNREFUSED)
+```
+
+**Use the automated script**:
+```bash
+# macOS/Linux
+npm run android:dev
+
+# Windows
+npm run android:dev:win
+```
+
+**Or manually**:
+```bash
+# Ensure emulator is running first
+adb devices  # Should show your emulator
+
+# Set up port forwarding
+adb reverse tcp:8081 tcp:8081
+
+# Start Metro
+npx expo start --android
+```
+
+**Why this is needed**: The Android emulator tries to connect to Metro at `10.0.2.2:8081` (the host IP from the emulator's perspective), but without `adb reverse`, the connection fails. The reverse proxy forwards port 8081 from the emulator to your host machine's Metro bundler.
+
+**iOS simulator and physical devices** don't need this setup.
+
+### 5. Start Metro Bundler
 
 ```bash
 npx expo start
@@ -205,15 +243,40 @@ npx expo start
 
 Press:
 - `i` for iOS simulator
-- `a` for Android emulator
+- `a` for Android emulator (after running android:dev script)
 - Scan QR code with dev client on physical device
 
-### 5. Verify Setup
+### 6. Verify Setup
 
 1. App should open to login screen
 2. Tap "Sign In" → Auth0 login should open
 3. After login, home screen should appear
 4. Check that map loads (Mapbox working)
+
+**If stuck on "Reloading..."**: This usually means Metro isn't connected. For Android emulator, make sure you ran the `android:dev` script or manually set up `adb reverse tcp:8081 tcp:8081`.
+
+**If you see native errors** (NoClassDefFoundError, etc.): You need a full rebuild. See the "When to Rebuild" section below or run `npm run android:rebuild`.
+
+## When to Rebuild the Native App
+
+You **DO NOT** need to rebuild for normal JS/TS development. Metro handles hot reloading.
+
+You **DO** need to rebuild when:
+- ✅ You ran `npm install` and added/updated native dependencies
+- ✅ You changed `app.json` plugins array
+- ✅ You see native errors: `NoClassDefFoundError`, `Native module cannot be null`, etc.
+- ✅ First time setup
+
+**To rebuild:**
+```bash
+# macOS/Linux
+npm run android:rebuild
+
+# Windows
+npm run android:rebuild:win
+```
+
+**For detailed troubleshooting, see [ANDROID_TROUBLESHOOTING.md](../../ANDROID_TROUBLESHOOTING.md)**
 
 ## Project Structure
 
