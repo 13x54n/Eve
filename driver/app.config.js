@@ -48,7 +48,7 @@ module.exports = ({ config }) => {
       [
         "expo-build-properties",
         {
-          ios: { deploymentTarget: "15.0" },
+          ios: { deploymentTarget: "15.1" },
         },
       ],
     ],
