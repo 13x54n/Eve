@@ -185,8 +185,36 @@ export default function Home() {
     try {
       setPresenceBusy(true);
       if (next === 'ONLINE') {
-        const current = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        await updatePresence({ presence: next, latitude: current.coords.latitude, longitude: current.coords.longitude });
+        let location: Location.LocationObject | null = null;
+
+        try {
+          location = await Location.getLastKnownPositionAsync();
+        } catch {
+          // Last known position not available
+        }
+
+        if (!location) {
+          const timeoutMs = 5000;
+          const getCurrentPosition = Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Location timeout")), timeoutMs)
+          );
+
+          try {
+            location = await Promise.race([getCurrentPosition, timeout]);
+          } catch (error) {
+            if ((error as Error).message === "Location timeout") {
+              throw new Error("Location request timed out. Please ensure GPS is enabled and try again.");
+            }
+            throw error;
+          }
+        }
+
+        if (!location) {
+          throw new Error("Could not determine your location. Please try again.");
+        }
+
+        await updatePresence({ presence: next, latitude: location.coords.latitude, longitude: location.coords.longitude });
       } else {
         await updatePresence({ presence: next });
       }
@@ -212,7 +240,7 @@ export default function Home() {
     } catch (error: any) {
       Alert.alert(
         next === 'ONLINE' ? 'Could not go online' : 'Could not go offline',
-        error?.response?.data?.message ?? 'Please try again.',
+        error?.response?.data?.message ?? error?.message ?? 'Please try again.',
       );
     } finally {
       setPresenceBusy(false);

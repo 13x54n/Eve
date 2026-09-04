@@ -3,7 +3,6 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -29,6 +28,7 @@ import {
   getGreetingTemplate,
   interpolateGreeting,
 } from "@/services/greetings";
+import { HomeSkeleton } from "@/components/home-skeleton";
 
 export default function HomeScreen() {
   const brand = useBrand();
@@ -64,12 +64,41 @@ export default function HomeScreen() {
         setLocationMessage("Location permission is off. Showing the default map area.");
         return;
       }
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      const { latitude, longitude } = location.coords;
-      setRegion({ latitude, longitude });
-      setLocationMessage(null);
+
+      let location: Location.LocationObject | null = null;
+
+      try {
+        location = await Location.getLastKnownPositionAsync();
+      } catch {
+        // Last known position not available
+      }
+
+      if (!location) {
+        const timeoutMs = 5000;
+        const getCurrentPosition = Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        const timeout = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Location timeout")), timeoutMs)
+        );
+
+        try {
+          location = await Promise.race([getCurrentPosition, timeout]);
+        } catch (error) {
+          if ((error as Error).message === "Location timeout") {
+            setLocationMessage("Location took too long. Showing the default map area.");
+          } else {
+            setLocationMessage("Could not find your location. Showing the default map area.");
+          }
+          return;
+        }
+      }
+
+      if (location) {
+        const { latitude, longitude } = location.coords;
+        setRegion({ latitude, longitude });
+        setLocationMessage(null);
+      }
     } catch {
       setLocationMessage("Could not find your location. Showing the default map area.");
     } finally {
@@ -131,15 +160,38 @@ export default function HomeScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        nextRegion = {
-          ...region,
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        };
-        setRegion(nextRegion);
+        let location: Location.LocationObject | null = null;
+
+        try {
+          location = await Location.getLastKnownPositionAsync();
+        } catch {
+          // Last known position not available
+        }
+
+        if (!location) {
+          const timeoutMs = 5000;
+          const getCurrentPosition = Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+          const timeout = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Location timeout")), timeoutMs)
+          );
+
+          try {
+            location = await Promise.race([getCurrentPosition, timeout]);
+          } catch {
+            // Keep the last known location or fallback region
+          }
+        }
+
+        if (location) {
+          nextRegion = {
+            ...region,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
+          setRegion(nextRegion);
+        }
       }
     } catch {
       // Keep the last known location or fallback region.
@@ -178,12 +230,7 @@ export default function HomeScreen() {
   }
 
   if (loading) {
-    return (
-      <View>
-        <ActivityIndicator size="large" />
-        <Text>Finding your location...</Text>
-      </View>
-    );
+    return <HomeSkeleton />;
   }
 
   return (
