@@ -34,7 +34,10 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function isUnauthorized(error: unknown) {
-  return axios.isAxiosError(error) && error.response?.status === 401;
+  return (
+    axios.isAxiosError(error) &&
+    (error.response?.status === 401 || error.response?.status === 404)
+  );
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -48,13 +51,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Do not await Auth0 webAuth.clearSession. Custom Tabs / ASWebAuthenticationSession
     // often never return from /v2/logout, which freezes Sign out on "Signing out...".
     // Local credentials + Eve token are enough; the next authorize() uses prompt=login.
-    try {
-      await clearCredentials();
-    } catch {
-    }
-    await clearStoredSession();
-    await OfflineStorage.clear();
-    await actionQueue.clear();
+    void clearCredentials().catch(() => {});
+    await Promise.allSettled([
+      clearStoredSession(),
+      OfflineStorage.clear(),
+      actionQueue.clear(),
+    ]);
     setUser(null);
     setHasStoredSession(false);
   }, [clearCredentials]);

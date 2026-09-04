@@ -2,6 +2,8 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 import { requireApiBaseUrl, requireAuthBaseUrl } from '@/lib/public-env';
+import { OfflineStorage } from '@/lib/offline-storage';
+import { actionQueue } from '@/lib/action-queue';
 
 const API_BASE = requireApiBaseUrl('rider');
 const AUTH_BASE = requireAuthBaseUrl('rider');
@@ -21,6 +23,18 @@ function shouldRetry(error: AxiosError): boolean {
     return true;
   }
   return RETRY_STATUS_CODES.includes(error.response.status);
+}
+
+function isSessionRequest(url?: string) {
+  return (url ?? '').replace(/^\//, '') === 'auth/me';
+}
+
+async function clearLocalSession() {
+  await Promise.allSettled([
+    SecureStore.deleteItemAsync('access_token'),
+    OfflineStorage.clear(),
+    actionQueue.clear(),
+  ]);
 }
 
 async function sleep(ms: number): Promise<void> {
@@ -61,7 +75,17 @@ api.interceptors.response.use(
       headers: { 'x-retry-count': string };
     };
 
-    if (error.response?.status === 401) {
+    const sessionFailure =
+      isSessionRequest(config?.url) &&
+      (error.response?.status === 401 || error.response?.status === 404);
+
+    if (sessionFailure) {
+      await clearLocalSession();
+      try {
+        router.replace('/(auth)/welcome');
+      } catch {
+      }
+    } else if (error.response?.status === 401) {
       await SecureStore.deleteItemAsync('access_token');
       try {
         router.replace('/(auth)/welcome');
@@ -87,7 +111,7 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    if (__DEV__) {
+    if (__DEV__ && !sessionFailure) {
       console.error(
         `[api] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} failed`,
         error.message,

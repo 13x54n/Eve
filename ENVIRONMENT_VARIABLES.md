@@ -234,6 +234,7 @@ CORS_ORIGINS=https://admin.example.com,https://monitor.example.com
 |----------|-------------|---------|----------|
 | `RATE_LIMIT_MAX` | Max requests per window | `100` | No |
 | `RATE_LIMIT_WINDOW` | Window in minutes | `15` | No |
+| `DRIVER_API_RATE_LIMIT` | Max authenticated Driver API requests per 15 minutes | `2000` | No |
 
 ### Logging
 

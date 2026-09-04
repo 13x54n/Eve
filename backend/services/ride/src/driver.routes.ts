@@ -33,7 +33,7 @@ const skipInVitest = () => Boolean(process.env.VITEST);
 
 const driverApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 600,
+  limit: Number(process.env.DRIVER_API_RATE_LIMIT || 2000),
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) =>

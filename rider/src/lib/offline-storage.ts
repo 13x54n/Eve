@@ -47,7 +47,7 @@ export class OfflineStorage {
   static async clear(): Promise<void> {
     try {
       const keys = Object.values(STORAGE_KEYS);
-      await AsyncStorage.multiRemove(keys);
+      await Promise.all(keys.map((key) => AsyncStorage.removeItem(key)));
     } catch (error) {
       console.error("[OfflineStorage] Error clearing storage:", error);
       throw error;
