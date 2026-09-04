@@ -81,7 +81,7 @@ AUTH0_CLIENT_ID=your_auth0_client_id
 DATABASE_URL=postgresql://user:pass@host:5432/eve
 
 # Optional - CORS
-CORS_ORIGINS=https://admin.yourdomain.com,https://monitor.yourdomain.com
+CORS_ORIGINS=https://admin.yourdomain.com
 ```
 
 ### Generating Secrets

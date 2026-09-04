@@ -1,6 +1,6 @@
 # Store release (alpha)
 
-Internal TestFlight / Play tracks via EAS. Admin and monitor are not store targets.
+Internal TestFlight / Play tracks via EAS. Admin and www (marketing site) are not store targets.
 
 ## Expo env (EAS `preview` / `production`)
 

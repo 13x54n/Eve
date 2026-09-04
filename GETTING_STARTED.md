@@ -1,6 +1,6 @@
 # Getting Started with Eve
 
-Alpha path: **PostgreSQL/Redis → backend (`npm run dev`) → rider/driver**. The admin console and monitor dashboard are optional and are not alpha release targets.
+Alpha path: **PostgreSQL/Redis → backend (`npm run dev`) → rider/driver**. The admin console and marketing site (www) are optional and are not alpha release targets.
 
 This guide will help you set up local development in under 1 hour.
 
@@ -13,9 +13,8 @@ This guide will help you set up local development in under 1 hour.
 - [Step 4: Database Setup](#step-4-database-setup)
 - [Step 5: Start Backend Services](#step-5-start-backend-services)
 - [Step 6: Admin Console Setup (optional)](#step-6-admin-console-setup-optional)
-- [Step 7: Monitor Dashboard Setup (optional)](#step-7-monitor-dashboard-setup-optional)
-- [Step 8: Marketing Site Setup (optional)](#step-8-marketing-site-setup-optional)
-- [Step 9: Mobile Apps Setup](#step-9-mobile-apps-setup)
+- [Step 7: Marketing Site Setup (optional)](#step-7-marketing-site-setup-optional)
+- [Step 8: Mobile Apps Setup](#step-8-mobile-apps-setup)
 - [Verification](#verification)
 - [Next Steps](#next-steps)
 - [Common Issues](#common-issues)
@@ -72,7 +71,7 @@ cd Eve
 
 # Verify repository structure
 ls -la
-# You should see: admin/ backend/ driver/ monitor/ rider/ www/ README.md
+# You should see: admin/ backend/ driver/ rider/ www/ README.md
 ```
 
 ### 1.2 Install Root Dependencies
@@ -310,57 +309,11 @@ Expected output:
 
 You should see the admin dashboard!
 
-## Step 7: Monitor Dashboard Setup (optional)
-
-The monitor dashboard shows system health and performance metrics.
-
-### 7.1 Install Monitor Dependencies
-
-```bash
-# Open a new terminal
-cd monitor
-
-# Install dependencies
-npm install
-```
-
-### 7.2 Configure Monitor Environment
-
-```bash
-# Copy environment file
-cp .env.example .env
-```
-
-Default `.env` works for local development.
-
-### 7.3 Start Monitor Dashboard
-
-```bash
-npm run dev
-```
-
-Expected output:
-```
-▲ Next.js 16.x.x
-- Local:        http://localhost:3010
-
-✓ Ready in X.Xs
-```
-
-### 7.4 Access Monitor Dashboard
-
-Open http://localhost:3010
-
-You should see health metrics for:
-- Auth, location, ride, notify, and admin APIs
-- Admin console (if running)
-- Memory and CPU usage
-
-## Step 8: Marketing Site Setup (optional)
+## Step 7: Marketing Site Setup (optional)
 
 The marketing site is a public landing page. It does not call the API.
 
-### 8.1 Install and run
+### 7.1 Install and run
 
 ```bash
 # Open a new terminal
@@ -372,7 +325,7 @@ npm run dev
 
 Open http://localhost:3020. Optionally set `NEXT_PUBLIC_GITHUB_URL` in `.env.local` so Docs and View source point at the public repository.
 
-## Step 9: Mobile Apps Setup
+## Step 8: Mobile Apps Setup
 
 Mobile apps require additional setup for Mapbox and Auth0.
 
@@ -382,7 +335,7 @@ Mobile apps require additional setup for Mapbox and Auth0.
 - **Auth0 account** configured
 - **Mapbox account** for maps
 
-### 9.1 Rider App Setup
+### 8.1 Rider App Setup
 
 ```bash
 cd rider
@@ -413,7 +366,7 @@ ifconfig | grep "inet "
 ipconfig
 ```
 
-### 9.2 Build Development Client
+### 8.2 Build Development Client
 
 ```bash
 # iOS
@@ -425,7 +378,7 @@ npx expo run:android
 
 This builds a development client with Auth0 and Mapbox integrated.
 
-### 9.3 Driver App Setup
+### 8.3 Driver App Setup
 
 Same as rider app:
 
@@ -462,12 +415,6 @@ npx prisma studio
 2. Navigate to Dashboard → should show trip statistics
 3. Navigate to Riders → should show seeded riders
 4. Navigate to Drivers → should show seeded drivers
-
-### Monitor Dashboard Verification
-
-1. Open http://localhost:3010
-2. All services should show green "Healthy" status
-3. Ping times should be < 50ms
 
 ### Marketing Site Verification
 
@@ -646,7 +593,6 @@ You should now have:
 - ✅ PostgreSQL and Redis running in Docker
 - ✅ Backend services on http://localhost:4001–4005
 - ✅ Admin console running on http://localhost:3000
-- ✅ Monitor dashboard running on http://localhost:3010
 - ✅ (Optional) Marketing site on http://localhost:3020
 - ✅ Database seeded with test data
 - ✅ (Optional) Mobile apps running on iOS/Android

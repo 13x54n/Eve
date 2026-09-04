@@ -77,12 +77,11 @@ Eve is a full-stack ride-matching platform featuring:
 
 ```
 Eve/
-  www/       Next.js 16 marketing site — open-source landing page (port 3020)
   rider/     Expo 57 rider app — Auth0, request, offers, tracking, history
   driver/    Expo 57 driver app — Auth0, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
-  monitor/   Next.js 16 liveness board — API/frontend ping, memory, host performance
-  backend/   API: npm workspaces (packages, services) + Prisma/Postgres
+  www/       Next.js 16 marketing site — open-source landing page (port 3020)
+  backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
 ```
 
 ## Architecture
@@ -358,12 +357,6 @@ Admin console: [http://localhost:3000](http://localhost:3000).
 
 Monitor (separate from admin):
 
-```bash
-cd monitor && npm install && npm run dev
-```
-
-Liveness board: [http://localhost:3010](http://localhost:3010). Probes auth/location/ride/notify/admin `/health` and frontend origins. See `monitor/.env.example`.
-
 Marketing site (open-source landing page, no backend required):
 
 ```bash
@@ -422,7 +415,7 @@ Do not use these credentials outside local development.
 - [Rider App](rider/README.md) - Mobile app for passengers
 - [Driver App](driver/README.md) - Mobile app for drivers
 - [Admin Console](admin/README.md) - Web-based operations dashboard
-- [Monitor Dashboard](monitor/README.md) - System health monitoring
+- [Marketing Site](www/README.md) - Public landing page
 
 ### Additional Resources
 - [Security Policy](SECURITY.md) - Security practices and reporting

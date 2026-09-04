@@ -225,7 +225,7 @@ SMTP_PASS=<secret-access-key>
 CORS_ORIGINS=http://localhost:3000,http://localhost:3010
 
 # Production
-CORS_ORIGINS=https://admin.example.com,https://monitor.example.com
+CORS_ORIGINS=https://admin.example.com
 ```
 
 ### Rate Limiting
@@ -327,27 +327,6 @@ RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
-```
-
-### Monitor Dashboard (`monitor/.env`)
-
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `MONITOR_AUTH_URL` | Auth health | `http://localhost:4001/health` | Yes |
-| `MONITOR_LOCATION_URL` | Location health | `http://localhost:4002/health` | Yes |
-| `MONITOR_RIDE_URL` | Ride health | `http://localhost:4003/health` | Yes |
-| `MONITOR_NOTIFY_URL` | Notify health | `http://localhost:4004/health` | Yes |
-| `MONITOR_ADMIN_API_URL` | Admin API health | `http://localhost:4005/health` | Yes |
-| `MONITOR_ADMIN_URL` | Admin console | `http://localhost:3000` | No |
-
-**Example**:
-```bash
-MONITOR_AUTH_URL=http://localhost:4001/health
-MONITOR_LOCATION_URL=http://localhost:4002/health
-MONITOR_RIDE_URL=http://localhost:4003/health
-MONITOR_NOTIFY_URL=http://localhost:4004/health
-MONITOR_ADMIN_API_URL=http://localhost:4005/health
-MONITOR_ADMIN_URL=http://localhost:3000
 ```
 
 ## Security Best Practices
@@ -472,7 +451,7 @@ NOTIFY_GRPC_URL=notify:50052
 IMAGEKIT_PRIVATE_KEY=<private-key>
 IMAGEKIT_PUBLIC_KEY=<public-key>
 IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/prod-id
-CORS_ORIGINS=https://admin.example.com,https://monitor.example.com
+CORS_ORIGINS=https://admin.example.com
 SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_USER=apikey
