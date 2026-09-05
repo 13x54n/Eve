@@ -174,16 +174,16 @@ Platform credits cash out to the driver's Privy Ethereum address. Trip fares are
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `TREASURY_PRIVATE_KEY` | Hex key that pays drivers | — | For on-chain send |
-| `CHAIN_RPC_URL` | JSON-RPC URL | — | For on-chain send |
-| `PAYOUT_CHAIN_ID` | EVM chain id | `84532` (Base Sepolia) | No |
-| `PAYOUT_CHAIN_NAME` | Display name | `Base Sepolia` | No |
-| `PAYOUT_EXPLORER_TX_URL` | Explorer prefix | Base Sepolia | No |
-| `PAYOUT_TOKEN_ADDRESS` | ERC-20; empty = native ETH | — | No |
-| `PAYOUT_TOKEN_SYMBOL` | Display symbol | `ETH` or `USDC` | No |
-| `PAYOUT_TOKEN_DECIMALS` | Token decimals | `18` native / `6` ERC-20 | No |
-| `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 token | `1` | No |
+| `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
+| `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
+| `PAYOUT_CHAIN_NAME` | Display name | `Arc Testnet` | No |
+| `PAYOUT_EXPLORER_TX_URL` | Explorer prefix | `https://testnet.arcscan.app/tx/` | No |
+| `PAYOUT_TOKEN_ADDRESS` | ERC-20; empty = native USDC send | — | No |
+| `PAYOUT_TOKEN_SYMBOL` | Display symbol | `USDC` | No |
+| `PAYOUT_TOKEN_DECIMALS` | Token decimals | `6` | No |
+| `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 USDC | `1` | No |
 
-If treasury env is unset, `POST /api/driver/wallet/withdraw` stays `PENDING`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+Treasury gas and payout value are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Email Configuration (Optional)
 

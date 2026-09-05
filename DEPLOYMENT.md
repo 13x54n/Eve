@@ -43,7 +43,7 @@ Until a prod Compose file exists, run the same five processes with production `N
 - `/socket.io` → notify :4004
 - WebSocket upgrade on notify
 
-Set `INTERNAL_SERVICE_SECRET`, strong `JWT_ACCESS_SECRET`, and gRPC URLs to the location/notify hosts. Optional driver payouts: treasury key + RPC ([backend/docs/driver-wallet.md](backend/docs/driver-wallet.md)).
+Set `INTERNAL_SERVICE_SECRET`, strong `JWT_ACCESS_SECRET`, and gRPC URLs to the location/notify hosts. Optional driver payouts: `TREASURY_PRIVATE_KEY` on Circle Arc Testnet ([backend/docs/driver-wallet.md](backend/docs/driver-wallet.md)).
 
 Do not expose Postgres or Redis publicly.
 

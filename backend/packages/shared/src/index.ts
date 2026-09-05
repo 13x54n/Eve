@@ -1,6 +1,9 @@
 export { fail } from "./errors.js";
 export {
+  DEFAULT_CHAIN_RPC_URL,
+  DEFAULT_PAYOUT_CHAIN_ID,
   executePayout,
+  getChainRpcUrl,
   getPayoutChainPublicConfig,
   isTreasuryConfigured,
   sendTreasuryPayout,
