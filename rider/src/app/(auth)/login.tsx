@@ -8,7 +8,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Image source={{ uri: "https://ik.imagekit.io/lexy/Eve/logo.png" }} style={{ width: 100, height: 100, marginHorizontal: "auto", marginTop: 40 }} />
       <Text style={styles.title}>Welcome back</Text>
-      <Text style={styles.subtitle}>Log in with SMS or a passkey.</Text>
+      <Text style={styles.subtitle}>Log in with a code sent to your phone or email.</Text>
 
       <PrivyAuthForm
         mode="login"

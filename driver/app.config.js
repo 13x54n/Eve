@@ -25,27 +25,12 @@ function applyDotEnv() {
 
 applyDotEnv();
 
-function relyingPartyHost() {
-  const raw = process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY?.trim() ?? "";
-  return raw.replace(/^https?:\/\//i, "").replace(/\/+$/, "").toLowerCase();
-}
-
 /** @param {{ config: import("expo/config").ExpoConfig }} ctx */
 module.exports = ({ config }) => {
-  const passkeyHost = relyingPartyHost();
-  const associatedDomains = passkeyHost ? [`webcredentials:${passkeyHost}`] : [];
-
   return {
     ...config,
-    ios: {
-      ...config.ios,
-      associatedDomains: [
-        ...new Set([...(config.ios?.associatedDomains ?? []), ...associatedDomains]),
-      ],
-    },
     plugins: [
       ...(config.plugins ?? []),
-      "./plugins/with-passkey-passcode-fallback",
       [
         "expo-build-properties",
         {

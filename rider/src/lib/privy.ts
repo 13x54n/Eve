@@ -9,12 +9,8 @@ export function requirePrivyConfig() {
   return { appId, clientId };
 }
 
-export function requireRelyingParty() {
-  const relyingParty = process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY?.trim();
-  if (!relyingParty) {
-    throw new Error("EXPO_PUBLIC_PRIVY_RELYING_PARTY is not set");
-  }
-  return relyingParty.replace(/\/+$/, "");
+export function formatEmailForPrivy(input: string) {
+  return input.trim().toLowerCase();
 }
 
 export function formatPhoneForPrivy(input: string) {
@@ -49,24 +45,6 @@ export function isAlreadyAuthenticatedPrivyError(error: unknown) {
     message.includes("already loggedin") ||
     message.includes("already authenticated")
   );
-}
-
-export const PASSKEY_BIOMETRIC_HELP =
-  "Turn on Face ID, Touch ID, or a device passcode, then try again. On Simulator, enable Features → Face ID → Enrolled.";
-
-export function passkeyErrorMessage(
-  error: unknown,
-  fallback = "Please try again.",
-) {
-  const message = errorMessage(error);
-  const normalized = message.toLowerCase();
-  if (
-    normalized.includes("biometricexception") ||
-    normalized.includes("biometrics must be enabled")
-  ) {
-    return PASSKEY_BIOMETRIC_HELP;
-  }
-  return message || fallback;
 }
 
 async function wait(ms: number) {

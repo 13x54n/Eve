@@ -168,7 +168,7 @@ export default function MenuScreen() {
     {
       icon: 'lock',
       title: 'Security',
-      detail: 'SMS and passkey',
+      detail: 'SMS and email',
       onPress: () => router.push('/profile/security' as Href),
     },
   ];

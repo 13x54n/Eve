@@ -1,10 +1,8 @@
 import {
+  formatEmailForPrivy,
   formatPhoneForPrivy,
   isAlreadyAuthenticatedPrivyError,
-  PASSKEY_BIOMETRIC_HELP,
-  passkeyErrorMessage,
   requirePrivyConfig,
-  requireRelyingParty,
   truncateWalletAddress,
   waitForIdentityToken,
 } from '@/lib/privy';
@@ -37,9 +35,8 @@ describe('requirePrivyConfig', () => {
 });
 
 describe('privy helpers', () => {
-  it('strips trailing slashes from the relying party', () => {
-    process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY = 'https://example.com/';
-    expect(requireRelyingParty()).toBe('https://example.com');
+  it('normalizes email for Privy', () => {
+    expect(formatEmailForPrivy('  Alex@Example.COM ')).toBe('alex@example.com');
   });
 
   it('formats US phone numbers with +1', () => {
@@ -63,25 +60,6 @@ describe('isAlreadyAuthenticatedPrivyError', () => {
       true,
     );
     expect(isAlreadyAuthenticatedPrivyError(new Error('Invalid code'))).toBe(false);
-  });
-});
-
-describe('passkeyErrorMessage', () => {
-  it('maps native biometric exceptions to a setup hint', () => {
-    expect(
-      passkeyErrorMessage(
-        new Error(
-          "FunctionCallException: Calling the 'create' function has failed\nCaused by: BiometricException: Biometrics must be enabled",
-        ),
-      ),
-    ).toBe(PASSKEY_BIOMETRIC_HELP);
-  });
-
-  it('keeps unrelated errors', () => {
-    expect(passkeyErrorMessage(new Error('User cancelled the passkey interaction'))).toBe(
-      'User cancelled the passkey interaction',
-    );
-    expect(passkeyErrorMessage({})).toBe('Please try again.');
   });
 });
 
