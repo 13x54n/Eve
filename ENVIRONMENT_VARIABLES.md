@@ -127,46 +127,26 @@ X-Internal-Secret: <secret>
 
 ### Location Service
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `MATCH_RADIUS_KM` | Driver matching radius (km) | `25` | No |
-
-**Matching Configuration**:
-```bash
-# Default: 25km radius
-MATCH_RADIUS_KM=25
-
-# Urban area: smaller radius
-MATCH_RADIUS_KM=15
-
-# Rural area: larger radius
-MATCH_RADIUS_KM=40
-```
+Match radius is **`MATCH_RADIUS_KM = 15`** in `backend/packages/shared/src/distance.ts`. It is **not** read from the environment. Change the constant and restart services; do not set `MATCH_RADIUS_KM` in `.env`.
 
 ### gRPC Configuration
 
+gRPC between ride/admin and location/notify is always on. There is no `GRPC_ENABLED` flag. If the gRPC peer is down, clients fall back to HTTP then in-process matching.
+
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `GRPC_ENABLED` | Enable gRPC for inter-service calls | `false` | No |
 | `GRPC_LOGGING` | Log gRPC requests | `false` | No |
-| `LOCATION_GRPC_PORT` | Location gRPC port | `50051` | gRPC mode |
-| `NOTIFY_GRPC_PORT` | Notify gRPC port | `50052` | gRPC mode |
-| `LOCATION_GRPC_URL` | Location gRPC URL | `localhost:50051` | gRPC mode |
-| `NOTIFY_GRPC_URL` | Notify gRPC URL | `localhost:50052` | gRPC mode |
+| `LOCATION_GRPC_PORT` | Location gRPC port | `50051` | Yes |
+| `NOTIFY_GRPC_PORT` | Notify gRPC port | `50052` | Yes |
+| `LOCATION_GRPC_URL` | Location gRPC URL | `127.0.0.1:50051` | Yes |
+| `NOTIFY_GRPC_URL` | Notify gRPC URL | `127.0.0.1:50052` | Yes |
 
-**gRPC Setup**:
 ```bash
-# Enable gRPC
-GRPC_ENABLED=true
-GRPC_LOGGING=true
-
-# Service URLs
-LOCATION_GRPC_URL=localhost:50051
-NOTIFY_GRPC_URL=localhost:50052
-
+LOCATION_GRPC_URL=127.0.0.1:50051
+NOTIFY_GRPC_URL=127.0.0.1:50052
 # Docker
-LOCATION_GRPC_URL=location:50051
-NOTIFY_GRPC_URL=notify:50052
+# LOCATION_GRPC_URL=location:50051
+# NOTIFY_GRPC_URL=notify:50052
 ```
 
 ### ImageKit (Driver Documents)
@@ -186,6 +166,24 @@ IMAGEKIT_PUBLIC_KEY=public_abc123...
 IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-id
 IMAGEKIT_DRIVER_FOLDER=/eve/drivers
 ```
+
+### Driver Eve Wallet (optional)
+
+Platform credits cash out to the driver's Privy Ethereum address. Trip fares are not sent on-chain.
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `TREASURY_PRIVATE_KEY` | Hex key that pays drivers | — | For on-chain send |
+| `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
+| `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
+| `PAYOUT_CHAIN_NAME` | Display name | `Arc Testnet` | No |
+| `PAYOUT_EXPLORER_TX_URL` | Explorer prefix | `https://testnet.arcscan.app/tx/` | No |
+| `PAYOUT_TOKEN_ADDRESS` | ERC-20; empty = native USDC send | — | No |
+| `PAYOUT_TOKEN_SYMBOL` | Display symbol | `USDC` | No |
+| `PAYOUT_TOKEN_DECIMALS` | Token decimals | `6` | No |
+| `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 USDC | `1` | No |
+
+Treasury gas and payout value are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Email Configuration (Optional)
 
@@ -222,7 +220,7 @@ SMTP_PASS=<secret-access-key>
 **Examples**:
 ```bash
 # Development (default)
-CORS_ORIGINS=http://localhost:3000,http://localhost:3010
+CORS_ORIGINS=http://localhost:3000,http://localhost:3020,http://localhost:8081
 
 # Production
 CORS_ORIGINS=https://admin.example.com
@@ -462,7 +460,6 @@ SMTP_USER=apikey
 SMTP_PASS=<sendgrid-api-key>
 EMAIL_FROM=noreply@example.com
 LOG_LEVEL=warn
-GRPC_ENABLED=true
 LOCATION_GRPC_URL=location-internal:50051
 NOTIFY_GRPC_URL=notify-internal:50052
 ```

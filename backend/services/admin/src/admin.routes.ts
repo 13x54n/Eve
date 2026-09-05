@@ -8,6 +8,7 @@ import {
   dashboard,
   driver,
   drivers,
+  creditDriverWallet,
   fleets,
   greetings,
   createGreeting,
@@ -75,6 +76,11 @@ router.patch(
   "/drivers/:id",
   requirePermission("drivers:approve"),
   reviewDriver,
+);
+router.post(
+  "/drivers/:id/wallet/credit",
+  requirePermission("payments:payout"),
+  creditDriverWallet,
 );
 
 router.get("/vehicles", requirePermission("drivers:read"), vehicles);

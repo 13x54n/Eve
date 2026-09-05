@@ -24,7 +24,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-See **[docs/docker.md](docs/docker.md)** for health URLs, logs, and seed.
+See **[docs/docker.md](docs/docker.md)** for health URLs, logs, seed, and host emulator networking. Rider/driver apps are not in Compose. Driver wallet cash-out: **[docs/driver-wallet.md](docs/driver-wallet.md)**.
 
 ### Without Docker
 

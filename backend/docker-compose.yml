@@ -1,6 +1,11 @@
-# Local split-stack: auth, location, ride, notify, admin.
+# Local split-stack: Postgres, Redis, and five Node services
+# (auth, location, ride, notify, admin).
 # Usage (from backend/): docker compose up --build
 # Compose loads backend/.env for ${DATABASE_URL} at build time.
+#
+# Rider/driver Expo apps are not part of this Compose file. Build and run
+# them on the host (or EAS), then open the iOS Simulator / Android Emulator
+# against the published ports (see backend/docs/docker.md).
 
 x-dev-build: &dev-build
   context: .

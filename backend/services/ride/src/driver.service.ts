@@ -913,6 +913,7 @@ export async function getDriverEarningsOverview(userId: string) {
       weekEarnings: money(weekNet),
       weekTrips: weekTrips.length,
       lifetimeEarnings: money(profile.earningsTotal),
+      walletBalance: money(profile.walletBalance),
       rating: money(profile.rating),
       acceptanceRate: money(profile.acceptanceRate),
       cancellationRate: money(profile.cancellationRate),

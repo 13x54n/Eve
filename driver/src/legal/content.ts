@@ -38,7 +38,7 @@ export const driverTerms: LegalDocument = {
     },
     {
       heading: "5. Offers, matched price, and payment",
-      body: "Requests include a suggested fare. Your offer is recorded, and if the rider accepts, Eve stores the matched price for audit. Eve does not deduct commission, process ride payments, or pay you out. The rider pays you off-platform. You are responsible for collecting that payment and for tax reporting. Eve does not guarantee you will be paid.",
+      body: "Requests include a suggested fare. Your offer is recorded, and if the rider accepts, Eve stores the matched price for audit. Eve does not deduct commission or collect trip payments — the rider pays you off-platform. Separately, Eve Wallet holds optional platform credits (bonuses) that you may cash out to the Privy embedded Ethereum wallet linked to your account. You are responsible for collecting off-platform trip payment and for tax reporting.",
     },
     {
       heading: "6. Location while online",

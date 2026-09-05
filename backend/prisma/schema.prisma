@@ -287,6 +287,7 @@ model DriverProfile {
   cancellationRate Decimal               @default(0) @db.Decimal(5, 2)
   onlineHours      Decimal               @default(0) @db.Decimal(10, 2)
   earningsTotal    Decimal               @default(0) @db.Decimal(12, 2)
+  walletBalance    Decimal               @default(0) @db.Decimal(12, 2)
   city             String?
   latitude         Float?
   longitude        Float?

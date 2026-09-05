@@ -12,6 +12,8 @@ import {
   canCreateStaff,
   canManageTargetStaff,
   isDepartmentStaffRole,
+  executePayout,
+  isTreasuryConfigured,
   type AdminStaffRole,
   type AdminStaffTitle,
   type StaffActor,
@@ -331,7 +333,7 @@ export async function searchRiders(query: Record<string, unknown>) {
 function sanitizePublicUser(user: {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: string;
   accountStatus: string;
@@ -339,6 +341,8 @@ function sanitizePublicUser(user: {
   flagged: boolean;
   city: string | null;
   createdAt: Date;
+  ethereumWallet?: string | null;
+  solanaWallet?: string | null;
 }) {
   return {
     id: user.id,
@@ -351,6 +355,8 @@ function sanitizePublicUser(user: {
     flagged: user.flagged,
     city: user.city,
     createdAt: user.createdAt,
+    ethereumWallet: user.ethereumWallet ?? null,
+    solanaWallet: user.solanaWallet ?? null,
   };
 }
 
@@ -556,6 +562,7 @@ function serializeDriver(
     cancellationRate: money(driver.cancellationRate),
     onlineHours: money(driver.onlineHours),
     earningsTotal: money(driver.earningsTotal),
+    walletBalance: money(driver.walletBalance),
     city: driver.city,
     lat: driver.latitude,
     lng: driver.longitude,
@@ -1187,21 +1194,133 @@ export async function refundPayment(
   return { ...refund, amount: money(refund.amount) };
 }
 
+export async function creditDriverWallet(
+  profileId: string,
+  actorId: string,
+  body: { amount: number; note?: string },
+  ip?: string,
+) {
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount === 0) {
+    fail("Credit amount is required", "ValidationError");
+  }
+
+  const driver = await prisma.driverProfile.findUnique({
+    where: { id: profileId },
+  });
+  if (!driver) {
+    fail("Driver not found", "NotFoundError");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.driverProfile.update({
+      where: { id: profileId },
+      data: { walletBalance: { increment: amount } },
+    });
+    await tx.ledgerEntry.create({
+      data: {
+        userId: driver.userId,
+        type: "CREDIT",
+        status: "COMPLETED",
+        method: "WALLET",
+        amount: Math.abs(amount),
+        note: body.note ?? (amount > 0 ? "Admin credit" : "Admin debit"),
+      },
+    });
+  });
+
+  await writeAudit({
+    actorId,
+    action: "driver.wallet.credit",
+    entity: "DriverProfile",
+    entityId: profileId,
+    metadata: body as Prisma.InputJsonValue,
+    ip,
+  });
+
+  return getDriver(profileId);
+}
+
 export async function payoutDriver(
   actorId: string,
   body: { userId: string; amount: number; note?: string },
   ip?: string,
 ) {
-  const payout = await prisma.ledgerEntry.create({
-    data: {
-      userId: body.userId,
-      type: "PAYOUT",
-      status: "COMPLETED",
-      method: "WALLET",
-      amount: body.amount,
-      note: body.note ?? "Admin payout",
-    },
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    fail("Payout amount must be positive", "ValidationError");
+  }
+  const rounded = Number(amount.toFixed(2));
+
+  const user = await prisma.user.findUnique({
+    where: { id: body.userId },
+    include: { driverProfile: true },
   });
+  if (!user?.driverProfile) {
+    fail("Driver not found", "NotFoundError");
+  }
+
+  if (Number(user.driverProfile.walletBalance) < rounded) {
+    fail("Insufficient Eve wallet balance", "ConflictError");
+  }
+
+  const destination = user.ethereumWallet?.trim() || null;
+
+  const payout = await prisma.$transaction(async (tx) => {
+    const updated = await tx.driverProfile.updateMany({
+      where: {
+        userId: body.userId,
+        walletBalance: { gte: rounded },
+      },
+      data: { walletBalance: { decrement: rounded } },
+    });
+    if (updated.count !== 1) {
+      fail("Insufficient Eve wallet balance", "ConflictError");
+    }
+    return tx.ledgerEntry.create({
+      data: {
+        userId: body.userId,
+        type: "PAYOUT",
+        status: "PENDING",
+        method: "WALLET",
+        amount: rounded,
+        brand: destination,
+        note: body.note ?? (destination ? `Admin payout to ${destination}` : "Admin payout"),
+      },
+    });
+  });
+
+  if (destination && isTreasuryConfigured()) {
+    try {
+      const { txHash } = await executePayout(destination, rounded);
+      const completed = await prisma.ledgerEntry.update({
+        where: { id: payout.id },
+        data: { status: "COMPLETED", providerRef: txHash },
+      });
+      await writeAudit({
+        actorId,
+        action: "payment.payout",
+        entity: "LedgerEntry",
+        entityId: completed.id,
+        metadata: { ...body, txHash } as Prisma.InputJsonValue,
+        ip,
+      });
+      return { ...completed, amount: money(completed.amount) };
+    } catch (error) {
+      await prisma.$transaction([
+        prisma.driverProfile.update({
+          where: { userId: body.userId },
+          data: { walletBalance: { increment: rounded } },
+        }),
+        prisma.ledgerEntry.update({
+          where: { id: payout.id },
+          data: { status: "FAILED" },
+        }),
+      ]);
+      const message = error instanceof Error ? error.message : "Payout failed";
+      fail(message, "ConflictError");
+    }
+  }
 
   await writeAudit({
     actorId,

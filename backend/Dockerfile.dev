@@ -1,3 +1,7 @@
+# Backend-only development image for the five Node services (auth, location,
+# ride, notify, admin). Rider and driver Expo apps are NOT built here — run
+# them on the host (Xcode / Android Studio / EAS) and point them at the
+# Compose-published ports. See backend/docs/docker.md.
 FROM node:22-bookworm-slim
 
 RUN apt-get update -y && \

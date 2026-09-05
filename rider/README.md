@@ -33,17 +33,17 @@ The Rider app enables passengers to:
 ## Features
 
 ### Authentication
-- Privy SMS / passkeys
-- Biometric authentication (Face ID, Touch ID)
-- JWT token management
-- Secure token storage (SecureStore)
+- Privy SMS / email OTP (dev client required; not Expo Go)
+- JWT in SecureStore
+- Embedded Ethereum + Solana wallets created on login
 
 ### Trip Management
 - Search pickup/dropoff locations
 - Get fare estimates
 - Select vehicle type (CAR, BIKE)
+- Courier requests (`courier/`)
 - View incoming driver offers
-- Accept best offer
+- Accept a match
 - Track trip status in real-time
 
 ### Real-Time Tracking
@@ -59,9 +59,8 @@ The Rider app enables passengers to:
 
 ### Profile & History
 - View past trips
-- Trip receipts
-- Saved locations
-- Profile management
+- Profile and legal screens
+- Embedded wallet addresses on profile
 
 ## Architecture
 
@@ -70,12 +69,12 @@ The Rider app enables passengers to:
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | Expo | 57 | React Native framework |
-| React Native | 0.76+ | Mobile UI |
+| React Native | 0.86.x | Mobile UI |
 | TypeScript | 5.9+ | Type safety |
 | Privy | @privy-io/expo | Authentication and wallets |
 | Mapbox | @rnmapbox/maps | Maps & navigation |
 | Socket.IO | socket.io-client | Real-time events |
-| Zustand | 4.x | State management |
+| React Context | — | Auth, network, theme |
 
 ### Navigation
 
@@ -84,32 +83,32 @@ File-based routing with Expo Router:
 ```
 src/app/
   (auth)/
-    login.tsx           # SMS / passkey login
-    onboarding.tsx      # First-time user flow
+    welcome.tsx
+    login.tsx              # Privy SMS / email OTP
+    register.tsx           # leftover password UI (not the production path)
+    forgot-password.tsx
   (tabs)/
-    index.tsx           # Home / Request ride
-    trips.tsx           # Trip history
-    profile.tsx         # User profile
-  trip/
-    [id].tsx            # Active trip details
-    offers.tsx          # Review offers
+    home.tsx               # Request ride
+    rides.tsx              # History
+    profile.tsx            # Profile + embedded wallets
+  ride/                    # Request, searching, tracking, completed, chat, support
+  courier/                 # Courier request and public track token
+  legal/
+  profile/
 ```
 
 ### State Management
 
-- **Zustand** for global state (user, active trip, offers)
-- **React Query** for API data fetching and caching
-- **Context** for theme and localization
+- React context (`auth-context`, network, theme) — not Zustand
+- REST via `src/services/`
 
 ### Key Services
 
-```typescript
-// src/services/
-auth.ts         // Privy exchange, token management
-api.ts          // HTTP client, API calls
-socket.ts       // WebSocket connection
-location.ts     // GPS tracking
-notifications.ts // Push notifications
+```
+src/services/auth.ts
+src/services/api.ts
+src/lib/privy.ts
+src/lib/complete-privy-session.ts
 ```
 
 ## Prerequisites

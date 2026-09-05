@@ -27,7 +27,8 @@ export function HowItWorks() {
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
         <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Four steps from request to match. No in-app wallet.
+          Four steps from request to match. Trip payment stays off-platform. Eve Wallet
+          is for optional platform credits to a driver Privy wallet — not ride fares.
         </p>
         <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step) => (
