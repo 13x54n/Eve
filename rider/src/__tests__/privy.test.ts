@@ -1,6 +1,8 @@
 import {
   formatPhoneForPrivy,
   isAlreadyAuthenticatedPrivyError,
+  PASSKEY_BIOMETRIC_HELP,
+  passkeyErrorMessage,
   requirePrivyConfig,
   requireRelyingParty,
   truncateWalletAddress,
@@ -61,6 +63,25 @@ describe('isAlreadyAuthenticatedPrivyError', () => {
       true,
     );
     expect(isAlreadyAuthenticatedPrivyError(new Error('Invalid code'))).toBe(false);
+  });
+});
+
+describe('passkeyErrorMessage', () => {
+  it('maps native biometric exceptions to a setup hint', () => {
+    expect(
+      passkeyErrorMessage(
+        new Error(
+          "FunctionCallException: Calling the 'create' function has failed\nCaused by: BiometricException: Biometrics must be enabled",
+        ),
+      ),
+    ).toBe(PASSKEY_BIOMETRIC_HELP);
+  });
+
+  it('keeps unrelated errors', () => {
+    expect(passkeyErrorMessage(new Error('User cancelled the passkey interaction'))).toBe(
+      'User cancelled the passkey interaction',
+    );
+    expect(passkeyErrorMessage({})).toBe('Please try again.');
   });
 });
 

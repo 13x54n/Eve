@@ -19,7 +19,8 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby pickup and drop-off points and to share your position with your driver during a trip.",
-        "NSUserNotificationsUsageDescription": "Eve sends ride updates such as driver offers, arrival, and trip status."
+        "NSUserNotificationsUsageDescription": "Eve sends ride updates such as driver offers, arrival, and trip status.",
+        "NSFaceIDUsageDescription": "Eve uses Face ID to create and unlock your passkey."
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -46,7 +47,8 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC"
       ]
     },
     "web": {

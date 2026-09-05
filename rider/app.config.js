@@ -45,6 +45,7 @@ module.exports = ({ config }) => {
     },
     plugins: [
       ...(config.plugins ?? []),
+      "./plugins/with-passkey-passcode-fallback",
       [
         "expo-build-properties",
         {

@@ -51,6 +51,24 @@ export function isAlreadyAuthenticatedPrivyError(error: unknown) {
   );
 }
 
+export const PASSKEY_BIOMETRIC_HELP =
+  "Turn on Face ID, Touch ID, or a device passcode, then try again. On Simulator, enable Features → Face ID → Enrolled.";
+
+export function passkeyErrorMessage(
+  error: unknown,
+  fallback = "Please try again.",
+) {
+  const message = errorMessage(error);
+  const normalized = message.toLowerCase();
+  if (
+    normalized.includes("biometricexception") ||
+    normalized.includes("biometrics must be enabled")
+  ) {
+    return PASSKEY_BIOMETRIC_HELP;
+  }
+  return message || fallback;
+}
+
 async function wait(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }

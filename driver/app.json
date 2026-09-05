@@ -20,7 +20,8 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you are online.",
         "NSUserNotificationsUsageDescription": "Eve sends incoming trip requests, offer updates, and trip status alerts.",
-        "NSPhotoLibraryUsageDescription": "Eve lets you upload licence, insurance, and vehicle documents from your photo library during driver onboarding."
+        "NSPhotoLibraryUsageDescription": "Eve lets you upload licence, insurance, and vehicle documents from your photo library during driver onboarding.",
+        "NSFaceIDUsageDescription": "Eve uses Face ID to create and unlock your passkey."
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -47,7 +48,8 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC"
       ],
       "softwareKeyboardLayoutMode": "pan"
     },

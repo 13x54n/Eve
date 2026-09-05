@@ -9,6 +9,7 @@ import { ActionButton } from "@/components/action-button";
 import {
   formatPhoneForPrivy,
   isAlreadyAuthenticatedPrivyError,
+  passkeyErrorMessage,
   requireRelyingParty,
 } from "@/lib/privy";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
@@ -101,7 +102,7 @@ export function PrivyAuthForm({
     } catch (error) {
       Alert.alert(
         mode === "signup" ? "Passkey signup failed" : "Passkey login failed",
-        error instanceof Error ? error.message : "Please try again.",
+        passkeyErrorMessage(error),
       );
     } finally {
       setBusy(null);
