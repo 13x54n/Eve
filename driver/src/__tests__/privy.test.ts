@@ -1,8 +1,8 @@
 import {
+  formatEmailForPrivy,
   formatPhoneForPrivy,
   isAlreadyAuthenticatedPrivyError,
   requirePrivyConfig,
-  requireRelyingParty,
   truncateWalletAddress,
   waitForIdentityToken,
 } from '@/lib/privy';
@@ -35,9 +35,8 @@ describe('requirePrivyConfig', () => {
 });
 
 describe('privy helpers', () => {
-  it('strips trailing slashes from the relying party', () => {
-    process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY = 'https://example.com/';
-    expect(requireRelyingParty()).toBe('https://example.com');
+  it('normalizes email for Privy', () => {
+    expect(formatEmailForPrivy('  Alex@Example.COM ')).toBe('alex@example.com');
   });
 
   it('formats US phone numbers with +1', () => {

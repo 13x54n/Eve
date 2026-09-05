@@ -47,7 +47,8 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "POST_NOTIFICATIONS"
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC"
       ],
       "softwareKeyboardLayoutMode": "pan"
     },

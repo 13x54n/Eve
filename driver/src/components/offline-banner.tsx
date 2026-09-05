@@ -1,47 +1,16 @@
 import Feather from "@expo/vector-icons/Feather";
 import { StyleSheet, Text, View } from "react-native";
 import { useNetwork } from "@/context/network-context";
-import { useEffect, useState } from "react";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-  withTiming,
-} from "react-native-reanimated";
 
 export function OfflineBanner() {
   const { isOnline, isConnected } = useNetwork();
-  const [visible, setVisible] = useState(!isOnline);
-  const translateY = useSharedValue(-100);
-  const opacity = useSharedValue(0);
 
-  useEffect(() => {
-    if (!isOnline) {
-      setVisible(true);
-      translateY.value = withSpring(0, {
-        damping: 15,
-        stiffness: 150,
-      });
-      opacity.value = withTiming(1, { duration: 300 });
-    } else {
-      translateY.value = withTiming(-100, { duration: 300 });
-      opacity.value = withTiming(0, { duration: 300 }, () => {
-        setVisible(false);
-      });
-    }
-  }, [isOnline, translateY, opacity]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: opacity.value,
-  }));
-
-  if (!visible && isOnline) {
+  if (isOnline) {
     return null;
   }
 
   return (
-    <Animated.View style={[styles.banner, animatedStyle]}>
+    <View style={styles.banner}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Feather name="wifi-off" size={16} color="#DC2626" />
@@ -57,7 +26,7 @@ export function OfflineBanner() {
           </Text>
         </View>
       </View>
-    </Animated.View>
+    </View>
   );
 }
 

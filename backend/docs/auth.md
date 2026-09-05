@@ -65,7 +65,9 @@ EXPO_PUBLIC_API_URL=http://localhost:4003/api
 EXPO_PUBLIC_WS_URL=http://localhost:4004
 ```
 
-Use a **different** Privy client ID per app. Never put `PRIVY_APP_SECRET` in the mobile apps. Restart Metro after changing `EXPO_PUBLIC_*`. Rebuild the **dev client** after native plugin changes (`npx expo run:ios` / `run:android`).
+Use a **different** Privy client ID per app. Never put `PRIVY_APP_SECRET` in the mobile apps. Restart Metro after changing `EXPO_PUBLIC_*`. Rebuild the **dev client** after native plugin changes (`npx expo run:ios` / `run:android`), including Face ID usage text and the passkey passcode-fallback plugin.
+
+Passkeys need a device passcode. Face ID/Touch ID is optional once the native client includes that plugin. On iOS Simulator, enroll Face ID with **Features → Face ID → Enrolled** if you still see `BiometricException`.
 
 ## Local seed vs the apps
 

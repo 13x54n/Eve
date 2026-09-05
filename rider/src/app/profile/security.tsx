@@ -1,32 +1,11 @@
-import { useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useLinkWithPasskey } from "@privy-io/expo/passkey";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useBrand } from "@/context/theme-context";
-import { requireRelyingParty } from "@/lib/privy";
-import { ActionButton } from "@/components/action-button";
 
 export default function SecurityScreen() {
   const brand = useBrand();
   const styles = makeStyles(brand);
-  const { linkWithPasskey } = useLinkWithPasskey();
-  const [loading, setLoading] = useState(false);
-
-  async function addPasskey() {
-    try {
-      setLoading(true);
-      await linkWithPasskey({ relyingParty: requireRelyingParty() });
-      Alert.alert("Passkey added", "You can use this passkey the next time you sign in.");
-    } catch (error) {
-      Alert.alert(
-        "Could not add passkey",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <View style={styles.screen}>
@@ -39,14 +18,8 @@ export default function SecurityScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.lead}>
-          Sign-in uses SMS codes and passkeys via Privy. Add a passkey on this device for faster login.
+          Sign-in uses a one-time code sent to your phone or email via Privy.
         </Text>
-        <ActionButton
-          label="Add passkey"
-          loadingLabel="Waiting for passkey..."
-          loading={loading}
-          onPress={() => void addPasskey()}
-        />
       </ScrollView>
     </View>
   );

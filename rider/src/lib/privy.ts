@@ -9,12 +9,8 @@ export function requirePrivyConfig() {
   return { appId, clientId };
 }
 
-export function requireRelyingParty() {
-  const relyingParty = process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY?.trim();
-  if (!relyingParty) {
-    throw new Error("EXPO_PUBLIC_PRIVY_RELYING_PARTY is not set");
-  }
-  return relyingParty.replace(/\/+$/, "");
+export function formatEmailForPrivy(input: string) {
+  return input.trim().toLowerCase();
 }
 
 export function formatPhoneForPrivy(input: string) {

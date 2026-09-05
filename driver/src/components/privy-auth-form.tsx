@@ -1,21 +1,18 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
-import { useLoginWithSMS, usePrivy } from "@privy-io/expo";
-import {
-  useLoginWithPasskey,
-  useSignupWithPasskey,
-} from "@privy-io/expo/passkey";
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useLoginWithEmail, useLoginWithSMS, usePrivy } from "@privy-io/expo";
 import { ActionButton } from "@/components/action-button";
 import {
+  formatEmailForPrivy,
   formatPhoneForPrivy,
   isAlreadyAuthenticatedPrivyError,
-  requireRelyingParty,
 } from "@/lib/privy";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
 import { useAuth } from "@/context/auth-context";
 import type { AuthResponse } from "@/services/auth";
 
 type Mode = "login" | "signup";
+type Method = "sms" | "email";
 
 export function PrivyAuthForm({
   mode,
@@ -29,13 +26,14 @@ export function PrivyAuthForm({
   const { setUser } = useAuth();
   const { user: privyUser } = usePrivy();
   const completeSession = useCompletePrivySession();
-  const { sendCode, loginWithCode, state } = useLoginWithSMS();
-  const { loginWithPasskey } = useLoginWithPasskey();
-  const { signupWithPasskey } = useSignupWithPasskey();
+  const sms = useLoginWithSMS();
+  const emailLogin = useLoginWithEmail();
+  const [method, setMethod] = useState<Method>("sms");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
-  const [busy, setBusy] = useState<"sms" | "otp" | "passkey" | null>(null);
+  const [busy, setBusy] = useState<"send" | "otp" | null>(null);
 
   async function finish() {
     const session = await completeSession();
@@ -43,16 +41,36 @@ export function PrivyAuthForm({
     onAuthenticated(session.user);
   }
 
+  function switchMethod(next: Method) {
+    if (next === method) return;
+    setMethod(next);
+    setCode("");
+    setCodeSent(false);
+  }
+
   async function handleSendCode() {
-    const formatted = formatPhoneForPrivy(phone);
-    if (formatted.replace(/\D/g, "").length < 10) {
-      Alert.alert("Invalid phone", "Enter a phone number with country code, for example +1 555 555 0100.");
-      return;
-    }
     try {
-      setBusy("sms");
-      await sendCode({ phone: formatted });
-      setPhone(formatted);
+      setBusy("send");
+      if (method === "sms") {
+        const formatted = formatPhoneForPrivy(phone);
+        if (formatted.replace(/\D/g, "").length < 10) {
+          Alert.alert(
+            "Invalid phone",
+            "Enter a phone number with country code, for example +1 555 555 0100.",
+          );
+          return;
+        }
+        await sms.sendCode({ phone: formatted });
+        setPhone(formatted);
+      } else {
+        const formatted = formatEmailForPrivy(email);
+        if (!formatted.includes("@") || !formatted.includes(".")) {
+          Alert.alert("Invalid email", "Enter a valid email address.");
+          return;
+        }
+        await emailLogin.sendCode({ email: formatted });
+        setEmail(formatted);
+      }
       setCodeSent(true);
     } catch (error) {
       Alert.alert("Could not send code", error instanceof Error ? error.message : "Try again.");
@@ -66,11 +84,20 @@ export function PrivyAuthForm({
       setBusy("otp");
       if (!privyUser) {
         try {
-          await loginWithCode({
-            code: code.trim(),
-            phone: formatPhoneForPrivy(phone),
-            disableSignup: mode === "login" ? undefined : false,
-          });
+          const disableSignup = mode === "login" ? undefined : false;
+          if (method === "sms") {
+            await sms.loginWithCode({
+              code: code.trim(),
+              phone: formatPhoneForPrivy(phone),
+              disableSignup,
+            });
+          } else {
+            await emailLogin.loginWithCode({
+              code: code.trim(),
+              email: formatEmailForPrivy(email),
+              disableSignup,
+            });
+          }
         } catch (error) {
           if (!isAlreadyAuthenticatedPrivyError(error)) {
             throw error;
@@ -88,46 +115,65 @@ export function PrivyAuthForm({
     }
   }
 
-  async function handlePasskey() {
-    try {
-      setBusy("passkey");
-      const relyingParty = requireRelyingParty();
-      if (mode === "signup") {
-        await signupWithPasskey({ relyingParty });
-      } else {
-        await loginWithPasskey({ relyingParty });
-      }
-      await finish();
-    } catch (error) {
-      Alert.alert(
-        mode === "signup" ? "Passkey signup failed" : "Passkey login failed",
-        error instanceof Error ? error.message : "Please try again.",
-      );
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  const sending = state.status === "sending-code" || busy === "sms";
-  const submitting = state.status === "submitting-code" || busy === "otp";
+  const sending =
+    busy === "send" ||
+    sms.state.status === "sending-code" ||
+    emailLogin.state.status === "sending-code";
+  const submitting =
+    busy === "otp" ||
+    sms.state.status === "submitting-code" ||
+    emailLogin.state.status === "submitting-code";
+  const channelLabel = method === "sms" ? "SMS" : "email";
 
   return (
     <View>
-      <TextInput
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="Phone number"
-        keyboardType="phone-pad"
-        autoComplete="tel"
-        inputMode="tel"
-        style={styles.input}
-        editable={!disabled && busy === null}
-      />
+      <View style={styles.methodRow}>
+        <Pressable
+          onPress={() => switchMethod("sms")}
+          style={[styles.methodTab, method === "sms" && styles.methodTabActive]}
+          disabled={disabled || busy !== null}
+        >
+          <Text style={[styles.methodText, method === "sms" && styles.methodTextActive]}>Phone</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => switchMethod("email")}
+          style={[styles.methodTab, method === "email" && styles.methodTabActive]}
+          disabled={disabled || busy !== null}
+        >
+          <Text style={[styles.methodText, method === "email" && styles.methodTextActive]}>Email</Text>
+        </Pressable>
+      </View>
+
+      {method === "sms" ? (
+        <TextInput
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Phone number"
+          keyboardType="phone-pad"
+          autoComplete="tel"
+          inputMode="tel"
+          style={styles.input}
+          editable={!disabled && busy === null}
+        />
+      ) : (
+        <TextInput
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          keyboardType="email-address"
+          autoComplete="email"
+          autoCapitalize="none"
+          autoCorrect={false}
+          inputMode="email"
+          style={styles.input}
+          editable={!disabled && busy === null}
+        />
+      )}
       {!codeSent ? (
         <ActionButton
           style={styles.button}
           textStyle={styles.buttonText}
-          label="Send SMS code"
+          label={`Send ${channelLabel} code`}
           loadingLabel="Sending code..."
           loading={sending}
           disabled={disabled}
@@ -147,7 +193,7 @@ export function PrivyAuthForm({
           <ActionButton
             style={styles.button}
             textStyle={styles.buttonText}
-            label="Continue with SMS"
+            label={`Continue with ${channelLabel}`}
             loadingLabel="Signing in..."
             loading={submitting}
             disabled={disabled}
@@ -155,23 +201,36 @@ export function PrivyAuthForm({
           />
         </>
       )}
-
-      <Text style={styles.or}>or</Text>
-
-      <ActionButton
-        style={styles.secondary}
-        textStyle={styles.secondaryText}
-        label={mode === "signup" ? "Create a passkey" : "Sign in with passkey"}
-        loadingLabel="Waiting for passkey..."
-        loading={busy === "passkey"}
-        disabled={disabled}
-        onPress={() => void handlePasskey()}
-      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  methodRow: {
+    flexDirection: "row",
+    marginTop: 8,
+    gap: 8,
+  },
+  methodTab: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#D1D5DB",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+  },
+  methodTabActive: {
+    borderColor: "#2e4ed2",
+    backgroundColor: "#EEF2FF",
+  },
+  methodText: {
+    fontWeight: "700",
+    color: "#6B7280",
+  },
+  methodTextActive: {
+    color: "#2e4ed2",
+  },
   input: {
     marginTop: 12,
     paddingHorizontal: 14,
@@ -191,25 +250,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "white",
-    textAlign: "center",
-    fontWeight: "700",
-  },
-  or: {
-    marginTop: 20,
-    textAlign: "center",
-    color: "#6B7280",
-    fontWeight: "600",
-  },
-  secondary: {
-    padding: 16,
-    marginTop: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#D1D5DB",
-    backgroundColor: "#FFFFFF",
-  },
-  secondaryText: {
-    color: "#111827",
     textAlign: "center",
     fontWeight: "700",
   },

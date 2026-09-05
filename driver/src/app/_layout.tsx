@@ -7,6 +7,7 @@ import { DriverNotificationsProvider } from "@/context/driver-notifications";
 import { ThemeProvider } from "@/context/theme-context";
 import { NetworkProvider } from "@/context/network-context";
 import { requirePrivyConfig } from "@/lib/privy";
+import { AuthLoading } from "@/components/auth-loading";
 
 export default function RootLayout() {
   const { appId, clientId } = requirePrivyConfig();
@@ -41,13 +42,14 @@ function RootNavigator() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return null;
+    return <AuthLoading />;
   }
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
+        animation: "none",
       }}
     >
       <Stack.Protected guard={isAuthenticated}>

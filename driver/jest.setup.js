@@ -3,7 +3,6 @@ process.env.EXPO_PUBLIC_API_URL = 'http://localhost:4003/api';
 process.env.EXPO_PUBLIC_WS_URL = 'http://localhost:4004';
 process.env.EXPO_PUBLIC_PRIVY_APP_ID = 'test-privy-app-id';
 process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID = 'test-client-id';
-process.env.EXPO_PUBLIC_PRIVY_RELYING_PARTY = 'https://example.com';
 
 import '@testing-library/jest-native/extend-expect';
 
@@ -66,6 +65,11 @@ jest.mock('@privy-io/expo', () => ({
     loginWithCode: jest.fn(),
     state: { status: 'initial' },
   })),
+  useLoginWithEmail: jest.fn(() => ({
+    sendCode: jest.fn(),
+    loginWithCode: jest.fn(),
+    state: { status: 'initial' },
+  })),
   useIdentityToken: jest.fn(() => ({
     getIdentityToken: jest.fn(),
   })),
@@ -78,12 +82,6 @@ jest.mock('@privy-io/expo', () => ({
     create: jest.fn(),
   })),
   PrivyProvider: ({ children }) => children,
-}));
-
-jest.mock('@privy-io/expo/passkey', () => ({
-  useLoginWithPasskey: jest.fn(() => ({ loginWithPasskey: jest.fn(), state: { status: 'initial' } })),
-  useSignupWithPasskey: jest.fn(() => ({ signupWithPasskey: jest.fn(), state: { status: 'initial' } })),
-  useLinkWithPasskey: jest.fn(() => ({ linkWithPasskey: jest.fn(), state: { status: 'initial' } })),
 }));
 
 jest.mock('expo-document-picker', () => ({
