@@ -10,7 +10,7 @@ npm install
 npx playwright install
 ```
 
-2. Make sure the backend is running on port 4000 with test data
+2. Make sure the backend services are running (auth `:4001`, admin `:4005`, plus ride/notify as needed) with seeded staff.
 3. Admin console will be started automatically by Playwright
 
 ## Running Tests

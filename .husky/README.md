@@ -6,9 +6,10 @@ This project uses Husky and lint-staged to run automated checks before committin
 
 ### On Every Commit (pre-commit)
 
-1. **Linting**: ESLint runs on staged files
-2. **Formatting**: Prettier formats code automatically
-3. **Type checking**: TypeScript files are validated
+1. **Linting**: ESLint runs on staged files (lint-staged)
+2. **Formatting**: Prettier formats staged files
+
+Typecheck is not part of the default pre-commit hook.
 
 ### On Push (pre-push)
 

@@ -352,28 +352,25 @@ ratelimit:{ip}:{endpoint}    STRING request count (expires)
 
 ## Communication Patterns
 
-### Client-to-Gateway (HTTP/WebSocket)
+### Client-to-service (HTTP/WebSocket)
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Gateway
     participant Service
     participant Database
 
-    Client->>Gateway: HTTP Request
-    Gateway->>Gateway: Authenticate JWT
-    Gateway->>Gateway: Rate Limit Check
-    Gateway->>Service: Forward Request
+    Client->>Service: HTTP Request plus Eve JWT
+    Service->>Service: Authenticate JWT
+    Service->>Service: Rate Limit Check
     Service->>Database: Query Data
     Database-->>Service: Return Data
-    Service-->>Gateway: Response
-    Gateway-->>Client: HTTP Response
+    Service-->>Client: HTTP Response
 ```
 
 **Protocols**:
-- REST over HTTP/1.1
-- WebSocket (Socket.IO) for real-time
+- REST over HTTP/1.1 (auth `:4001`, ride `:4003`, admin `:4005`)
+- WebSocket (Socket.IO) on notify `:4004`
 - JSON payloads
 - JWT bearer tokens
 
@@ -393,7 +390,7 @@ const drivers = await fetch(`${LOCATION_URL}/internal/nearby-drivers`, {
 });
 ```
 
-#### gRPC (Optional, High Performance)
+#### gRPC (always on)
 
 ```protobuf
 service LocationService {
@@ -403,8 +400,8 @@ service LocationService {
 
 **Performance Comparison**:
 - HTTP: 15-30ms latency
-- gRPC: 2-5ms latency (3-10x faster)
-- Enable with `GRPC_ENABLED=true`
+- gRPC: 2-5ms latency when the peer is up
+- There is no `GRPC_ENABLED` flag. Clients fall back to HTTP if gRPC is unreachable.
 
 **Files**:
 - `backend/proto/*.proto` - Protocol definitions
@@ -415,16 +412,14 @@ service LocationService {
 ```mermaid
 sequenceDiagram
     participant Client
-    participant Gateway
     participant Notify
     participant Ride
 
-    Client->>Gateway: WebSocket Connect
-    Gateway->>Notify: Forward Connection
-    Notify->>Notify: Authenticate
+    Client->>Notify: WebSocket Connect :4004
+    Notify->>Notify: Authenticate Eve JWT
     Notify->>Client: Connection Established
-    
-    Ride->>Notify: Emit Event (trip:updated)
+
+    Ride->>Notify: Emit Event trip updated
     Notify->>Client: Push Event
     Client->>Client: Update UI
 ```
@@ -442,27 +437,23 @@ sequenceDiagram
 sequenceDiagram
     participant App as Mobile App
     participant Privy
-    participant Gateway
     participant AuthSvc as Auth Service
     participant DB as PostgreSQL
 
-    App->>Privy: SMS or passkey
+    App->>Privy: SMS or email OTP
     Privy-->>App: Identity token
-    App->>Gateway: POST /api/auth/privy<br/>{identityToken}
-    Gateway->>AuthSvc: Forward Request
+    App->>AuthSvc: POST /api/auth/privy identityToken
     AuthSvc->>Privy: Verify identity token
     Privy-->>AuthSvc: Valid
-    AuthSvc->>DB: Find/Create User
+    AuthSvc->>DB: Find or create user and wallet addresses
     DB-->>AuthSvc: User Record
     AuthSvc->>AuthSvc: Generate Eve JWT
-    AuthSvc-->>Gateway: {accessToken, user}
-    Gateway-->>App: Response
+    AuthSvc-->>App: accessToken and user
     App->>App: Store Token in SecureStore
-    
-    Note over App,Gateway: Future Requests
-    App->>Gateway: HTTP + Bearer Token
-    Gateway->>Gateway: Verify Eve JWT
-    Gateway->>Gateway: Authorized
+
+    Note over App,AuthSvc: Later API calls
+    App->>AuthSvc: HTTP plus Bearer token
+    AuthSvc->>AuthSvc: Verify Eve JWT
 ```
 
 **Security**:
@@ -480,7 +471,6 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Rider as Rider App
-    participant Gateway
     participant Ride
     participant Location
     participant Notify
@@ -488,29 +478,26 @@ sequenceDiagram
     participant Redis
     participant DB
 
-    Rider->>Gateway: POST /api/rider/trips
-    Gateway->>Ride: Create Trip
-    Ride->>DB: Insert Trip (status=SEARCHING)
+    Rider->>Ride: POST /api/rider/trips
+    Ride->>DB: Insert Trip status SEARCHING
     Ride->>Location: Index Trip in H3
-    Location->>Redis: SADD h3:trips:CAR:<cell>
+    Location->>Redis: SADD h3 trips CAR cell
     Location-->>Ride: Indexed
     Ride->>Location: Find Nearby Drivers
-    Location->>Redis: H3 gridDisk + SUNION
+    Location->>Redis: H3 gridDisk plus SUNION
     Redis-->>Location: Driver IDs
-    Location->>DB: Validate Drivers (ONLINE)
+    Location->>DB: Validate Drivers ONLINE
     DB-->>Location: Valid Drivers
     Location-->>Ride: Driver List
-    Ride->>Notify: Emit trip-request:new
+    Ride->>Notify: Emit trip-request new
     Notify->>Driver: Push Notification
     Driver->>Driver: Show New Trip
-    Ride-->>Gateway: Trip Created
-    Gateway-->>Rider: {trip}
-    
+    Ride-->>Rider: trip
+
     Note over Driver: Driver submits offer
-    Driver->>Gateway: POST /api/driver/offers
-    Gateway->>Ride: Create Offer
+    Driver->>Ride: POST /api/driver/trips id offers
     Ride->>DB: Insert Offer
-    Ride->>Notify: Emit offer:new
+    Ride->>Notify: Emit offer new
     Notify->>Rider: Push Offer
     Rider->>Rider: Show Offer
 ```
@@ -538,26 +525,25 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Driver as Driver App
-    participant Gateway
+    participant Ride
     participant Location
     participant Redis
     participant Notify
     participant Rider as Rider App
 
     loop Every 5 seconds
-        Driver->>Gateway: POST /api/driver/presence
-        Gateway->>Location: Update Position
-        Location->>Redis: Update h3:pos:drivers
+        Driver->>Ride: PATCH /api/driver/presence
+        Ride->>Location: Update Position
+        Location->>Redis: Update h3 pos drivers
         Location->>Redis: Update H3 cell if changed
-        
+
         alt Driver on active trip
-            Location->>Notify: Emit location:updated
+            Location->>Notify: Emit location updated
             Notify->>Rider: Push Location
             Rider->>Rider: Update Map
         end
-        
-        Location-->>Gateway: OK
-        Gateway-->>Driver: OK
+
+        Ride-->>Driver: OK
     end
 ```
 
@@ -690,12 +676,6 @@ graph TB
         ALB[Application Load Balancer]
     end
     
-    subgraph Gateways["Gateway Layer"]
-        GW1[Gateway 1]
-        GW2[Gateway 2]
-        GW3[Gateway N]
-    end
-    
     subgraph Services["Service Layer"]
         Auth1[Auth 1]
         Auth2[Auth 2]
@@ -703,6 +683,8 @@ graph TB
         Loc2[Location 2]
         Ride1[Ride 1]
         Ride2[Ride 2]
+        Ntfy1[Notify 1]
+        Admin1[Admin 1]
     end
     
     subgraph Data["Data Layer"]
@@ -711,14 +693,11 @@ graph TB
         RedisCluster[Redis Cluster]
     end
     
-    ALB --> GW1
-    ALB --> GW2
-    ALB --> GW3
-    
-    GW1 --> Auth1
-    GW2 --> Auth2
-    GW3 --> Auth1
-    
+    ALB --> Auth1
+    ALB --> Ride1
+    ALB --> Ntfy1
+    ALB --> Admin1
+
     Auth1 --> PGPrimary
     Loc1 --> RedisCluster
     Ride1 --> PGPrimary
@@ -764,9 +743,9 @@ graph LR
     PrivyCheck -->|No| Reject[401 Unauthorized]
     GetEveToken --> EveToken[Eve JWT Token]
     
-    EveToken --> |2. API Request| GatewayAuth{Valid JWT?}
-    GatewayAuth -->|Yes| RoleCheck{Authorized Role?}
-    GatewayAuth -->|No| Reject2[401 Unauthorized]
+    EveToken --> |2. API Request| ServiceAuth{Valid JWT?}
+    ServiceAuth -->|Yes| RoleCheck{Authorized Role?}
+    ServiceAuth -->|No| Reject2[401 Unauthorized]
     RoleCheck -->|Yes| Service[Service Access]
     RoleCheck -->|No| Reject3[403 Forbidden]
 ```

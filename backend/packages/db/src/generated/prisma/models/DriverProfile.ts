@@ -32,6 +32,7 @@ export type DriverProfileAvgAggregateOutputType = {
   cancellationRate: runtime.Decimal | null
   onlineHours: runtime.Decimal | null
   earningsTotal: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
   latitude: number | null
   longitude: number | null
 }
@@ -42,6 +43,7 @@ export type DriverProfileSumAggregateOutputType = {
   cancellationRate: runtime.Decimal | null
   onlineHours: runtime.Decimal | null
   earningsTotal: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
   latitude: number | null
   longitude: number | null
 }
@@ -57,6 +59,7 @@ export type DriverProfileMinAggregateOutputType = {
   cancellationRate: runtime.Decimal | null
   onlineHours: runtime.Decimal | null
   earningsTotal: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
   city: string | null
   latitude: number | null
   longitude: number | null
@@ -74,6 +77,7 @@ export type DriverProfileMaxAggregateOutputType = {
   cancellationRate: runtime.Decimal | null
   onlineHours: runtime.Decimal | null
   earningsTotal: runtime.Decimal | null
+  walletBalance: runtime.Decimal | null
   city: string | null
   latitude: number | null
   longitude: number | null
@@ -91,6 +95,7 @@ export type DriverProfileCountAggregateOutputType = {
   cancellationRate: number
   onlineHours: number
   earningsTotal: number
+  walletBalance: number
   city: number
   latitude: number
   longitude: number
@@ -105,6 +110,7 @@ export type DriverProfileAvgAggregateInputType = {
   cancellationRate?: true
   onlineHours?: true
   earningsTotal?: true
+  walletBalance?: true
   latitude?: true
   longitude?: true
 }
@@ -115,6 +121,7 @@ export type DriverProfileSumAggregateInputType = {
   cancellationRate?: true
   onlineHours?: true
   earningsTotal?: true
+  walletBalance?: true
   latitude?: true
   longitude?: true
 }
@@ -130,6 +137,7 @@ export type DriverProfileMinAggregateInputType = {
   cancellationRate?: true
   onlineHours?: true
   earningsTotal?: true
+  walletBalance?: true
   city?: true
   latitude?: true
   longitude?: true
@@ -147,6 +155,7 @@ export type DriverProfileMaxAggregateInputType = {
   cancellationRate?: true
   onlineHours?: true
   earningsTotal?: true
+  walletBalance?: true
   city?: true
   latitude?: true
   longitude?: true
@@ -164,6 +173,7 @@ export type DriverProfileCountAggregateInputType = {
   cancellationRate?: true
   onlineHours?: true
   earningsTotal?: true
+  walletBalance?: true
   city?: true
   latitude?: true
   longitude?: true
@@ -268,6 +278,7 @@ export type DriverProfileGroupByOutputType = {
   cancellationRate: runtime.Decimal
   onlineHours: runtime.Decimal
   earningsTotal: runtime.Decimal
+  walletBalance: runtime.Decimal
   city: string | null
   latitude: number | null
   longitude: number | null
@@ -308,6 +319,7 @@ export type DriverProfileWhereInput = {
   cancellationRate?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.StringNullableFilter<"DriverProfile"> | string | null
   latitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
   longitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
@@ -334,6 +346,7 @@ export type DriverProfileOrderByWithRelationInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -363,6 +376,7 @@ export type DriverProfileWhereUniqueInput = Prisma.AtLeast<{
   cancellationRate?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.StringNullableFilter<"DriverProfile"> | string | null
   latitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
   longitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
@@ -389,6 +403,7 @@ export type DriverProfileOrderByWithAggregationInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -414,6 +429,7 @@ export type DriverProfileScalarWhereWithAggregatesInput = {
   cancellationRate?: Prisma.DecimalWithAggregatesFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalWithAggregatesFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalWithAggregatesFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalWithAggregatesFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.StringNullableWithAggregatesFilter<"DriverProfile"> | string | null
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"DriverProfile"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"DriverProfile"> | number | null
@@ -429,6 +445,7 @@ export type DriverProfileCreateInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -455,6 +472,7 @@ export type DriverProfileUncheckedCreateInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -477,6 +495,7 @@ export type DriverProfileUpdateInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -503,6 +522,7 @@ export type DriverProfileUncheckedUpdateInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -527,6 +547,7 @@ export type DriverProfileCreateManyInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -542,6 +563,7 @@ export type DriverProfileUpdateManyMutationInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -559,6 +581,7 @@ export type DriverProfileUncheckedUpdateManyInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -591,6 +614,7 @@ export type DriverProfileCountOrderByAggregateInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   city?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
@@ -603,6 +627,7 @@ export type DriverProfileAvgOrderByAggregateInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
 }
@@ -618,6 +643,7 @@ export type DriverProfileMaxOrderByAggregateInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   city?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
@@ -635,6 +661,7 @@ export type DriverProfileMinOrderByAggregateInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   city?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
@@ -647,6 +674,7 @@ export type DriverProfileSumOrderByAggregateInput = {
   cancellationRate?: Prisma.SortOrder
   onlineHours?: Prisma.SortOrder
   earningsTotal?: Prisma.SortOrder
+  walletBalance?: Prisma.SortOrder
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
 }
@@ -859,6 +887,7 @@ export type DriverProfileCreateWithoutUserInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -883,6 +912,7 @@ export type DriverProfileUncheckedCreateWithoutUserInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -921,6 +951,7 @@ export type DriverProfileUpdateWithoutUserInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -945,6 +976,7 @@ export type DriverProfileUncheckedUpdateWithoutUserInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -967,6 +999,7 @@ export type DriverProfileCreateWithoutFleetCompanyInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -991,6 +1024,7 @@ export type DriverProfileUncheckedCreateWithoutFleetCompanyInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1044,6 +1078,7 @@ export type DriverProfileScalarWhereInput = {
   cancellationRate?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFilter<"DriverProfile"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.StringNullableFilter<"DriverProfile"> | string | null
   latitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
   longitude?: Prisma.FloatNullableFilter<"DriverProfile"> | number | null
@@ -1059,6 +1094,7 @@ export type DriverProfileCreateWithoutVehiclesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1084,6 +1120,7 @@ export type DriverProfileUncheckedCreateWithoutVehiclesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1121,6 +1158,7 @@ export type DriverProfileUpdateWithoutVehiclesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1146,6 +1184,7 @@ export type DriverProfileUncheckedUpdateWithoutVehiclesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1167,6 +1206,7 @@ export type DriverProfileCreateWithoutDocumentsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1192,6 +1232,7 @@ export type DriverProfileUncheckedCreateWithoutDocumentsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1229,6 +1270,7 @@ export type DriverProfileUpdateWithoutDocumentsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1254,6 +1296,7 @@ export type DriverProfileUncheckedUpdateWithoutDocumentsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1275,6 +1318,7 @@ export type DriverProfileCreateWithoutTripsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1300,6 +1344,7 @@ export type DriverProfileUncheckedCreateWithoutTripsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1337,6 +1382,7 @@ export type DriverProfileUpdateWithoutTripsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1362,6 +1408,7 @@ export type DriverProfileUncheckedUpdateWithoutTripsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1383,6 +1430,7 @@ export type DriverProfileCreateWithoutDispatchesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1408,6 +1456,7 @@ export type DriverProfileUncheckedCreateWithoutDispatchesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1445,6 +1494,7 @@ export type DriverProfileUpdateWithoutDispatchesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1470,6 +1520,7 @@ export type DriverProfileUncheckedUpdateWithoutDispatchesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1491,6 +1542,7 @@ export type DriverProfileCreateWithoutOffersInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1516,6 +1568,7 @@ export type DriverProfileUncheckedCreateWithoutOffersInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1553,6 +1606,7 @@ export type DriverProfileUpdateWithoutOffersInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1578,6 +1632,7 @@ export type DriverProfileUncheckedUpdateWithoutOffersInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1599,6 +1654,7 @@ export type DriverProfileCreateWithoutIncidentsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1624,6 +1680,7 @@ export type DriverProfileUncheckedCreateWithoutIncidentsInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1661,6 +1718,7 @@ export type DriverProfileUpdateWithoutIncidentsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1686,6 +1744,7 @@ export type DriverProfileUncheckedUpdateWithoutIncidentsInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1707,6 +1766,7 @@ export type DriverProfileCreateWithoutIncentivesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1732,6 +1792,7 @@ export type DriverProfileUncheckedCreateWithoutIncentivesInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1769,6 +1830,7 @@ export type DriverProfileUpdateWithoutIncentivesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1794,6 +1856,7 @@ export type DriverProfileUncheckedUpdateWithoutIncentivesInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1816,6 +1879,7 @@ export type DriverProfileCreateManyFleetCompanyInput = {
   cancellationRate?: runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -1831,6 +1895,7 @@ export type DriverProfileUpdateWithoutFleetCompanyInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1855,6 +1920,7 @@ export type DriverProfileUncheckedUpdateWithoutFleetCompanyInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1878,6 +1944,7 @@ export type DriverProfileUncheckedUpdateManyWithoutFleetCompanyInput = {
   cancellationRate?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   onlineHours?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   earningsTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  walletBalance?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
@@ -1980,6 +2047,7 @@ export type DriverProfileSelect<ExtArgs extends runtime.Types.Extensions.Interna
   cancellationRate?: boolean
   onlineHours?: boolean
   earningsTotal?: boolean
+  walletBalance?: boolean
   city?: boolean
   latitude?: boolean
   longitude?: boolean
@@ -2007,6 +2075,7 @@ export type DriverProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   cancellationRate?: boolean
   onlineHours?: boolean
   earningsTotal?: boolean
+  walletBalance?: boolean
   city?: boolean
   latitude?: boolean
   longitude?: boolean
@@ -2026,6 +2095,7 @@ export type DriverProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   cancellationRate?: boolean
   onlineHours?: boolean
   earningsTotal?: boolean
+  walletBalance?: boolean
   city?: boolean
   latitude?: boolean
   longitude?: boolean
@@ -2045,13 +2115,14 @@ export type DriverProfileSelectScalar = {
   cancellationRate?: boolean
   onlineHours?: boolean
   earningsTotal?: boolean
+  walletBalance?: boolean
   city?: boolean
   latitude?: boolean
   longitude?: boolean
   notes?: boolean
 }
 
-export type DriverProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "fleetCompanyId" | "approvalStatus" | "presence" | "rating" | "acceptanceRate" | "cancellationRate" | "onlineHours" | "earningsTotal" | "city" | "latitude" | "longitude" | "notes", ExtArgs["result"]["driverProfile"]>
+export type DriverProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "fleetCompanyId" | "approvalStatus" | "presence" | "rating" | "acceptanceRate" | "cancellationRate" | "onlineHours" | "earningsTotal" | "walletBalance" | "city" | "latitude" | "longitude" | "notes", ExtArgs["result"]["driverProfile"]>
 export type DriverProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   fleetCompany?: boolean | Prisma.DriverProfile$fleetCompanyArgs<ExtArgs>
@@ -2097,6 +2168,7 @@ export type $DriverProfilePayload<ExtArgs extends runtime.Types.Extensions.Inter
     cancellationRate: runtime.Decimal
     onlineHours: runtime.Decimal
     earningsTotal: runtime.Decimal
+    walletBalance: runtime.Decimal
     city: string | null
     latitude: number | null
     longitude: number | null
@@ -2543,6 +2615,7 @@ export interface DriverProfileFieldRefs {
   readonly cancellationRate: Prisma.FieldRef<"DriverProfile", 'Decimal'>
   readonly onlineHours: Prisma.FieldRef<"DriverProfile", 'Decimal'>
   readonly earningsTotal: Prisma.FieldRef<"DriverProfile", 'Decimal'>
+  readonly walletBalance: Prisma.FieldRef<"DriverProfile", 'Decimal'>
   readonly city: Prisma.FieldRef<"DriverProfile", 'String'>
   readonly latitude: Prisma.FieldRef<"DriverProfile", 'Float'>
   readonly longitude: Prisma.FieldRef<"DriverProfile", 'Float'>

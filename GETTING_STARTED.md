@@ -30,7 +30,7 @@ Before starting, ensure you have:
 - [ ] Docker Desktop installed and running
 - [ ] At least 8GB RAM available
 - [ ] 10GB free disk space
-- [ ] Ports 3000, 3010, 3020, 4001-4005, 5432, 6379, 8081 available
+- [ ] Ports 3000, 3020, 4001-4005, 5432, 6379, 8081 available
 - [ ] (Optional) Xcode 15+ for iOS development
 - [ ] (Optional) Android Studio for Android development
 
@@ -356,7 +356,15 @@ cp .env.example .env
 # EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token
 ```
 
-**Important**: Use your machine's LAN IP, not `localhost`, so the mobile app can reach the backend.
+**Important**: Rider and driver apps are **not** in Docker. Backend Compose publishes ports; Expo and the emulator run on the host.
+
+URL cheat sheet (backend already up via `npm run dev` or `docker compose up` from `backend/`):
+
+| Client | Auth / Ride / Notify |
+| --- | --- |
+| iOS Simulator | `http://localhost:4001/api`, `:4003/api`, `:4004` |
+| Android Emulator | `adb reverse` those three ports and use `localhost`, **or** `http://10.0.2.2:4001/api` (and `4003` / `4004`) |
+| Physical device | `http://<LAN_IP>:4001/api` (etc.) |
 
 Find your LAN IP:
 ```bash
@@ -370,14 +378,17 @@ ipconfig
 ### 8.2 Build Development Client
 
 ```bash
-# iOS
+# iOS Simulator (macOS + Xcode)
 npx expo run:ios
 
-# Android
+# Android Emulator (Android Studio AVD)
+adb reverse tcp:4001 tcp:4001
+adb reverse tcp:4003 tcp:4003
+adb reverse tcp:4004 tcp:4004
 npx expo run:android
 ```
 
-This builds a development client with Privy and Mapbox integrated.
+This builds a development client with Privy and Mapbox integrated. After install, Metro can open the app with `i` / `a`. See [backend/docs/docker.md](backend/docs/docker.md) for emulator networking against Compose.
 
 ### 8.3 Driver App Setup
 
@@ -602,4 +613,4 @@ You should now have:
 
 ---
 
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-05

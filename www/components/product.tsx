@@ -7,7 +7,7 @@ const surfaces = [
   {
     name: "Driver",
     stack: "Expo 57",
-    body: "Onboard, go online, send offers, run the trip, and see earnings (off-platform pay).",
+    body: "Onboard, go online, send offers, run the trip, see matched fares, and cash out Eve Wallet credits to Privy.",
   },
   {
     name: "Admin",
@@ -15,14 +15,9 @@ const surfaces = [
     body: "Optional operations console: riders, drivers, trips, vehicles, pricing, safety, support.",
   },
   {
-    name: "Monitor",
-    stack: "Next.js 16 · :3010",
-    body: "Optional liveness board for API and frontend health. Not an alpha release target.",
-  },
-  {
     name: "Backend",
     stack: "Node services",
-    body: "Auth, location, ride, notify, and admin APIs. Postgres 16, Redis 7, optional gRPC.",
+    body: "Auth, location, ride, notify, and admin APIs. Postgres 16, Redis 7, gRPC between services.",
   },
 ];
 

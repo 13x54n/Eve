@@ -1,5 +1,14 @@
 export { fail } from "./errors.js";
 export {
+  executePayout,
+  getPayoutChainPublicConfig,
+  isTreasuryConfigured,
+  sendTreasuryPayout,
+  setPayoutSenderForTests,
+  type PayoutSendResult,
+  type PayoutSender,
+} from "./treasury.js";
+export {
   createAccessToken,
   verifyAccessToken,
   type AccessTokenPayload,

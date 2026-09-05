@@ -102,33 +102,24 @@ The Admin Console is a web application for Eve platform operations staff to:
 
 ```
 app/
-  (auth)/
-    login/              # Staff login
-  (dashboard)/
-    page.tsx            # Dashboard home
+  login/page.tsx
+  (console)/
+    dashboard/page.tsx
     riders/
-      page.tsx          # Riders list
-      [id]/page.tsx     # Rider details
     drivers/
-      page.tsx          # Drivers list
-      [id]/
-        page.tsx        # Driver profile
-        documents.tsx   # View documents
     trips/
-      page.tsx          # Trips list
-      [id]/page.tsx     # Trip details
     pricing/
-      page.tsx          # Fare configs
-      [id]/page.tsx     # Edit fare config
-    markets/
-      page.tsx          # Markets & zones
+    couriers/
+    vehicles/
+    staff/
+    greetings/
+    safety/
     support/
-      page.tsx          # Support tickets
 ```
 
 ### API Integration
 
-Admin console calls Eve backend Gateway:
+The browser calls same-origin `/api`. Next.js rewrites to auth `:4001`, ride `:4003`, notify `:4004`, and admin `:4005`. There is no HTTP gateway.
 
 ```typescript
 // lib/api.ts
@@ -144,24 +135,19 @@ export async function fetchRiders() {
 }
 ```
 
-**API Prefix**: `/api/admin/*`  
+**Admin API prefix**: `/api/admin/*` on port **4005**  
 **Authentication**: JWT (email/password login)
 
 ### Real-Time Updates
 
-WebSocket connection for live dashboard:
+Socket.IO on notify `:4004`:
 
 ```typescript
-// lib/socket.ts
 import { io } from 'socket.io-client';
 
-const socket = io(GATEWAY_URL, {
+const socket = io(process.env.NEXT_PUBLIC_NOTIFY_URL, {
   path: '/socket.io',
   query: { token: getToken() }
-});
-
-socket.on('admin:stats-updated', (stats) => {
-  updateDashboard(stats);
 });
 ```
 
@@ -169,7 +155,7 @@ socket.on('admin:stats-updated', (stats) => {
 
 - **Node.js**: 22.x or higher
 - **npm**: 10.x or higher
-- **Backend running**: Gateway must be accessible
+- **Backend running**: auth, ride, notify, and admin services (see GETTING_STARTED)
 
 ## Local Development
 
@@ -189,22 +175,18 @@ cp .env.example .env.local
 Edit `.env.local`:
 
 ```bash
-# API URL (proxied through Next.js)
 NEXT_PUBLIC_API_URL=/api
-
-# Internal proxy target
-API_PROXY_TARGET=http://127.0.0.1:4000
-
-# Gateway URL for WebSocket
-NEXT_PUBLIC_GATEWAY_URL=http://127.0.0.1:4000
-
-# Mapbox (optional, for trip maps)
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
+NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 ```
 
 **How it works**:
 - Browser calls `/api/*` (same-origin)
-- Next.js rewrites to `API_PROXY_TARGET`
+- Next.js rewrites each prefix to `AUTH_PROXY_TARGET`, `RIDE_PROXY_TARGET`, `NOTIFY_PROXY_TARGET`, `ADMIN_PROXY_TARGET`
 - No CORS issues
 
 ### 3. Start Development Server
@@ -377,9 +359,12 @@ npm start
 
 ```bash
 # .env.production
-NEXT_PUBLIC_API_URL=https://api.example.com/api
-API_PROXY_TARGET=http://gateway-internal:4000
-NEXT_PUBLIC_GATEWAY_URL=https://api.example.com
+NEXT_PUBLIC_API_URL=/api
+AUTH_PROXY_TARGET=http://auth:4001
+RIDE_PROXY_TARGET=http://ride:4003
+NOTIFY_PROXY_TARGET=http://notify:4004
+ADMIN_PROXY_TARGET=http://admin:4005
+NEXT_PUBLIC_NOTIFY_URL=https://notify.example.com
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.production_token
 ```
 
@@ -425,7 +410,7 @@ See [../DEPLOYMENT.md](../DEPLOYMENT.md) for complete deployment guide.
 **Problem**: Invalid credentials or backend not running
 
 **Solution**:
-1. Check backend is running: `curl http://localhost:4000/api/health`
+1. Check backend is running: `curl http://localhost:4001/health` and `curl http://localhost:4005/health`
 2. Verify credentials (seeded accounts use `Admin123!`)
 3. Check browser console for errors
 4. Check backend logs
@@ -437,7 +422,7 @@ See [../DEPLOYMENT.md](../DEPLOYMENT.md) for complete deployment guide.
 **Solution**:
 ```typescript
 // Bad: Direct call
-fetch('http://localhost:4000/api/riders')
+fetch('http://localhost:4005/api/admin/riders')
 
 // Good: Use proxy
 fetch('/api/admin/riders')
@@ -446,7 +431,8 @@ fetch('/api/admin/riders')
 Verify `.env.local`:
 ```bash
 NEXT_PUBLIC_API_URL=/api
-API_PROXY_TARGET=http://127.0.0.1:4000
+AUTH_PROXY_TARGET=http://127.0.0.1:4001
+ADMIN_PROXY_TARGET=http://127.0.0.1:4005
 ```
 
 ### Page not updating with real-time data
@@ -455,7 +441,7 @@ API_PROXY_TARGET=http://127.0.0.1:4000
 
 **Solution**:
 1. Check socket connection in browser dev tools (Network → WS)
-2. Verify `NEXT_PUBLIC_GATEWAY_URL` is set
+2. Verify `NEXT_PUBLIC_NOTIFY_URL` is set
 3. Check token is valid
 4. Reconnect socket after token refresh
 

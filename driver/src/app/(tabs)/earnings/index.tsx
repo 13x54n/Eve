@@ -7,22 +7,37 @@ import {
   StatusBar,
   SectionList,
   Platform,
+  TextInput,
+  Alert,
+  Share,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { EarningsSummary, EarningsTrip, getEarnings } from '@/services/driver';
+import {
+  DriverWallet,
+  EarningsSummary,
+  EarningsTrip,
+  WalletLedgerEntry,
+  getEarnings,
+  getWallet,
+  withdrawWallet,
+} from '@/services/driver';
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
+import { useCompletePrivySession } from '@/lib/complete-privy-session';
+import { truncateWalletAddress } from '@/lib/privy';
 
-type TxType = 'trip' | 'tip' | 'bonus' | 'cashout';
+type TxType = 'trip' | 'credit' | 'withdraw' | 'payout';
 
 type Transaction = {
   id: string;
   type: TxType;
   title: string;
   time: string;
-  amount: number; // positive = earned, negative = cashed out
+  amount: number;
+  tripId?: string;
 };
 
 type Section = {
@@ -31,38 +46,84 @@ type Section = {
   data: Transaction[];
 };
 
-// Groups completed trips returned by the backend into day-based sections.
-function groupTripsIntoSections(trips: EarningsTrip[]): Section[] {
+function ledgerType(entry: WalletLedgerEntry): TxType {
+  if (entry.type === 'CREDIT') return 'credit';
+  if (entry.type === 'WALLET_WITHDRAW') return 'withdraw';
+  return 'payout';
+}
+
+function ledgerTitle(entry: WalletLedgerEntry) {
+  if (entry.type === 'CREDIT') return entry.note || 'Platform credit';
+  if (entry.type === 'WALLET_WITHDRAW') {
+    const status = entry.status === 'COMPLETED' ? 'Cashed out' : entry.status === 'FAILED' ? 'Cash-out failed' : 'Cash-out pending';
+    return status;
+  }
+  return entry.note || 'Admin payout';
+}
+
+function groupHistory(
+  trips: EarningsTrip[],
+  entries: WalletLedgerEntry[],
+): Section[] {
   const todayLabel = new Date().toDateString();
   const byDay = new Map<string, Transaction[]>();
-  for (const trip of trips) {
-    const created = new Date(trip.createdAt);
-    const dayKey = created.toDateString();
-    const title = dayKey === todayLabel
-      ? 'Today'
-      : created.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+
+  function push(_createdAt: string, tx: Omit<Transaction, 'time'> & { created: Date }) {
+    const dayKey = tx.created.toDateString();
+    const title =
+      dayKey === todayLabel
+        ? 'Today'
+        : tx.created.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
     const list = byDay.get(title) ?? [];
     list.push({
-      id: trip.id,
-      type: 'trip',
-      title: 'Trip earnings',
-      time: created.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
-      amount: trip.netEarnings,
+      id: tx.id,
+      type: tx.type,
+      title: tx.title,
+      amount: tx.amount,
+      tripId: tx.tripId,
+      time: tx.created.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
     });
     byDay.set(title, list);
   }
+
+  for (const trip of trips) {
+    const created = new Date(trip.createdAt);
+    push(trip.createdAt, {
+      id: `trip-${trip.id}`,
+      type: 'trip',
+      title: 'Trip (off-platform)',
+      amount: trip.netEarnings,
+      tripId: trip.id,
+      created,
+    });
+  }
+  for (const entry of entries) {
+    const created = new Date(entry.createdAt);
+    const signed =
+      entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT'
+        ? -Math.abs(entry.amount)
+        : Math.abs(entry.amount);
+    push(entry.createdAt, {
+      id: entry.id,
+      type: ledgerType(entry),
+      title: ledgerTitle(entry),
+      amount: signed,
+      created,
+    });
+  }
+
   return Array.from(byDay.entries()).map(([title, data]) => ({
     title,
-    total: data.reduce((sum, item) => sum + item.amount, 0),
-    data,
+    total: data.reduce((sum, item) => sum + (item.type === 'trip' ? item.amount : 0), 0),
+    data: data.sort((a, b) => b.time.localeCompare(a.time)),
   }));
 }
 
 const TX_ICON: Record<TxType, { name: any; lib: 'ion' | 'mci'; bg: string; fg: string }> = {
   trip: { name: 'car', lib: 'mci', bg: '#EFF6FF', fg: '#3B82F6' },
-  tip: { name: 'gift', lib: 'ion', bg: '#F0FDF4', fg: '#16A34A' },
-  bonus: { name: 'star', lib: 'ion', bg: '#FFFBEB', fg: '#D97706' },
-  cashout: { name: 'arrow-down-circle', lib: 'ion', bg: '#FEF2F2', fg: '#DC2626' },
+  credit: { name: 'gift', lib: 'ion', bg: '#F0FDF4', fg: '#16A34A' },
+  withdraw: { name: 'arrow-down-circle', lib: 'ion', bg: '#FEF2F2', fg: '#DC2626' },
+  payout: { name: 'wallet', lib: 'ion', bg: '#FFFBEB', fg: '#D97706' },
 };
 
 function TxIcon({ type }: { type: TxType }) {
@@ -81,18 +142,24 @@ function formatMoney(n: number) {
 }
 
 export default function Earnings() {
+  const completePrivy = useCompletePrivySession();
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
+  const [wallet, setWallet] = useState<DriverWallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [cashingOut, setCashingOut] = useState(false);
+  const [linking, setLinking] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
       if (!opts?.silent) setLoading(true);
       setError(false);
-      const result = await getEarnings();
-      setSummary(result.summary);
-      setRecentTrips(result.recentTrips);
+      const [earningsResult, walletResult] = await Promise.all([getEarnings(), getWallet()]);
+      setSummary(earningsResult.summary);
+      setRecentTrips(earningsResult.recentTrips);
+      setWallet(walletResult);
     } catch {
       setError(true);
     } finally {
@@ -106,14 +173,65 @@ export default function Earnings() {
 
   const { refreshing, onRefresh } = usePullToRefresh(() => load({ silent: true }));
 
-  const sections = useMemo(() => groupTripsIntoSections(recentTrips), [recentTrips]);
-  const balance = summary?.lifetimeEarnings ?? 0;
+  const sections = useMemo(
+    () => groupHistory(recentTrips, wallet?.entries ?? []),
+    [recentTrips, wallet?.entries],
+  );
+  const balance = wallet?.walletBalance ?? summary?.walletBalance ?? 0;
+
+  async function onLinkWallet() {
+    try {
+      setLinking(true);
+      await completePrivy();
+      await load({ silent: true });
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Could not link Privy wallet';
+      Alert.alert('Wallet', message);
+    } finally {
+      setLinking(false);
+    }
+  }
+
+  async function onCashOut() {
+    const value = Number(amount);
+    const min = wallet?.minWithdrawUsd ?? 1;
+    if (!Number.isFinite(value) || value < min) {
+      Alert.alert('Cash out', `Enter at least $${min.toFixed(2)}.`);
+      return;
+    }
+    if (!wallet?.ethereumWallet) {
+      Alert.alert('Cash out', 'Link your Privy Ethereum wallet first.');
+      return;
+    }
+    try {
+      setCashingOut(true);
+      const result = await withdrawWallet(value, `mobile-${Date.now()}`);
+      setAmount('');
+      await load({ silent: true });
+      const status = result.entry.status;
+      const extra = result.entry.providerRef ? `\nTx ${result.entry.providerRef}` : '';
+      Alert.alert(
+        'Cash out',
+        status === 'COMPLETED'
+          ? `Sent to your Privy wallet.${extra}`
+          : status === 'PENDING'
+            ? 'Requested. An admin will complete the on-chain send when the treasury is configured.'
+            : `Status: ${status}`,
+      );
+    } catch (caught: unknown) {
+      const message =
+        (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (caught instanceof Error ? caught.message : 'Cash-out failed');
+      Alert.alert('Cash out', message);
+    } finally {
+      setCashingOut(false);
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
 
-      {/* Top bar */}
       <View style={styles.topBar}>
         <View style={styles.backButton} />
         <Text style={styles.topBarTitle}>Eve Wallet</Text>
@@ -129,7 +247,6 @@ export default function Earnings() {
         refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
         ListHeaderComponent={
           <>
-            {/* Wallet balance card */}
             <LinearGradient
               colors={['#2E4ED2', '#3B82F6']}
               start={{ x: 0, y: 0 }}
@@ -139,20 +256,66 @@ export default function Earnings() {
               <View style={styles.walletCardTopRow}>
                 <View style={styles.walletChip}>
                   <MaterialCommunityIcons name="wallet" size={14} color="#FFFFFF" />
-                  <Text style={styles.walletChipText}>Total Earnings</Text>
+                  <Text style={styles.walletChipText}>Available (platform credits)</Text>
                 </View>
                 <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
               </View>
 
               <Text style={styles.balanceText}>${balance.toFixed(2)}</Text>
+              <Text style={styles.walletFooterHint}>
+                Trip fares are collected off-platform. This balance is Eve credits paid to your Privy
+                Ethereum wallet.
+              </Text>
 
+              <TouchableOpacity
+                style={styles.addressRow}
+                onPress={() => {
+                  const addr = wallet?.ethereumWallet;
+                  if (!addr) return;
+                  void Share.share({ message: addr });
+                }}
+              >
+                <Text style={styles.addressLabel}>
+                  {wallet?.ethereumWallet
+                    ? `Privy ${truncateWalletAddress(wallet.ethereumWallet)} · ${wallet.chain.chainName}`
+                    : 'No Privy Ethereum wallet yet'}
+                </Text>
+              </TouchableOpacity>
 
-              {/* Decorative card texture */}
               <View pointerEvents="none" style={styles.cardGlowOne} />
               <View pointerEvents="none" style={styles.cardGlowTwo} />
             </LinearGradient>
 
-            {/* Quick stats */}
+            {wallet?.ethereumWallet ? (
+              <View style={styles.cashOutRow}>
+                <TextInput
+                  style={styles.cashOutInput}
+                  keyboardType="decimal-pad"
+                  placeholder="Amount USD"
+                  placeholderTextColor="#9CA3AF"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
+                <TouchableOpacity
+                  style={styles.cashOutButton}
+                  onPress={() => void onCashOut()}
+                  disabled={cashingOut}
+                >
+                  {cashingOut ? (
+                    <ActivityIndicator color="#2E4ED2" />
+                  ) : (
+                    <Text style={styles.cashOutText}>Cash out</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity style={styles.linkButton} onPress={() => void onLinkWallet()} disabled={linking}>
+                <Text style={styles.linkButtonText}>
+                  {linking ? 'Linking…' : 'Link Privy Ethereum wallet'}
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statLabel}>Today</Text>
@@ -163,8 +326,8 @@ export default function Earnings() {
                 <Text style={styles.statValue}>${(summary?.weekEarnings ?? 0).toFixed(2)}</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Trips</Text>
-                <Text style={styles.statValue}>{summary?.weekTrips ?? 0}</Text>
+                <Text style={styles.statLabel}>Lifetime fares</Text>
+                <Text style={styles.statValue}>${(summary?.lifetimeEarnings ?? 0).toFixed(2)}</Text>
               </View>
             </View>
 
@@ -174,10 +337,12 @@ export default function Earnings() {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.txRow}
-            activeOpacity={0.6}
-            onPress={() =>
-              router.push({ pathname: '/(tabs)/earnings/[id]', params: { id: item.id } })
-            }
+            activeOpacity={item.tripId ? 0.6 : 1}
+            onPress={() => {
+              if (item.tripId) {
+                router.push({ pathname: '/(tabs)/earnings/[id]', params: { id: item.tripId } });
+              }
+            }}
           >
             <TxIcon type={item.type} />
             <View style={styles.txMiddle}>
@@ -192,7 +357,7 @@ export default function Earnings() {
             >
               {formatMoney(item.amount)}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+            {item.tripId ? <Ionicons name="chevron-forward" size={16} color="#C4C9D4" /> : null}
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.txSeparator} />}
@@ -201,15 +366,15 @@ export default function Earnings() {
           error ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="alert-circle" size={48} color="#B91C1C" />
-              <Text style={styles.emptyText}>Could not load earnings</Text>
+              <Text style={styles.emptyText}>Could not load wallet</Text>
               <TouchableOpacity style={styles.retryButton} onPress={() => void load()}>
                 <Text style={styles.retryText}>Tap to retry</Text>
               </TouchableOpacity>
             </View>
           ) : loading ? (
-            <Text style={styles.loadingText}>Loading earnings...</Text>
+            <Text style={styles.loadingText}>Loading wallet...</Text>
           ) : (
-            <Text style={styles.emptyText}>No earnings yet</Text>
+            <Text style={styles.emptyText}>No wallet activity yet</Text>
           )
         }
       />
@@ -306,6 +471,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
+    minWidth: 108,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
   },
   cashOutText: {
     fontSize: 14,
@@ -317,6 +487,46 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'rgba(255,255,255,0.75)',
     flexShrink: 1,
+    marginTop: 10,
+  },
+  addressRow: {
+    marginTop: 14,
+  },
+  addressLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.92)',
+  },
+  cashOutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 14,
+  },
+  cashOutInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#0F172A',
+  },
+  linkButton: {
+    marginTop: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  linkButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2E4ED2',
   },
   cardGlowOne: {
     position: 'absolute',

@@ -62,6 +62,18 @@ export const reviewDriver = handle(async (req, res) => {
   );
 });
 
+export const creditDriverWallet = handle(async (req, res) => {
+  const auth = actor(req);
+  res.status(200).json(
+    await admin.creditDriverWallet(
+      String(req.params.id),
+      auth.user.id,
+      req.body,
+      req.ip,
+    ),
+  );
+});
+
 export const vehicles = handle(async (req, res) => {
   res.json(await admin.listVehicles(req.query as Record<string, unknown>));
 });
