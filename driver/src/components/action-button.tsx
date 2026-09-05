@@ -9,9 +9,6 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
-import Animated from 'react-native-reanimated';
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type ActionButtonProps = {
   onPress: () => void;
@@ -80,7 +77,7 @@ export function ActionButton({
     );
 
   return (
-    <AnimatedPressable
+    <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label ?? loadingLabel}
       accessibilityState={{ disabled: blocked, busy: loading }}
@@ -91,7 +88,7 @@ export function ActionButton({
       style={[styles.base, style, contentStyle, scaled && styles.pressed, loading && styles.loading]}
     >
       {content}
-    </AnimatedPressable>
+    </Pressable>
   );
 }
 

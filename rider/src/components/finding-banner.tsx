@@ -1,13 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
-import { useEffect } from 'react';
 import { ActionButton } from '@/components/action-button';
 
 export function FindingBanner({
@@ -23,26 +15,11 @@ export function FindingBanner({
   onOpen: () => void;
   onCancel: () => void;
 }) {
-  const pulse = useSharedValue(0.55);
-
-  useEffect(() => {
-    pulse.value = withRepeat(
-      withTiming(1, { duration: 1100, easing: Easing.inOut(Easing.quad) }),
-      -1,
-      true,
-    );
-  }, [pulse]);
-
-  const ringStyle = useAnimatedStyle(() => ({
-    opacity: pulse.value,
-    transform: [{ scale: 0.85 + pulse.value * 0.2 }],
-  }));
-
   return (
     <Pressable style={styles.card} onPress={onOpen} accessibilityRole="button">
       <View style={styles.row}>
         <View style={styles.radar}>
-          <Animated.View style={[styles.ring, ringStyle]} />
+          <View style={styles.ring} />
           <View style={styles.core}>
             <Feather name="navigation" size={16} color="#FFFFFF" />
           </View>

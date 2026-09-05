@@ -14,7 +14,6 @@ import {
   FlatList,
 } from "react-native";
 import { Image } from "expo-image";
-import Animated, { FadeInDown } from "react-native-reanimated";
 import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
 import { cancelTrip } from "@/services/trips";
 import { useRideSession } from "@/context/ride-session";
@@ -218,7 +217,7 @@ export default function HomeScreen() {
           onCancel={() => void handleCancelSearch()}
         />
       ) : null}
-      <Animated.View entering={FadeInDown.delay(80).duration(420)} style={styles.searchContainer}>
+      <View style={styles.searchContainer}>
         <Feather name="search" size={24} color="#2e4ed2" />
         <TextInput
           style={styles.searchText}
@@ -242,7 +241,7 @@ export default function HomeScreen() {
             <Feather name="x-circle" size={20} color="#9CA3AF" />
           </Pressable>
         ) : null}
-      </Animated.View>
+      </View>
 
       {searchFocused && (destination || suggestions.length > 0) ? (
         <View style={styles.suggestionsCard}>
@@ -314,8 +313,7 @@ export default function HomeScreen() {
         }}
       />
 
-      <Animated.View
-        entering={FadeInDown.delay(160).duration(420)}
+      <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -351,7 +349,7 @@ export default function HomeScreen() {
           <Text style={styles.featureText}>Courier</Text>
           <Text>Let's get moving!</Text>
         </Pressable>
-      </Animated.View>
+      </View>
 
       <Image
         source={{ uri: "https://images.unsplash.com/vector-1786329675328-b975cece8a57?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }}
