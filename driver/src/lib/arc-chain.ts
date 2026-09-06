@@ -10,8 +10,3 @@ export const eveArcTestnet = {
     default: { http: [RPC] },
   },
 };
-
-export const privyChainConfig = {
-  defaultChain: eveArcTestnet,
-  supportedChains: [eveArcTestnet],
-} as const;

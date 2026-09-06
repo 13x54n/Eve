@@ -6,7 +6,6 @@ import { publishPaymentEvent } from "./payment-events.js";
 import {
   cancelEscrowFinalize,
   findTripIdByHash,
-  scheduleEscrowFinalize,
 } from "./escrow-scheduler.js";
 
 let watching = false;
@@ -25,6 +24,26 @@ export function startEscrowEventWatch() {
   client.watchEvent({
     address: escrow,
     event: parseAbiItem(
+      "event Deposited(bytes32 indexed tripId, address indexed payer, address indexed payee, uint256 amount)",
+    ),
+    onLogs: (logs) => {
+      void Promise.all(
+        logs.map(async (log) => {
+          const tripId = await findTripIdByHash(String(log.args.tripId));
+          if (!tripId) return;
+          const { applyChainDeposit } = await import("./payment.service.js");
+          await publishPaymentEvent("escrow.deposit.confirmed", tripId, {
+            txHash: log.transactionHash,
+          });
+          await applyChainDeposit(tripId, log.transactionHash);
+        }),
+      );
+    },
+  });
+
+  client.watchEvent({
+    address: escrow,
+    event: parseAbiItem(
       "event SettlementStarted(bytes32 indexed tripId, address indexed payee, uint64 settleFrom)",
     ),
     onLogs: (logs) => {
@@ -33,8 +52,12 @@ export function startEscrowEventWatch() {
           const tripId = await findTripIdByHash(String(log.args.tripId));
           if (!tripId || log.args.settleFrom == null) return;
           const settleFromMs = Number(log.args.settleFrom) * 1000;
-          await publishPaymentEvent("escrow.settlement.started", tripId, { settleFromMs });
-          await scheduleEscrowFinalize(tripId, settleFromMs);
+          const { applyChainSettlement } = await import("./payment.service.js");
+          await publishPaymentEvent("escrow.settlement.started", tripId, {
+            txHash: log.transactionHash,
+            settleFromMs,
+          });
+          await applyChainSettlement(tripId, log.transactionHash, settleFromMs);
         }),
       );
     },

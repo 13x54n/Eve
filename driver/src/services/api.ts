@@ -127,7 +127,8 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    if (__DEV__ && !sessionFailure) {
+    const status = error.response?.status;
+    if (__DEV__ && !sessionFailure && status !== 409) {
       console.error(
         `[api] ${error.config?.method?.toUpperCase()} ${error.config?.baseURL}${error.config?.url} failed`,
         error.message,

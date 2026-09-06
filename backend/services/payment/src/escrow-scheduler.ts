@@ -79,8 +79,7 @@ export async function findTripIdByHash(tripIdHashHex: string) {
   const needle = tripIdHashHex.toLowerCase();
   const trips = await prisma.trip.findMany({
     where: {
-      paymentStatus: { in: ["ESCROWED", "SETTLING", "DISPUTED"] },
-      escrowDepositTx: { not: null },
+      paymentStatus: { in: ["PENDING", "ESCROWED", "SETTLING", "DISPUTED"] },
     },
     select: { id: true },
   });

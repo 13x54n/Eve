@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/context/theme-context";
 import { NetworkProvider } from "@/context/network-context";
 import { requirePrivyConfig } from "@/lib/privy";
 import { AuthLoading } from "@/components/auth-loading";
-import { privyChainConfig } from "@/lib/arc-chain";
+import { eveArcTestnet } from "@/lib/arc-chain";
 
 export default function RootLayout() {
   const { appId, clientId } = requirePrivyConfig();
@@ -20,12 +20,12 @@ export default function RootLayout() {
           <PrivyProvider
             appId={appId}
             clientId={clientId}
+            supportedChains={[eveArcTestnet]}
             config={{
               embedded: {
                 ethereum: { createOnLogin: "users-without-wallets" },
                 solana: { createOnLogin: "users-without-wallets" },
               },
-              ...privyChainConfig,
             }}
           >
             <AuthProvider>

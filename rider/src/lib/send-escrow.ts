@@ -26,28 +26,10 @@ async function ensureArcTestnet(provider: EthereumProvider, chainId: number) {
   if (current === chainId) return;
 
   const hex = chainIdHex(chainId);
-  try {
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: hex }],
-    });
-    return;
-  } catch {
-    await provider.request({
-      method: "wallet_addEthereumChain",
-      params: [
-        {
-          chainId: hex,
-          chainName: eveArcTestnet.name,
-          nativeCurrency: eveArcTestnet.nativeCurrency,
-          rpcUrls: [eveArcTestnet.rpcUrls.default.http[0]],
-          blockExplorerUrls: eveArcTestnet.blockExplorers?.default
-            ? [eveArcTestnet.blockExplorers.default.url]
-            : ["https://testnet.arcscan.app"],
-        },
-      ],
-    });
-  }
+  await provider.request({
+    method: "wallet_switchEthereumChain",
+    params: [{ chainId: hex }],
+  });
 }
 
 function isZeroValue(value: string | undefined) {

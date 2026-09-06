@@ -6,6 +6,8 @@ export {
   riderWalletRouter,
 } from "./payment.routes.js";
 export {
+  applyChainDeposit,
+  applyChainSettlement,
   confirmTripEscrow,
   getDriverWallet,
   getRiderWallet,
@@ -21,5 +23,6 @@ export {
   withdrawDriverWallet,
 } from "./payment.service.js";
 export { advanceEscrowNowMs, DISPUTE_WINDOW_MS, setEscrowForTests, setEscrowNowMs } from "./escrow.js";
-export { clearEscrowTimers, flushDueEscrowSettlements } from "./escrow-scheduler.js";
+export { clearEscrowTimers, findTripIdByHash, flushDueEscrowSettlements } from "./escrow-scheduler.js";
+export { handlePaymentEvent } from "./kafka-consumer.js";
 export { getUsdcBalance, setBalanceReaderForTests } from "./chain.js";

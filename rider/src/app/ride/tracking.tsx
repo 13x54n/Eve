@@ -5,7 +5,7 @@ import { ActivityIndicator, Alert, Linking, Pressable, Share, StyleSheet, Text, 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ExpoLinking from "expo-linking";
 import { cancelTrip, getTrip, getTripMessages, addTripStop, updateTripDestination, Trip } from "@/services/trips";
-import { confirmEscrow, getRefundQuote } from "@/services/wallet";
+import { confirmDeposit, confirmEscrow, getDepositQuote, getRefundQuote } from "@/services/wallet";
 import { useSendEscrowTx } from "@/lib/send-escrow";
 import { MapLocationPicker } from "@/components/map-location-picker";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
@@ -15,7 +15,7 @@ import { ActionButton } from "@/components/action-button";
 import { EveMap, EveMarker, EveRoute } from "@/components/map/eve-map";
 import { useDrivingRoute } from "@/components/map/use-driving-route";
 
-const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived", "trip:route_updated"];
+const STATUS_EVENTS = ["trip:assigned", "trip:started", "trip:completed", "trip:cancelled", "driver:arrived", "trip:route_updated", "escrow.deposit.confirmed"];
 const MAP_BOTTOM_INSET = 360;
 
 function haversineKm(
@@ -58,6 +58,9 @@ export default function TrackingScreen() {
         latitude: next.driver!.latitude!,
         longitude: next.driver!.longitude!,
       });
+    }
+    if (next.status === "ASSIGNED" && next.paymentStatus === "PENDING") {
+      return;
     }
     if (next.status === "COMPLETED") {
       router.replace({ pathname: "/ride/completed", params: { tripId: next.id } });
@@ -138,6 +141,22 @@ export default function TrackingScreen() {
       : { latitude: trip.dropoffLat, longitude: trip.dropoffLng }
     : null;
   const { coordinates: routeCoordinates, durationMin: routeDurationMin } = useDrivingRoute(driverLocation, destination);
+
+  async function payDeposit() {
+    if (!tripId || busy) return;
+    try {
+      setBusy(true);
+      const quote = await getDepositQuote(tripId);
+      const txHash = await sendEscrowTx(quote);
+      await confirmDeposit(tripId, txHash);
+      await refresh();
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      Alert.alert("Could not pay", message ?? (error instanceof Error ? error.message : "Please try again."));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function handleCancel() {
     if (!tripId) return;
@@ -233,6 +252,7 @@ export default function TrackingScreen() {
   const isCourier = trip.rideType === "COURIER";
   const isRecipient = trip.viewerRole === "recipient";
   const canManage = trip.canManage !== false;
+  const needsPayment = trip.status === "ASSIGNED" && trip.paymentStatus === "PENDING";
   const headingToPickup = trip.status === "ASSIGNED";
   const driverName = trip.driver?.user?.name ?? (trip.status === "SEARCHING" ? "Finding a driver" : "Your driver");
   const vehicleLabel = trip.vehicle
@@ -243,7 +263,9 @@ export default function TrackingScreen() {
   const plate = trip.vehicle?.plateNumber;
   const stageLabel = trip.status === "SEARCHING"
     ? (isCourier ? "Finding a courier driver" : "Finding your driver")
-    : headingToPickup
+    : needsPayment
+      ? "Lock fare to continue"
+      : headingToPickup
       ? (isCourier ? "Pickup package" : "Meet at pickup")
       : (isCourier ? `Delivering to ${trip.recipientName ?? "recipient"}` : "On the way to dropoff");
   const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
@@ -431,6 +453,17 @@ export default function TrackingScreen() {
             </View>
           ) : null}
 
+          {canManage && needsPayment ? (
+            <ActionButton
+              style={styles.pay}
+              textStyle={styles.payText}
+              label="Pay with USDC"
+              loadingLabel="Paying..."
+              loading={busy}
+              onPress={() => void payDeposit()}
+            />
+          ) : null}
+
           {canManage && (trip.status === "ASSIGNED" || trip.status === "ONGOING") ? (
             <ActionButton
               style={styles.cancel}
@@ -581,6 +614,8 @@ const styles = StyleSheet.create({
   routeCopy: { flex: 1, minWidth: 0, justifyContent: "space-between", gap: 14 },
   addressDot: { width: 8, height: 8, borderRadius: 4 },
   addressText: { color: Brand.text, fontSize: 13 },
+  pay: { alignItems: "center", marginTop: 12, minHeight: 44, paddingVertical: 12, backgroundColor: Brand.accent },
+  payText: { color: "#FFFFFF", fontWeight: "700", fontSize: 14 },
   cancel: { alignItems: "center", marginTop: 8, minHeight: 44, paddingVertical: 8, backgroundColor: Brand.danger },
   routeActions: { flexDirection: "row", gap: 8, marginTop: 12 },
   routeAction: {

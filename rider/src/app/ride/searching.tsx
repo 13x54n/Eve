@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { acceptOffer, cancelTrip, getTrip, Trip } from "@/services/trips";
-import { confirmDeposit, confirmEscrow } from "@/services/wallet";
+import { confirmDeposit, confirmEscrow, getDepositQuote } from "@/services/wallet";
 import { useSendEscrowDeposit, useSendEscrowTx } from "@/lib/send-escrow";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useRideSession } from "@/context/ride-session";
@@ -30,7 +30,7 @@ export default function SearchingScreen() {
         if (!mounted) return;
         setLoadError(false);
         setTrip(next);
-        if (next.status === "ASSIGNED" || next.status === "ONGOING") {
+        if (next.status === "ONGOING" || (next.status === "ASSIGNED" && next.paymentStatus === "ESCROWED")) {
           router.replace({ pathname: "/ride/tracking", params: { tripId } });
         } else if (next.status === "CANCELLED" || next.status === "COMPLETED") {
           router.replace("/(tabs)/home");
@@ -44,13 +44,30 @@ export default function SearchingScreen() {
     void refresh(true);
     const remove = addSocketListener((event) => {
       if (!mounted) return;
-      if (["offer:created", "trip:assigned", "trip:cancelled"].includes(event)) void refresh();
+      if (["offer:created", "trip:assigned", "trip:cancelled", "escrow.deposit.confirmed"].includes(event)) void refresh();
     });
     const timer = setInterval(() => void refresh(), 3000);
     return () => { mounted = false; clearInterval(timer); remove(); };
   }, [tripId]);
 
   const offers = trip?.offers?.filter((offer) => offer.status === "PENDING") ?? [];
+  const needsPayment = trip?.status === "ASSIGNED" && trip.paymentStatus === "PENDING";
+
+  async function payDeposit() {
+    if (!tripId || acceptingId) return;
+    try {
+      setAcceptingId("deposit");
+      const quote = await getDepositQuote(tripId);
+      const txHash = await sendEscrow(quote);
+      await confirmDeposit(tripId, txHash);
+      router.replace({ pathname: "/ride/tracking", params: { tripId } });
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      Alert.alert("Could not pay", message ?? (error instanceof Error ? error.message : "Please try again."));
+    } finally {
+      setAcceptingId(null);
+    }
+  }
 
   async function chooseOffer(offerId: string) {
     if (!tripId || acceptingId) return;
@@ -122,14 +139,20 @@ export default function SearchingScreen() {
           </View>
         </View>
       </View>
-      <Text style={styles.eyebrow}>{offers.length ? "DRIVERS AVAILABLE" : "JUST A MOMENT"}</Text>
+      <Text style={styles.eyebrow}>
+        {needsPayment ? "PAYMENT REQUIRED" : offers.length ? "DRIVERS AVAILABLE" : "JUST A MOMENT"}
+      </Text>
       <Text style={styles.title}>
-        {trip?.rideType === "COURIER"
+        {needsPayment
+          ? "Lock the fare to continue"
+          : trip?.rideType === "COURIER"
           ? (offers.length ? "Choose a courier driver" : "Finding a courier driver")
           : (offers.length ? "Choose your offer" : "Finding your driver")}
       </Text>
       <Text style={styles.subtitle}>
-        {trip?.rideType === "COURIER"
+        {needsPayment
+          ? "Your driver is assigned. Confirm USDC escrow so they can start."
+          : trip?.rideType === "COURIER"
           ? (offers.length ? "Pick who will pick up and deliver the package." : `Sending to ${trip.recipientName ?? "the recipient"}.`)
           : (offers.length ? "Compare prices and arrival times." : "Matching you with a nearby driver.")}
       </Text>
@@ -137,8 +160,19 @@ export default function SearchingScreen() {
       {loadError && !trip ? (
         <Text style={styles.subtitle}>Could not refresh offers. Retrying…</Text>
       ) : null}
+      {needsPayment ? (
+        <ActionButton
+          style={styles.pay}
+          textStyle={styles.payText}
+          label="Pay with USDC"
+          loadingLabel="Paying..."
+          loading={acceptingId === "deposit"}
+          disabled={acceptingId !== null}
+          onPress={() => void payDeposit()}
+        />
+      ) : null}
       <View style={styles.offers}>
-        {offers.map((offer) => (
+        {offers.map((offer) => {
           <View style={styles.offer} key={offer.id}>
             <View style={styles.offerCopy}>
               <Text style={styles.driver}>{offer.driver?.user.name ?? "Nearby driver"}</Text>
@@ -189,6 +223,8 @@ const styles = StyleSheet.create({
   fare: { marginHorizontal: 10, color: "#111827", fontSize: 18, fontWeight: "800" },
   accept: { paddingVertical: 9, paddingHorizontal: 12, borderRadius: 9, backgroundColor: "#2E4ED5" },
   acceptText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
+  pay: { width: "100%", marginTop: 24, alignItems: "center", padding: 16, borderRadius: 12, backgroundColor: "#2E4ED5" },
+  payText: { color: "#FFFFFF", fontWeight: "700" },
   cancel: { position: "absolute", bottom: 38, left: 24, right: 24, alignItems: "center", padding: 16, borderWidth: 1, borderColor: "#FECACA", borderRadius: 12 },
   cancelText: { color: "#B91C1C", fontWeight: "700" },
 });

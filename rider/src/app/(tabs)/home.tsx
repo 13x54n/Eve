@@ -11,7 +11,6 @@ import {
   Text,
   TextInput,
   View,
-  FlatList,
 } from "react-native";
 import { Image } from "expo-image";
 import { searchAddresses, AddressSuggestion, geocodeSuggestion } from "@/services/location";
@@ -259,12 +258,10 @@ export default function HomeScreen() {
               <Text style={styles.mapChoiceText}>Choose on map</Text>
             </Pressable>
           </View>
-          <FlatList
-            data={suggestions}
-            keyExtractor={(i) => i.display_name}
-            style={{ maxHeight: 220 }}
-            renderItem={({ item }) => (
+          <View style={{ maxHeight: 220 }}>
+            {suggestions.map((item) => (
               <Pressable
+                key={item.display_name}
                 style={styles.suggestionRow}
                 onPress={() => void handleSelectSuggestion(item)}
               >
@@ -281,13 +278,11 @@ export default function HomeScreen() {
                 </View>
                 <Feather name="chevron-right" size={18} color="#9CA3AF" />
               </Pressable>
-            )}
-            ListEmptyComponent={
-              destination ? (
-                <Text style={{ padding: 10, color: "#6B7280" }}>No results found</Text>
-              ) : null
-            }
-          />
+            ))}
+            {suggestions.length === 0 && destination ? (
+              <Text style={{ padding: 10, color: "#6B7280" }}>No results found</Text>
+            ) : null}
+          </View>
         </View>
       ) : null}
 

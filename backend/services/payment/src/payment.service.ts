@@ -138,6 +138,85 @@ function expectedFrom(trip: TripWithParties, action: EscrowAction) {
   return requireDriverWallet(trip);
 }
 
+function logEscrowApply(
+  action: string,
+  tripId: string,
+  txHash: string,
+  from: string,
+  to: string,
+) {
+  console.info("[payment] escrow apply", { action, tripId, txHash, from, to });
+}
+
+async function persistDeposit(trip: TripWithParties, txHash: string) {
+  if (trip.paymentStatus === "ESCROWED" && trip.escrowDepositTx === txHash) {
+    return trip;
+  }
+  if (trip.paymentStatus !== "PENDING") {
+    return trip;
+  }
+  const previous = trip.paymentStatus;
+  const updated = await prisma.trip.update({
+    where: { id: trip.id },
+    data: {
+      paymentStatus: "ESCROWED",
+      paymentMethod: "WALLET",
+      escrowDepositTx: txHash,
+    },
+  });
+  const existingCharge = await prisma.ledgerEntry.findFirst({
+    where: { tripId: trip.id, type: "CHARGE" },
+  });
+  if (!existingCharge) {
+    await prisma.ledgerEntry.create({
+      data: {
+        tripId: trip.id,
+        userId: trip.rider.userId,
+        type: "CHARGE",
+        status: "PENDING",
+        method: "WALLET",
+        amount: trip.fareTotal,
+        providerRef: txHash,
+        note: `USDC escrowed on Arc Testnet for trip ${trip.bookingCode}`,
+      },
+    });
+  }
+  logEscrowApply("deposit", trip.id, txHash, previous, "ESCROWED");
+  return { ...trip, ...updated };
+}
+
+async function persistSettlement(trip: TripWithParties, txHash: string, settleFromMs?: number) {
+  if (trip.escrowStartTx === txHash && trip.paymentStatus === "SETTLING") {
+    return trip;
+  }
+  const canStart =
+    trip.paymentStatus === "ESCROWED" ||
+    (trip.paymentStatus === "SETTLING" && !trip.escrowStartTx);
+  if (!canStart) {
+    return trip;
+  }
+  const previous = trip.paymentStatus;
+  const settleFrom = settleFromMs
+    ? new Date(settleFromMs)
+    : new Date(escrowNowMs() + disputeWindowMs());
+  const updated = await prisma.trip.update({
+    where: { id: trip.id },
+    data: {
+      paymentStatus: "SETTLING",
+      escrowStartTx: txHash,
+      escrowSettleFrom: settleFrom,
+    },
+  });
+  await scheduleEscrowFinalize(trip.id, settleFrom.getTime());
+  logEscrowApply("startSettlement", trip.id, txHash, previous, "SETTLING");
+  return {
+    ...trip,
+    ...updated,
+    escrowSettleFrom: settleFrom,
+    escrowStartTx: txHash,
+  };
+}
+
 function inferAction(trip: TripWithParties, userId: string): EscrowAction {
   const isRider = trip.rider.userId === userId;
   const isDriver = trip.driver?.userId === userId;
@@ -204,26 +283,7 @@ export async function confirmTripEscrow(
   });
 
   if (confirmed.action === "deposit") {
-    const updated = await prisma.trip.update({
-      where: { id: trip.id },
-      data: {
-        paymentStatus: "ESCROWED",
-        paymentMethod: "WALLET",
-        escrowDepositTx: confirmed.txHash,
-      },
-    });
-    await prisma.ledgerEntry.create({
-      data: {
-        tripId: trip.id,
-        userId,
-        type: "CHARGE",
-        status: "PENDING",
-        method: "WALLET",
-        amount: trip.fareTotal,
-        providerRef: confirmed.txHash,
-        note: `USDC escrowed on Arc Testnet for trip ${trip.bookingCode}`,
-      },
-    });
+    const updated = await persistDeposit(trip, confirmed.txHash);
     await publishPaymentEvent("escrow.deposit.confirmed", trip.id, {
       txHash: confirmed.txHash,
     });
@@ -231,30 +291,12 @@ export async function confirmTripEscrow(
   }
 
   if (confirmed.action === "startSettlement") {
-    const settleFrom = confirmed.settleFromMs
-      ? new Date(confirmed.settleFromMs)
-      : new Date(escrowNowMs() + disputeWindowMs());
-    const updated = await prisma.trip.update({
-      where: { id: trip.id },
-      data: {
-        paymentStatus: "SETTLING",
-        escrowStartTx: confirmed.txHash,
-        escrowSettleFrom: settleFrom,
-      },
-    });
-    await scheduleEscrowFinalize(trip.id, settleFrom.getTime());
+    const updated = await persistSettlement(trip, confirmed.txHash, confirmed.settleFromMs);
     await publishPaymentEvent("escrow.settlement.started", trip.id, {
       txHash: confirmed.txHash,
-      settleFromMs: settleFrom.getTime(),
+      settleFromMs: updated.escrowSettleFrom?.getTime() ?? escrowNowMs() + disputeWindowMs(),
     });
-    const latest = await prisma.trip.findUnique({ where: { id: trip.id } });
-    return snapshot({
-      ...trip,
-      ...updated,
-      ...latest,
-      escrowSettleFrom: latest?.escrowSettleFrom ?? settleFrom,
-      escrowStartTx: confirmed.txHash,
-    });
+    return snapshot({ ...trip, ...updated });
   }
 
   if (confirmed.action === "dispute") {
@@ -449,6 +491,26 @@ export async function onEscrowDisputed(tripId: string, disputeTx: string | null)
   };
   if (process.env.VITEST) await run();
   else void run().catch(() => undefined);
+}
+
+export async function applyChainDeposit(tripId: string, txHash: string) {
+  const hash = txHash.trim();
+  if (!hash) return;
+  const trip = await loadTrip(tripId);
+  if (!trip) return;
+  await persistDeposit(trip, hash);
+}
+
+export async function applyChainSettlement(
+  tripId: string,
+  txHash: string,
+  settleFromMs?: number,
+) {
+  const hash = txHash.trim();
+  if (!hash) return;
+  const trip = await loadTrip(tripId);
+  if (!trip) return;
+  await persistSettlement(trip, hash, settleFromMs);
 }
 
 export async function applyChainRelease(tripId: string, txHash: string) {

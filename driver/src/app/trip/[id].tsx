@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams, usePathname, router } from 'expo-router';
+import type { AxiosError } from 'axios';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import {
@@ -107,6 +108,10 @@ export default function ActiveTripScreen() {
       .then(() => { if (id) subscribeTrip(id); })
       .catch(() => { /* GPS still updates locally; rider may lag until reconnect */ });
     const removeSocket = addDriverSocketListener((event, payload) => {
+      if (event === 'escrow.deposit.confirmed') {
+        void refresh();
+        return;
+      }
       if (event === 'trip:route_updated') {
         const next = payload as { id?: string; fareTotal?: number; dropoffAddress?: string };
         if (next.id && next.id !== id) return;
@@ -180,12 +185,26 @@ export default function ActiveTripScreen() {
 
   async function handleStart() {
     if (!trip) return;
+    if (trip.paymentStatus !== 'ESCROWED') {
+      Alert.alert('Waiting for payment', 'The rider must lock the fare in escrow before the trip can start.');
+      void refresh();
+      return;
+    }
     try {
       setBusy(true);
       const updated = await startTrip(trip.id);
       setTrip(updated);
-    } catch {
-      Alert.alert('Could not start trip', 'Please try again.');
+    } catch (error) {
+      const responseError = error as AxiosError<{ message?: string }>;
+      if (responseError.response?.status === 409) {
+        Alert.alert(
+          'Trip is not ready',
+          responseError.response.data?.message ?? 'The rider must lock the fare in escrow before the trip can start.',
+        );
+        void refresh();
+      } else {
+        Alert.alert('Could not start trip', 'Please try again.');
+      }
     } finally {
       setBusy(false);
     }
@@ -276,13 +295,16 @@ export default function ActiveTripScreen() {
   }
 
   const isCourier = trip.rideType === 'COURIER';
+  const waitingForEscrow = trip.paymentStatus !== 'ESCROWED';
   const passengerName = !isCourier ? trip.recipientName : null;
   const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
   const stops = trip.stops ?? [];
   const stageLabel = isHeadingToPickup
     ? (isCourier ? 'Pickup package' : 'Heading to pickup')
     : trip.status === 'ASSIGNED'
-      ? (isCourier ? 'Package collected — ready to deliver' : passengerName ? `Arrived — waiting for ${passengerName}` : 'Arrived — waiting for rider')
+      ? waitingForEscrow
+        ? 'Waiting for payment confirmation'
+        : (isCourier ? 'Package collected — ready to deliver' : passengerName ? `Arrived — waiting for ${passengerName}` : 'Arrived — waiting for rider')
       : (isCourier ? `Deliver to ${trip.recipientName ?? 'recipient'}` : passengerName ? `Drop off ${passengerName}` : 'Heading to destination');
   const pickup = { latitude: trip.pickupLat, longitude: trip.pickupLng };
   const dropoff = { latitude: trip.dropoffLat, longitude: trip.dropoffLng };
@@ -428,9 +450,10 @@ export default function ActiveTripScreen() {
           <ActionButton
             style={styles.primaryButton}
             textStyle={styles.primaryButtonText}
-            label={isCourier ? 'Start delivery' : 'Start trip'}
+            label={waitingForEscrow ? 'Waiting for payment' : isCourier ? 'Start delivery' : 'Start trip'}
             loadingLabel="Starting..."
             loading={busy}
+            disabled={waitingForEscrow}
             onPress={() => void handleStart()}
           />
         ) : (

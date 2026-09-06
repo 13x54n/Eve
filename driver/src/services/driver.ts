@@ -266,6 +266,7 @@ export type ActiveTrip = {
   fareTotal: number;
   distanceKm: number;
   durationMin: number;
+  paymentStatus: string;
   rider: { user: { name: string; phone: string | null } };
   rideType?: string;
   recipientName?: string | null;
