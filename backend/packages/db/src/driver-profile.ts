@@ -7,6 +7,7 @@ export function sanitizeDriverUser(user: {
   email: string | null;
   phone: string | null;
   ethereumWallet?: string | null;
+  ethereumWalletId?: string | null;
   solanaWallet?: string | null;
   role: string;
   city: string | null;
@@ -20,6 +21,7 @@ export function sanitizeDriverUser(user: {
     email: user.email,
     phone: user.phone,
     ethereumWallet: user.ethereumWallet ?? null,
+    ethereumWalletId: user.ethereumWalletId ?? null,
     solanaWallet: user.solanaWallet ?? null,
     role: user.role,
     city: user.city,

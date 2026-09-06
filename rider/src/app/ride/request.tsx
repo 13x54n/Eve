@@ -416,15 +416,15 @@ export default function RequestRideScreen() {
       <View style={styles.paymentInfoCard}>
         <View style={styles.paymentInfoHeader}>
           <Feather name="info" size={20} color="#2E4ED5" />
-          <Text style={styles.paymentInfoTitle}>Payment: Cash Only</Text>
+          <Text style={styles.paymentInfoTitle}>Payment: USDC on Arc Testnet</Text>
         </View>
         <Text style={styles.paymentInfoText}>
-          Pay your driver directly in cash at the end of your trip. The suggested fare will be shown when a driver accepts.
+          When you accept a driver, you sign one Privy transaction that locks the fare in escrow. Completing the trip pays the driver. Cancelling returns the USDC.
         </Text>
         <View style={styles.paymentInfoNote}>
           <Feather name="dollar-sign" size={14} color="#6B7280" />
           <Text style={styles.paymentInfoNoteText}>
-            Digital payment methods coming soon
+            Native USDC · Arc Testnet
           </Text>
         </View>
       </View>

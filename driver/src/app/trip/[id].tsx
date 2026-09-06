@@ -332,7 +332,7 @@ export default function ActiveTripScreen() {
                 {isCourier ? `Deliver to ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}
               </Text>
             ) : null}
-            <Text style={styles.riderFare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
+            <Text style={styles.riderFare}>USDC · ${Number(trip.fareTotal).toFixed(2)}</Text>
           </View>
           {trip.recipientPhone ? (
             <TouchableOpacity

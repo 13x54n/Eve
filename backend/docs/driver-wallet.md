@@ -1,25 +1,25 @@
-# Driver Eve Wallet
+# Driver / rider Arc Testnet payments
 
-Trip **matched fares stay cash / off-platform**. They increment `DriverProfile.earningsTotal` only.
+Trip fares lock **USDC on Circle Arc Testnet** (`5042002`). The rider signs **one** Privy transaction that deposits native `msg.value` into `RideEscrow`. Completing a trip releases to the driver; cancel refunds the rider. Platform credits (`walletBalance`) cash out with an ERC-20 USDC transfer.
 
-Eve Wallet is a separate USD ledger (`DriverProfile.walletBalance`) for **platform credits** (admin bonuses). Drivers cash out to the **Privy embedded Ethereum wallet** created at login (`User.ethereumWallet`).
+Per [`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md):
+
+- Wallets show a **single** USDC balance: ERC-20 `balanceOf` at `0x3600000000000000000000000000000000000000` (6 decimals).
+- Escrow `value` is **18-decimal native** units of the same asset (not a second token).
+- Do not add native `eth_getBalance` to the ERC-20 balance.
 
 ## Flow
 
-1. Admin credits the driver: `POST /api/admin/drivers/:profileId/wallet/credit` (`payments:payout`).
-2. Driver app shows balance on the earnings tab and calls `GET /api/driver/wallet`.
-3. Cash-out: `POST /api/driver/wallet/withdraw` `{ amount, idempotencyKey? }`.
-4. Ride service debits `walletBalance` and writes `LedgerEntry` type `WALLET_WITHDRAW`.
-5. If `TREASURY_PRIVATE_KEY` is set, `@eve/shared` sends **native USDC on Circle Arc Testnet** (chain ID `5042002`, RPC `https://rpc.testnet.arc.io`) via viem to `ethereumWallet`. `maxFeePerGas` is at least 20 Gwei. Otherwise the row stays `PENDING`.
-6. Admin `POST /api/admin/payouts` `{ userId, amount, note? }` also debits the ledger and uses the same treasury path when configured.
+1. Rider creates a trip (`paymentMethod: WALLET`).
+2. Rider accepts an offer. Payment service returns deposit calldata (`to`, `value`, `data`).
+3. App switches to Arc Testnet (`5042002`) if needed, sends `eth_sendTransaction` via the Privy embedded wallet, then `POST /api/payment/trips/:id/confirm`.
+4. `paymentStatus` becomes `ESCROWED`. Driver `start` / `complete` require this.
+5. Complete: payment service operator calls `release`. Cancel: `refund`.
 
-Solana addresses are stored and shown; payouts in this version are Ethereum only.
+Deploy the contract with Foundry: [backend/contracts/README.md](contracts/README.md) and [Deploy on Arc](https://docs.arc.io/arc/tutorials/deploy-on-arc).
 
-## Env (backend)
+## Env
 
-See `backend/.env.example`: `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL` (defaults to Circle Arc Testnet), `PAYOUT_CHAIN_ID` (default `5042002`). Fund the treasury at [faucet.circle.com](https://faucet.circle.com). Optional `PAYOUT_TOKEN_ADDRESS` for ERC-20 instead of native USDC.
+`PAYMENT_PORT=4006`, `ESCROW_CONTRACT_ADDRESS`, `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`. Apps need `EXPO_PUBLIC_PAYMENT_URL` (e.g. `http://localhost:4006/api`).
 
-## Related
-
-- [auth.md](auth.md) — Privy session and wallet address persistence
-- Driver UI: `driver/src/app/(tabs)/earnings/index.tsx`
+Admin credits: `POST /api/admin/drivers/:profileId/wallet/credit`. Driver cash-out: `POST /api/driver/wallet/withdraw` on the **payment** service.

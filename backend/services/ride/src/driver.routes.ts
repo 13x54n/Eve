@@ -24,8 +24,6 @@ import {
   trips,
   acceptDispatch,
   declineDispatch,
-  wallet,
-  withdrawWallet,
 } from "./driver.controller.js";
 import { requireAuth, requireRole } from "@eve/http";
 
@@ -64,8 +62,6 @@ router.post("/trips/:id/start", startTrip);
 router.post("/trips/:id/complete", completeTrip);
 router.post("/trips/:id/cancel", cancelTrip);
 router.get("/earnings", earnings);
-router.get("/wallet", wallet);
-router.post("/wallet/withdraw", withdrawWallet);
 router.get("/support", listSupport);
 router.post("/support", createSupport);
 router.get("/support/:id", getSupport);

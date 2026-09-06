@@ -15,12 +15,13 @@ Detailed documentation for Eve's microservices architecture.
 
 ## Overview
 
-Eve's backend consists of five Node services:
+Eve's backend consists of six Node services:
 - **Auth**: Authentication and user management
 - **Location**: GPS tracking and geospatial matching (gRPC)
 - **Ride**: Trip lifecycle, offers, and driver presence HTTP
 - **Notify**: Real-time events via WebSocket
 - **Admin**: Staff console API (`/api/admin`)
+- **Payment**: Arc Testnet USDC wallets, ride escrow, and treasury cash-out
 
 See [services-ports.md](services-ports.md) for ports. Clients call services directly (no HTTP gateway).
 

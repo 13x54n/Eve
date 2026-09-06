@@ -56,7 +56,6 @@ export default function ProfileScreen() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [ethereumWallet, setEthereumWallet] = useState("");
-  const [solanaWallet, setSolanaWallet] = useState("");
   const [memberSince, setMemberSince] = useState("");
   const [signingOut, setSigningOut] = useState(false);
 
@@ -67,7 +66,6 @@ export default function ProfileScreen() {
       setEmail(sessionUser.email ?? "");
       setPhone(sessionUser.phone ?? "");
       setEthereumWallet(sessionUser.ethereumWallet ?? "");
-      setSolanaWallet(sessionUser.solanaWallet ?? "");
       setMemberSince(new Date(sessionUser.createdAt).getFullYear().toString());
     } catch {
       /* keep empty state on failure */
@@ -171,27 +169,13 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
         <SettingsSection
-          title="Embedded wallets"
+          title="Wallet"
           rows={[
             {
               icon: "credit-card",
-              title: "Ethereum",
-              detail: ethereumWallet ? truncateWalletAddress(ethereumWallet) : "Created on sign-in",
-              onPress: () =>
-                Alert.alert(
-                  "Ethereum wallet",
-                  ethereumWallet || "Your Privy embedded Ethereum wallet is created when you sign in.",
-                ),
-            },
-            {
-              icon: "credit-card",
-              title: "Solana",
-              detail: solanaWallet ? truncateWalletAddress(solanaWallet) : "Created on sign-in",
-              onPress: () =>
-                Alert.alert(
-                  "Solana wallet",
-                  solanaWallet || "Your Privy embedded Solana wallet is created when you sign in.",
-                ),
+              title: "Arc Testnet wallet",
+              detail: ethereumWallet ? truncateWalletAddress(ethereumWallet) : "USDC on Privy",
+              onPress: () => router.push("/profile/wallet" as Href),
             },
           ]}
         />

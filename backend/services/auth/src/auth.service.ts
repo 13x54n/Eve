@@ -40,6 +40,7 @@ type UserRecord = {
   email: string | null;
   phone: string | null;
   ethereumWallet?: string | null;
+  ethereumWalletId?: string | null;
   solanaWallet?: string | null;
   role: UserRole;
   adminStaffRole?: AdminStaffRole | null;
@@ -63,6 +64,7 @@ export function sanitizeUser(user: UserRecord) {
     email: user.email,
     phone: user.phone,
     ethereumWallet: user.ethereumWallet ?? null,
+    ethereumWalletId: user.ethereumWalletId ?? null,
     solanaWallet: user.solanaWallet ?? null,
     role: user.role,
     adminStaffRole: staffRole,
@@ -503,6 +505,7 @@ async function createPrivyDriver(input: {
   phone?: string | null;
   privyDid: string;
   ethereumWallet?: string | null;
+  ethereumWalletId?: string | null;
   solanaWallet?: string | null;
 }) {
   return prisma.user.create({
@@ -512,6 +515,7 @@ async function createPrivyDriver(input: {
       phone: input.phone ?? null,
       privyDid: input.privyDid,
       ethereumWallet: input.ethereumWallet ?? null,
+      ethereumWalletId: input.ethereumWalletId ?? null,
       solanaWallet: input.solanaWallet ?? null,
       role: "DRIVER",
       accountStatus: "PENDING",
@@ -554,12 +558,13 @@ function sessionUser<T extends { role: string }>(user: T, role: "RIDER" | "DRIVE
 export async function exchangePrivySession(
   role: "RIDER" | "DRIVER",
   identityToken: string,
-  wallets?: { ethereumWallet?: string; solanaWallet?: string },
+  wallets?: { ethereumWallet?: string; solanaWallet?: string; ethereumWalletId?: string },
 ) {
   const claims = await verifyPrivyIdentityToken(identityToken);
   const email = claims.email?.trim().toLowerCase();
   const phone = claims.phone?.trim() || null;
   const ethereumWallet = claims.ethereumWallet ?? wallets?.ethereumWallet ?? null;
+  const ethereumWalletId = claims.ethereumWalletId ?? wallets?.ethereumWalletId ?? null;
   const solanaWallet = claims.solanaWallet ?? wallets?.solanaWallet ?? null;
 
   let user = await prisma.user.findUnique({ where: { privyDid: claims.privyDid } });
@@ -575,6 +580,7 @@ export async function exchangePrivySession(
           lastLoginAt: new Date(),
           ...(email && !byPhone.email ? { email } : {}),
           ...(ethereumWallet ? { ethereumWallet } : {}),
+          ...(ethereumWalletId ? { ethereumWalletId } : {}),
           ...(solanaWallet ? { solanaWallet } : {}),
         },
       });
@@ -592,6 +598,7 @@ export async function exchangePrivySession(
           lastLoginAt: new Date(),
           ...(phone && !byEmail.phone ? { phone } : {}),
           ...(ethereumWallet ? { ethereumWallet } : {}),
+          ...(ethereumWalletId ? { ethereumWalletId } : {}),
           ...(solanaWallet ? { solanaWallet } : {}),
         },
       });
@@ -626,6 +633,7 @@ export async function exchangePrivySession(
             phone,
             privyDid: claims.privyDid,
             ethereumWallet,
+            ethereumWalletId,
             solanaWallet,
           })
         : await prisma.user.create({
@@ -635,6 +643,7 @@ export async function exchangePrivySession(
               phone,
               privyDid: claims.privyDid,
               ethereumWallet,
+              ethereumWalletId,
               solanaWallet,
               role: "RIDER",
               riderProfile: { create: {} },
@@ -651,6 +660,9 @@ export async function exchangePrivySession(
         lastLoginAt: new Date(),
         ...(ethereumWallet && ethereumWallet !== user.ethereumWallet
           ? { ethereumWallet }
+          : {}),
+        ...(ethereumWalletId && ethereumWalletId !== user.ethereumWalletId
+          ? { ethereumWalletId }
           : {}),
         ...(solanaWallet && solanaWallet !== user.solanaWallet
           ? { solanaWallet }
@@ -669,6 +681,7 @@ export async function exchangePrivySession(
       user: sanitizeDriverUser({
         ...session,
         ethereumWallet: user.ethereumWallet,
+        ethereumWalletId: user.ethereumWalletId,
         solanaWallet: user.solanaWallet,
       }),
       driverProfile: fullProfile,

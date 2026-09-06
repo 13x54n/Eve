@@ -30,3 +30,7 @@ export function requireAuthBaseUrl(appLabel: "rider" | "driver"): string {
 export function requireWsUrl(appLabel: "rider" | "driver"): string {
   return requirePublicUrl("EXPO_PUBLIC_WS_URL", appLabel);
 }
+
+export function requirePaymentBaseUrl(appLabel: "rider" | "driver"): string {
+  return requirePublicUrl("EXPO_PUBLIC_PAYMENT_URL", appLabel);
+}

@@ -302,7 +302,7 @@ export default function TrackingScreen() {
                 {ratingLabel ? <Text style={styles.rating}>★ {ratingLabel}</Text> : null}
               </View>
               <Text style={styles.vehicle} numberOfLines={1}>{vehicleLabel}</Text>
-              {isRecipient ? null : <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>}
+              {isRecipient ? null : <Text style={styles.fare}>USDC · ${Number(trip.fareTotal).toFixed(2)}</Text>}
               {trip.recipientName ? (
                 <Text style={styles.fare}>
                   {isCourier ? `To ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}

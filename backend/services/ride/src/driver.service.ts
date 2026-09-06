@@ -8,6 +8,7 @@ import {
   syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
+import { refundTripEscrow, releaseTripEscrow } from "@eve/payment";
 import {
   expireTimedOutDispatches,
   refreshAcceptanceRate,
@@ -571,6 +572,10 @@ export async function startTrip(userId: string, tripId: string) {
     throw error;
   }
 
+  if (trip.paymentStatus !== "ESCROWED") {
+    fail("Wait for the rider to lock USDC in escrow", "ConflictError");
+  }
+
   const updated = await prisma.trip.update({
     where: { id: tripId },
     data: {
@@ -624,6 +629,12 @@ export async function completeTrip(
     throw error;
   }
 
+  if (trip.paymentStatus !== "ESCROWED") {
+    fail("Fare is not in escrow", "ConflictError");
+  }
+
+  const { txHash } = await releaseTripEscrow(tripId);
+
   const driverNetEarnings = Number(trip.fareTotal);
 
   const updatedTrip = await prisma.$transaction(async (tx) => {
@@ -649,17 +660,33 @@ export async function completeTrip(
       },
     });
 
-    await tx.ledgerEntry.create({
-      data: {
-        tripId: trip.id,
-        userId: profile.userId,
-        type: "CHARGE",
-        status: "COMPLETED",
-        method: trip.paymentMethod,
-        amount: trip.fareTotal,
-        note: `Matched fare recorded off-platform for trip ${trip.bookingCode}`,
-      },
+    const existingCharge = await tx.ledgerEntry.findFirst({
+      where: { tripId: trip.id, type: "CHARGE" },
     });
+    if (existingCharge) {
+      await tx.ledgerEntry.update({
+        where: { id: existingCharge.id },
+        data: {
+          status: "COMPLETED",
+          providerRef: txHash,
+          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
+        },
+      });
+    }
+    if (!existingCharge || existingCharge.userId !== profile.userId) {
+      await tx.ledgerEntry.create({
+        data: {
+          tripId: trip.id,
+          userId: profile.userId,
+          type: "CHARGE",
+          status: "COMPLETED",
+          method: trip.paymentMethod,
+          amount: trip.fareTotal,
+          providerRef: txHash,
+          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
+        },
+      });
+    }
 
     return completed;
   });
@@ -713,6 +740,10 @@ export async function cancelTrip(
     const error = new Error("Trip not found or not assigned to you");
     error.name = "NotFoundError";
     throw error;
+  }
+
+  if (trip.paymentStatus === "ESCROWED") {
+    await refundTripEscrow(tripId);
   }
 
   const cancelledTrip = await prisma.trip.update({

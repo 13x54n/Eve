@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import request from "supertest";
 import type { Test } from "supertest";
 import app from "./test-app.js";
@@ -129,7 +130,22 @@ export function goOnline(token: string, location: { lat: number; lng: number } =
 export async function spawnRider(options: { name?: string; phone?: string } = {}) {
   const { email, request: req } = registerRider(options.name, options.phone);
   const res = await req.expect(201);
-  return { email, token: res.body.accessToken as string, user: res.body.user };
+  const userId = res.body.user.id as string;
+  const ethereumWallet = testEthAddress(userId);
+  await prisma.user.update({ where: { id: userId }, data: { ethereumWallet } });
+  return { email, token: res.body.accessToken as string, user: { ...res.body.user, ethereumWallet } };
+}
+
+export function testEthAddress(seed: string) {
+  return `0x${createHash("sha256").update(seed).digest("hex").slice(0, 40)}`;
+}
+
+export async function confirmEscrow(token: string, tripId: string) {
+  const txHash = `0x${createHash("sha256").update(`${tripId}:${Date.now()}:${Math.random()}`).digest("hex")}`;
+  return request(app)
+    .post(`/api/payment/trips/${tripId}/confirm`)
+    .set("Authorization", `Bearer ${token}`)
+    .send({ txHash });
 }
 
 export async function spawnApprovedOnlineDriver(
@@ -152,7 +168,10 @@ export async function spawnApprovedOnlineDriver(
     await approveDriver(profileId);
   }
   await goOnline(token, options.location ?? PICKUP).expect(200);
-  return { email, token, profileId, user: res.body.user };
+  const userId = res.body.user.id as string;
+  const ethereumWallet = testEthAddress(`driver:${userId}`);
+  await prisma.user.update({ where: { id: userId }, data: { ethereumWallet } });
+  return { email, token, profileId, user: { ...res.body.user, ethereumWallet } };
 }
 
 export async function cleanupMarketplaceUsers(emails: string[] = trackedEmails) {

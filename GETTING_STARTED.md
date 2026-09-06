@@ -384,6 +384,7 @@ cp .env.example .env
 # Edit .env and set:
 # EXPO_PUBLIC_AUTH_URL=http://<YOUR_LAN_IP>:4001/api
 # EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:4003/api
+# EXPO_PUBLIC_PAYMENT_URL=http://<YOUR_LAN_IP>:4006/api
 # EXPO_PUBLIC_WS_URL=http://<YOUR_LAN_IP>:4004
 # EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 # EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id

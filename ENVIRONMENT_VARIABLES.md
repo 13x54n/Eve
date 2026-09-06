@@ -169,18 +169,20 @@ IMAGEKIT_DRIVER_FOLDER=/eve/drivers
 
 ### Driver Eve Wallet (optional)
 
-Platform credits cash out to the driver's Privy Ethereum address. Trip fares are not sent on-chain.
+Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC (6 decimals at `0x3600…0000`). Trip fares lock in RideEscrow as native Arc USDC (18-decimal `msg.value`) — the same asset, not a second token.
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
+| `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
+| `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow | — | For live chain |
 | `TREASURY_PRIVATE_KEY` | Hex key that pays drivers | — | For on-chain send |
 | `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
 | `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
 | `PAYOUT_CHAIN_NAME` | Display name | `Arc Testnet` | No |
 | `PAYOUT_EXPLORER_TX_URL` | Explorer prefix | `https://testnet.arcscan.app/tx/` | No |
-| `PAYOUT_TOKEN_ADDRESS` | ERC-20; empty = native USDC send | — | No |
+| `PAYOUT_TOKEN_ADDRESS` | ERC-20 USDC; `native` = native send | `0x3600000000000000000000000000000000000000` | No |
 | `PAYOUT_TOKEN_SYMBOL` | Display symbol | `USDC` | No |
-| `PAYOUT_TOKEN_DECIMALS` | Token decimals | `6` | No |
+| `PAYOUT_TOKEN_DECIMALS` | ERC-20 USDC view decimals | `6` | No |
 | `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 USDC | `1` | No |
 
 Treasury gas and payout value are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
@@ -254,6 +256,7 @@ CORS_ORIGINS=https://admin.example.com
 |----------|-------------|---------|----------|
 | `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | `http://192.168.1.100:4001/api` | ✅ Yes |
 | `EXPO_PUBLIC_API_URL` | Ride HTTP base | `http://192.168.1.100:4003/api` | ✅ Yes |
+| `EXPO_PUBLIC_PAYMENT_URL` | Payment HTTP base | `http://192.168.1.100:4006/api` | ✅ Yes |
 | `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | `http://192.168.1.100:4004` | ✅ Yes |
 | `EXPO_PUBLIC_PRIVY_APP_ID` | Privy application ID | `clxxxxxxxx` | ✅ Yes |
 | `EXPO_PUBLIC_PRIVY_CLIENT_ID` | Privy app client ID | `client_xxx` | ✅ Yes |

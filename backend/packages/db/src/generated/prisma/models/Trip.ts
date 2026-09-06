@@ -78,6 +78,9 @@ export type TripMinAggregateOutputType = {
   fareTotal: runtime.Decimal | null
   paymentStatus: $Enums.LedgerStatus | null
   paymentMethod: $Enums.PaymentMethodKind | null
+  escrowDepositTx: string | null
+  escrowReleaseTx: string | null
+  escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
   startedAt: Date | null
@@ -116,6 +119,9 @@ export type TripMaxAggregateOutputType = {
   fareTotal: runtime.Decimal | null
   paymentStatus: $Enums.LedgerStatus | null
   paymentMethod: $Enums.PaymentMethodKind | null
+  escrowDepositTx: string | null
+  escrowReleaseTx: string | null
+  escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
   startedAt: Date | null
@@ -154,6 +160,9 @@ export type TripCountAggregateOutputType = {
   fareTotal: number
   paymentStatus: number
   paymentMethod: number
+  escrowDepositTx: number
+  escrowReleaseTx: number
+  escrowRefundTx: number
   cancellationReason: number
   scheduledAt: number
   startedAt: number
@@ -218,6 +227,9 @@ export type TripMinAggregateInputType = {
   fareTotal?: true
   paymentStatus?: true
   paymentMethod?: true
+  escrowDepositTx?: true
+  escrowReleaseTx?: true
+  escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
   startedAt?: true
@@ -256,6 +268,9 @@ export type TripMaxAggregateInputType = {
   fareTotal?: true
   paymentStatus?: true
   paymentMethod?: true
+  escrowDepositTx?: true
+  escrowReleaseTx?: true
+  escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
   startedAt?: true
@@ -294,6 +309,9 @@ export type TripCountAggregateInputType = {
   fareTotal?: true
   paymentStatus?: true
   paymentMethod?: true
+  escrowDepositTx?: true
+  escrowReleaseTx?: true
+  escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
   startedAt?: true
@@ -419,6 +437,9 @@ export type TripGroupByOutputType = {
   fareTotal: runtime.Decimal
   paymentStatus: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx: string | null
+  escrowReleaseTx: string | null
+  escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
   startedAt: Date | null
@@ -480,6 +501,9 @@ export type TripWhereInput = {
   fareTotal?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
@@ -530,6 +554,9 @@ export type TripOrderByWithRelationInput = {
   fareTotal?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
+  escrowDepositTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowReleaseTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -583,6 +610,9 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   fareTotal?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
@@ -633,6 +663,9 @@ export type TripOrderByWithAggregationInput = {
   fareTotal?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
+  escrowDepositTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowReleaseTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -679,6 +712,9 @@ export type TripScalarWhereWithAggregatesInput = {
   fareTotal?: Prisma.DecimalWithAggregatesFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusWithAggregatesFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindWithAggregatesFilter<"Trip"> | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  escrowReleaseTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  escrowRefundTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
@@ -713,6 +749,9 @@ export type TripCreateInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -763,6 +802,9 @@ export type TripUncheckedCreateInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -805,6 +847,9 @@ export type TripUpdateInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -855,6 +900,9 @@ export type TripUncheckedUpdateInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -901,6 +949,9 @@ export type TripCreateManyInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -935,6 +986,9 @@ export type TripUpdateManyMutationInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -973,6 +1027,9 @@ export type TripUncheckedUpdateManyInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1021,6 +1078,9 @@ export type TripCountOrderByAggregateInput = {
   fareTotal?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
+  escrowDepositTx?: Prisma.SortOrder
+  escrowReleaseTx?: Prisma.SortOrder
+  escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
@@ -1071,6 +1131,9 @@ export type TripMaxOrderByAggregateInput = {
   fareTotal?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
+  escrowDepositTx?: Prisma.SortOrder
+  escrowReleaseTx?: Prisma.SortOrder
+  escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
@@ -1109,6 +1172,9 @@ export type TripMinOrderByAggregateInput = {
   fareTotal?: Prisma.SortOrder
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
+  escrowDepositTx?: Prisma.SortOrder
+  escrowReleaseTx?: Prisma.SortOrder
+  escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
@@ -1475,6 +1541,9 @@ export type TripCreateWithoutRecipientUserInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1523,6 +1592,9 @@ export type TripUncheckedCreateWithoutRecipientUserInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1598,6 +1670,9 @@ export type TripScalarWhereInput = {
   fareTotal?: Prisma.DecimalFilter<"Trip"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
@@ -1632,6 +1707,9 @@ export type TripCreateWithoutRiderInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1680,6 +1758,9 @@ export type TripUncheckedCreateWithoutRiderInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1748,6 +1829,9 @@ export type TripCreateWithoutDriverInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1796,6 +1880,9 @@ export type TripUncheckedCreateWithoutDriverInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1864,6 +1951,9 @@ export type TripCreateWithoutVehicleInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1912,6 +2002,9 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -1980,6 +2073,9 @@ export type TripCreateWithoutDispatchesInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2029,6 +2125,9 @@ export type TripUncheckedCreateWithoutDispatchesInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2086,6 +2185,9 @@ export type TripUpdateWithoutDispatchesInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2135,6 +2237,9 @@ export type TripUncheckedUpdateWithoutDispatchesInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2176,6 +2281,9 @@ export type TripCreateWithoutStopsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2225,6 +2333,9 @@ export type TripUncheckedCreateWithoutStopsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2282,6 +2393,9 @@ export type TripUpdateWithoutStopsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2331,6 +2445,9 @@ export type TripUncheckedUpdateWithoutStopsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2372,6 +2489,9 @@ export type TripCreateWithoutChatMessagesInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2421,6 +2541,9 @@ export type TripUncheckedCreateWithoutChatMessagesInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2478,6 +2601,9 @@ export type TripUpdateWithoutChatMessagesInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2527,6 +2653,9 @@ export type TripUncheckedUpdateWithoutChatMessagesInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2568,6 +2697,9 @@ export type TripCreateWithoutOffersInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2617,6 +2749,9 @@ export type TripUncheckedCreateWithoutOffersInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2674,6 +2809,9 @@ export type TripUpdateWithoutOffersInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2723,6 +2861,9 @@ export type TripUncheckedUpdateWithoutOffersInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2764,6 +2905,9 @@ export type TripCreateWithoutEventsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2813,6 +2957,9 @@ export type TripUncheckedCreateWithoutEventsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -2870,6 +3017,9 @@ export type TripUpdateWithoutEventsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2919,6 +3069,9 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2960,6 +3113,9 @@ export type TripCreateWithoutLedgerInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3009,6 +3165,9 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3066,6 +3225,9 @@ export type TripUpdateWithoutLedgerInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3115,6 +3277,9 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3156,6 +3321,9 @@ export type TripCreateWithoutTicketsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3205,6 +3373,9 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3262,6 +3433,9 @@ export type TripUpdateWithoutTicketsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3311,6 +3485,9 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3352,6 +3529,9 @@ export type TripCreateWithoutIncidentsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3401,6 +3581,9 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3458,6 +3641,9 @@ export type TripUpdateWithoutIncidentsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3507,6 +3693,9 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3551,6 +3740,9 @@ export type TripCreateManyRecipientUserInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3585,6 +3777,9 @@ export type TripUpdateWithoutRecipientUserInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3633,6 +3828,9 @@ export type TripUncheckedUpdateWithoutRecipientUserInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3678,6 +3876,9 @@ export type TripUncheckedUpdateManyWithoutRecipientUserInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3715,6 +3916,9 @@ export type TripCreateManyRiderInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3749,6 +3953,9 @@ export type TripUpdateWithoutRiderInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3797,6 +4004,9 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3842,6 +4052,9 @@ export type TripUncheckedUpdateManyWithoutRiderInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3879,6 +4092,9 @@ export type TripCreateManyDriverInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -3913,6 +4129,9 @@ export type TripUpdateWithoutDriverInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -3961,6 +4180,9 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4006,6 +4228,9 @@ export type TripUncheckedUpdateManyWithoutDriverInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4043,6 +4268,9 @@ export type TripCreateManyVehicleInput = {
   fareTotal: runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
+  escrowDepositTx?: string | null
+  escrowReleaseTx?: string | null
+  escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
   startedAt?: Date | string | null
@@ -4077,6 +4305,9 @@ export type TripUpdateWithoutVehicleInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4125,6 +4356,9 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4170,6 +4404,9 @@ export type TripUncheckedUpdateManyWithoutVehicleInput = {
   fareTotal?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
+  escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -4302,6 +4539,9 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   fareTotal?: boolean
   paymentStatus?: boolean
   paymentMethod?: boolean
+  escrowDepositTx?: boolean
+  escrowReleaseTx?: boolean
+  escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
   startedAt?: boolean
@@ -4353,6 +4593,9 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   fareTotal?: boolean
   paymentStatus?: boolean
   paymentMethod?: boolean
+  escrowDepositTx?: boolean
+  escrowReleaseTx?: boolean
+  escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
   startedAt?: boolean
@@ -4395,6 +4638,9 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   fareTotal?: boolean
   paymentStatus?: boolean
   paymentMethod?: boolean
+  escrowDepositTx?: boolean
+  escrowReleaseTx?: boolean
+  escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
   startedAt?: boolean
@@ -4437,6 +4683,9 @@ export type TripSelectScalar = {
   fareTotal?: boolean
   paymentStatus?: boolean
   paymentMethod?: boolean
+  escrowDepositTx?: boolean
+  escrowReleaseTx?: boolean
+  escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
   startedAt?: boolean
@@ -4447,7 +4696,7 @@ export type TripSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
+export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "escrowDepositTx" | "escrowReleaseTx" | "escrowRefundTx" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
 export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
@@ -4520,6 +4769,9 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     fareTotal: runtime.Decimal
     paymentStatus: $Enums.LedgerStatus
     paymentMethod: $Enums.PaymentMethodKind
+    escrowDepositTx: string | null
+    escrowReleaseTx: string | null
+    escrowRefundTx: string | null
     cancellationReason: string | null
     scheduledAt: Date | null
     startedAt: Date | null
@@ -4990,6 +5242,9 @@ export interface TripFieldRefs {
   readonly fareTotal: Prisma.FieldRef<"Trip", 'Decimal'>
   readonly paymentStatus: Prisma.FieldRef<"Trip", 'LedgerStatus'>
   readonly paymentMethod: Prisma.FieldRef<"Trip", 'PaymentMethodKind'>
+  readonly escrowDepositTx: Prisma.FieldRef<"Trip", 'String'>
+  readonly escrowReleaseTx: Prisma.FieldRef<"Trip", 'String'>
+  readonly escrowRefundTx: Prisma.FieldRef<"Trip", 'String'>
   readonly cancellationReason: Prisma.FieldRef<"Trip", 'String'>
   readonly scheduledAt: Prisma.FieldRef<"Trip", 'DateTime'>
   readonly startedAt: Prisma.FieldRef<"Trip", 'DateTime'>

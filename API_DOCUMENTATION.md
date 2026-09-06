@@ -491,7 +491,7 @@ GET /api/driver/wallet
 POST /api/driver/wallet/withdraw
 ```
 
-`GET /earnings` returns today/week/lifetime **matched fares** plus `walletBalance`. `GET /wallet` returns withdrawable platform credits, Privy addresses, chain config, and ledger rows. `POST /wallet/withdraw` `{ "amount": 10, "idempotencyKey": "optional" }` cashes out to `User.ethereumWallet`. Admin: `POST /api/admin/drivers/:id/wallet/credit`, `POST /api/admin/payouts`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+`GET /earnings` returns today/week/lifetime matched fares. `GET /wallet` (payment service `:4006`) returns Arc Testnet USDC (ERC-20 6-decimal view), platform credits, Privy address, and ledger. `POST /wallet/withdraw` cashes credits to the driver wallet as ERC-20 USDC. Riders pay native `msg.value` into `RideEscrow` (`POST /api/payment/trips/:id/confirm`). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 **Response** (`GET /driver/earnings`):
 ```json

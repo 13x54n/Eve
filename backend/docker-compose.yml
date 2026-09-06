@@ -1,5 +1,5 @@
-# Local split-stack: Postgres, Redis, and five Node services
-# (auth, location, ride, notify, admin).
+# Local split-stack: Postgres, Redis, and six Node services
+# (auth, location, ride, notify, admin, payment).
 # Usage (from backend/): docker compose up --build
 # Compose loads backend/.env for ${DATABASE_URL} at build time.
 #
@@ -202,6 +202,30 @@ services:
         condition: service_started
       notify:
         condition: service_started
+    networks:
+      - eve
+    restart: unless-stopped
+
+  payment:
+    build: *dev-build
+    container_name: eve-payment
+    volumes: *app-volumes
+    command: npm run dev -w @eve/payment
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      PAYMENT_PORT: 4006
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      TREASURY_PRIVATE_KEY: ${TREASURY_PRIVATE_KEY:-}
+      CHAIN_RPC_URL: ${CHAIN_RPC_URL:-https://rpc.testnet.arc.io}
+      ESCROW_CONTRACT_ADDRESS: ${ESCROW_CONTRACT_ADDRESS:-}
+    ports:
+      - "4006:4006"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     networks:
       - eve
     restart: unless-stopped

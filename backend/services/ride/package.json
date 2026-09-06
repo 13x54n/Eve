@@ -15,11 +15,12 @@
     "dev": "cross-env NODE_OPTIONS=--conditions=development tsx watch src/server.ts",
     "start": "node dist/server.js"
   },
-  "dependencies": {
+    "dependencies": {
     "@eve/db": "*",
     "@eve/http": "*",
     "@eve/location": "*",
     "@eve/notify": "*",
+    "@eve/payment": "*",
     "@eve/shared": "*",
     "express": "^5.1.0",
     "dotenv": "^17.2.1",

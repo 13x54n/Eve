@@ -29,7 +29,7 @@ import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 import { useCompletePrivySession } from '@/lib/complete-privy-session';
 import { truncateWalletAddress } from '@/lib/privy';
 
-type TxType = 'trip' | 'credit' | 'withdraw' | 'payout';
+type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund';
 
 type Transaction = {
   id: string;
@@ -49,11 +49,15 @@ type Section = {
 function ledgerType(entry: WalletLedgerEntry): TxType {
   if (entry.type === 'CREDIT') return 'credit';
   if (entry.type === 'WALLET_WITHDRAW') return 'withdraw';
+  if (entry.type === 'CHARGE') return 'charge';
+  if (entry.type === 'REFUND') return 'refund';
   return 'payout';
 }
 
 function ledgerTitle(entry: WalletLedgerEntry) {
   if (entry.type === 'CREDIT') return entry.note || 'Platform credit';
+  if (entry.type === 'CHARGE') return entry.note || 'Trip USDC';
+  if (entry.type === 'REFUND') return entry.note || 'Escrow refund';
   if (entry.type === 'WALLET_WITHDRAW') {
     const status = entry.status === 'COMPLETED' ? 'Cashed out' : entry.status === 'FAILED' ? 'Cash-out failed' : 'Cash-out pending';
     return status;
@@ -91,7 +95,7 @@ function groupHistory(
     push(trip.createdAt, {
       id: `trip-${trip.id}`,
       type: 'trip',
-      title: 'Trip (off-platform)',
+      title: 'Trip fare',
       amount: trip.netEarnings,
       tripId: trip.id,
       created,
@@ -100,7 +104,7 @@ function groupHistory(
   for (const entry of entries) {
     const created = new Date(entry.createdAt);
     const signed =
-      entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT'
+      entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT' || entry.type === 'REFUND'
         ? -Math.abs(entry.amount)
         : Math.abs(entry.amount);
     push(entry.createdAt, {
@@ -124,6 +128,8 @@ const TX_ICON: Record<TxType, { name: any; lib: 'ion' | 'mci'; bg: string; fg: s
   credit: { name: 'gift', lib: 'ion', bg: '#F0FDF4', fg: '#16A34A' },
   withdraw: { name: 'arrow-down-circle', lib: 'ion', bg: '#FEF2F2', fg: '#DC2626' },
   payout: { name: 'wallet', lib: 'ion', bg: '#FFFBEB', fg: '#D97706' },
+  charge: { name: 'arrow-down', lib: 'ion', bg: '#ECFDF5', fg: '#059669' },
+  refund: { name: 'return-up-back', lib: 'ion', bg: '#F8FAFC', fg: '#64748B' },
 };
 
 function TxIcon({ type }: { type: TxType }) {
@@ -151,6 +157,8 @@ export default function Earnings() {
   const [amount, setAmount] = useState('');
   const [cashingOut, setCashingOut] = useState(false);
   const [linking, setLinking] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [showCashOut, setShowCashOut] = useState(false);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -177,7 +185,9 @@ export default function Earnings() {
     () => groupHistory(recentTrips, wallet?.entries ?? []),
     [recentTrips, wallet?.entries],
   );
-  const balance = wallet?.walletBalance ?? summary?.walletBalance ?? 0;
+  const onChain = wallet?.onChainUsdc ?? 0;
+  const credits = wallet?.walletBalance ?? summary?.walletBalance ?? 0;
+  const symbol = wallet?.chain.tokenSymbol ?? 'USDC';
 
   async function onLinkWallet() {
     try {
@@ -190,6 +200,12 @@ export default function Earnings() {
     } finally {
       setLinking(false);
     }
+  }
+
+  async function onReceive() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
+    await Share.share({ message: addr });
   }
 
   async function onCashOut() {
@@ -213,7 +229,7 @@ export default function Earnings() {
       Alert.alert(
         'Cash out',
         status === 'COMPLETED'
-          ? `Sent to your Privy wallet.${extra}`
+          ? `Sent ${symbol} to your wallet on Arc Testnet.${extra}`
           : status === 'PENDING'
             ? 'Requested. An admin will complete the on-chain send when the treasury is configured.'
             : `Status: ${status}`,
@@ -234,7 +250,7 @@ export default function Earnings() {
 
       <View style={styles.topBar}>
         <View style={styles.backButton} />
-        <Text style={styles.topBarTitle}>Eve Wallet</Text>
+        <Text style={styles.topBarTitle}>Wallet</Text>
         <View style={styles.backButton} />
       </View>
 
@@ -255,66 +271,86 @@ export default function Earnings() {
             >
               <View style={styles.walletCardTopRow}>
                 <View style={styles.walletChip}>
-                  <MaterialCommunityIcons name="wallet" size={14} color="#FFFFFF" />
-                  <Text style={styles.walletChipText}>Available (platform credits)</Text>
+                  <MaterialCommunityIcons name="circle-slice-8" size={14} color="#FFFFFF" />
+                  <Text style={styles.walletChipText}>{wallet?.chain.chainName ?? 'Arc Testnet'}</Text>
                 </View>
-                <Ionicons name="eye-outline" size={18} color="rgba(255,255,255,0.85)" />
+                <TouchableOpacity onPress={() => setHidden((value) => !value)}>
+                  <Ionicons name={hidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
               </View>
 
-              <Text style={styles.balanceText}>${balance.toFixed(2)}</Text>
+              <Text style={styles.balanceText}>
+                {hidden ? '••••' : `${onChain.toFixed(2)} ${symbol}`}
+              </Text>
               <Text style={styles.walletFooterHint}>
-                Trip fares are collected off-platform. This balance is Eve credits paid to your Privy
-                Ethereum wallet.
+                USDC on Arc Testnet (ERC-20 view). Same asset as gas — trip fares settle here from rider escrow.
               </Text>
 
-              <TouchableOpacity
-                style={styles.addressRow}
-                onPress={() => {
-                  const addr = wallet?.ethereumWallet;
-                  if (!addr) return;
-                  void Share.share({ message: addr });
-                }}
-              >
+              <TouchableOpacity style={styles.addressRow} onPress={() => void onReceive()}>
                 <Text style={styles.addressLabel}>
                   {wallet?.ethereumWallet
-                    ? `Privy ${truncateWalletAddress(wallet.ethereumWallet)} · ${wallet.chain.chainName}`
+                    ? truncateWalletAddress(wallet.ethereumWallet)
                     : 'No Privy Ethereum wallet yet'}
                 </Text>
               </TouchableOpacity>
-
-              <View pointerEvents="none" style={styles.cardGlowOne} />
-              <View pointerEvents="none" style={styles.cardGlowTwo} />
             </LinearGradient>
 
-            {wallet?.ethereumWallet ? (
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => void onReceive()} disabled={!wallet?.ethereumWallet}>
+                <Ionicons name="arrow-down" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Receive</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => setShowCashOut((value) => !value)}>
+                <Ionicons name="arrow-up" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Cash out</Text>
+              </TouchableOpacity>
+              {!wallet?.ethereumWallet ? (
+                <TouchableOpacity style={styles.actionBtn} onPress={() => void onLinkWallet()} disabled={linking}>
+                  <Ionicons name="link" size={18} color="#2E4ED2" />
+                  <Text style={styles.actionLabel}>{linking ? 'Linking' : 'Link'}</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {showCashOut && wallet?.ethereumWallet ? (
               <View style={styles.cashOutRow}>
                 <TextInput
                   style={styles.cashOutInput}
                   keyboardType="decimal-pad"
-                  placeholder="Amount USD"
+                  placeholder={`Credits $${credits.toFixed(2)}`}
                   placeholderTextColor="#9CA3AF"
                   value={amount}
                   onChangeText={setAmount}
                 />
-                <TouchableOpacity
-                  style={styles.cashOutButton}
-                  onPress={() => void onCashOut()}
-                  disabled={cashingOut}
-                >
-                  {cashingOut ? (
-                    <ActivityIndicator color="#2E4ED2" />
-                  ) : (
-                    <Text style={styles.cashOutText}>Cash out</Text>
-                  )}
+                <TouchableOpacity style={styles.cashOutButton} onPress={() => void onCashOut()} disabled={cashingOut}>
+                  {cashingOut ? <ActivityIndicator color="#2E4ED2" /> : <Text style={styles.cashOutText}>Send</Text>}
                 </TouchableOpacity>
               </View>
-            ) : (
-              <TouchableOpacity style={styles.linkButton} onPress={() => void onLinkWallet()} disabled={linking}>
-                <Text style={styles.linkButtonText}>
-                  {linking ? 'Linking…' : 'Link Privy Ethereum wallet'}
-                </Text>
-              </TouchableOpacity>
-            )}
+            ) : null}
+
+            <View style={styles.tokenRow}>
+              <View style={styles.tokenIcon}>
+                <Text style={styles.tokenIconText}>$</Text>
+              </View>
+              <View style={styles.txMiddle}>
+                <Text style={styles.txTitle}>{symbol}</Text>
+                <Text style={styles.txTime}>Arc Testnet · USDC</Text>
+              </View>
+              <Text style={styles.tokenAmount}>{hidden ? '••••' : onChain.toFixed(2)}</Text>
+            </View>
+
+            {credits > 0 ? (
+              <View style={styles.tokenRow}>
+                <View style={[styles.tokenIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="gift" size={16} color="#2E4ED2" />
+                </View>
+                <View style={styles.txMiddle}>
+                  <Text style={styles.txTitle}>Eve credits</Text>
+                  <Text style={styles.txTime}>Cash out to Arc USDC</Text>
+                </View>
+                <Text style={styles.tokenAmount}>{hidden ? '••••' : `$${credits.toFixed(2)}`}</Text>
+              </View>
+            ) : null}
 
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
@@ -326,12 +362,12 @@ export default function Earnings() {
                 <Text style={styles.statValue}>${(summary?.weekEarnings ?? 0).toFixed(2)}</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statLabel}>Lifetime fares</Text>
+                <Text style={styles.statLabel}>Lifetime</Text>
                 <Text style={styles.statValue}>${(summary?.lifetimeEarnings ?? 0).toFixed(2)}</Text>
               </View>
             </View>
 
-            <Text style={styles.historyTitle}>Transaction history</Text>
+            <Text style={styles.historyTitle}>Activity</Text>
           </>
         }
         renderItem={({ item }) => (
@@ -349,19 +385,13 @@ export default function Earnings() {
               <Text style={styles.txTitle}>{item.title}</Text>
               <Text style={styles.txTime}>{item.time}</Text>
             </View>
-            <Text
-              style={[
-                styles.txAmount,
-                { color: item.amount < 0 ? '#DC2626' : '#16A34A' },
-              ]}
-            >
+            <Text style={[styles.txAmount, { color: item.amount < 0 ? '#DC2626' : '#16A34A' }]}>
               {formatMoney(item.amount)}
             </Text>
             {item.tripId ? <Ionicons name="chevron-forward" size={16} color="#C4C9D4" /> : null}
           </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.txSeparator} />}
-        SectionSeparatorComponent={() => <View style={{ height: 8 }} />}
         ListEmptyComponent={
           error ? (
             <View style={styles.emptyContainer}>
@@ -383,12 +413,7 @@ export default function Earnings() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f7f8ef',
-  },
-
-  // --- Top bar ---
+  safeArea: { flex: 1, backgroundColor: '#f7f8ef' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,75 +422,34 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? 12 : 4,
     paddingBottom: 8,
   },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topBarTitle: {
-    fontSize: 27,
-    fontWeight: '700',
-    color: '#0F172A',
-    letterSpacing: -0.2,
-  },
-  iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
-    borderColor: '#EAECEF',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 32,
-  },
-
-  // --- Wallet card ---
+  backButton: { width: 38, height: 38 },
+  topBarTitle: { fontSize: 27, fontWeight: '700', color: '#0F172A', letterSpacing: -0.2 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 32 },
   walletCard: {
     borderRadius: 24,
     padding: 20,
     marginTop: 8,
     overflow: 'hidden',
-    shadowColor: '#2E4ED2',
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 6,
   },
-  walletCardTopRow: {
-    flexDirection: 'row',
+  walletCardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  walletChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  walletChipText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.9)' },
+  balanceText: { fontSize: 36, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1, marginTop: 14 },
+  walletFooterHint: { fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.75)', marginTop: 10 },
+  addressRow: { marginTop: 14 },
+  addressLabel: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  actionBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 16,
+    paddingVertical: 12,
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 4,
   },
-  walletChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  walletChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.9)',
-  },
-  balanceText: {
-    fontSize: 40,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -1,
-    marginTop: 14,
-  },
-  walletCardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 18,
-    gap: 12,
-  },
+  actionLabel: { fontSize: 13, fontWeight: '700', color: '#2E4ED2' },
   cashOutButton: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 18,
@@ -477,32 +461,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#EAECEF',
   },
-  cashOutText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2E4ED2',
-  },
-  walletFooterHint: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.75)',
-    flexShrink: 1,
-    marginTop: 10,
-  },
-  addressRow: {
-    marginTop: 14,
-  },
-  addressLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.92)',
-  },
-  cashOutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 14,
-  },
+  cashOutText: { fontSize: 14, fontWeight: '700', color: '#2E4ED2' },
+  cashOutRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
   cashOutInput: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -514,155 +474,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#0F172A',
   },
-  linkButton: {
-    marginTop: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#EAECEF',
-    borderRadius: 20,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  linkButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2E4ED2',
-  },
-  cardGlowOne: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    top: -60,
-    right: -40,
-  },
-  cardGlowTwo: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    bottom: -50,
-    left: -30,
-  },
-
-  // --- Stats row ---
-  statsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 14,
-  },
-  statCard: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#F0F1EC',
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  statValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 4,
-  },
-
-  // --- Transaction list ---
-  historyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: 24,
-    marginBottom: 4,
-    letterSpacing: -0.2,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 16,
-    paddingBottom: 6,
-  },
-  sectionHeaderText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6B7280',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  sectionHeaderTotal: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#16A34A',
-  },
-  txRow: {
+  tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     padding: 12,
+    marginTop: 10,
+    borderRadius: 16,
   },
-  txIcon: {
+  tokenIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  txMiddle: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  txTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  txTime: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  txAmount: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginRight: 4,
-  },
-  txSeparator: {
-    height: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    padding: 40,
-    marginTop: 20,
-  },
-  emptyText: {
-    marginTop: 16,
-    color: '#6B7280',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  loadingText: {
-    marginTop: 40,
-    color: '#6B7280',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  retryButton: {
-    marginTop: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#2E4ED5',
-  },
-  retryText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  tokenIconText: { fontSize: 18, fontWeight: '800', color: '#16A34A' },
+  tokenAmount: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  statCard: { flex: 1, paddingVertical: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: '#F0F1EC' },
+  statLabel: { fontSize: 12, fontWeight: '500', color: '#6B7280' },
+  statValue: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginTop: 4 },
+  historyTitle: { fontSize: 17, fontWeight: '700', color: '#0F172A', marginTop: 24, marginBottom: 4 },
+  txRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 12 },
+  txIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  txMiddle: { flex: 1, marginLeft: 12 },
+  txTitle: { fontSize: 14, fontWeight: '600', color: '#0F172A' },
+  txTime: { fontSize: 12, fontWeight: '400', color: '#9CA3AF', marginTop: 2 },
+  txAmount: { fontSize: 15, fontWeight: '700', marginRight: 4 },
+  txSeparator: { height: 8 },
+  emptyContainer: { alignItems: 'center', padding: 40, marginTop: 20 },
+  emptyText: { marginTop: 16, color: '#6B7280', fontSize: 16, textAlign: 'center' },
+  loadingText: { marginTop: 40, color: '#6B7280', fontSize: 16, textAlign: 'center' },
+  retryButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: '#2E4ED5' },
+  retryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
 });

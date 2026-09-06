@@ -97,7 +97,7 @@ graph TB
 
 ### Local development
 
-From `backend/`, `npm run dev` starts five Node processes (auth, location, ride, notify, admin). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with local function fallback when a gRPC peer is unavailable. Host-side services use the `DATABASE_URL` and `REDIS_URL` from `backend/.env`; Docker Compose overrides those values with its Postgres and Redis service names.
+From `backend/`, `npm run dev` starts six Node processes (auth, location, ride, notify, admin, payment). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with local function fallback when a gRPC peer is unavailable. Host-side services use the `DATABASE_URL` and `REDIS_URL` from `backend/.env`; Docker Compose overrides those values with its Postgres and Redis service names.
 
 For the complete startup order, see [GETTING_STARTED.md](GETTING_STARTED.md) and [backend/docs/docker.md](backend/docs/docker.md). Host development must run `npm run db:generate` and `npx prisma migrate deploy` against the database named by `DATABASE_URL` before starting the services. Docker runs the equivalent migration job automatically.
 
@@ -206,6 +206,26 @@ stateDiagram-v2
 - `backend/services/notify/src/server.ts`
 - `backend/services/notify/src/realtime.ts` - Socket.IO setup
 - `backend/services/notify/src/emit.ts` - Event emission
+
+#### Payment Service (Port 4006)
+
+**Responsibilities**:
+- Arc Testnet USDC wallets (ERC-20 6-decimal view for display)
+- RideEscrow deposit quotes, confirm, operator release/refund
+- Driver platform-credit cash-out (ERC-20 USDC transfer)
+
+USDC on Arc is one asset with two views (Circle `use-arc`): native 18-decimal `msg.value` for escrow gas math; ERC-20 `0x3600…0000` for balances and cash-out. Never sum the two.
+
+**Key Operations**:
+- `GET /api/driver/wallet` / `POST /api/driver/wallet/withdraw`
+- `GET /api/rider/wallet`
+- `GET /api/payment/trips/:id/deposit` / `POST /api/payment/trips/:id/confirm`
+- `POST /internal/trips/:id/release` / `refund`
+
+**Key Files**:
+- `backend/services/payment/src/server.ts`
+- `backend/contracts/src/RideEscrow.sol`
+- `backend/docs/driver-wallet.md`
 
 ## Data Layer
 
@@ -373,7 +393,7 @@ sequenceDiagram
 ```
 
 **Protocols**:
-- REST over HTTP/1.1 (auth `:4001`, ride `:4003`, admin `:4005`)
+- REST over HTTP/1.1 (auth `:4001`, ride `:4003`, admin `:4005`, payment `:4006`)
 - WebSocket (Socket.IO) on notify `:4004`
 - JSON payloads
 - JWT bearer tokens

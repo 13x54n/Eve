@@ -41,6 +41,23 @@ export type Trip = {
   vehicle?: { make: string; model: string; plateNumber: string; color?: string };
   offers?: TripOffer[];
   createdAt: string;
+  paymentStatus?: string;
+};
+
+export type AcceptOfferResult = {
+  trip: Trip;
+  deposit: {
+    chainId: number;
+    chainName: string;
+    to: string;
+    value: string;
+    data: `0x${string}`;
+    tripIdHash: `0x${string}`;
+    amountUsd: number;
+    tokenSymbol: string;
+    decimals: number;
+    explorerTxUrl: string;
+  } | null;
 };
 
 export type TripStop = {
@@ -119,10 +136,10 @@ export async function markTripMessagesRead(tripId: string) {
 }
 
 export async function acceptOffer(tripId: string, offerId: string) {
-  const { data } = await api.post<{ trip: Trip }>(
+  const { data } = await api.post<AcceptOfferResult>(
     `/rider/trips/${tripId}/offers/${offerId}/accept`,
   );
-  return data.trip;
+  return data;
 }
 
 export async function cancelTrip(id: string) {
