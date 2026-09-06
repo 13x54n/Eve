@@ -47,7 +47,7 @@ run load/admin-dashboard.js
 
 echo ""
 echo "=== load:seed (reset leftover SEARCHING trips / geo) ==="
-LOAD_COUNT="${LOAD_COUNT:-10}" npm run load:seed
+LOAD_COUNT="${LOAD_COUNT:-10}" npm run load:seed || echo "load:seed failed (continuing)"
 
 run --vus "$VUS" --duration "$DURATION" load/presence.js
 run --vus "$VUS" --duration "$DURATION" load/search-storm.js
