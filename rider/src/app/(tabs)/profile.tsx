@@ -182,7 +182,7 @@ export default function ProfileScreen() {
         <SettingsSection title="Preferences" rows={preferenceRows} />
         <SettingsSection title="More" rows={moreRows} />
       </ScrollView>
-      <View style={{ paddingBottom: insets.bottom + (Platform.OS === "ios" ? 64 : 12) }}>
+      <View style={{ paddingBottom: insets.bottom + (Platform.OS === "ios" ? 10 : 12) }}>
         <ActionButton
           style={styles.logoutButton}
           textStyle={styles.logoutText}
@@ -239,6 +239,6 @@ const styles = StyleSheet.create({
   copy: { flex: 1 },
   rowTitle: { color: Brand.text, fontSize: 16, fontWeight: "700" },
   rowDetail: { marginTop: 3, color: Brand.textSecondary, fontSize: 13 },
-  logoutButton: { alignItems: "center", justifyContent: "center", marginBottom: 12, padding: 15, borderRadius: 12, backgroundColor: Brand.danger },
+  logoutButton: { alignItems: "center", justifyContent: "center", marginBottom: 0, padding: 15, borderRadius: 12, backgroundColor: Brand.danger },
   logoutText: { color: Brand.surface, fontWeight: "700" },
 });
