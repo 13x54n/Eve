@@ -54,7 +54,7 @@ export default function lifecycle() {
 
   const funded = http.post(
     `${pay}/api/payment/trips/${trip.id}/confirm`,
-    JSON.stringify({ txHash: fakeTxHash(trip.id) }),
+    JSON.stringify({ txHash: fakeTxHash(trip.id), action: "deposit" }),
     jsonHeaders(pair.riderToken),
   );
   check(funded, { "escrow confirmed": (r) => r.status === 200 });
@@ -69,5 +69,19 @@ export default function lifecycle() {
     jsonHeaders(pair.driverToken),
   );
   check(completed, { "trip completed": (r) => r.status === 200 });
+
+  const startedSettle = http.post(
+    `${pay}/api/payment/trips/${trip.id}/confirm`,
+    JSON.stringify({ txHash: fakeTxHash(`${trip.id}:start`), action: "startSettlement" }),
+    jsonHeaders(pair.driverToken),
+  );
+  check(startedSettle, { "settlement started": (r) => r.status === 200 });
+
+  const finalized = http.post(
+    `${pay}/api/payment/trips/${trip.id}/confirm`,
+    JSON.stringify({ txHash: fakeTxHash(`${trip.id}:fin`), action: "finalize" }),
+    jsonHeaders(pair.driverToken),
+  );
+  check(finalized, { "escrow finalized": (r) => r.status === 200 });
   sleep(0.5);
 }

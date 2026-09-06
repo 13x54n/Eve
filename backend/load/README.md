@@ -67,7 +67,7 @@ Start at **20 VUs / 1m**, then **50 VUs / 2m**.
 | `admin-dashboard.js` | admin `:4005` | Staff login + dashboard |
 | `search-storm.js` | ride | Many `POST /api/rider/trips` |
 | `offer-market.js` | ride | Incoming + offers; **409 is expected** (one pending offer) |
-| `lifecycle.js` | ride + payment | Create → offer → accept → escrow confirm → start → complete |
+| `lifecycle.js` | ride + payment | Create → escrow → complete → startSettlement → finalize |
 | `presence.js` | ride | GPS/presence patches (location throttle is 15s; not every ping persists) |
 | `matchmaking-geo.js` | ride + location | Cross-city create/incoming/cancel |
 

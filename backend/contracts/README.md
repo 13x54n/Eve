@@ -1,6 +1,6 @@
 # Ride escrow (Arc Testnet)
 
-Native USDC escrow for Eve trip fares. Rider deposits once (`deposit` with `msg.value`). The payment service operator calls `release` (complete) or `refund` (cancel).
+Native USDC escrow for Eve trip fares. The **rider** signs `deposit` (`msg.value`). After the trip, the **driver** signs `startSettlement` (5-minute dispute window), then `finalize`. The rider may `dispute` in that window and `refund`. There is **no operator key** on this contract.
 
 Follow Circle's [`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md) rules:
 
@@ -10,6 +10,8 @@ Follow Circle's [`use-arc`](https://github.com/circlefin/skills/blob/master/plug
 - Factor: `1e18` native = `1e6` ERC-20 (`10^12`). Never sum the two views.
 
 Chain id `5042002`. Fund wallets from [faucet.circle.com](https://faucet.circle.com) (Arc Testnet). Mempool requires at least 20 Gwei `maxFeePerGas`.
+
+`DISPUTE_WINDOW` is **5 minutes**, enforced on-chain.
 
 ## Foundry
 
@@ -27,7 +29,6 @@ Set RPC in the environment (do not commit keys):
 
 ```bash
 export ARC_TESTNET_RPC_URL=https://rpc.testnet.arc.io
-export OPERATOR_ADDRESS=0x...   # treasury / payment operator
 ```
 
 Preferred deploy (encrypted keystore — required outside local testing):
@@ -37,8 +38,7 @@ cast wallet import deployer --interactive
 forge create src/RideEscrow.sol:RideEscrow \
   --rpc-url $ARC_TESTNET_RPC_URL \
   --account deployer \
-  --broadcast \
-  --constructor-args $OPERATOR_ADDRESS
+  --broadcast
 ```
 
 Local testing only — never pass `--private-key` as a CLI flag in testnet, staging, or production:
@@ -47,8 +47,7 @@ Local testing only — never pass `--private-key` as a CLI flag in testnet, stag
 forge create src/RideEscrow.sol:RideEscrow \
   --rpc-url $ARC_TESTNET_RPC_URL \
   --private-key $PRIVATE_KEY \
-  --broadcast \
-  --constructor-args $OPERATOR_ADDRESS
+  --broadcast
 ```
 
 Verify on Arcscan (Blockscout):
@@ -57,8 +56,7 @@ Verify on Arcscan (Blockscout):
 forge verify-contract $ESCROW_CONTRACT_ADDRESS src/RideEscrow.sol:RideEscrow \
   --chain-id 5042002 \
   --verifier blockscout \
-  --verifier-url https://testnet.arcscan.app/api/ \
-  --constructor-args $(cast abi-encode "constructor(address)" $OPERATOR_ADDRESS)
+  --verifier-url https://testnet.arcscan.app/api/
 ```
 
-Set `ESCROW_CONTRACT_ADDRESS` in `backend/.env`.
+Set `ESCROW_CONTRACT_ADDRESS` in `backend/.env`. Platform credit cash-out still uses `TREASURY_PRIVATE_KEY`; escrow does not.

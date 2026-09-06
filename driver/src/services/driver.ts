@@ -291,7 +291,11 @@ export async function startTrip(tripId: string) {
 }
 
 export async function completeTrip(tripId: string, input: { rating?: number; feedback?: string } = {}) {
-  const { data } = await api.post<{ trip: ActiveTrip; earnings: { netEarnings: number } }>(`/driver/trips/${tripId}/complete`, input);
+  const { data } = await api.post<{
+    trip: ActiveTrip;
+    earnings: { netEarnings: number; pending?: boolean };
+    settlement?: { startQuote: import("./payment").CallQuote };
+  }>(`/driver/trips/${tripId}/complete`, input);
   return data;
 }
 

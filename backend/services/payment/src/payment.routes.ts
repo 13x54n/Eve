@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireInternalService, requireRole, skipRateLimit } from "@eve/http";
+import { requireAuth, requireRole, skipRateLimit } from "@eve/http";
 import rateLimit from "express-rate-limit";
 import * as controller from "./payment.controller.js";
 
@@ -15,7 +15,10 @@ export const paymentRouter = Router();
 paymentRouter.use(paymentRateLimiter, requireAuth);
 paymentRouter.get("/config", controller.config);
 paymentRouter.get("/trips/:id/deposit", requireRole("RIDER"), controller.quoteDeposit);
-paymentRouter.post("/trips/:id/confirm", requireRole("RIDER"), controller.confirmDeposit);
+paymentRouter.get("/trips/:id/settlement", requireRole("DRIVER"), controller.quoteSettlement);
+paymentRouter.get("/trips/:id/dispute", requireRole("RIDER"), controller.quoteDispute);
+paymentRouter.get("/trips/:id/refund", requireRole("RIDER"), controller.quoteRefund);
+paymentRouter.post("/trips/:id/confirm", controller.confirmEscrow);
 
 export const riderWalletRouter = Router();
 riderWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("RIDER"));
@@ -27,6 +30,3 @@ driverWalletRouter.get("/wallet", controller.driverWallet);
 driverWalletRouter.post("/wallet/withdraw", controller.withdrawWallet);
 
 export const paymentInternalRouter = Router();
-paymentInternalRouter.use(paymentRateLimiter, requireInternalService);
-paymentInternalRouter.post("/trips/:id/release", controller.releaseInternal);
-paymentInternalRouter.post("/trips/:id/refund", controller.refundInternal);

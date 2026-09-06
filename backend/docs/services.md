@@ -377,9 +377,8 @@ WebSocket connections authenticated via JWT:
 ### Responsibilities
 
 - Arc Testnet USDC wallet reads (ERC-20 6-decimal view)
-- RideEscrow deposit quotes and confirm
-- Operator `release` / `refund`
-- Driver platform-credit cash-out (ERC-20 transfer)
+- RideEscrow quotes and confirm (`deposit`, `startSettlement`, `dispute`, `finalize`, `refund`)
+- Driver platform-credit cash-out (ERC-20 transfer; treasury key, not escrow)
 
 USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md)): native 18-decimal `msg.value` for escrow; ERC-20 `0x3600…0000` for display and cash-out. Never sum the two.
 
@@ -389,12 +388,13 @@ USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefi
 |----------|--------|---------|
 | `/api/payment/config` | GET | Chain and escrow config |
 | `/api/payment/trips/:id/deposit` | GET | Quote native deposit tx |
-| `/api/payment/trips/:id/confirm` | POST | Confirm rider tx hash |
+| `/api/payment/trips/:id/settlement` | GET | Quote startSettlement or finalize |
+| `/api/payment/trips/:id/dispute` | GET | Quote dispute |
+| `/api/payment/trips/:id/refund` | GET | Quote refund |
+| `/api/payment/trips/:id/confirm` | POST | Confirm app-signed tx hash |
 | `/api/rider/wallet` | GET | Rider on-chain USDC |
 | `/api/driver/wallet` | GET | Driver USDC + credits |
 | `/api/driver/wallet/withdraw` | POST | Cash out credits |
-| `/internal/trips/:id/release` | POST | Operator release |
-| `/internal/trips/:id/refund` | POST | Operator refund |
 
 **See**: [driver-wallet.md](driver-wallet.md) and [contracts/README.md](../contracts/README.md)
 

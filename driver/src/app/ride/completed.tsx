@@ -1,18 +1,60 @@
 import Feather from "@expo/vector-icons/Feather";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { confirmEscrow, getSettlementQuote } from "@/services/payment";
+import { useSendEscrowTx } from "@/lib/send-escrow";
 
 export default function CompletedScreen() {
-  const { dropoff, fare, net } = useLocalSearchParams<{ dropoff?: string; fare?: string; net?: string }>();
+  const { dropoff, fare, net, tripId } = useLocalSearchParams<{
+    dropoff?: string;
+    fare?: string;
+    net?: string;
+    tripId?: string;
+  }>();
   const [rating, setRating] = useState(0);
+  const [status, setStatus] = useState<"settling" | "ready" | "released" | "idle">(
+    tripId ? "settling" : "idle",
+  );
+  const [remainingSec, setRemainingSec] = useState(300);
+  const sendEscrowTx = useSendEscrowTx();
   const amount = net ?? fare;
   const destination = dropoff ?? "your dropoff";
-  const hasTrip = Boolean(dropoff || fare || net);
+  const hasTrip = Boolean(dropoff || fare || net || tripId);
+
+  const tryFinalize = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      const quote = await getSettlementQuote(tripId);
+      if (quote.action === "startSettlement") {
+        await confirmEscrow(tripId, await sendEscrowTx(quote), "startSettlement");
+        return;
+      }
+      if (quote.action === "finalize") {
+        setStatus("ready");
+        const txHash = await sendEscrowTx(quote);
+        await confirmEscrow(tripId, txHash, "finalize");
+        setStatus("released");
+      } else if (quote.settleFrom) {
+        const ms = new Date(quote.settleFrom).getTime() - Date.now();
+        setRemainingSec(Math.max(0, Math.ceil(ms / 1000)));
+        setStatus("settling");
+      }
+    } catch {
+      /* window still open or disputed */
+    }
+  }, [sendEscrowTx, tripId]);
 
   useEffect(() => {
     if (!hasTrip) router.replace("/(tabs)/home");
   }, [hasTrip]);
+
+  useEffect(() => {
+    if (!tripId) return;
+    void tryFinalize();
+    const timer = setInterval(() => void tryFinalize(), 5000);
+    return () => clearInterval(timer);
+  }, [tripId, tryFinalize]);
 
   if (!hasTrip) {
     return (
@@ -21,6 +63,13 @@ export default function CompletedScreen() {
       </View>
     );
   }
+
+  const settleCopy =
+    status === "released"
+      ? "Fare released to your wallet."
+      : status === "ready"
+        ? "Signing finalize…"
+        : `Funds release in ${Math.floor(remainingSec / 60)}:${String(remainingSec % 60).padStart(2, "0")} unless the rider disputes.`;
 
   return (
     <View style={styles.container}>
@@ -32,9 +81,9 @@ export default function CompletedScreen() {
       <Text style={styles.subtitle}>Trip to {destination} is complete.</Text>
       {amount ? (
         <View style={styles.fare}>
-          <Text style={styles.fareLabel}>Matched fare (cash)</Text>
+          <Text style={styles.fareLabel}>Matched fare (USDC escrow)</Text>
           <Text style={styles.amount}>${Number(amount).toFixed(2)}</Text>
-          <Text style={styles.receipt}>Collect payment from the rider off-platform</Text>
+          <Text style={styles.receipt}>{settleCopy}</Text>
         </View>
       ) : null}
       <Text style={styles.rateLabel}>Rate your rider</Text>
@@ -61,7 +110,7 @@ const styles = StyleSheet.create({
   fare: { alignItems: "center", width: "100%", marginTop: 32, padding: 20, borderRadius: 16, backgroundColor: "#FFFFFF" },
   fareLabel: { color: "#6B7280", fontSize: 12 },
   amount: { marginTop: 5, color: "#111827", fontSize: 30, fontWeight: "800" },
-  receipt: { marginTop: 5, color: "#6B7280", fontSize: 12 },
+  receipt: { marginTop: 5, color: "#6B7280", fontSize: 12, textAlign: "center" },
   rateLabel: { marginTop: 30, color: "#374151", fontWeight: "700" },
   stars: { flexDirection: "row", gap: 12, marginTop: 14 },
   button: { position: "absolute", bottom: 38, left: 24, right: 24, alignItems: "center", padding: 16, borderRadius: 12, backgroundColor: "#2E4ED5" },

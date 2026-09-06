@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { CallQuote } from './wallet';
 
 export type RiderVehicleType = 'BIKE' | 'CAR';
 export type RideType = 'STANDARD' | 'AIRPORT' | 'MULTI_STOP' | 'SCHEDULED' | 'CORPORATE' | 'COURIER';
@@ -42,6 +43,7 @@ export type Trip = {
   offers?: TripOffer[];
   createdAt: string;
   paymentStatus?: string;
+  escrowSettleFrom?: string | null;
 };
 
 export type AcceptOfferResult = {
@@ -143,8 +145,8 @@ export async function acceptOffer(tripId: string, offerId: string) {
 }
 
 export async function cancelTrip(id: string) {
-  const { data } = await api.post<{ trip: Trip }>(`/rider/trips/${id}/cancel`);
-  return data.trip;
+  const { data } = await api.post<{ trip: Trip; refund?: CallQuote | null }>(`/rider/trips/${id}/cancel`);
+  return data;
 }
 
 export async function addTripStop(tripId: string, input: { address: string; lat: number; lng: number }) {

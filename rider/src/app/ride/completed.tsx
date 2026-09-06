@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -14,6 +15,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionButton } from "@/components/action-button";
 import { getTrip, Trip } from "@/services/trips";
+import { confirmEscrow, getDisputeQuote, getRefundQuote } from "@/services/wallet";
+import { useSendEscrowTx } from "@/lib/send-escrow";
 
 function formatMoney(n: number) {
   return `$${Number(n).toFixed(2)}`;
@@ -65,6 +68,8 @@ export default function CompletedScreen() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const sendEscrowTx = useSendEscrowTx();
 
   const load = useCallback(async () => {
     if (!tripId) {
@@ -87,6 +92,25 @@ export default function CompletedScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function handleDispute() {
+    if (!trip) return;
+    try {
+      setBusy(true);
+      const quote = await getDisputeQuote(trip.id);
+      const txHash = await sendEscrowTx(quote);
+      await confirmEscrow(trip.id, txHash, "dispute");
+      const refund = await getRefundQuote(trip.id);
+      const refundHash = await sendEscrowTx(refund);
+      await confirmEscrow(trip.id, refundHash, "refund");
+      await load();
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      Alert.alert("Could not dispute", message ?? "The 5-minute window may have closed.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function goBack() {
     if (router.canGoBack()) {
@@ -143,10 +167,17 @@ export default function CompletedScreen() {
                 <Text style={styles.heroAmount}>$0.00</Text>
                 <Text style={styles.heroHint}>No cash is due for this trip.</Text>
               </>
+            ) : trip.paymentStatus === "SETTLING" ? (
+              <>
+                <Text style={styles.heroAmount}>{formatMoney(trip.fareTotal)}</Text>
+                <Text style={styles.heroHint}>
+                  Funds release to the driver in 5 minutes unless you dispute.
+                </Text>
+              </>
             ) : (
               <>
                 <Text style={styles.heroAmount}>{formatMoney(trip.fareTotal)}</Text>
-                <Text style={styles.heroHint}>Pay your driver in cash</Text>
+                <Text style={styles.heroHint}>Fare locked in Arc Testnet USDC escrow</Text>
               </>
             )}
             <Text style={styles.bookingCode}>{trip.bookingCode}</Text>
@@ -223,6 +254,15 @@ export default function CompletedScreen() {
             <Text style={styles.helpText}>Help with this trip</Text>
             <Feather name="chevron-right" size={16} color="#C4C9D4" />
           </Pressable>
+
+          {trip.paymentStatus === "SETTLING" && !hideFare ? (
+            <ActionButton
+              label={busy ? "Disputing..." : "Dispute this trip"}
+              onPress={() => void handleDispute()}
+              style={styles.doneButton}
+              textStyle={styles.doneText}
+            />
+          ) : null}
 
           <ActionButton
             label="Done"

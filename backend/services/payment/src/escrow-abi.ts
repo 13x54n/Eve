@@ -2,16 +2,11 @@ import type { Abi } from "viem";
 
 export const ESCROW_ABI = [
   {
-    type: "constructor",
-    stateMutability: "nonpayable",
-    inputs: [{ name: "operator_", type: "address" }],
-  },
-  {
     type: "function",
-    name: "operator",
+    name: "DISPUTE_WINDOW",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ name: "", type: "address" }],
+    outputs: [{ name: "", type: "uint64" }],
   },
   {
     type: "function",
@@ -23,6 +18,7 @@ export const ESCROW_ABI = [
       { name: "payee", type: "address" },
       { name: "amount", type: "uint256" },
       { name: "state", type: "uint8" },
+      { name: "settleFrom", type: "uint64" },
     ],
   },
   {
@@ -37,7 +33,21 @@ export const ESCROW_ABI = [
   },
   {
     type: "function",
-    name: "release",
+    name: "startSettlement",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tripId", type: "bytes32" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "dispute",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "tripId", type: "bytes32" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "finalize",
     stateMutability: "nonpayable",
     inputs: [{ name: "tripId", type: "bytes32" }],
     outputs: [],
@@ -57,6 +67,23 @@ export const ESCROW_ABI = [
       { name: "payer", type: "address", indexed: true },
       { name: "payee", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "SettlementStarted",
+    inputs: [
+      { name: "tripId", type: "bytes32", indexed: true },
+      { name: "payee", type: "address", indexed: true },
+      { name: "settleFrom", type: "uint64", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "Disputed",
+    inputs: [
+      { name: "tripId", type: "bytes32", indexed: true },
+      { name: "payer", type: "address", indexed: true },
     ],
   },
   {

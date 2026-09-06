@@ -6,14 +6,17 @@ export {
   riderWalletRouter,
 } from "./payment.routes.js";
 export {
-  confirmTripDeposit,
+  confirmTripEscrow,
   getDriverWallet,
   getRiderWallet,
   publicPaymentConfig,
+  quoteStartSettlementForTrip,
   quoteTripDeposit,
+  quoteTripDispute,
+  quoteTripRefund,
+  quoteTripSettlement,
   refundTripEscrow,
-  releaseTripEscrow,
   withdrawDriverWallet,
 } from "./payment.service.js";
-export { setEscrowForTests } from "./escrow.js";
+export { advanceEscrowNowMs, DISPUTE_WINDOW_MS, setEscrowForTests, setEscrowNowMs } from "./escrow.js";
 export { getUsdcBalance, setBalanceReaderForTests } from "./chain.js";

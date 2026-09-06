@@ -3,8 +3,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { acceptOffer, cancelTrip, getTrip, Trip } from "@/services/trips";
-import { confirmDeposit } from "@/services/wallet";
-import { useSendEscrowDeposit } from "@/lib/send-escrow";
+import { confirmDeposit, confirmEscrow } from "@/services/wallet";
+import { useSendEscrowDeposit, useSendEscrowTx } from "@/lib/send-escrow";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useRideSession } from "@/context/ride-session";
 import { ActionButton } from "@/components/action-button";
@@ -18,6 +18,7 @@ export default function SearchingScreen() {
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const sendEscrow = useSendEscrowDeposit();
+  const sendEscrowTx = useSendEscrowTx();
 
   useEffect(() => {
     if (!tripId) return;
@@ -83,7 +84,11 @@ export default function SearchingScreen() {
           void (async () => {
             try {
               setCancelling(true);
-              await cancelTrip(tripId);
+              const result = await cancelTrip(tripId);
+              if (result.refund) {
+                const txHash = await sendEscrowTx(result.refund);
+                await confirmEscrow(tripId, txHash, "refund");
+              }
               await refreshActive();
               router.replace("/(tabs)/home");
             } catch {

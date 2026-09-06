@@ -216,7 +216,7 @@ stateDiagram-v2
 
 **Responsibilities**:
 - Arc Testnet USDC wallets (ERC-20 6-decimal view for display)
-- RideEscrow deposit quotes, confirm, operator release/refund
+- RideEscrow deposit / settlement / dispute / refund quotes + confirm (app-signed; 5-minute window)
 - Driver platform-credit cash-out (ERC-20 USDC transfer)
 
 USDC on Arc is one asset with two views (Circle `use-arc`): native 18-decimal `msg.value` for escrow gas math; ERC-20 `0x3600…0000` for balances and cash-out. Never sum the two.
@@ -224,8 +224,8 @@ USDC on Arc is one asset with two views (Circle `use-arc`): native 18-decimal `m
 **Key Operations**:
 - `GET /api/driver/wallet` / `POST /api/driver/wallet/withdraw`
 - `GET /api/rider/wallet`
-- `GET /api/payment/trips/:id/deposit` / `POST /api/payment/trips/:id/confirm`
-- `POST /internal/trips/:id/release` / `refund`
+- `GET /api/payment/trips/:id/deposit|settlement|dispute|refund`
+- `POST /api/payment/trips/:id/confirm`
 
 **Key Files**:
 - `backend/services/payment/src/server.ts`

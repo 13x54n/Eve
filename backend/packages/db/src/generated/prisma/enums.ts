@@ -195,7 +195,8 @@ export const LedgerStatus = {
   FAILED: 'FAILED',
   DISPUTED: 'DISPUTED',
   CANCELLED: 'CANCELLED',
-  ESCROWED: 'ESCROWED'
+  ESCROWED: 'ESCROWED',
+  SETTLING: 'SETTLING'
 } as const
 
 export type LedgerStatus = (typeof LedgerStatus)[keyof typeof LedgerStatus]

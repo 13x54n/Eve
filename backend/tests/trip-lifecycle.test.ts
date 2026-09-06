@@ -101,9 +101,16 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         .send({ rating: 5 })
         .expect(200);
       expect(completed.body.trip.status).toBe("COMPLETED");
+      expect(completed.body.trip.paymentStatus).toBe("SETTLING");
       expect(completed.body.earnings.netEarnings).toBe(proposedFare);
+      expect(completed.body.earnings.pending).toBe(true);
 
-      const ledger = await prisma.ledgerEntry.findFirst({ where: { tripId: trip.id } });
+      await confirmEscrow(driver.token, trip.id, "startSettlement").expect(200);
+      const { advanceEscrowNowMs, DISPUTE_WINDOW_MS } = await import("@eve/payment");
+      advanceEscrowNowMs(DISPUTE_WINDOW_MS);
+      await confirmEscrow(driver.token, trip.id, "finalize").expect(200);
+
+      const ledger = await prisma.ledgerEntry.findFirst({ where: { tripId: trip.id, type: "CHARGE" } });
       expect(ledger).toMatchObject({ type: "CHARGE", status: "COMPLETED" });
       expect(ledger?.note).toMatch(/Arc Testnet/i);
 

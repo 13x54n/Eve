@@ -41,7 +41,7 @@ export async function acceptOffer(req: Request, res: Response, next: NextFunctio
 }
 
 export async function cancelTrip(req: Request, res: Response, next: NextFunction) {
-  try { res.json({ trip: await riderService.cancelTrip(userId(req), String(req.params.id)) }); } catch (error) { next(error); }
+  try { res.json(await riderService.cancelTrip(userId(req), String(req.params.id))); } catch (error) { next(error); }
 }
 
 export async function listMessages(req: Request, res: Response, next: NextFunction) {

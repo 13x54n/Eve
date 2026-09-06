@@ -9,6 +9,9 @@ function userId(req: Request) {
 
 const confirmSchema = z.object({
   txHash: z.string().trim().regex(/^0x[a-fA-F0-9]{64}$/),
+  action: z
+    .enum(["deposit", "startSettlement", "dispute", "finalize", "refund"])
+    .optional(),
 });
 
 const withdrawSchema = z.object({
@@ -34,10 +37,42 @@ export async function quoteDeposit(req: Request, res: Response, next: NextFuncti
   }
 }
 
-export async function confirmDeposit(req: Request, res: Response, next: NextFunction) {
+export async function quoteSettlement(req: Request, res: Response, next: NextFunction) {
   try {
-    const { txHash } = confirmSchema.parse(req.body);
-    res.json(await paymentService.confirmTripDeposit(userId(req), String(req.params.id), txHash));
+    res.json({
+      settlement: await paymentService.quoteTripSettlement(userId(req), String(req.params.id)),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function quoteDispute(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({
+      dispute: await paymentService.quoteTripDispute(userId(req), String(req.params.id)),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function quoteRefund(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json({
+      refund: await paymentService.quoteTripRefund(userId(req), String(req.params.id)),
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function confirmEscrow(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { txHash, action } = confirmSchema.parse(req.body);
+    res.json(
+      await paymentService.confirmTripEscrow(userId(req), String(req.params.id), txHash, action),
+    );
   } catch (error) {
     next(error);
   }
@@ -63,22 +98,6 @@ export async function withdrawWallet(req: Request, res: Response, next: NextFunc
   try {
     const data = withdrawSchema.parse(req.body);
     res.status(201).json(await paymentService.withdrawDriverWallet(userId(req), data));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function releaseInternal(req: Request, res: Response, next: NextFunction) {
-  try {
-    res.json(await paymentService.releaseTripEscrow(String(req.params.id)));
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function refundInternal(req: Request, res: Response, next: NextFunction) {
-  try {
-    res.json(await paymentService.refundTripEscrow(String(req.params.id)));
   } catch (error) {
     next(error);
   }

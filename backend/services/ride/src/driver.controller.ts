@@ -188,7 +188,7 @@ export async function completeTrip(
 ) {
   try {
     const user = getAuthUser(req);
-    const data = tripActionSchema.parse(req.body);
+    const data = tripActionSchema.parse(req.body ?? {});
     const result = await driverService.completeTrip(
       user.id,
       String(req.params.id),
@@ -207,12 +207,12 @@ export async function cancelTrip(
 ) {
   try {
     const user = getAuthUser(req);
-    const trip = await driverService.cancelTrip(
+    const result = await driverService.cancelTrip(
       user.id,
       String(req.params.id),
       req.body?.reason,
     );
-    res.status(200).json({ trip });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

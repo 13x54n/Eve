@@ -176,7 +176,7 @@ Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC 
 |----------|-------------|---------|----------|
 | `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
 | `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow | — | For live chain |
-| `TREASURY_PRIVATE_KEY` | Hex key that pays drivers | — | For on-chain send |
+| `TREASURY_PRIVATE_KEY` | Hex key for platform-credit cash-out only (not escrow) | — | For on-chain send |
 | `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
 | `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
 | `PAYOUT_CHAIN_NAME` | Display name | `Arc Testnet` | No |

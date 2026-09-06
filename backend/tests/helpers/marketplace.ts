@@ -140,12 +140,16 @@ export function testEthAddress(seed: string) {
   return `0x${createHash("sha256").update(seed).digest("hex").slice(0, 40)}`;
 }
 
-export function confirmEscrow(token: string, tripId: string) {
-  const txHash = `0x${createHash("sha256").update(`${tripId}:${Date.now()}:${Math.random()}`).digest("hex")}`;
+export function confirmEscrow(
+  token: string,
+  tripId: string,
+  action: "deposit" | "startSettlement" | "dispute" | "finalize" | "refund" = "deposit",
+) {
+  const txHash = `0x${createHash("sha256").update(`${tripId}:${action}:${Date.now()}:${Math.random()}`).digest("hex")}`;
   return request(app)
     .post(`/api/payment/trips/${tripId}/confirm`)
     .set("Authorization", `Bearer ${token}`)
-    .send({ txHash });
+    .send({ txHash, action });
 }
 
 export async function spawnApprovedOnlineDriver(

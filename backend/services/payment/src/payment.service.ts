@@ -8,7 +8,14 @@ import {
   usdToNativeUsdcWei,
 } from "@eve/shared/treasury";
 import { getUsdcBalance } from "./chain.js";
-import { escrowOps, getEscrowAddress, type DepositQuote } from "./escrow.js";
+import {
+  disputeWindowMs,
+  escrowNowMs,
+  escrowOps,
+  getEscrowAddress,
+  type CallQuote,
+  type EscrowAction,
+} from "./escrow.js";
 
 export function tripIdHash(tripId: string): Hex {
   return keccak256(toBytes(tripId));
@@ -16,6 +23,355 @@ export function tripIdHash(tripId: string): Hex {
 
 function fareWei(amountUsd: number) {
   return usdToNativeUsdcWei(amountUsd);
+}
+
+type TripWithParties = NonNullable<Awaited<ReturnType<typeof loadTrip>>>;
+
+async function loadTrip(tripId: string) {
+  return prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      rider: { include: { user: true } },
+      driver: { include: { user: true } },
+    },
+  });
+}
+
+function riderWalletOf(trip: TripWithParties) {
+  return trip.rider.user.ethereumWallet?.trim() || "";
+}
+
+function driverWalletOf(trip: TripWithParties) {
+  return trip.driver?.user.ethereumWallet?.trim() || "";
+}
+
+function requireRiderWallet(trip: TripWithParties) {
+  const wallet = riderWalletOf(trip);
+  if (!wallet) fail("Link a Privy Ethereum wallet before paying", "ValidationError");
+  return wallet;
+}
+
+function requireDriverWallet(trip: TripWithParties) {
+  const wallet = driverWalletOf(trip);
+  if (!wallet) fail("Driver has no Privy Ethereum wallet", "ConflictError");
+  return wallet;
+}
+
+export function publicPaymentConfig() {
+  return {
+    ...getPayoutChainPublicConfig(),
+    escrowAddress: getEscrowAddress(),
+    escrowConfigured: Boolean(getEscrowAddress()) || Boolean(process.env.VITEST),
+    disputeWindowMs: disputeWindowMs(),
+  };
+}
+
+function quoteDepositFor(trip: TripWithParties): CallQuote {
+  return escrowOps().quoteDeposit({
+    tripIdHash: tripIdHash(trip.id),
+    payee: requireDriverWallet(trip),
+    amountWei: fareWei(Number(trip.fareTotal)),
+  });
+}
+
+export async function quoteTripDeposit(userId: string, tripId: string): Promise<CallQuote> {
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.rider.userId !== userId) fail("Trip not found", "NotFoundError");
+  if (trip.status !== "ASSIGNED" || trip.paymentStatus !== "PENDING") {
+    fail("This trip cannot be funded", "ConflictError");
+  }
+  requireDriverWallet(trip);
+  requireRiderWallet(trip);
+  return quoteDepositFor(trip);
+}
+
+export async function quoteTripSettlement(userId: string, tripId: string): Promise<CallQuote> {
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.driver?.userId !== userId) fail("Trip not found", "NotFoundError");
+  requireDriverWallet(trip);
+  const started = Boolean(trip.escrowStartTx);
+  const settleFrom = trip.escrowSettleFrom?.getTime() ?? 0;
+  if (trip.paymentStatus === "SETTLING" && started && escrowNowMs() >= settleFrom) {
+    return escrowOps().quoteCall("finalize", tripIdHash(trip.id));
+  }
+  if (trip.paymentStatus === "ESCROWED" || (trip.paymentStatus === "SETTLING" && !started)) {
+    return escrowOps().quoteCall("startSettlement", tripIdHash(trip.id));
+  }
+  fail("Settlement is not available for this trip", "ConflictError");
+}
+
+export async function quoteTripDispute(userId: string, tripId: string): Promise<CallQuote> {
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.rider.userId !== userId) fail("Trip not found", "NotFoundError");
+  if (trip.paymentStatus !== "SETTLING" || !trip.escrowStartTx) {
+    fail("There is no open dispute window", "ConflictError");
+  }
+  if (escrowNowMs() >= (trip.escrowSettleFrom?.getTime() ?? 0)) {
+    fail("The dispute window has closed", "ConflictError");
+  }
+  requireRiderWallet(trip);
+  return escrowOps().quoteCall("dispute", tripIdHash(trip.id));
+}
+
+export async function quoteTripRefund(userId: string, tripId: string): Promise<CallQuote> {
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.rider.userId !== userId) fail("Trip not found", "NotFoundError");
+  if (trip.paymentStatus !== "ESCROWED" && trip.paymentStatus !== "DISPUTED") {
+    fail("This trip cannot be refunded", "ConflictError");
+  }
+  requireRiderWallet(trip);
+  return escrowOps().quoteCall("refund", tripIdHash(trip.id));
+}
+
+function expectedFrom(trip: TripWithParties, action: EscrowAction) {
+  if (action === "deposit" || action === "dispute" || action === "refund") {
+    return requireRiderWallet(trip);
+  }
+  return requireDriverWallet(trip);
+}
+
+function inferAction(trip: TripWithParties, userId: string): EscrowAction {
+  const isRider = trip.rider.userId === userId;
+  const isDriver = trip.driver?.userId === userId;
+  if (trip.paymentStatus === "PENDING" && isRider) return "deposit";
+  if ((trip.paymentStatus === "ESCROWED" || (trip.paymentStatus === "SETTLING" && !trip.escrowStartTx)) && isDriver) {
+    return "startSettlement";
+  }
+  if (trip.paymentStatus === "SETTLING" && isRider && escrowNowMs() < (trip.escrowSettleFrom?.getTime() ?? 0)) {
+    return "dispute";
+  }
+  if (trip.paymentStatus === "SETTLING" && isDriver && escrowNowMs() >= (trip.escrowSettleFrom?.getTime() ?? 0)) {
+    return "finalize";
+  }
+  if ((trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED") && isRider) {
+    return "refund";
+  }
+  fail("No escrow action is available for this user", "ConflictError");
+}
+
+export async function confirmTripEscrow(
+  userId: string,
+  tripId: string,
+  txHash: string,
+  actionHint?: EscrowAction,
+) {
+  const hash = txHash.trim();
+  const trip = await loadTrip(tripId);
+  if (!trip) fail("Trip not found", "NotFoundError");
+  const isRider = trip.rider.userId === userId;
+  const isDriver = trip.driver?.userId === userId;
+  if (!isRider && !isDriver) fail("Trip not found", "NotFoundError");
+
+  const action = actionHint ?? inferAction(trip, userId);
+  if ((action === "deposit" || action === "dispute" || action === "refund") && !isRider) {
+    fail("Only the rider can submit this transaction", "ForbiddenError");
+  }
+  if ((action === "startSettlement" || action === "finalize") && !isDriver) {
+    fail("Only the driver can submit this transaction", "ForbiddenError");
+  }
+
+  if (action === "deposit" && trip.paymentStatus === "ESCROWED" && trip.escrowDepositTx === hash) {
+    return snapshot(trip);
+  }
+  if (action === "startSettlement" && trip.escrowStartTx === hash) {
+    return snapshot(trip);
+  }
+  if (action === "finalize" && trip.paymentStatus === "COMPLETED" && trip.escrowReleaseTx === hash) {
+    return snapshot(trip);
+  }
+  if (action === "refund" && trip.paymentStatus === "CANCELLED" && trip.escrowRefundTx === hash) {
+    return snapshot(trip);
+  }
+  if (action === "dispute" && trip.paymentStatus === "DISPUTED" && trip.escrowDisputeTx === hash) {
+    return snapshot(trip);
+  }
+
+  const confirmed = await escrowOps().confirm({
+    txHash: hash,
+    expectedFrom: expectedFrom(trip, action),
+    expectedPayee: requireDriverWallet(trip),
+    tripIdHash: tripIdHash(trip.id),
+    amountWei: fareWei(Number(trip.fareTotal)),
+    action,
+  });
+
+  if (confirmed.action === "deposit") {
+    const updated = await prisma.trip.update({
+      where: { id: trip.id },
+      data: {
+        paymentStatus: "ESCROWED",
+        paymentMethod: "WALLET",
+        escrowDepositTx: confirmed.txHash,
+      },
+    });
+    await prisma.ledgerEntry.create({
+      data: {
+        tripId: trip.id,
+        userId,
+        type: "CHARGE",
+        status: "PENDING",
+        method: "WALLET",
+        amount: trip.fareTotal,
+        providerRef: confirmed.txHash,
+        note: `USDC escrowed on Arc Testnet for trip ${trip.bookingCode}`,
+      },
+    });
+    return snapshot({ ...trip, ...updated });
+  }
+
+  if (confirmed.action === "startSettlement") {
+    const settleFrom = confirmed.settleFromMs
+      ? new Date(confirmed.settleFromMs)
+      : new Date(escrowNowMs() + disputeWindowMs());
+    const updated = await prisma.trip.update({
+      where: { id: trip.id },
+      data: {
+        paymentStatus: "SETTLING",
+        escrowStartTx: confirmed.txHash,
+        escrowSettleFrom: settleFrom,
+      },
+    });
+    return snapshot({ ...trip, ...updated, escrowSettleFrom: settleFrom, escrowStartTx: confirmed.txHash });
+  }
+
+  if (confirmed.action === "dispute") {
+    const updated = await prisma.trip.update({
+      where: { id: trip.id },
+      data: {
+        paymentStatus: "DISPUTED",
+        escrowDisputeTx: confirmed.txHash,
+      },
+    });
+    return snapshot({ ...trip, ...updated, paymentStatus: "DISPUTED", escrowDisputeTx: confirmed.txHash });
+  }
+
+  if (confirmed.action === "finalize") {
+    await applyFinalize(trip, confirmed.txHash);
+    const updated = await prisma.trip.findUnique({ where: { id: trip.id } });
+    return snapshot({ ...trip, ...updated! });
+  }
+
+  if (confirmed.action === "refund") {
+    await applyRefund(trip, confirmed.txHash);
+    const updated = await prisma.trip.findUnique({ where: { id: trip.id } });
+    return snapshot({ ...trip, ...updated! });
+  }
+
+  fail("Unknown escrow action", "ValidationError");
+}
+
+async function applyFinalize(trip: TripWithParties, txHash: string) {
+  const driverUserId = trip.driver?.userId;
+  const driverProfileId = trip.driverId;
+  if (!driverUserId || !driverProfileId) fail("Driver is missing", "ConflictError");
+  const driverNetEarnings = Number(trip.fareTotal);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.trip.update({
+      where: { id: trip.id },
+      data: {
+        paymentStatus: "COMPLETED",
+        escrowReleaseTx: txHash,
+      },
+    });
+    if (trip.paymentStatus !== "COMPLETED") {
+      await tx.driverProfile.update({
+        where: { id: driverProfileId },
+        data: { earningsTotal: { increment: driverNetEarnings } },
+      });
+    }
+    const existingCharge = await tx.ledgerEntry.findFirst({
+      where: { tripId: trip.id, type: "CHARGE" },
+    });
+    if (existingCharge) {
+      await tx.ledgerEntry.update({
+        where: { id: existingCharge.id },
+        data: {
+          status: "COMPLETED",
+          providerRef: txHash,
+          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
+        },
+      });
+    }
+    if (!existingCharge || existingCharge.userId !== driverUserId) {
+      await tx.ledgerEntry.create({
+        data: {
+          tripId: trip.id,
+          userId: driverUserId,
+          type: "CHARGE",
+          status: "COMPLETED",
+          method: trip.paymentMethod,
+          amount: trip.fareTotal,
+          providerRef: txHash,
+          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
+        },
+      });
+    }
+  });
+}
+
+async function applyRefund(trip: TripWithParties, txHash: string) {
+  await prisma.trip.update({
+    where: { id: trip.id },
+    data: {
+      escrowRefundTx: txHash,
+      paymentStatus: "CANCELLED",
+      status: trip.status === "COMPLETED" ? trip.status : "CANCELLED",
+    },
+  });
+  await prisma.ledgerEntry.create({
+    data: {
+      tripId: trip.id,
+      userId: trip.rider.userId,
+      type: "REFUND",
+      status: "COMPLETED",
+      method: "WALLET",
+      amount: trip.fareTotal,
+      providerRef: txHash,
+      note: `USDC refunded from escrow for trip ${trip.bookingCode}`,
+    },
+  });
+}
+
+function snapshot(trip: {
+  id: string;
+  paymentStatus: string;
+  escrowDepositTx?: string | null;
+  escrowStartTx?: string | null;
+  escrowSettleFrom?: Date | null;
+  escrowDisputeTx?: string | null;
+  escrowReleaseTx?: string | null;
+  escrowRefundTx?: string | null;
+  status?: string;
+}) {
+  return {
+    tripId: trip.id,
+    paymentStatus: trip.paymentStatus,
+    status: trip.status,
+    escrowDepositTx: trip.escrowDepositTx ?? null,
+    escrowStartTx: trip.escrowStartTx ?? null,
+    escrowSettleFrom: trip.escrowSettleFrom?.toISOString() ?? null,
+    escrowDisputeTx: trip.escrowDisputeTx ?? null,
+    escrowReleaseTx: trip.escrowReleaseTx ?? null,
+    escrowRefundTx: trip.escrowRefundTx ?? null,
+    disputeWindowMs: disputeWindowMs(),
+  };
+}
+
+/** @deprecated Apps sign refund; kept for unfunded trips. */
+export async function refundTripEscrow(tripId: string) {
+  const trip = await loadTrip(tripId);
+  if (!trip) fail("Trip not found", "NotFoundError");
+  if (trip.paymentStatus !== "ESCROWED" && trip.paymentStatus !== "DISPUTED") {
+    return { txHash: null };
+  }
+  return { quote: await quoteTripRefund(trip.rider.userId, tripId) };
+}
+
+export async function quoteStartSettlementForTrip(tripId: string): Promise<CallQuote> {
+  const trip = await loadTrip(tripId);
+  if (!trip?.driver?.userId) fail("Trip not found", "NotFoundError");
+  return quoteTripSettlement(trip.driver.userId, tripId);
 }
 
 function serializeLedger(entry: {
@@ -42,169 +398,6 @@ function serializeLedger(entry: {
     note: entry.note,
     createdAt: entry.createdAt,
   };
-}
-
-export function publicPaymentConfig() {
-  return {
-    ...getPayoutChainPublicConfig(),
-    escrowAddress: getEscrowAddress(),
-    escrowConfigured: Boolean(getEscrowAddress()) || Boolean(process.env.VITEST),
-  };
-}
-
-export async function quoteTripDeposit(userId: string, tripId: string): Promise<DepositQuote> {
-  const trip = await prisma.trip.findFirst({
-    where: { id: tripId, rider: { userId } },
-    include: {
-      rider: { include: { user: true } },
-      driver: { include: { user: true } },
-    },
-  });
-  if (!trip) fail("Trip not found", "NotFoundError");
-  if (trip.status !== "ASSIGNED" || trip.paymentStatus !== "PENDING") {
-    fail("This trip cannot be funded", "ConflictError");
-  }
-  if (!trip.driver?.user.ethereumWallet) {
-    fail("Driver has no Privy Ethereum wallet", "ConflictError");
-  }
-  if (!trip.rider.user.ethereumWallet) {
-    fail("Link a Privy Ethereum wallet before paying", "ValidationError");
-  }
-  return escrowOps().quote({
-    tripIdHash: tripIdHash(trip.id),
-    payee: trip.driver.user.ethereumWallet,
-    amountWei: fareWei(Number(trip.fareTotal)),
-  });
-}
-
-export async function confirmTripDeposit(
-  userId: string,
-  tripId: string,
-  txHash: string,
-) {
-  const hash = txHash.trim();
-  const trip = await prisma.trip.findFirst({
-    where: { id: tripId, rider: { userId } },
-    include: {
-      rider: { include: { user: true } },
-      driver: { include: { user: true } },
-    },
-  });
-  if (!trip) fail("Trip not found", "NotFoundError");
-  if (trip.paymentStatus === "ESCROWED" && trip.escrowDepositTx === hash) {
-    return {
-      tripId: trip.id,
-      paymentStatus: trip.paymentStatus,
-      escrowDepositTx: trip.escrowDepositTx,
-    };
-  }
-  if (trip.paymentStatus === "ESCROWED") {
-    fail("Fare is already in escrow", "ConflictError");
-  }
-  if (trip.status !== "ASSIGNED") {
-    fail("Accept a driver before depositing", "ConflictError");
-  }
-  const riderWallet = trip.rider.user.ethereumWallet?.trim();
-  const driverWallet = trip.driver?.user.ethereumWallet?.trim();
-  if (!riderWallet || !driverWallet) {
-    fail("Both rider and driver need Privy Ethereum wallets", "ValidationError");
-  }
-
-  const confirmed = await escrowOps().confirm({
-    txHash: hash,
-    expectedFrom: riderWallet,
-    expectedPayee: driverWallet,
-    tripIdHash: tripIdHash(trip.id),
-    amountWei: fareWei(Number(trip.fareTotal)),
-  });
-
-  const updated = await prisma.trip.update({
-    where: { id: trip.id },
-    data: {
-      paymentStatus: "ESCROWED",
-      paymentMethod: "WALLET",
-      escrowDepositTx: confirmed.txHash,
-    },
-  });
-
-  await prisma.ledgerEntry.create({
-    data: {
-      tripId: trip.id,
-      userId,
-      type: "CHARGE",
-      status: "PENDING",
-      method: "WALLET",
-      amount: trip.fareTotal,
-      providerRef: confirmed.txHash,
-      note: `USDC escrowed on Arc Testnet for trip ${trip.bookingCode}`,
-    },
-  });
-
-  return {
-    tripId: updated.id,
-    paymentStatus: updated.paymentStatus,
-    escrowDepositTx: updated.escrowDepositTx,
-  };
-}
-
-export async function releaseTripEscrow(tripId: string) {
-  const trip = await prisma.trip.findUnique({
-    where: { id: tripId },
-    include: { driver: { include: { user: true } } },
-  });
-  if (!trip) fail("Trip not found", "NotFoundError");
-  if (trip.paymentStatus === "COMPLETED" && trip.escrowReleaseTx) {
-    return { txHash: trip.escrowReleaseTx };
-  }
-  if (trip.paymentStatus !== "ESCROWED") {
-    fail("Fare is not in escrow", "ConflictError");
-  }
-  const { txHash } = await escrowOps().release(tripIdHash(trip.id));
-  await prisma.trip.update({
-    where: { id: trip.id },
-    data: { escrowReleaseTx: txHash },
-  });
-  return { txHash };
-}
-
-export async function refundTripEscrow(tripId: string) {
-  const trip = await prisma.trip.findUnique({ where: { id: tripId } });
-  if (!trip) fail("Trip not found", "NotFoundError");
-  if (trip.paymentStatus === "CANCELLED" && trip.escrowRefundTx) {
-    return { txHash: trip.escrowRefundTx };
-  }
-  if (trip.paymentStatus !== "ESCROWED") {
-    return { txHash: null };
-  }
-  const { txHash } = await escrowOps().refund(tripIdHash(trip.id));
-  const zero =
-    txHash ===
-    "0x0000000000000000000000000000000000000000000000000000000000000000";
-  await prisma.trip.update({
-    where: { id: trip.id },
-    data: {
-      escrowRefundTx: zero ? null : txHash,
-      paymentStatus: "CANCELLED",
-    },
-  });
-  if (!zero) {
-    await prisma.ledgerEntry.create({
-      data: {
-        tripId: trip.id,
-        userId: (await prisma.riderProfile.findUnique({
-          where: { id: trip.riderId },
-          select: { userId: true },
-        }))!.userId,
-        type: "REFUND",
-        status: "COMPLETED",
-        method: "WALLET",
-        amount: trip.fareTotal,
-        providerRef: txHash,
-        note: `USDC refunded from escrow for trip ${trip.bookingCode}`,
-      },
-    });
-  }
-  return { txHash: zero ? null : txHash };
 }
 
 async function walletActivity(userId: string) {

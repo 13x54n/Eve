@@ -79,6 +79,9 @@ export type TripMinAggregateOutputType = {
   paymentStatus: $Enums.LedgerStatus | null
   paymentMethod: $Enums.PaymentMethodKind | null
   escrowDepositTx: string | null
+  escrowStartTx: string | null
+  escrowSettleFrom: Date | null
+  escrowDisputeTx: string | null
   escrowReleaseTx: string | null
   escrowRefundTx: string | null
   cancellationReason: string | null
@@ -120,6 +123,9 @@ export type TripMaxAggregateOutputType = {
   paymentStatus: $Enums.LedgerStatus | null
   paymentMethod: $Enums.PaymentMethodKind | null
   escrowDepositTx: string | null
+  escrowStartTx: string | null
+  escrowSettleFrom: Date | null
+  escrowDisputeTx: string | null
   escrowReleaseTx: string | null
   escrowRefundTx: string | null
   cancellationReason: string | null
@@ -161,6 +167,9 @@ export type TripCountAggregateOutputType = {
   paymentStatus: number
   paymentMethod: number
   escrowDepositTx: number
+  escrowStartTx: number
+  escrowSettleFrom: number
+  escrowDisputeTx: number
   escrowReleaseTx: number
   escrowRefundTx: number
   cancellationReason: number
@@ -228,6 +237,9 @@ export type TripMinAggregateInputType = {
   paymentStatus?: true
   paymentMethod?: true
   escrowDepositTx?: true
+  escrowStartTx?: true
+  escrowSettleFrom?: true
+  escrowDisputeTx?: true
   escrowReleaseTx?: true
   escrowRefundTx?: true
   cancellationReason?: true
@@ -269,6 +281,9 @@ export type TripMaxAggregateInputType = {
   paymentStatus?: true
   paymentMethod?: true
   escrowDepositTx?: true
+  escrowStartTx?: true
+  escrowSettleFrom?: true
+  escrowDisputeTx?: true
   escrowReleaseTx?: true
   escrowRefundTx?: true
   cancellationReason?: true
@@ -310,6 +325,9 @@ export type TripCountAggregateInputType = {
   paymentStatus?: true
   paymentMethod?: true
   escrowDepositTx?: true
+  escrowStartTx?: true
+  escrowSettleFrom?: true
+  escrowDisputeTx?: true
   escrowReleaseTx?: true
   escrowRefundTx?: true
   cancellationReason?: true
@@ -438,6 +456,9 @@ export type TripGroupByOutputType = {
   paymentStatus: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx: string | null
+  escrowStartTx: string | null
+  escrowSettleFrom: Date | null
+  escrowDisputeTx: string | null
   escrowReleaseTx: string | null
   escrowRefundTx: string | null
   cancellationReason: string | null
@@ -502,6 +523,9 @@ export type TripWhereInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowStartTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowSettleFrom?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  escrowDisputeTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
@@ -555,6 +579,9 @@ export type TripOrderByWithRelationInput = {
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
   escrowDepositTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowStartTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowSettleFrom?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowDisputeTx?: Prisma.SortOrderInput | Prisma.SortOrder
   escrowReleaseTx?: Prisma.SortOrderInput | Prisma.SortOrder
   escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -611,6 +638,9 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowStartTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowSettleFrom?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  escrowDisputeTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
@@ -664,6 +694,9 @@ export type TripOrderByWithAggregationInput = {
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
   escrowDepositTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowStartTx?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowSettleFrom?: Prisma.SortOrderInput | Prisma.SortOrder
+  escrowDisputeTx?: Prisma.SortOrderInput | Prisma.SortOrder
   escrowReleaseTx?: Prisma.SortOrderInput | Prisma.SortOrder
   escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -713,6 +746,9 @@ export type TripScalarWhereWithAggregatesInput = {
   paymentStatus?: Prisma.EnumLedgerStatusWithAggregatesFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindWithAggregatesFilter<"Trip"> | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  escrowStartTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
+  escrowSettleFrom?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
+  escrowDisputeTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   escrowReleaseTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   escrowRefundTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
@@ -750,6 +786,9 @@ export type TripCreateInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -803,6 +842,9 @@ export type TripUncheckedCreateInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -848,6 +890,9 @@ export type TripUpdateInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -901,6 +946,9 @@ export type TripUncheckedUpdateInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -950,6 +998,9 @@ export type TripCreateManyInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -987,6 +1038,9 @@ export type TripUpdateManyMutationInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1028,6 +1082,9 @@ export type TripUncheckedUpdateManyInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1079,6 +1136,9 @@ export type TripCountOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
   escrowDepositTx?: Prisma.SortOrder
+  escrowStartTx?: Prisma.SortOrder
+  escrowSettleFrom?: Prisma.SortOrder
+  escrowDisputeTx?: Prisma.SortOrder
   escrowReleaseTx?: Prisma.SortOrder
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
@@ -1132,6 +1192,9 @@ export type TripMaxOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
   escrowDepositTx?: Prisma.SortOrder
+  escrowStartTx?: Prisma.SortOrder
+  escrowSettleFrom?: Prisma.SortOrder
+  escrowDisputeTx?: Prisma.SortOrder
   escrowReleaseTx?: Prisma.SortOrder
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
@@ -1173,6 +1236,9 @@ export type TripMinOrderByAggregateInput = {
   paymentStatus?: Prisma.SortOrder
   paymentMethod?: Prisma.SortOrder
   escrowDepositTx?: Prisma.SortOrder
+  escrowStartTx?: Prisma.SortOrder
+  escrowSettleFrom?: Prisma.SortOrder
+  escrowDisputeTx?: Prisma.SortOrder
   escrowReleaseTx?: Prisma.SortOrder
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
@@ -1542,6 +1608,9 @@ export type TripCreateWithoutRecipientUserInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1593,6 +1662,9 @@ export type TripUncheckedCreateWithoutRecipientUserInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1671,6 +1743,9 @@ export type TripScalarWhereInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFilter<"Trip"> | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFilter<"Trip"> | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowStartTx?: Prisma.StringNullableFilter<"Trip"> | string | null
+  escrowSettleFrom?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  escrowDisputeTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowReleaseTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
@@ -1708,6 +1783,9 @@ export type TripCreateWithoutRiderInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1759,6 +1837,9 @@ export type TripUncheckedCreateWithoutRiderInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1830,6 +1911,9 @@ export type TripCreateWithoutDriverInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1881,6 +1965,9 @@ export type TripUncheckedCreateWithoutDriverInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -1952,6 +2039,9 @@ export type TripCreateWithoutVehicleInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2003,6 +2093,9 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2074,6 +2167,9 @@ export type TripCreateWithoutDispatchesInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2126,6 +2222,9 @@ export type TripUncheckedCreateWithoutDispatchesInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2186,6 +2285,9 @@ export type TripUpdateWithoutDispatchesInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2238,6 +2340,9 @@ export type TripUncheckedUpdateWithoutDispatchesInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2282,6 +2387,9 @@ export type TripCreateWithoutStopsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2334,6 +2442,9 @@ export type TripUncheckedCreateWithoutStopsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2394,6 +2505,9 @@ export type TripUpdateWithoutStopsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2446,6 +2560,9 @@ export type TripUncheckedUpdateWithoutStopsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2490,6 +2607,9 @@ export type TripCreateWithoutChatMessagesInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2542,6 +2662,9 @@ export type TripUncheckedCreateWithoutChatMessagesInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2602,6 +2725,9 @@ export type TripUpdateWithoutChatMessagesInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2654,6 +2780,9 @@ export type TripUncheckedUpdateWithoutChatMessagesInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2698,6 +2827,9 @@ export type TripCreateWithoutOffersInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2750,6 +2882,9 @@ export type TripUncheckedCreateWithoutOffersInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2810,6 +2945,9 @@ export type TripUpdateWithoutOffersInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2862,6 +3000,9 @@ export type TripUncheckedUpdateWithoutOffersInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2906,6 +3047,9 @@ export type TripCreateWithoutEventsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -2958,6 +3102,9 @@ export type TripUncheckedCreateWithoutEventsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3018,6 +3165,9 @@ export type TripUpdateWithoutEventsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3070,6 +3220,9 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3114,6 +3267,9 @@ export type TripCreateWithoutLedgerInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3166,6 +3322,9 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3226,6 +3385,9 @@ export type TripUpdateWithoutLedgerInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3278,6 +3440,9 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3322,6 +3487,9 @@ export type TripCreateWithoutTicketsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3374,6 +3542,9 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3434,6 +3605,9 @@ export type TripUpdateWithoutTicketsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3486,6 +3660,9 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3530,6 +3707,9 @@ export type TripCreateWithoutIncidentsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3582,6 +3762,9 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3642,6 +3825,9 @@ export type TripUpdateWithoutIncidentsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3694,6 +3880,9 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3741,6 +3930,9 @@ export type TripCreateManyRecipientUserInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3778,6 +3970,9 @@ export type TripUpdateWithoutRecipientUserInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3829,6 +4024,9 @@ export type TripUncheckedUpdateWithoutRecipientUserInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3877,6 +4075,9 @@ export type TripUncheckedUpdateManyWithoutRecipientUserInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3917,6 +4118,9 @@ export type TripCreateManyRiderInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -3954,6 +4158,9 @@ export type TripUpdateWithoutRiderInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4005,6 +4212,9 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4053,6 +4263,9 @@ export type TripUncheckedUpdateManyWithoutRiderInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4093,6 +4306,9 @@ export type TripCreateManyDriverInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -4130,6 +4346,9 @@ export type TripUpdateWithoutDriverInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4181,6 +4400,9 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4229,6 +4451,9 @@ export type TripUncheckedUpdateManyWithoutDriverInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4269,6 +4494,9 @@ export type TripCreateManyVehicleInput = {
   paymentStatus?: $Enums.LedgerStatus
   paymentMethod: $Enums.PaymentMethodKind
   escrowDepositTx?: string | null
+  escrowStartTx?: string | null
+  escrowSettleFrom?: Date | string | null
+  escrowDisputeTx?: string | null
   escrowReleaseTx?: string | null
   escrowRefundTx?: string | null
   cancellationReason?: string | null
@@ -4306,6 +4534,9 @@ export type TripUpdateWithoutVehicleInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4357,6 +4588,9 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4405,6 +4639,9 @@ export type TripUncheckedUpdateManyWithoutVehicleInput = {
   paymentStatus?: Prisma.EnumLedgerStatusFieldUpdateOperationsInput | $Enums.LedgerStatus
   paymentMethod?: Prisma.EnumPaymentMethodKindFieldUpdateOperationsInput | $Enums.PaymentMethodKind
   escrowDepositTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowStartTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  escrowSettleFrom?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  escrowDisputeTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowReleaseTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4540,6 +4777,9 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   paymentStatus?: boolean
   paymentMethod?: boolean
   escrowDepositTx?: boolean
+  escrowStartTx?: boolean
+  escrowSettleFrom?: boolean
+  escrowDisputeTx?: boolean
   escrowReleaseTx?: boolean
   escrowRefundTx?: boolean
   cancellationReason?: boolean
@@ -4594,6 +4834,9 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   paymentStatus?: boolean
   paymentMethod?: boolean
   escrowDepositTx?: boolean
+  escrowStartTx?: boolean
+  escrowSettleFrom?: boolean
+  escrowDisputeTx?: boolean
   escrowReleaseTx?: boolean
   escrowRefundTx?: boolean
   cancellationReason?: boolean
@@ -4639,6 +4882,9 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   paymentStatus?: boolean
   paymentMethod?: boolean
   escrowDepositTx?: boolean
+  escrowStartTx?: boolean
+  escrowSettleFrom?: boolean
+  escrowDisputeTx?: boolean
   escrowReleaseTx?: boolean
   escrowRefundTx?: boolean
   cancellationReason?: boolean
@@ -4684,6 +4930,9 @@ export type TripSelectScalar = {
   paymentStatus?: boolean
   paymentMethod?: boolean
   escrowDepositTx?: boolean
+  escrowStartTx?: boolean
+  escrowSettleFrom?: boolean
+  escrowDisputeTx?: boolean
   escrowReleaseTx?: boolean
   escrowRefundTx?: boolean
   cancellationReason?: boolean
@@ -4696,7 +4945,7 @@ export type TripSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "escrowDepositTx" | "escrowReleaseTx" | "escrowRefundTx" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
+export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "escrowDepositTx" | "escrowStartTx" | "escrowSettleFrom" | "escrowDisputeTx" | "escrowReleaseTx" | "escrowRefundTx" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
 export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
@@ -4770,6 +5019,9 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     paymentStatus: $Enums.LedgerStatus
     paymentMethod: $Enums.PaymentMethodKind
     escrowDepositTx: string | null
+    escrowStartTx: string | null
+    escrowSettleFrom: Date | null
+    escrowDisputeTx: string | null
     escrowReleaseTx: string | null
     escrowRefundTx: string | null
     cancellationReason: string | null
@@ -5243,6 +5495,9 @@ export interface TripFieldRefs {
   readonly paymentStatus: Prisma.FieldRef<"Trip", 'LedgerStatus'>
   readonly paymentMethod: Prisma.FieldRef<"Trip", 'PaymentMethodKind'>
   readonly escrowDepositTx: Prisma.FieldRef<"Trip", 'String'>
+  readonly escrowStartTx: Prisma.FieldRef<"Trip", 'String'>
+  readonly escrowSettleFrom: Prisma.FieldRef<"Trip", 'DateTime'>
+  readonly escrowDisputeTx: Prisma.FieldRef<"Trip", 'String'>
   readonly escrowReleaseTx: Prisma.FieldRef<"Trip", 'String'>
   readonly escrowRefundTx: Prisma.FieldRef<"Trip", 'String'>
   readonly cancellationReason: Prisma.FieldRef<"Trip", 'String'>

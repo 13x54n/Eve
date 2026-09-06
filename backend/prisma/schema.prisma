@@ -143,6 +143,7 @@ enum LedgerStatus {
   DISPUTED
   CANCELLED
   ESCROWED
+  SETTLING
 }
 
 enum TicketStatus {
@@ -372,6 +373,9 @@ model Trip {
   paymentStatus      LedgerStatus      @default(PENDING)
   paymentMethod      PaymentMethodKind
   escrowDepositTx    String?
+  escrowStartTx      String?
+  escrowSettleFrom   DateTime?
+  escrowDisputeTx    String?
   escrowReleaseTx    String?
   escrowRefundTx     String?
   cancellationReason String?

@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useEmbeddedEthereumWallet } from "@privy-io/expo";
-import type { CallQuote } from "@/services/wallet";
+import type { CallQuote } from "@/services/payment";
 import { eveArcTestnet } from "@/lib/arc-chain";
 
 function chainIdHex(id: number) {
@@ -24,14 +24,12 @@ async function ensureArcTestnet(provider: EthereumProvider, chainId: number) {
     await provider.request({ method: "eth_chainId" }),
   );
   if (current === chainId) return;
-
   const hex = chainIdHex(chainId);
   try {
     await provider.request({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: hex }],
     });
-    return;
   } catch {
     await provider.request({
       method: "wallet_addEthereumChain",
@@ -91,6 +89,3 @@ export function useSendEscrowTx() {
     [wallets],
   );
 }
-
-/** @deprecated use useSendEscrowTx */
-export const useSendEscrowDeposit = useSendEscrowTx;

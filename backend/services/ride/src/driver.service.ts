@@ -8,7 +8,7 @@ import {
   syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
-import { refundTripEscrow, releaseTripEscrow } from "@eve/payment";
+import { quoteStartSettlementForTrip, quoteTripRefund } from "@eve/payment";
 import {
   expireTimedOutDispatches,
   refreshAcceptanceRate,
@@ -629,11 +629,33 @@ export async function completeTrip(
     throw error;
   }
 
-  if (trip.paymentStatus !== "ESCROWED") {
+  if (trip.paymentStatus !== "ESCROWED" && trip.paymentStatus !== "SETTLING") {
     fail("Fare is not in escrow", "ConflictError");
   }
 
-  const { txHash } = await releaseTripEscrow(tripId);
+  if (trip.status !== "ONGOING" && !(trip.status === "COMPLETED" && trip.paymentStatus === "SETTLING")) {
+    fail("Trip is not in progress", "ConflictError");
+  }
+
+  if (trip.status === "COMPLETED" && trip.paymentStatus === "SETTLING") {
+    const startQuote = trip.escrowStartTx
+      ? null
+      : await quoteStartSettlementForTrip(tripId);
+    return {
+      trip: await prisma.trip.findFirst({
+        where: { id: tripId },
+        include: { rider: { include: { user: true } }, vehicle: true },
+      }),
+      settlement: startQuote ? { startQuote } : undefined,
+      earnings: {
+        fareTotal: money(trip.fareTotal),
+        netEarnings: money(Number(trip.fareTotal)),
+        pending: true,
+        durationMin: trip.durationMin,
+        distanceKm: money(trip.distanceKm),
+      },
+    };
+  }
 
   const driverNetEarnings = Number(trip.fareTotal);
 
@@ -643,7 +665,7 @@ export async function completeTrip(
       data: {
         status: "COMPLETED",
         endedAt: new Date(),
-        paymentStatus: "COMPLETED",
+        paymentStatus: "SETTLING",
       },
       include: {
         rider: { include: { user: true } },
@@ -655,41 +677,13 @@ export async function completeTrip(
       where: { id: profile.id },
       data: {
         presence: "ONLINE",
-        earningsTotal: { increment: driverNetEarnings },
         onlineHours: { increment: (trip.durationMin || 15) / 60 },
       },
     });
 
-    const existingCharge = await tx.ledgerEntry.findFirst({
-      where: { tripId: trip.id, type: "CHARGE" },
-    });
-    if (existingCharge) {
-      await tx.ledgerEntry.update({
-        where: { id: existingCharge.id },
-        data: {
-          status: "COMPLETED",
-          providerRef: txHash,
-          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
-        },
-      });
-    }
-    if (!existingCharge || existingCharge.userId !== profile.userId) {
-      await tx.ledgerEntry.create({
-        data: {
-          tripId: trip.id,
-          userId: profile.userId,
-          type: "CHARGE",
-          status: "COMPLETED",
-          method: trip.paymentMethod,
-          amount: trip.fareTotal,
-          providerRef: txHash,
-          note: `USDC released on Arc Testnet for trip ${trip.bookingCode}`,
-        },
-      });
-    }
-
     return completed;
   });
+  const startQuote = await quoteStartSettlementForTrip(tripId);
   await syncDriverGeoClient(userId);
 
   await recordTripEvent({
@@ -699,7 +693,7 @@ export async function completeTrip(
     details: {
       driverId: profile.id,
       endedAt: new Date().toISOString(),
-      driverEarnings: driverNetEarnings,
+      pendingSettlement: true,
       riderRatingGiven: input.rating,
     },
   });
@@ -708,9 +702,11 @@ export async function completeTrip(
 
   return {
     trip: updatedTrip,
+    settlement: { startQuote },
     earnings: {
       fareTotal: money(trip.fareTotal),
       netEarnings: money(driverNetEarnings),
+      pending: true,
       durationMin: trip.durationMin,
       distanceKm: money(trip.distanceKm),
     },
@@ -734,6 +730,7 @@ export async function cancelTrip(
 
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, driverId: profile.id },
+    include: { rider: true },
   });
 
   if (!trip) {
@@ -742,8 +739,9 @@ export async function cancelTrip(
     throw error;
   }
 
-  if (trip.paymentStatus === "ESCROWED") {
-    await refundTripEscrow(tripId);
+  let refund = null as Awaited<ReturnType<typeof quoteTripRefund>> | null;
+  if (trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED") {
+    refund = await quoteTripRefund(trip.rider.userId, tripId);
   }
 
   const cancelledTrip = await prisma.trip.update({
@@ -751,7 +749,10 @@ export async function cancelTrip(
     data: {
       status: "CANCELLED",
       cancellationReason: reason || "Cancelled by driver",
-      paymentStatus: "CANCELLED",
+      paymentStatus:
+        trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED"
+          ? trip.paymentStatus
+          : "CANCELLED",
     },
     include: {
       rider: { include: { user: true } },
@@ -785,7 +786,7 @@ export async function cancelTrip(
 
   emitTripAndUserEvent(tripId, "RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
 
-  return cancelledTrip;
+  return { trip: cancelledTrip, refund };
 }
 
 const driverTripInclude = {
@@ -811,6 +812,9 @@ function serializeDriverTrip(trip: {
   fareTotal: number | { toString(): string };
   paymentStatus: string;
   paymentMethod: string;
+  escrowSettleFrom?: Date | null;
+  escrowStartTx?: string | null;
+  escrowDisputeTx?: string | null;
   cancellationReason: string | null;
   createdAt: Date;
   startedAt: Date | null;
@@ -836,6 +840,9 @@ function serializeDriverTrip(trip: {
     netEarnings: money(trip.fareTotal),
     paymentStatus: trip.paymentStatus,
     paymentMethod: trip.paymentMethod,
+    escrowSettleFrom: trip.escrowSettleFrom ?? null,
+    escrowStartTx: trip.escrowStartTx ?? null,
+    escrowDisputeTx: trip.escrowDisputeTx ?? null,
     riderName: trip.rider?.user?.name || "Rider",
     riderRating: money(trip.rider?.rating || 5.0),
     cancellationReason: trip.cancellationReason,
