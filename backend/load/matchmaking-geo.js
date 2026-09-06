@@ -45,6 +45,7 @@ export default function matchmakingGeo() {
   }
 
   const trip = created.json("trip");
+  sleep(0.05);
 
   const incoming = http.get(
     `${root}/api/driver/trips/incoming`,

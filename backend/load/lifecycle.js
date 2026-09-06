@@ -18,7 +18,6 @@ export default function lifecycle() {
   const pair = pairs[(__VU - 1) % pairs.length];
   const root = rideUrl();
   const pay = paymentUrl();
-  http.setResponseCallback(http.expectedStatuses(200, 201, 409));
 
   cancelActiveTrip(root, pair.riderToken);
 

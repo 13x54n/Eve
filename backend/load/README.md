@@ -32,7 +32,7 @@ With services on `npm run dev`:
 npm run load:capacity
 ```
 
-That ramps from 200 toward 4000 requests/second against `GET /health` (no auth, no trip rules). Watch:
+That ramps from 200 toward 4000 requests/second against `GET /health` (no auth, no trip rules). Use `HEALTH_PATH` if you need a different path — do not set `PATH` (that is the shell executable path). Watch:
 
 | Metric | Meaning |
 | --- | --- |

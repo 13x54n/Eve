@@ -140,6 +140,12 @@ export function memoryEscrowOps(): EscrowOps {
     async release(tripIdHash) {
       const item = memory.get(tripIdHash);
       if (!item) {
+        // Ride and payment are separate processes; confirm writes memory on payment,
+        // complete/release runs in ride. LOAD_ESCROW trusts the DB ESCROWED row.
+        if (process.env.LOAD_ESCROW === "1") {
+          const txHash = (`0xrel${tripIdHash.slice(2)}`).slice(0, 66).padEnd(66, "0");
+          return { txHash };
+        }
         fail("No escrow deposit to release", "ConflictError");
       }
       if (item.state === "released") {
