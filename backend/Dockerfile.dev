@@ -24,7 +24,12 @@ COPY services/admin/package.json ./services/admin/
 
 RUN npm ci
 
+COPY docker-entrypoint.sh /usr/local/bin/eve-entrypoint.sh
+RUN chmod +x /usr/local/bin/eve-entrypoint.sh
+
 COPY . .
+
+ENTRYPOINT ["eve-entrypoint.sh"]
 
 # Supplied at build time from backend/.env (see docker-compose.yml build.args).
 ARG DATABASE_URL

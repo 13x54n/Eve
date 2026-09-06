@@ -2,7 +2,8 @@ import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
-import { hashPassword, setPayoutSenderForTests } from "@eve/shared";
+import { hashPassword } from "@eve/shared";
+import { setPayoutSenderForTests } from "@eve/shared/treasury";
 import { registerDriver } from "./helpers/marketplace.js";
 
 const adminEmail = `wallet-admin-${Date.now()}@example.com`;

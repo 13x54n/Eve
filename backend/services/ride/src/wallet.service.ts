@@ -1,11 +1,10 @@
 import { prisma } from "@eve/db";
+import { fail, money } from "@eve/shared";
 import {
   executePayout,
-  fail,
   getPayoutChainPublicConfig,
   isTreasuryConfigured,
-  money,
-} from "@eve/shared";
+} from "@eve/shared/treasury";
 
 const MIN_WITHDRAW_USD = 1;
 const MAX_WITHDRAW_USD = 10_000;

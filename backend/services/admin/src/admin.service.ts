@@ -12,12 +12,11 @@ import {
   canCreateStaff,
   canManageTargetStaff,
   isDepartmentStaffRole,
-  executePayout,
-  isTreasuryConfigured,
   type AdminStaffRole,
   type AdminStaffTitle,
   type StaffActor,
 } from "@eve/shared";
+import { executePayout, isTreasuryConfigured } from "@eve/shared/treasury";
 
 function parseFilters(query: Record<string, unknown>) {
   const city = typeof query.city === "string" && query.city ? query.city : undefined;

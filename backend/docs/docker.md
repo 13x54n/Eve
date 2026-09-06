@@ -53,7 +53,7 @@ docker compose exec auth npm run db:seed
 docker compose exec postgres psql -U eve -d eve
 ```
 
-Migrations run automatically via the `migrate` service on `up`. After changing dependencies, rebuild: `docker compose up --build`.
+Migrations run automatically via the `migrate` service on `up`. Containers share a `eve_node_modules` volume and sync it from `package-lock.json` on start, so new packages (for example `viem` on `@eve/shared`) install without wiping Postgres. Rebuild the image after Dockerfile changes: `docker compose up --build`.
 
 ## Mobile apps and emulators (host)
 

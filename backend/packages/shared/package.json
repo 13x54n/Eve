@@ -9,6 +9,12 @@
       "development": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./treasury": {
+      "types": "./src/treasury.ts",
+      "development": "./src/treasury.ts",
+      "import": "./dist/treasury.js",
+      "default": "./dist/treasury.js"
     }
   },
   "dependencies": {

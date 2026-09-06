@@ -11,6 +11,12 @@ x-dev-build: &dev-build
   context: .
   dockerfile: Dockerfile.dev
 
+# Shared node_modules volume (not host bind). Entrypoint re-runs npm ci when
+# package-lock.json is newer so new deps like viem land without a volume wipe.
+x-app-volumes: &app-volumes
+  - .:/app
+  - eve_node_modules:/app/node_modules
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -49,9 +55,7 @@ services:
   migrate:
     build: *dev-build
     container_name: eve-migrate
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: sh -c "rm -rf packages/db/src/generated/prisma && npx prisma generate && npx prisma migrate deploy"
     env_file: .env
     environment:
@@ -66,9 +70,7 @@ services:
   auth:
     build: *dev-build
     container_name: eve-auth
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: npm run dev -w @eve/auth
     env_file: .env
     environment:
@@ -91,9 +93,7 @@ services:
   location:
     build: *dev-build
     container_name: eve-location
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: npm run dev -w @eve/location
     env_file: .env
     environment:
@@ -120,9 +120,7 @@ services:
   ride:
     build: *dev-build
     container_name: eve-ride
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: npm run dev -w @eve/ride
     env_file: .env
     environment:
@@ -155,9 +153,7 @@ services:
   notify:
     build: *dev-build
     container_name: eve-notify
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: npm run dev -w @eve/notify
     env_file: .env
     environment:
@@ -183,9 +179,7 @@ services:
   admin:
     build: *dev-build
     container_name: eve-admin
-    volumes:
-      - .:/app
-      - /app/node_modules
+    volumes: *app-volumes
     command: npm run dev -w @eve/admin
     env_file: .env
     environment:
@@ -219,3 +213,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  eve_node_modules:
