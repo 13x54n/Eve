@@ -1,6 +1,6 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { getDriverProfile, getMinFare, prisma, recordTripEvent } from "@eve/db";
-import { MATCH_RADIUS_KM, fail, money, startOfDay } from "@eve/shared";
+import { MATCH_RADIUS_KM, fail, money, startOfDay, invalidateTripConfirmationCache, writeTripConfirmationCache } from "@eve/shared";
 import {
   distanceToPickupClient,
   nearbySearchingTripsClient,
@@ -187,6 +187,18 @@ export function getDocumentUploadAuth() {
 }
 
 export async function getIncomingTrips(userId: string) {
+  const empty = {
+    trips: [] as unknown[],
+    pendingOffer: null as null | Record<string, unknown>,
+    activeDispatch: null as null | ReturnType<typeof serializeActiveDispatch>,
+    pendingEscrowTrip: null as null | {
+      tripId: string;
+      pickupAddress: string;
+      dropoffAddress: string;
+      fareTotal: number;
+    },
+    activeTripId: null as string | null,
+  };
   const profile = await prisma.driverProfile.findUnique({
     where: { userId },
     include: { vehicles: true },
@@ -198,18 +210,40 @@ export async function getIncomingTrips(userId: string) {
     throw error;
   }
 
-  if (profile.approvalStatus !== "APPROVED" || !["ONLINE", "IDLE"].includes(profile.presence)) {
-    return { trips: [], pendingOffer: null, activeDispatch: null };
+  if (profile.approvalStatus !== "APPROVED") {
+    return empty;
   }
 
   await expireTimedOutDispatches(profile.id);
 
   const activeTrip = await prisma.trip.findFirst({
     where: { driverId: profile.id, status: { in: ["ASSIGNED", "ONGOING"] } },
-    select: { id: true },
+    select: {
+      id: true,
+      status: true,
+      paymentStatus: true,
+      pickupAddress: true,
+      dropoffAddress: true,
+      fareTotal: true,
+    },
   });
   if (activeTrip) {
-    return { trips: [], pendingOffer: null, activeDispatch: null };
+    if (activeTrip.status === "ASSIGNED" && activeTrip.paymentStatus === "PENDING") {
+      return {
+        ...empty,
+        pendingEscrowTrip: {
+          tripId: activeTrip.id,
+          pickupAddress: activeTrip.pickupAddress,
+          dropoffAddress: activeTrip.dropoffAddress,
+          fareTotal: money(activeTrip.fareTotal),
+        },
+      };
+    }
+    return { ...empty, activeTripId: activeTrip.id };
+  }
+
+  if (!["ONLINE", "IDLE"].includes(profile.presence)) {
+    return empty;
   }
 
   const pendingOffer = await prisma.tripOffer.findFirst({
@@ -219,7 +253,7 @@ export async function getIncomingTrips(userId: string) {
 
   if (pendingOffer) {
     return {
-      trips: [],
+      ...empty,
       pendingOffer: {
         id: pendingOffer.id,
         tripId: pendingOffer.tripId,
@@ -322,7 +356,7 @@ export async function getIncomingTrips(userId: string) {
       distanceToPickup: distanceById.get(trip.id) ?? null,
     }));
 
-  return { trips: nearby, pendingOffer: null, activeDispatch };
+  return { ...empty, trips: nearby, pendingOffer: null, activeDispatch };
 }
 
 export async function createTripOffer(userId: string, tripId: string, input: { proposedFare: number; etaMinutes: number }) {
@@ -380,7 +414,8 @@ export async function createTripOffer(userId: string, tripId: string, input: { p
   try {
     const offer = await prisma.tripOffer.create({ data: { tripId, driverId: profile.id, proposedFare: input.proposedFare, etaMinutes: input.etaMinutes } });
     const payload = { ...offer, proposedFare: Number(offer.proposedFare), tripId };
-    emitTripAndUserEvent(tripId, "RIDER", trip.rider.userId, "offer:created", payload);
+    await emitTripAndUserEvent(tripId, "RIDER", trip.rider.userId, "offer:created", payload);
+    await invalidateTripConfirmationCache({ tripId, riderUserId: trip.rider.userId });
     return offer;
   } catch (error: any) {
     if (error?.code === "P2002") { error.name = "ConflictError"; error.message = "You already offered on this trip"; }
@@ -536,19 +571,34 @@ export async function arrivedAtPickup(userId: string, tripId: string) {
     throw error;
   }
 
+  const arrivedAt = new Date();
+  const updated = await prisma.trip.update({
+    where: { id: tripId },
+    data: { arrivedAt },
+    include: driverTripInclude,
+  });
+
   await recordTripEvent({
     tripId,
     action: "driver.arrived",
     actorId: userId,
     details: {
       driverId: profile.id,
-      arrivedAt: new Date().toISOString(),
+      arrivedAt: arrivedAt.toISOString(),
     },
   });
 
-  emitTripAndUserEvent(tripId, "RIDER", trip.rider.userId, "driver:arrived", trip);
+  await emitTripAndUserEvent(tripId, "RIDER", updated.rider.userId, "driver:arrived", updated);
+  await writeTripConfirmationCache({
+    tripId,
+    status: updated.status,
+    paymentStatus: updated.paymentStatus,
+    riderUserId: updated.rider.userId,
+    driverUserId: userId,
+    snapshot: serializeDriverTrip(updated),
+  });
 
-  return trip;
+  return updated;
 }
 
 export async function startTrip(userId: string, tripId: string) {
@@ -598,7 +648,15 @@ export async function startTrip(userId: string, tripId: string) {
     },
   });
 
-  emitTripAndUserEvent(tripId, "RIDER", updated.rider.userId, "trip:started", updated);
+  await emitTripAndUserEvent(tripId, "RIDER", updated.rider.userId, "trip:started", updated);
+  await writeTripConfirmationCache({
+    tripId,
+    status: updated.status,
+    paymentStatus: updated.paymentStatus,
+    riderUserId: updated.rider.userId,
+    driverUserId: userId,
+    snapshot: updated,
+  });
 
   return updated;
 }
@@ -698,7 +756,15 @@ export async function completeTrip(
     },
   });
 
-  emitTripAndUserEvent(tripId, "RIDER", updatedTrip.rider.userId, "trip:completed", updatedTrip);
+  await emitTripAndUserEvent(tripId, "RIDER", updatedTrip.rider.userId, "trip:completed", updatedTrip);
+  await writeTripConfirmationCache({
+    tripId,
+    status: updatedTrip.status,
+    paymentStatus: updatedTrip.paymentStatus,
+    riderUserId: updatedTrip.rider.userId,
+    driverUserId: userId,
+    snapshot: serializeDriverTrip(updatedTrip),
+  });
 
   return {
     trip: updatedTrip,
@@ -784,7 +850,15 @@ export async function cancelTrip(
     },
   });
 
-  emitTripAndUserEvent(tripId, "RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
+  await emitTripAndUserEvent(tripId, "RIDER", cancelledTrip.rider.userId, "trip:cancelled", cancelledTrip);
+  await writeTripConfirmationCache({
+    tripId,
+    status: cancelledTrip.status,
+    paymentStatus: cancelledTrip.paymentStatus,
+    riderUserId: cancelledTrip.rider.userId,
+    driverUserId: userId,
+    snapshot: serializeDriverTrip(cancelledTrip),
+  });
 
   return { trip: cancelledTrip, refund };
 }
@@ -817,6 +891,7 @@ function serializeDriverTrip(trip: {
   escrowDisputeTx?: string | null;
   cancellationReason: string | null;
   createdAt: Date;
+  arrivedAt?: Date | null;
   startedAt: Date | null;
   endedAt: Date | null;
   rider?: { rating?: unknown; user?: { name?: string | null } | null } | null;
@@ -847,6 +922,7 @@ function serializeDriverTrip(trip: {
     riderRating: money(trip.rider?.rating || 5.0),
     cancellationReason: trip.cancellationReason,
     createdAt: trip.createdAt,
+    arrivedAt: trip.arrivedAt ?? null,
     startedAt: trip.startedAt,
     endedAt: trip.endedAt,
     stops: trip.stops ?? [],

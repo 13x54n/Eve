@@ -24,6 +24,15 @@ export {
 } from "./permissions.js";
 export { cache, CacheService, withCache } from "./cache.js";
 export {
+  getCachedActiveTripId,
+  getCachedTripDetail,
+  invalidateTripConfirmationCache,
+  isTerminalTripStatus,
+  tripActiveKey,
+  tripDetailKey,
+  writeTripConfirmationCache,
+} from "./trip-cache.js";
+export {
   EVE_TOPICS,
   disconnectKafka,
   eventInstance,

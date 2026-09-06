@@ -25,7 +25,9 @@ GPS used for matching stays on Redis/gRPC and is **not** published on Kafka. `dr
 
 Keys are trip id, user id, or ticket/incident id so partitions stay ordered per entity.
 
-When Kafka is **on**, producers skip notify gRPC; notify consumes and fans out to Socket.IO.
+When Kafka is **on**, producers skip notify gRPC; notify consumes and fans out to Socket.IO. Payment events include `riderUserId` and `driverUserId` so escrow confirmations hit user rooms, not only `trip:{id}`.
+
+`trip:assigned` is published **after** `escrow.deposit.confirmed`, not when the rider first accepts an offer (`offer:accepted` is the waiting signal).
 
 When Kafka is **off** (or Vitest), publishes use an in-process bus. Notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`.
 

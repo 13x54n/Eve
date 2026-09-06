@@ -228,9 +228,18 @@ export async function getIncomingTrips() {
     trips: IncomingTrip[];
     pendingOffer: PendingOffer | null;
     activeDispatch: ActiveDispatch | null;
+    pendingEscrowTrip: PendingEscrowTrip | null;
+    activeTripId: string | null;
   }>('/driver/trips/incoming');
   return data;
 }
+
+export type PendingEscrowTrip = {
+  tripId: string;
+  pickupAddress: string;
+  dropoffAddress: string;
+  fareTotal: number;
+};
 
 export async function acceptDispatch(tripId: string, proposedFare?: number) {
   const { data } = await api.post<{ offer: { id: string } }>(
@@ -267,6 +276,7 @@ export type ActiveTrip = {
   distanceKm: number;
   durationMin: number;
   paymentStatus: string;
+  arrivedAt?: string | null;
   rider: { user: { name: string; phone: string | null } };
   rideType?: string;
   recipientName?: string | null;

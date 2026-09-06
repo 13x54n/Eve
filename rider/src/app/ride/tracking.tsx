@@ -54,9 +54,9 @@ export default function TrackingScreen() {
     setLoadError(false);
     setTrip(next);
     if (typeof next.driver?.latitude === "number" && typeof next.driver?.longitude === "number") {
-      setDriverLocation((current) => current ?? {
-        latitude: next.driver!.latitude!,
-        longitude: next.driver!.longitude!,
+      setDriverLocation({
+        latitude: next.driver.latitude,
+        longitude: next.driver.longitude,
       });
     }
     if (next.status === "ASSIGNED" && next.paymentStatus === "PENDING") {
@@ -253,7 +253,8 @@ export default function TrackingScreen() {
   const isRecipient = trip.viewerRole === "recipient";
   const canManage = trip.canManage !== false;
   const needsPayment = trip.status === "ASSIGNED" && trip.paymentStatus === "PENDING";
-  const headingToPickup = trip.status === "ASSIGNED";
+  const headingToPickup = trip.status === "ASSIGNED" && !trip.arrivedAt;
+  const driverHere = trip.status === "ASSIGNED" && Boolean(trip.arrivedAt);
   const driverName = trip.driver?.user?.name ?? (trip.status === "SEARCHING" ? "Finding a driver" : "Your driver");
   const vehicleLabel = trip.vehicle
     ? `${trip.vehicle.make} ${trip.vehicle.model}`
@@ -265,6 +266,8 @@ export default function TrackingScreen() {
     ? (isCourier ? "Finding a courier driver" : "Finding your driver")
     : needsPayment
       ? "Lock fare to continue"
+      : driverHere
+      ? (isCourier ? "Driver is at pickup" : "Your driver is here")
       : headingToPickup
       ? (isCourier ? "Pickup package" : "Meet at pickup")
       : (isCourier ? `Delivering to ${trip.recipientName ?? "recipient"}` : "On the way to dropoff");

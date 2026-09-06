@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { confirmEscrow, getSettlementQuote } from "@/services/payment";
 import { getTripEarnings } from "@/services/driver";
 import { useSendEscrowTx } from "@/lib/send-escrow";
+import { addDriverSocketListener, connectDriverSocket } from "@/services/socket";
 
 export default function CompletedScreen() {
   const { dropoff, fare, net, tripId } = useLocalSearchParams<{
@@ -61,8 +62,14 @@ export default function CompletedScreen() {
   useEffect(() => {
     if (!tripId) return;
     void syncSettlement();
+    void connectDriverSocket().catch(() => undefined);
+    const remove = addDriverSocketListener((event) => {
+      if (event === "escrow.settlement.started" || event === "escrow.released" || event === "escrow.disputed") {
+        void syncSettlement();
+      }
+    });
     const timer = setInterval(() => void syncSettlement(), 5000);
-    return () => clearInterval(timer);
+    return () => { clearInterval(timer); remove(); };
   }, [tripId, syncSettlement]);
 
   if (!hasTrip) {

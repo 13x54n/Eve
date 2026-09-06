@@ -1,6 +1,7 @@
 import { keccak256, toBytes, type Hex } from "viem";
 import { prisma } from "@eve/db";
-import { fail, money } from "@eve/shared";
+import { fail, money, writeTripConfirmationCache } from "@eve/shared";
+import { emitTripAndUserEvent } from "@eve/notify";
 import {
   executePayout,
   getEscrowOperatorAddress,
@@ -138,6 +139,28 @@ function expectedFrom(trip: TripWithParties, action: EscrowAction) {
   return requireDriverWallet(trip);
 }
 
+function partyFields(trip: TripWithParties) {
+  return {
+    id: trip.id,
+    tripId: trip.id,
+    status: trip.status,
+    paymentStatus: trip.paymentStatus,
+    riderUserId: trip.rider.userId,
+    driverUserId: trip.driver?.userId ?? null,
+  };
+}
+
+async function cacheTripPayment(trip: TripWithParties, snapshot: unknown = trip) {
+  await writeTripConfirmationCache({
+    tripId: trip.id,
+    status: trip.status,
+    paymentStatus: trip.paymentStatus,
+    riderUserId: trip.rider.userId,
+    driverUserId: trip.driver?.userId ?? null,
+    snapshot,
+  });
+}
+
 function logEscrowApply(
   action: string,
   tripId: string,
@@ -182,7 +205,14 @@ async function persistDeposit(trip: TripWithParties, txHash: string) {
     });
   }
   logEscrowApply("deposit", trip.id, txHash, previous, "ESCROWED");
-  return { ...trip, ...updated };
+  const merged = { ...trip, ...updated };
+  await cacheTripPayment(merged);
+  const payload = { ...partyFields(merged), txHash };
+  await publishPaymentEvent("escrow.deposit.confirmed", trip.id, payload);
+  if (trip.driver?.userId) {
+    await emitTripAndUserEvent(trip.id, "DRIVER", trip.driver.userId, "trip:assigned", payload);
+  }
+  return merged;
 }
 
 async function persistSettlement(trip: TripWithParties, txHash: string, settleFromMs?: number) {
@@ -209,12 +239,19 @@ async function persistSettlement(trip: TripWithParties, txHash: string, settleFr
   });
   await scheduleEscrowFinalize(trip.id, settleFrom.getTime());
   logEscrowApply("startSettlement", trip.id, txHash, previous, "SETTLING");
-  return {
+  const merged = {
     ...trip,
     ...updated,
     escrowSettleFrom: settleFrom,
     escrowStartTx: txHash,
   };
+  await cacheTripPayment(merged);
+  await publishPaymentEvent("escrow.settlement.started", trip.id, {
+    ...partyFields(merged),
+    txHash,
+    settleFromMs: settleFrom.getTime(),
+  });
+  return merged;
 }
 
 function inferAction(trip: TripWithParties, userId: string): EscrowAction {
@@ -284,18 +321,11 @@ export async function confirmTripEscrow(
 
   if (confirmed.action === "deposit") {
     const updated = await persistDeposit(trip, confirmed.txHash);
-    await publishPaymentEvent("escrow.deposit.confirmed", trip.id, {
-      txHash: confirmed.txHash,
-    });
     return snapshot({ ...trip, ...updated });
   }
 
   if (confirmed.action === "startSettlement") {
     const updated = await persistSettlement(trip, confirmed.txHash, confirmed.settleFromMs);
-    await publishPaymentEvent("escrow.settlement.started", trip.id, {
-      txHash: confirmed.txHash,
-      settleFromMs: updated.escrowSettleFrom?.getTime() ?? escrowNowMs() + disputeWindowMs(),
-    });
     return snapshot({ ...trip, ...updated });
   }
 
@@ -307,7 +337,10 @@ export async function confirmTripEscrow(
         escrowDisputeTx: confirmed.txHash,
       },
     });
+    const merged = { ...trip, ...updated, paymentStatus: "DISPUTED" as const, escrowDisputeTx: confirmed.txHash };
+    await cacheTripPayment(merged);
     await publishPaymentEvent("escrow.disputed", trip.id, {
+      ...partyFields(merged),
       txHash: confirmed.txHash,
     });
     await onEscrowDisputed(trip.id, confirmed.txHash);
@@ -383,7 +416,10 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
       });
     }
   });
-  if (released) await publishPaymentEvent("escrow.released", trip.id, { txHash });
+  if (released) {
+    await cacheTripPayment({ ...trip, paymentStatus: "COMPLETED", status: "COMPLETED" });
+    await publishPaymentEvent("escrow.released", trip.id, { ...partyFields({ ...trip, paymentStatus: "COMPLETED" }), txHash });
+  }
 }
 
 async function applyRefund(trip: TripWithParties, txHash: string) {
@@ -412,7 +448,7 @@ async function applyRefund(trip: TripWithParties, txHash: string) {
       note: `USDC refunded from escrow for trip ${trip.bookingCode}`,
     },
   });
-  await publishPaymentEvent("escrow.refunded", trip.id, { txHash });
+  await publishPaymentEvent("escrow.refunded", trip.id, { ...partyFields({ ...trip, paymentStatus: "CANCELLED" }), txHash });
 }
 
 export async function operatorFinalizeTrip(tripId: string) {

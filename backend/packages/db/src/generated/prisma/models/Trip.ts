@@ -86,6 +86,7 @@ export type TripMinAggregateOutputType = {
   escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
+  arrivedAt: Date | null
   startedAt: Date | null
   endedAt: Date | null
   etaMinutes: number | null
@@ -130,6 +131,7 @@ export type TripMaxAggregateOutputType = {
   escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
+  arrivedAt: Date | null
   startedAt: Date | null
   endedAt: Date | null
   etaMinutes: number | null
@@ -174,6 +176,7 @@ export type TripCountAggregateOutputType = {
   escrowRefundTx: number
   cancellationReason: number
   scheduledAt: number
+  arrivedAt: number
   startedAt: number
   endedAt: number
   etaMinutes: number
@@ -244,6 +247,7 @@ export type TripMinAggregateInputType = {
   escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
+  arrivedAt?: true
   startedAt?: true
   endedAt?: true
   etaMinutes?: true
@@ -288,6 +292,7 @@ export type TripMaxAggregateInputType = {
   escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
+  arrivedAt?: true
   startedAt?: true
   endedAt?: true
   etaMinutes?: true
@@ -332,6 +337,7 @@ export type TripCountAggregateInputType = {
   escrowRefundTx?: true
   cancellationReason?: true
   scheduledAt?: true
+  arrivedAt?: true
   startedAt?: true
   endedAt?: true
   etaMinutes?: true
@@ -463,6 +469,7 @@ export type TripGroupByOutputType = {
   escrowRefundTx: string | null
   cancellationReason: string | null
   scheduledAt: Date | null
+  arrivedAt: Date | null
   startedAt: Date | null
   endedAt: Date | null
   etaMinutes: number | null
@@ -530,6 +537,7 @@ export type TripWhereInput = {
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  arrivedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   endedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   etaMinutes?: Prisma.IntNullableFilter<"Trip"> | number | null
@@ -586,6 +594,7 @@ export type TripOrderByWithRelationInput = {
   escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  arrivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   etaMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -645,6 +654,7 @@ export type TripWhereUniqueInput = Prisma.AtLeast<{
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  arrivedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   endedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   etaMinutes?: Prisma.IntNullableFilter<"Trip"> | number | null
@@ -701,6 +711,7 @@ export type TripOrderByWithAggregationInput = {
   escrowRefundTx?: Prisma.SortOrderInput | Prisma.SortOrder
   cancellationReason?: Prisma.SortOrderInput | Prisma.SortOrder
   scheduledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  arrivedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   etaMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -753,6 +764,7 @@ export type TripScalarWhereWithAggregatesInput = {
   escrowRefundTx?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableWithAggregatesFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
+  arrivedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
   endedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trip"> | Date | string | null
   etaMinutes?: Prisma.IntNullableWithAggregatesFilter<"Trip"> | number | null
@@ -793,6 +805,7 @@ export type TripCreateInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -849,6 +862,7 @@ export type TripUncheckedCreateInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -897,6 +911,7 @@ export type TripUpdateInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -953,6 +968,7 @@ export type TripUncheckedUpdateInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1005,6 +1021,7 @@ export type TripCreateManyInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1045,6 +1062,7 @@ export type TripUpdateManyMutationInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1089,6 +1107,7 @@ export type TripUncheckedUpdateManyInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1143,6 +1162,7 @@ export type TripCountOrderByAggregateInput = {
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  arrivedAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   etaMinutes?: Prisma.SortOrder
@@ -1199,6 +1219,7 @@ export type TripMaxOrderByAggregateInput = {
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  arrivedAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   etaMinutes?: Prisma.SortOrder
@@ -1243,6 +1264,7 @@ export type TripMinOrderByAggregateInput = {
   escrowRefundTx?: Prisma.SortOrder
   cancellationReason?: Prisma.SortOrder
   scheduledAt?: Prisma.SortOrder
+  arrivedAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   etaMinutes?: Prisma.SortOrder
@@ -1615,6 +1637,7 @@ export type TripCreateWithoutRecipientUserInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1669,6 +1692,7 @@ export type TripUncheckedCreateWithoutRecipientUserInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1750,6 +1774,7 @@ export type TripScalarWhereInput = {
   escrowRefundTx?: Prisma.StringNullableFilter<"Trip"> | string | null
   cancellationReason?: Prisma.StringNullableFilter<"Trip"> | string | null
   scheduledAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
+  arrivedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   startedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   endedAt?: Prisma.DateTimeNullableFilter<"Trip"> | Date | string | null
   etaMinutes?: Prisma.IntNullableFilter<"Trip"> | number | null
@@ -1790,6 +1815,7 @@ export type TripCreateWithoutRiderInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1844,6 +1870,7 @@ export type TripUncheckedCreateWithoutRiderInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1918,6 +1945,7 @@ export type TripCreateWithoutDriverInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -1972,6 +2000,7 @@ export type TripUncheckedCreateWithoutDriverInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2046,6 +2075,7 @@ export type TripCreateWithoutVehicleInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2100,6 +2130,7 @@ export type TripUncheckedCreateWithoutVehicleInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2174,6 +2205,7 @@ export type TripCreateWithoutDispatchesInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2229,6 +2261,7 @@ export type TripUncheckedCreateWithoutDispatchesInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2292,6 +2325,7 @@ export type TripUpdateWithoutDispatchesInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2347,6 +2381,7 @@ export type TripUncheckedUpdateWithoutDispatchesInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2394,6 +2429,7 @@ export type TripCreateWithoutStopsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2449,6 +2485,7 @@ export type TripUncheckedCreateWithoutStopsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2512,6 +2549,7 @@ export type TripUpdateWithoutStopsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2567,6 +2605,7 @@ export type TripUncheckedUpdateWithoutStopsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2614,6 +2653,7 @@ export type TripCreateWithoutChatMessagesInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2669,6 +2709,7 @@ export type TripUncheckedCreateWithoutChatMessagesInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2732,6 +2773,7 @@ export type TripUpdateWithoutChatMessagesInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2787,6 +2829,7 @@ export type TripUncheckedUpdateWithoutChatMessagesInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -2834,6 +2877,7 @@ export type TripCreateWithoutOffersInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2889,6 +2933,7 @@ export type TripUncheckedCreateWithoutOffersInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -2952,6 +2997,7 @@ export type TripUpdateWithoutOffersInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3007,6 +3053,7 @@ export type TripUncheckedUpdateWithoutOffersInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3054,6 +3101,7 @@ export type TripCreateWithoutEventsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3109,6 +3157,7 @@ export type TripUncheckedCreateWithoutEventsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3172,6 +3221,7 @@ export type TripUpdateWithoutEventsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3227,6 +3277,7 @@ export type TripUncheckedUpdateWithoutEventsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3274,6 +3325,7 @@ export type TripCreateWithoutLedgerInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3329,6 +3381,7 @@ export type TripUncheckedCreateWithoutLedgerInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3392,6 +3445,7 @@ export type TripUpdateWithoutLedgerInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3447,6 +3501,7 @@ export type TripUncheckedUpdateWithoutLedgerInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3494,6 +3549,7 @@ export type TripCreateWithoutTicketsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3549,6 +3605,7 @@ export type TripUncheckedCreateWithoutTicketsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3612,6 +3669,7 @@ export type TripUpdateWithoutTicketsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3667,6 +3725,7 @@ export type TripUncheckedUpdateWithoutTicketsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3714,6 +3773,7 @@ export type TripCreateWithoutIncidentsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3769,6 +3829,7 @@ export type TripUncheckedCreateWithoutIncidentsInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3832,6 +3893,7 @@ export type TripUpdateWithoutIncidentsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3887,6 +3949,7 @@ export type TripUncheckedUpdateWithoutIncidentsInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -3937,6 +4000,7 @@ export type TripCreateManyRecipientUserInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -3977,6 +4041,7 @@ export type TripUpdateWithoutRecipientUserInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4031,6 +4096,7 @@ export type TripUncheckedUpdateWithoutRecipientUserInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4082,6 +4148,7 @@ export type TripUncheckedUpdateManyWithoutRecipientUserInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4125,6 +4192,7 @@ export type TripCreateManyRiderInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -4165,6 +4233,7 @@ export type TripUpdateWithoutRiderInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4219,6 +4288,7 @@ export type TripUncheckedUpdateWithoutRiderInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4270,6 +4340,7 @@ export type TripUncheckedUpdateManyWithoutRiderInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4313,6 +4384,7 @@ export type TripCreateManyDriverInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -4353,6 +4425,7 @@ export type TripUpdateWithoutDriverInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4407,6 +4480,7 @@ export type TripUncheckedUpdateWithoutDriverInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4458,6 +4532,7 @@ export type TripUncheckedUpdateManyWithoutDriverInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4501,6 +4576,7 @@ export type TripCreateManyVehicleInput = {
   escrowRefundTx?: string | null
   cancellationReason?: string | null
   scheduledAt?: Date | string | null
+  arrivedAt?: Date | string | null
   startedAt?: Date | string | null
   endedAt?: Date | string | null
   etaMinutes?: number | null
@@ -4541,6 +4617,7 @@ export type TripUpdateWithoutVehicleInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4595,6 +4672,7 @@ export type TripUncheckedUpdateWithoutVehicleInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4646,6 +4724,7 @@ export type TripUncheckedUpdateManyWithoutVehicleInput = {
   escrowRefundTx?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cancellationReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scheduledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  arrivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   etaMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -4784,6 +4863,7 @@ export type TripSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
+  arrivedAt?: boolean
   startedAt?: boolean
   endedAt?: boolean
   etaMinutes?: boolean
@@ -4841,6 +4921,7 @@ export type TripSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
+  arrivedAt?: boolean
   startedAt?: boolean
   endedAt?: boolean
   etaMinutes?: boolean
@@ -4889,6 +4970,7 @@ export type TripSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
+  arrivedAt?: boolean
   startedAt?: boolean
   endedAt?: boolean
   etaMinutes?: boolean
@@ -4937,6 +5019,7 @@ export type TripSelectScalar = {
   escrowRefundTx?: boolean
   cancellationReason?: boolean
   scheduledAt?: boolean
+  arrivedAt?: boolean
   startedAt?: boolean
   endedAt?: boolean
   etaMinutes?: boolean
@@ -4945,7 +5028,7 @@ export type TripSelectScalar = {
   updatedAt?: boolean
 }
 
-export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "escrowDepositTx" | "escrowStartTx" | "escrowSettleFrom" | "escrowDisputeTx" | "escrowReleaseTx" | "escrowRefundTx" | "cancellationReason" | "scheduledAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
+export type TripOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "bookingCode" | "riderId" | "driverId" | "vehicleId" | "status" | "rideType" | "vehicleType" | "city" | "zone" | "pickupAddress" | "dropoffAddress" | "pickupLat" | "pickupLng" | "dropoffLat" | "dropoffLng" | "recipientName" | "recipientPhone" | "packageNote" | "trackingToken" | "recipientUserId" | "distanceKm" | "durationMin" | "suggestedFare" | "fareTotal" | "paymentStatus" | "paymentMethod" | "escrowDepositTx" | "escrowStartTx" | "escrowSettleFrom" | "escrowDisputeTx" | "escrowReleaseTx" | "escrowRefundTx" | "cancellationReason" | "scheduledAt" | "arrivedAt" | "startedAt" | "endedAt" | "etaMinutes" | "routeDeviation" | "createdAt" | "updatedAt", ExtArgs["result"]["trip"]>
 export type TripInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   rider?: boolean | Prisma.RiderProfileDefaultArgs<ExtArgs>
   driver?: boolean | Prisma.Trip$driverArgs<ExtArgs>
@@ -5026,6 +5109,7 @@ export type $TripPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     escrowRefundTx: string | null
     cancellationReason: string | null
     scheduledAt: Date | null
+    arrivedAt: Date | null
     startedAt: Date | null
     endedAt: Date | null
     etaMinutes: number | null
@@ -5502,6 +5586,7 @@ export interface TripFieldRefs {
   readonly escrowRefundTx: Prisma.FieldRef<"Trip", 'String'>
   readonly cancellationReason: Prisma.FieldRef<"Trip", 'String'>
   readonly scheduledAt: Prisma.FieldRef<"Trip", 'DateTime'>
+  readonly arrivedAt: Prisma.FieldRef<"Trip", 'DateTime'>
   readonly startedAt: Prisma.FieldRef<"Trip", 'DateTime'>
   readonly endedAt: Prisma.FieldRef<"Trip", 'DateTime'>
   readonly etaMinutes: Prisma.FieldRef<"Trip", 'Int'>

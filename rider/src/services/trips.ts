@@ -44,6 +44,7 @@ export type Trip = {
   createdAt: string;
   paymentStatus?: string;
   escrowSettleFrom?: string | null;
+  arrivedAt?: string | null;
 };
 
 export type AcceptOfferResult = {

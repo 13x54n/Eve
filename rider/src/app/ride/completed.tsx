@@ -17,6 +17,7 @@ import { ActionButton } from "@/components/action-button";
 import { getTrip, Trip } from "@/services/trips";
 import { confirmEscrow, getDisputeQuote } from "@/services/wallet";
 import { useSendEscrowTx } from "@/lib/send-escrow";
+import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 
 function formatMoney(n: number) {
   return `$${Number(n).toFixed(2)}`;
@@ -77,7 +78,6 @@ export default function CompletedScreen() {
       setLoading(false);
       return;
     }
-    setLoading(true);
     setError(false);
     try {
       setTrip(await getTrip(tripId));
@@ -92,6 +92,17 @@ export default function CompletedScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!tripId) return;
+    void connectSocket().then(() => subscribeTrip(tripId)).catch(() => undefined);
+    const remove = addSocketListener((event) => {
+      if (event === "escrow.settlement.started" || event === "escrow.released" || event === "escrow.disputed") {
+        void load();
+      }
+    });
+    return () => { remove(); };
+  }, [load, tripId]);
 
   useEffect(() => {
     if (!tripId || (trip?.paymentStatus !== "SETTLING" && trip?.paymentStatus !== "DISPUTED")) return;

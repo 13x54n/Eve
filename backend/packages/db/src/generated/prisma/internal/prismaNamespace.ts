@@ -2939,6 +2939,7 @@ export const TripScalarFieldEnum = {
   escrowRefundTx: 'escrowRefundTx',
   cancellationReason: 'cancellationReason',
   scheduledAt: 'scheduledAt',
+  arrivedAt: 'arrivedAt',
   startedAt: 'startedAt',
   endedAt: 'endedAt',
   etaMinutes: 'etaMinutes',

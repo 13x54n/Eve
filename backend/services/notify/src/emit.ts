@@ -164,3 +164,33 @@ export function emitTripAndUserEventLocal(
 export function emitAdminEventLocal(event: string, payload: unknown) {
   io?.to(ADMIN_OPS_ROOM).emit(event, payload);
 }
+
+export function emitPaymentRealtime(tripId: string, event: string, payload: unknown) {
+  emitTripEventLocal(tripId, event, payload);
+  const body = payload && typeof payload === "object" ? payload as {
+    riderUserId?: string | null;
+    driverUserId?: string | null;
+  } : {};
+  if (body.riderUserId) emitUserEventLocal("RIDER", body.riderUserId, event, payload);
+  if (body.driverUserId) emitUserEventLocal("DRIVER", body.driverUserId, event, payload);
+}
+
+export async function emitPaymentEvent(tripId: string, event: string, payload: unknown) {
+  await publishEveEvent(EVE_TOPICS.payment, {
+    type: event,
+    key: tripId,
+    payload,
+  });
+  const body = payload && typeof payload === "object"
+    ? payload as { riderUserId?: string | null; driverUserId?: string | null }
+    : {};
+  await deliverRealtime(
+    () => emitPaymentRealtime(tripId, event, payload),
+    async () => {
+      await emitTripEventGrpc(tripId, event, payload);
+      if (body.riderUserId) await emitUserEventGrpc("RIDER", body.riderUserId, event, payload);
+      if (body.driverUserId) await emitUserEventGrpc("DRIVER", body.driverUserId, event, payload);
+    },
+    { target: "trip", tripId, event, payload },
+  );
+}

@@ -72,6 +72,10 @@ export default function ActiveTripScreen() {
       if (driver?.activeTrip && driver.activeTrip.id === id) {
         setLoadError(false);
         setTrip(driver.activeTrip);
+        setHasArrived(Boolean(driver.activeTrip.arrivedAt) || driver.activeTrip.status === 'ONGOING');
+        if (driver.activeTrip.status === 'ASSIGNED' && driver.activeTrip.paymentStatus === 'PENDING') {
+          router.replace('/(tabs)/home');
+        }
       } else if (!driver?.activeTrip) {
         if (pathnameRef.current.startsWith('/trip/')) {
           router.replace('/(tabs)/home');
@@ -297,7 +301,7 @@ export default function ActiveTripScreen() {
   const isCourier = trip.rideType === 'COURIER';
   const waitingForEscrow = trip.paymentStatus !== 'ESCROWED';
   const passengerName = !isCourier ? trip.recipientName : null;
-  const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived;
+  const isHeadingToPickup = trip.status === 'ASSIGNED' && !hasArrived && trip.paymentStatus === 'ESCROWED';
   const stops = trip.stops ?? [];
   const stageLabel = isHeadingToPickup
     ? (isCourier ? 'Pickup package' : 'Heading to pickup')

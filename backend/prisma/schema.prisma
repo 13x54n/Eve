@@ -380,6 +380,7 @@ model Trip {
   escrowRefundTx     String?
   cancellationReason String?
   scheduledAt        DateTime?
+  arrivedAt          DateTime?
   startedAt          DateTime?
   endedAt            DateTime?
   etaMinutes         Int?

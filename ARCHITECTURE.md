@@ -434,7 +434,9 @@ const drivers = await fetch(`${LOCATION_URL}/internal/nearby-drivers`, {
 
 Auth, ride, admin, and payment **publish** domain events on Kafka (`eve.trip.events`, `eve.user.events`, `eve.admin.events`, `eve.auth.events`, `eve.payment.events`). Notify **consumes** them and pushes Socket.IO. Payment also consumes payment events for replica-safe escrow follow-up.
 
-**Kafka is for facts that fan out** (trip lifecycle, tickets, approval, coarse presence, escrow, registration). **gRPC/HTTP is for request/response** (matchmaking, quotes, auth). **Redis + Socket.IO is for GPS** — location pulses are not Kafka topics.
+**Kafka is for facts that fan out** (trip lifecycle, tickets, approval, coarse presence, escrow, registration). **gRPC/HTTP is for request/response** (matchmaking, quotes, auth). **Redis H3 + Socket.IO is for GPS**. Redis also holds a short-lived `trip:active:{userId}` / `trip:detail:{tripId}` snapshot so polls after a missed socket are fast. Redis is not a Socket.IO adapter and is not a second event bus.
+
+Happy path: request → offer → accept → automatic deposit → `trip:assigned` only once ESCROWED → trip → complete → `startSettlement` → operator `finalize`.
 
 When Kafka is unset, notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`. See [backend/docs/kafka.md](backend/docs/kafka.md).
 

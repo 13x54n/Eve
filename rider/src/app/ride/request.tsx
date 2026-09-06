@@ -249,6 +249,10 @@ export default function RequestRideScreen() {
         try {
           const active = await getActiveTrip();
           await refreshActive();
+          if (active?.status === "SEARCHING") {
+            router.replace({ pathname: "/ride/searching", params: { tripId: active.id } });
+            return;
+          }
           if (active?.status === "ASSIGNED" || active?.status === "ONGOING") {
             router.replace({ pathname: "/ride/tracking", params: { tripId: active.id } });
             return;
@@ -412,22 +416,6 @@ export default function RequestRideScreen() {
           />
         </View>
       ) : null}
-
-      <View style={styles.paymentInfoCard}>
-        <View style={styles.paymentInfoHeader}>
-          <Feather name="info" size={20} color="#2E4ED5" />
-          <Text style={styles.paymentInfoTitle}>Payment: USDC on Arc Testnet</Text>
-        </View>
-        <Text style={styles.paymentInfoText}>
-          When you accept a driver, you sign one Privy transaction that locks the fare in escrow. After the trip the driver starts a 5-minute window; you can dispute in that window. If you do not dispute, the fare releases automatically. A dispute holds funds until review. Cancelling before settlement lets you sign a refund.
-        </Text>
-        <View style={styles.paymentInfoNote}>
-          <Feather name="dollar-sign" size={14} color="#6B7280" />
-          <Text style={styles.paymentInfoNoteText}>
-            Native USDC · Arc Testnet
-          </Text>
-        </View>
-      </View>
 
       <View style={styles.routePreviewCard}>
         <View style={styles.routePreviewHeader}>

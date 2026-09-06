@@ -1,6 +1,7 @@
 import { EVE_TOPICS, isKafkaEnabled, subscribeEveTopic, type EveEvent } from "@eve/shared/kafka";
 import {
   emitAdminEventLocal,
+  emitPaymentRealtime,
   emitTripAndUserEventLocal,
   emitTripEventLocal,
   emitUserEventLocal,
@@ -57,7 +58,7 @@ export async function startNotifyKafkaConsumers() {
     groupId: "eve-notify",
     topic: EVE_TOPICS.payment,
     handler: (event) => {
-      emitTripEventLocal(event.key, event.type, event.payload);
+      emitPaymentRealtime(event.key, event.type, event.payload);
     },
   });
   console.log("Notify Kafka consumers subscribed");

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { calculateFare, prisma, recordTripEvent, selectGreetingTemplate } from "@eve/db";
-import { distanceKm, durationMinutes, fail, money } from "@eve/shared";
+import { distanceKm, durationMinutes, fail, money, getCachedActiveTripId, getCachedTripDetail, writeTripConfirmationCache } from "@eve/shared";
 import {
   indexSearchingTripClient,
   nearbyDriversClient,
@@ -80,7 +80,23 @@ function serializeTrip(trip: any, viewer?: Viewer) {
             ? { id: offer.driver.id, rating: money(offer.driver.rating), user: publicUser(offer.driver.user) }
             : undefined,
         })),
+    arrivedAt: trip.arrivedAt ?? null,
   };
+}
+
+async function rememberTrip(
+  snapshot: ReturnType<typeof serializeTrip>,
+  riderUserId: string,
+  driverUserId?: string | null,
+) {
+  await writeTripConfirmationCache({
+    tripId: snapshot.id,
+    status: snapshot.status,
+    paymentStatus: snapshot.paymentStatus,
+    riderUserId,
+    driverUserId: driverUserId ?? snapshot.driver?.userId ?? null,
+    snapshot,
+  });
 }
 
 async function matchRecipientUser(phone: string, excludeUserId: string) {
@@ -159,6 +175,7 @@ export async function createTrip(userId: string, input: {
     },
   });
   const result = serializeTrip(trip, { userId, riderId: rider.id });
+  await rememberTrip(result, userId);
   const matchAllVehicleTypes = isCourier;
   await indexSearchingTripClient({
     id: trip.id,
@@ -184,19 +201,28 @@ export async function createTrip(userId: string, input: {
   );
   await emitTripEvent(trip.id, "trip:requested", payload);
   if (recipientUserId) {
-    emitUserEvent("RIDER", recipientUserId, isCourier ? "courier:incoming" : "trip:incoming", result);
+    await emitUserEvent("RIDER", recipientUserId, isCourier ? "courier:incoming" : "trip:incoming", result);
   }
   return result;
 }
 
 export async function getTrip(userId: string, tripId: string) {
   const rider = await getRider(userId);
+  const cached = await getCachedTripDetail<Record<string, unknown>>(tripId);
+  if (
+    cached
+    && (cached.riderId === rider.id || cached.recipientUserId === userId)
+  ) {
+    return serializeTrip(cached, { userId, riderId: rider.id });
+  }
   const trip = await prisma.trip.findFirst({
     where: { id: tripId, OR: [{ riderId: rider.id }, { recipientUserId: userId }] },
     include: tripDetailInclude,
   });
   if (!trip) fail("Trip not found", "NotFoundError");
-  return serializeTrip(trip, { userId, riderId: rider.id });
+  const result = serializeTrip(trip, { userId, riderId: rider.id });
+  await rememberTrip(result, userId, trip.driver?.userId);
+  return result;
 }
 
 export async function listTrips(userId: string) {
@@ -211,12 +237,23 @@ export async function listTrips(userId: string) {
 
 export async function getActiveTrip(userId: string) {
   const rider = await getRider(userId);
+  const cachedId = await getCachedActiveTripId(userId);
+  if (cachedId) {
+    try {
+      return await getTrip(userId, cachedId);
+    } catch {
+      /* stale pointer */
+    }
+  }
   const trip = await prisma.trip.findFirst({
     where: { riderId: rider.id, status: { in: [...ACTIVE_STATUSES] } },
     include: tripDetailInclude,
     orderBy: { createdAt: "desc" },
   });
-  return trip ? serializeTrip(trip, { userId, riderId: rider.id }) : null;
+  if (!trip) return null;
+  const result = serializeTrip(trip, { userId, riderId: rider.id });
+  await rememberTrip(result, userId, trip.driver?.userId);
+  return result;
 }
 
 export async function getPublicCourier(token: string) {
@@ -380,10 +417,16 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
     ),
     syncDriverGeoClient(acceptedDriverUserId),
   ]);
-  emitTripAndUserEvent(tripId, "DRIVER", acceptedDriverUserId, "trip:assigned", result);
-  for (const driverUserId of rejectedDriverUserIds) {
-    emitUserEvent("DRIVER", driverUserId, "offer:rejected", { tripId });
-  }
+  await rememberTrip(result, userId, acceptedDriverUserId);
+  await emitTripAndUserEvent(tripId, "DRIVER", acceptedDriverUserId, "offer:accepted", {
+    ...result,
+    waitingForEscrow: true,
+  });
+  await Promise.all(
+    rejectedDriverUserIds.map((driverUserId) =>
+      emitUserEvent("DRIVER", driverUserId, "offer:rejected", { tripId }),
+    ),
+  );
   const deposit = await quoteTripDeposit(userId, tripId);
   return { trip: result, deposit };
 }
@@ -436,11 +479,12 @@ export async function cancelTrip(userId: string, tripId: string) {
     : null;
   if (assigned) {
     await syncDriverGeoClient(assigned.userId);
-    emitTripAndUserEvent(tripId, "DRIVER", assigned.userId, "trip:cancelled", result);
-  } else emitTripEvent(tripId, "trip:cancelled", result);
-  for (const row of pendingDrivers) {
-    emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId });
-  }
+    await emitTripAndUserEvent(tripId, "DRIVER", assigned.userId, "trip:cancelled", result);
+  } else await emitTripEvent(tripId, "trip:cancelled", result);
+  await Promise.all(
+    pendingDrivers.map((row) => emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId })),
+  );
+  await rememberTrip(result, userId, assigned?.userId ?? null);
   return { trip: result, refund };
 }
 
@@ -555,11 +599,11 @@ async function mutateTripRoute(
   });
 
   const result = await getTrip(userId, tripId);
-  emitTripEvent(trip.id, "trip:route_updated", result);
+  await emitTripEvent(trip.id, "trip:route_updated", result);
   if (trip.driver?.userId) {
-    emitUserEvent("DRIVER", trip.driver.userId, "trip:route_updated", result);
+    await emitUserEvent("DRIVER", trip.driver.userId, "trip:route_updated", result);
   }
-  emitUserEvent("RIDER", userId, "trip:route_updated", result);
+  await emitUserEvent("RIDER", userId, "trip:route_updated", result);
   return result;
 }
 

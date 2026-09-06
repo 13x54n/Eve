@@ -112,9 +112,20 @@ Use `cache.getMetrics()` to get real-time metrics:
 }
 ```
 
-## Phase 2: Core Features (Planned)
+## Phase 2: Active trip confirmation cache ✅
 
-### 1. Driver Profile Multi-Level Cache
+### Implemented
+
+**Files:** `backend/packages/shared/src/trip-cache.ts`, ride `getTrip` / `getActiveTrip`, payment persist helpers.
+
+| Key | Value | TTL |
+| --- | --- | --- |
+| `trip:active:{userId}` | trip id | 6 hours while SEARCHING / ASSIGNED / ONGOING; deleted on complete/cancel |
+| `trip:detail:{tripId}` | JSON snapshot (status, paymentStatus, arrivedAt, offers) | 60s active; 24h terminal |
+
+Write-through after create, offer (invalidate), accept (PENDING), deposit (ESCROWED), arrive, start, complete, settlement, cancel. Read-through on rider `getTrip` / `getActiveTrip`. Redis is **not** pub/sub for confirmations — Kafka + Socket.IO still deliver live events.
+
+### 1. Driver Profile Multi-Level Cache (still planned)
 **Files to modify:**
 - `backend/packages/db/src/driver-profile.ts`
 
@@ -191,8 +202,8 @@ If issues arise:
 1. ✅ Phase 1 complete - Fare configuration caching implemented
 2. ⏳ Add unit and integration tests for fare caching
 3. ⏳ Monitor cache metrics in staging environment
-4. ⏳ Begin Phase 2 implementation (driver profiles & active trips)
-5. ⏳ Implement remaining priorities based on performance data
+4. ✅ Phase 2 trip confirmation cache implemented
+5. ⏳ Driver profile cache and session blacklist remain planned
 
 ## Resources
 

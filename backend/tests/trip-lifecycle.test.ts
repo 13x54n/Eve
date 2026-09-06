@@ -71,12 +71,26 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         tokenSymbol: "USDC",
       });
 
+      const waiting = await request(app)
+        .get("/api/driver/trips/incoming")
+        .set("Authorization", `Bearer ${driver.token}`)
+        .expect(200);
+      expect(waiting.body.pendingEscrowTrip).toMatchObject({ tripId: trip.id });
+      expect(waiting.body.activeTripId).toBeNull();
+
       await request(app)
         .post(`/api/driver/trips/${trip.id}/start`)
         .set("Authorization", `Bearer ${driver.token}`)
         .expect(409);
 
       await confirmEscrow(rider.token, trip.id).expect(200);
+
+      const fundedIncoming = await request(app)
+        .get("/api/driver/trips/incoming")
+        .set("Authorization", `Bearer ${driver.token}`)
+        .expect(200);
+      expect(fundedIncoming.body.activeTripId).toBe(trip.id);
+      expect(fundedIncoming.body.pendingEscrowTrip).toBeNull();
 
       const assignedDriver = await request(app)
         .get("/api/driver/me")

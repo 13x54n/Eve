@@ -26,6 +26,7 @@ import {
   IncomingTrip,
   PendingOffer,
   ActiveDispatch,
+  PendingEscrowTrip,
   updatePresence,
 } from '@/services/driver';
 import { getOnboardingProgress } from '@/lib/onboarding-steps';
@@ -45,7 +46,7 @@ export default function Home() {
   pathnameRef.current = pathname;
   const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
-  const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
+  const [pendingEscrowTrip, setPendingEscrowTrip] = useState<PendingEscrowTrip | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
@@ -68,12 +69,17 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
     const refresh = async () => {
-      if (presenceRef.current !== 'ONLINE' && presenceRef.current !== 'IDLE') {
+      if (
+        presenceRef.current !== 'ONLINE'
+        && presenceRef.current !== 'IDLE'
+        && presenceRef.current !== 'ON_TRIP'
+      ) {
         if (mounted) {
           openingOfferRef.current = null;
           setIncomingTrips([]);
           setPendingOffer(null);
           setActiveDispatch(null);
+          setPendingEscrowTrip(null);
         }
         return;
       }
@@ -83,6 +89,11 @@ export default function Home() {
           setIncomingTrips(incoming.trips);
           setPendingOffer(incoming.pendingOffer);
           setActiveDispatch(incoming.activeDispatch);
+          setPendingEscrowTrip(incoming.pendingEscrowTrip);
+          if (incoming.activeTripId && pathnameRef.current === '/home') {
+            router.push(`/trip/${incoming.activeTripId}`);
+            return;
+          }
           if (incoming.activeDispatch) {
             openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
           } else {
@@ -105,9 +116,21 @@ export default function Home() {
           trip?.pickupAddress ? `Pickup at ${trip.pickupAddress} · est. $${Number(trip.fareTotal ?? 0).toFixed(2)}` : 'A rider nearby is requesting a trip.',
           {},
         );
+      } else if (event === 'offer:accepted') {
+        void refresh();
+        void notifyRideEvent('Rider chose you', 'Waiting for them to lock the fare in escrow.', {});
       } else if (event === 'trip:assigned') {
-        const assignedTrip = payload as { id?: string } | undefined;
-        if (assignedTrip?.id) router.push(`/trip/${assignedTrip.id}`);
+        const assignedTrip = payload as { id?: string; paymentStatus?: string } | undefined;
+        if (assignedTrip?.id && assignedTrip.paymentStatus !== 'PENDING') {
+          router.push(`/trip/${assignedTrip.id}`);
+        } else {
+          void refresh();
+        }
+      } else if (event === 'escrow.deposit.confirmed') {
+        const funded = payload as { id?: string; tripId?: string } | undefined;
+        const tripId = funded?.id ?? funded?.tripId;
+        if (tripId) router.push(`/trip/${tripId}`);
+        else void refresh();
       } else if (event === 'offer:rejected') {
         void refresh();
       }
@@ -136,16 +159,20 @@ export default function Home() {
         presenceRef.current = driver.presence;
         setPresence(driver.presence);
       }
-      if (driver?.activeTrip?.id && pathnameRef.current === '/home') {
+      if (driver?.activeTrip?.id && pathnameRef.current === '/home'
+        && (driver.activeTrip.status === 'ONGOING' || driver.activeTrip.paymentStatus === 'ESCROWED')) {
         router.push(`/trip/${driver.activeTrip.id}`);
       }
-      if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE') {
+      if (driver?.presence === 'ONLINE' || driver?.presence === 'IDLE' || driver?.presence === 'ON_TRIP') {
         try {
           const incoming = await getIncomingTrips();
           setIncomingTrips(incoming.trips);
           setPendingOffer(incoming.pendingOffer);
           setActiveDispatch(incoming.activeDispatch);
-          if (incoming.activeDispatch) {
+          setPendingEscrowTrip(incoming.pendingEscrowTrip);
+          if (incoming.activeTripId && pathnameRef.current === '/home') {
+            router.push(`/trip/${incoming.activeTripId}`);
+          } else if (incoming.activeDispatch) {
             openOfferScreen(incoming.activeDispatch.tripId, incoming.activeDispatch.expiresAt);
           } else {
             openingOfferRef.current = null;
@@ -158,6 +185,7 @@ export default function Home() {
         setIncomingTrips([]);
         setPendingOffer(null);
         setActiveDispatch(null);
+        setPendingEscrowTrip(null);
       }
     } catch {
       /* keep current screen */
@@ -272,7 +300,19 @@ export default function Home() {
             {presence === 'ONLINE' || presence === 'IDLE' ? 'You are online' : 'You are offline'}
           </Text> */}
         </View>
-        {pendingOffer ? (
+        {pendingEscrowTrip ? (
+          <View style={styles.requestSection}>
+            <Text style={styles.sectionTitle}>Waiting for escrow</Text>
+            <View style={styles.requestCard}>
+              <Text style={styles.requestTitle}>Rider is locking the fare</Text>
+              <Text style={styles.requestRoute}>{pendingEscrowTrip.pickupAddress}</Text>
+              <Text style={styles.requestRoute}>to {pendingEscrowTrip.dropoffAddress}</Text>
+              <Text style={styles.requestMeta}>
+                ${Number(pendingEscrowTrip.fareTotal).toFixed(2)} · you will be asked to start pickup after USDC is escrowed
+              </Text>
+            </View>
+          </View>
+        ) : pendingOffer ? (
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Waiting for match</Text>
             <View style={styles.requestCard}>

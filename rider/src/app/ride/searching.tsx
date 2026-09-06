@@ -44,7 +44,13 @@ export default function SearchingScreen() {
     void refresh(true);
     const remove = addSocketListener((event) => {
       if (!mounted) return;
-      if (["offer:created", "trip:assigned", "trip:cancelled", "escrow.deposit.confirmed"].includes(event)) void refresh();
+      if (event === "offer:created" || event === "trip:cancelled") {
+        void refresh();
+        return;
+      }
+      if (event === "escrow.deposit.confirmed" || event === "trip:assigned") {
+        router.replace({ pathname: "/ride/tracking", params: { tripId } });
+      }
     });
     const timer = setInterval(() => void refresh(), 3000);
     return () => { mounted = false; clearInterval(timer); remove(); };
@@ -52,6 +58,7 @@ export default function SearchingScreen() {
 
   const offers = trip?.offers?.filter((offer) => offer.status === "PENDING") ?? [];
   const needsPayment = trip?.status === "ASSIGNED" && trip.paymentStatus === "PENDING";
+  const lockingFare = Boolean(acceptingId) && acceptingId !== "deposit";
 
   async function payDeposit() {
     if (!tripId || acceptingId) return;
@@ -74,11 +81,16 @@ export default function SearchingScreen() {
     try {
       setAcceptingId(offerId);
       const result = await acceptOffer(tripId, offerId);
+      if (result.trip) setTrip(result.trip);
       if (result.deposit) {
         const txHash = await sendEscrow(result.deposit);
         await confirmDeposit(tripId, txHash);
+        router.replace({ pathname: "/ride/tracking", params: { tripId } });
+        return;
       }
-      router.replace({ pathname: "/ride/tracking", params: { tripId } });
+      if (result.trip.paymentStatus === "ESCROWED") {
+        router.replace({ pathname: "/ride/tracking", params: { tripId } });
+      }
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
       Alert.alert("Could not pay", message ?? (error instanceof Error ? error.message : "Please choose another offer."));
@@ -140,18 +152,22 @@ export default function SearchingScreen() {
         </View>
       </View>
       <Text style={styles.eyebrow}>
-        {needsPayment ? "PAYMENT REQUIRED" : offers.length ? "DRIVERS AVAILABLE" : "JUST A MOMENT"}
+        {lockingFare ? "LOCKING FARE" : needsPayment ? "FINISH PAYMENT" : offers.length ? "DRIVERS AVAILABLE" : "JUST A MOMENT"}
       </Text>
       <Text style={styles.title}>
-        {needsPayment
-          ? "Lock the fare to continue"
+        {lockingFare
+          ? "Locking USDC in escrow"
+          : needsPayment
+          ? "Resume fare lock"
           : trip?.rideType === "COURIER"
           ? (offers.length ? "Choose a courier driver" : "Finding a courier driver")
           : (offers.length ? "Choose your offer" : "Finding your driver")}
       </Text>
       <Text style={styles.subtitle}>
-        {needsPayment
-          ? "Your driver is assigned. Confirm USDC escrow so they can start."
+        {lockingFare
+          ? "Your driver is notified after this deposit confirms."
+          : needsPayment
+          ? "Deposit was interrupted. Confirm USDC escrow so your driver can start."
           : trip?.rideType === "COURIER"
           ? (offers.length ? "Pick who will pick up and deliver the package." : `Sending to ${trip.recipientName ?? "the recipient"}.`)
           : (offers.length ? "Compare prices and arrival times." : "Matching you with a nearby driver.")}
@@ -172,7 +188,7 @@ export default function SearchingScreen() {
         />
       ) : null}
       <View style={styles.offers}>
-        {offers.map((offer) => {
+        {offers.map((offer) => (
           <View style={styles.offer} key={offer.id}>
             <View style={styles.offerCopy}>
               <Text style={styles.driver}>{offer.driver?.user.name ?? "Nearby driver"}</Text>

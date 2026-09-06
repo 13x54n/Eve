@@ -48,7 +48,7 @@ sequenceDiagram
     Client->>Notify: WebSocket Connect :4004 /socket.io
     Notify->>Notify: Authenticate JWT
     Notify->>Client: Connection Established
-    Notify->>Client: Join user:{userId} room
+    Notify->>Client: Join rider|driver:{userId} room
     
     Note over Client,Notify: During Trip
     
@@ -212,24 +212,20 @@ Rooms group related sockets for targeted broadcasting.
 
 | Room | Members | Purpose |
 |------|---------|---------|
-| `user:{userId}` | Single user | User-specific notifications |
-| `trip:{tripId}` | Rider + Driver | Trip lifecycle events |
-| `admin` | All admin staff | Admin dashboard updates |
+| `rider:{userId}` / `driver:{userId}` | That user's sockets (JWT `sub`) | Offers, escrow, assignment |
+| `trip:{tripId}` | Rider, driver, recipient, admin after `trip:subscribe` | Location, chat, trip facts |
+| `admin:ops` | Admin staff | Ops dashboard |
+
+`trip:subscribe` authorizes **User.id** against `trip.rider.userId` / `trip.driver.userId` / `recipientUserId` (not profile ids). Success emits `trip:subscribed`.
 
 ### Joining Rooms
 
 **Automatic**:
-- `user:{userId}` joined on connection
+- `rider:{userId}` or `driver:{userId}` (and `admin:ops` for admins) on connection
 
 **Manual**:
 ```typescript
-// Join trip room when trip is assigned
-socket.emit('join-trip', { tripId: 123 });
-
-// Server side
-socket.on('join-trip', ({ tripId }) => {
-  socket.join(`trip:${tripId}`);
-});
+socket.emit('trip:subscribe', tripId);
 ```
 
 ### Leaving Rooms
@@ -262,12 +258,9 @@ io.to('user:123').to('admin').emit('notification', data);
 
 ### Event Naming Convention
 
-`<entity>:<action>` format:
-- `trip:created`
-- `trip:updated`
-- `trip:completed`
-- `offer:new`
-- `location:updated`
+`<entity>:<action>` format. Happy path:
+
+`trip:requested` → `offer:created` → `offer:accepted` (driver waits) → `escrow.deposit.confirmed` + `trip:assigned` → `driver:arrived` → `trip:started` → `trip:completed` → `escrow.settlement.started` → `escrow.released`
 
 ### Trip Events
 
@@ -275,8 +268,17 @@ io.to('user:123').to('admin').emit('notification', data);
 
 | Event | Data | Trigger |
 |-------|------|---------|
-| `trip:created` | `{ trip }` | Rider creates trip |
-| `trip:assigned` | `{ trip }` | Rider accepts offer |
+| `trip:requested` | trip + `dispatchExpiresAt` | Rider creates SEARCHING trip |
+| `offer:created` | offer | Driver bids |
+| `offer:accepted` | trip, `waitingForEscrow` | Rider accepted; deposit not confirmed |
+| `offer:rejected` | `{ tripId }` | Other bidders |
+| `escrow.deposit.confirmed` | trip ids + `txHash` | USDC locked |
+| `trip:assigned` | trip | **After** escrow; driver asked to start pickup |
+| `driver:arrived` | trip (`arrivedAt`) | Driver at pickup |
+| `trip:started` | trip | ONGOING |
+| `trip:completed` | trip | Complete; settlement follows |
+| `escrow.settlement.started` | `{ txHash, settleFromMs }` | Driver `startSettlement` |
+| `escrow.released` | `{ txHash }` | Operator finalize after dispute window |
 | `trip:driver-arriving` | `{ trip }` | Driver confirms pickup |
 | `trip:in-progress` | `{ trip }` | Driver starts trip |
 | `trip:completed` | `{ trip }` | Driver completes trip |

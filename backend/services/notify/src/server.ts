@@ -16,9 +16,9 @@ const httpServer = createServer(app);
 const socketServer = new Server(httpServer, { cors: corsOptions() });
 attachRealtime(socketServer);
 
-httpServer.listen(httpPort, "0.0.0.0", () => {
+httpServer.listen(httpPort, "0.0.0.0", async () => {
   console.log(`Notify service HTTP running on port ${httpPort}`);
-  void startNotifyKafkaConsumers();
+  await startNotifyKafkaConsumers();
 });
 
 // Start gRPC server
