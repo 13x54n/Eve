@@ -28,7 +28,8 @@ The Rider app enables passengers to:
 - Accept offers and track driver location in real-time
 - Chat with drivers during trips
 - View trip history and receipts
-- Manage payment methods (off-platform)
+- Pay matched fares in Arc Testnet USDC from the Privy wallet
+- Profile → Wallet for the ERC-20 USDC balance
 
 ## Features
 
@@ -60,7 +61,7 @@ The Rider app enables passengers to:
 ### Profile & History
 - View past trips
 - Profile and legal screens
-- Embedded wallet addresses on profile
+- Profile → Wallet (Arc Testnet USDC)
 
 ## Architecture
 
@@ -90,11 +91,12 @@ src/app/
   (tabs)/
     home.tsx               # Request ride
     rides.tsx              # History
-    profile.tsx            # Profile + embedded wallets
+    profile.tsx            # Profile + Wallet row
   ride/                    # Request, searching, tracking, completed, chat, support
   courier/                 # Courier request and public track token
   legal/
   profile/
+    wallet.tsx             # Arc USDC wallet
 ```
 
 ### State Management
@@ -107,7 +109,10 @@ src/app/
 ```
 src/services/auth.ts
 src/services/api.ts
+src/services/wallet.ts
 src/lib/privy.ts
+src/lib/arc-chain.ts
+src/lib/send-escrow.ts
 src/lib/complete-privy-session.ts
 ```
 
@@ -163,6 +168,7 @@ Edit `.env`:
 # Backend URLs (use your LAN IP for physical devices)
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
 # Privy Configuration
@@ -354,6 +360,7 @@ npx expo run:ios  # or run:android
 ```bash
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 ```
 

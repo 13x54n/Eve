@@ -101,12 +101,13 @@ openssl rand -base64 48
 | `RIDE_PORT` | Ride service port | `4003` | No |
 | `NOTIFY_PORT` | Notify HTTP/Socket.IO port | `4004` | No |
 | `ADMIN_PORT` | Admin API port | `4005` | No |
+| `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
 | `LOCATION_GRPC_PORT` | Location gRPC | `50051` | No |
 | `NOTIFY_GRPC_PORT` | Notify gRPC | `50052` | No |
 | `LOCATION_GRPC_URL` | gRPC client target | `127.0.0.1:50051` | No |
 | `NOTIFY_GRPC_URL` | gRPC client target | `127.0.0.1:50052` | No |
 
-There is no HTTP gateway and no `GATEWAY_MODE`. From `backend/`, `npm run dev` starts all five services.
+There is no HTTP gateway and no `GATEWAY_MODE`. From `backend/`, `npm run dev` starts all six services.
 
 Docker Compose sets `LOCATION_GRPC_URL=location:50051` and `NOTIFY_GRPC_URL=notify:50052`.
 
@@ -167,7 +168,7 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-id
 IMAGEKIT_DRIVER_FOLDER=/eve/drivers
 ```
 
-### Driver Eve Wallet (optional)
+### Driver Eve Wallet / Arc escrow (optional)
 
 Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC (6 decimals at `0x3600…0000`). Trip fares lock in RideEscrow as native Arc USDC (18-decimal `msg.value`) — the same asset, not a second token.
 
@@ -282,6 +283,7 @@ ipconfig | findstr IPv4
 ```bash
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
@@ -297,6 +299,7 @@ Same variables as Rider app:
 |----------|-------------|----------|
 | `EXPO_PUBLIC_AUTH_URL` | Auth HTTP base | ✅ Yes |
 | `EXPO_PUBLIC_API_URL` | Ride HTTP base | ✅ Yes |
+| `EXPO_PUBLIC_PAYMENT_URL` | Payment HTTP base | ✅ Yes |
 | `EXPO_PUBLIC_WS_URL` | Notify Socket.IO | ✅ Yes |
 | `EXPO_PUBLIC_PRIVY_APP_ID` | Privy application ID | ✅ Yes |
 | `EXPO_PUBLIC_PRIVY_CLIENT_ID` | Privy app client ID | ✅ Yes |
@@ -316,12 +319,13 @@ Same variables as Rider app:
 | `RIDE_PROXY_TARGET` | Ride rewrite | `http://127.0.0.1:4003` | No |
 | `NOTIFY_PROXY_TARGET` | Socket.IO rewrite | `http://127.0.0.1:4004` | No |
 | `ADMIN_PROXY_TARGET` | Admin API rewrite | `http://127.0.0.1:4005` | No |
+| `PAYMENT_PROXY_TARGET` | Payment rewrite | `http://127.0.0.1:4006` | No |
 | `NEXT_PUBLIC_NOTIFY_URL` | Socket.IO origin | `http://127.0.0.1:4004` | No |
 | `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox token | `pk.abc123...` | No |
 
 **How it works**:
 - Browser calls `/api/*` (same-origin)
-- Next.js rewrites to auth, ride, admin, and notify
+- Next.js rewrites to auth, ride, admin, payment, and notify
 
 **Example**:
 ```bash
@@ -330,6 +334,7 @@ AUTH_PROXY_TARGET=http://127.0.0.1:4001
 RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
@@ -411,6 +416,7 @@ AUTH_PROXY_TARGET=http://127.0.0.1:4001
 RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
@@ -418,6 +424,7 @@ NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```bash
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 EXPO_PUBLIC_PRIVY_CLIENT_ID=your_client_id
@@ -484,7 +491,7 @@ NOTIFY_GRPC_URL=notify-internal:50052
 - **Solution**: Add your origin to `CORS_ORIGINS` or use `/api` proxy in Next.js
 
 **Error**: `Mobile app cannot connect to API`
-- **Solution**: Use LAN IP, not `localhost`, in `EXPO_PUBLIC_AUTH_URL`, `EXPO_PUBLIC_API_URL`, and `EXPO_PUBLIC_WS_URL`
+- **Solution**: Use LAN IP, not `localhost`, in `EXPO_PUBLIC_AUTH_URL`, `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_PAYMENT_URL`, and `EXPO_PUBLIC_WS_URL`
 
 ### Verification Checklist
 

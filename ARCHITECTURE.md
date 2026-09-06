@@ -50,6 +50,7 @@ graph TB
         Ride[Ride Service :4003<br/>Trip lifecycle and presence]
         Notify[Notify Service :4004<br/>WebSocket and events]
         AdminApi[Admin Service :4005<br/>Staff API]
+        Payment[Payment Service :4006<br/>Arc USDC escrow]
     end
 
     subgraph DataLayer["Data Layer"]
@@ -65,13 +66,16 @@ graph TB
 
     RiderApp --> Auth
     RiderApp --> Ride
+    RiderApp --> Payment
     RiderApp --> Notify
     DriverApp --> Auth
     DriverApp --> Ride
+    DriverApp --> Payment
     DriverApp --> Notify
     AdminWeb --> Auth
     AdminWeb --> AdminApi
     AdminWeb --> Ride
+    AdminWeb --> Payment
     AdminWeb --> Notify
 
     Auth --> PG
@@ -79,6 +83,7 @@ graph TB
     Location --> Redis
     Ride --> PG
     Ride --> Redis
+    Payment --> PG
     Notify --> PG
 
     Ride -.gRPC.-> Location

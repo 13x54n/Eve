@@ -28,7 +28,7 @@ This guide covers development practices, workflows, and standards for contributi
 ```bash
 # Development
 cd backend
-npm run dev  # Five services with hot reload
+npm run dev  # Six services with hot reload
 
 # Admin console (optional for alpha)
 cd admin

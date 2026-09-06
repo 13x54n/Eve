@@ -33,6 +33,7 @@ Common questions and solutions for the Eve platform.
 - `4003` - Ride
 - `4004` - Notify HTTP/Socket.IO (`50052` gRPC)
 - `4005` - Admin API
+- `4006` - Payment
 - `5432` - PostgreSQL (required)
 - `6379` - Redis (required)
 - `3000` - Admin console
@@ -44,6 +45,10 @@ Check ports:
 lsof -i :4003  # macOS/Linux
 netstat -ano | findstr :4003  # Windows
 ```
+
+### Q: How do trip fares get paid?
+
+**A:** On Arc Testnet, the rider pays USDC from a Privy embedded wallet into `RideEscrow` (one signature). Completing the trip releases to the driver; cancel refunds the rider. Wallets show the ERC-20 USDC view (6 decimals). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md). Fund test wallets at https://faucet.circle.com.
 
 ### Q: Do I need Privy to run the backend?
 
@@ -93,7 +98,7 @@ docker compose exec postgres psql -U eve -d eve -c "SELECT 1;"
 
 ### Q: "Port 4003 is already in use"
 
-**A:** Another process is using a backend port (auth 4001, location 4002, ride 4003, notify 4004, admin 4005).
+**A:** Another process is using a backend port (auth 4001, location 4002, ride 4003, notify 4004, admin 4005, payment 4006).
 
 **Solution**:
 ```bash
@@ -361,6 +366,7 @@ ipconfig | findstr IPv4
 # Update .env
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 #                            ^^^^^^^^^^^^^^
 #                            Your LAN IP

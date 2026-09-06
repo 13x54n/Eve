@@ -29,8 +29,8 @@ The Driver app enables drivers to:
 - View incoming trips nearby
 - Submit competitive fare offers
 - Navigate to pickup and dropoff locations
-- Track trip status, matched fares, and Eve Wallet
-- Cash out platform credits to the Privy Ethereum wallet
+- Track trip status, matched fares, and Arc USDC wallet
+- Cash out platform credits as ERC-20 USDC to the Privy Ethereum wallet
 
 ## Features
 
@@ -56,10 +56,10 @@ The Driver app enables drivers to:
 - H3 indexing for matching
 
 ### Eve Wallet
-- Available platform credits (`walletBalance`), separate from lifetime matched fares
-- Cash-out to Privy embedded Ethereum wallet
+- On-chain Arc Testnet USDC (ERC-20 6-decimal view — same asset as gas)
+- Trip fares settle from rider `RideEscrow` on complete
+- Platform credits (`walletBalance`) cash out as ERC-20 USDC
 - Admin credits and payouts
-- Trip fares remain off-platform cash
 
 ### Communication
 - In-trip chat with rider
@@ -92,7 +92,7 @@ src/app/
     forgot-password.tsx
   (tabs)/
     home.tsx
-    earnings/            # Eve Wallet + trip list
+    earnings/            # Arc USDC wallet + trip list
     menu.tsx
   onboarding/
     vehicle.tsx
@@ -163,6 +163,7 @@ Edit `.env`:
 # Backend URLs (use LAN IP for physical devices)
 EXPO_PUBLIC_AUTH_URL=http://192.168.1.100:4001/api
 EXPO_PUBLIC_API_URL=http://192.168.1.100:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://192.168.1.100:4006/api
 EXPO_PUBLIC_WS_URL=http://192.168.1.100:4004
 
 # Privy (separate client from rider)

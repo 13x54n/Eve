@@ -7,7 +7,7 @@ This stack is **backend-only**. `Dockerfile.dev` does not install the Android SD
 Clients:
 
 - Rider/driver (iOS Simulator, or Android with `adb reverse`): `EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api`, `EXPO_PUBLIC_API_URL=http://localhost:4003/api`, `EXPO_PUBLIC_PAYMENT_URL=http://localhost:4006/api`, `EXPO_PUBLIC_WS_URL=http://localhost:4004`
-- Rider/driver (Android Emulator without reverse): use `http://10.0.2.2:4001/api` (and `4003` / `4004`) — `10.0.2.2` is the emulator’s alias for the host
+- Rider/driver (Android Emulator without reverse): use `http://10.0.2.2:4001/api` (and `4003` / `4006` / `4004`) — `10.0.2.2` is the emulator’s alias for the host
 - Physical device: your machine’s LAN IP instead of `localhost`
 - Admin: `NEXT_PUBLIC_API_URL=/api` with per-service proxy targets (see `admin/next.config.ts`)
 
@@ -63,6 +63,7 @@ Do not use `docker compose down -v` unless you intend to delete the local Postgr
 | `http://localhost:4003/health` | ride |
 | `http://localhost:4004/health` | notify |
 | `http://localhost:4005/health` | admin |
+| `http://localhost:4006/health` | payment |
 
 ## Common commands
 
@@ -81,7 +82,7 @@ On Windows, ensure shell scripts use LF line endings. The repository enforces th
 
 ## Mobile apps and emulators (host)
 
-Keep Metro and `expo run:*` on the machine that has Xcode / Android Studio. Compose only needs to publish 4001, 4003, and 4004 (and 4002/4005 if you hit them directly).
+Keep Metro and `expo run:*` on the machine that has Xcode / Android Studio. Compose only needs to publish 4001, 4003, 4004, and 4006 (and 4002/4005 if you hit them directly).
 
 ### iOS Simulator
 
@@ -101,6 +102,7 @@ Either map emulator ports to the host:
 adb reverse tcp:4001 tcp:4001
 adb reverse tcp:4003 tcp:4003
 adb reverse tcp:4004 tcp:4004
+adb reverse tcp:4006 tcp:4006
 ```
 
 and keep `localhost` in `EXPO_PUBLIC_*`, **or** set:
@@ -108,6 +110,7 @@ and keep `localhost` in `EXPO_PUBLIC_*`, **or** set:
 ```bash
 EXPO_PUBLIC_AUTH_URL=http://10.0.2.2:4001/api
 EXPO_PUBLIC_API_URL=http://10.0.2.2:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://10.0.2.2:4006/api
 EXPO_PUBLIC_WS_URL=http://10.0.2.2:4004
 ```
 

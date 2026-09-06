@@ -10,6 +10,7 @@ Detailed documentation for Eve's microservices architecture.
 - [Location Service](#location-service)
 - [Ride Service](#ride-service)
 - [Notify Service](#notify-service)
+- [Payment Service](#payment-service)
 - [Shared Packages](#shared-packages)
 - [Service Communication](#service-communication)
 
@@ -276,10 +277,11 @@ fare = max(fare, minFare)
 
 **When rider accepts offer**:
 1. Update trip (`status = ASSIGNED`, assign driver)
-2. Remove trip from geo index
-3. Update driver status (`ON_TRIP`)
-4. Emit `trip:assigned` to both parties
-5. Create chat room
+2. Return a payment deposit quote (`to`, native `value`, `data`)
+3. Remove trip from geo index
+4. Update driver status (`ON_TRIP`)
+5. Emit `trip:assigned` to both parties
+6. Rider confirms the escrow tx; `paymentStatus` becomes `ESCROWED`
 
 **Code**: `backend/services/ride/src/dispatch.ts`
 
@@ -365,6 +367,36 @@ WebSocket connections authenticated via JWT:
 - `EmitAdminEvent`
 
 **Code**: `backend/services/notify/src/realtime.ts`
+
+## Payment Service
+
+**Port**: 4006  
+**Package**: `@eve/payment`  
+**Location**: `backend/services/payment/`
+
+### Responsibilities
+
+- Arc Testnet USDC wallet reads (ERC-20 6-decimal view)
+- RideEscrow deposit quotes and confirm
+- Operator `release` / `refund`
+- Driver platform-credit cash-out (ERC-20 transfer)
+
+USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md)): native 18-decimal `msg.value` for escrow; ERC-20 `0x3600…0000` for display and cash-out. Never sum the two.
+
+### Key Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/payment/config` | GET | Chain and escrow config |
+| `/api/payment/trips/:id/deposit` | GET | Quote native deposit tx |
+| `/api/payment/trips/:id/confirm` | POST | Confirm rider tx hash |
+| `/api/rider/wallet` | GET | Rider on-chain USDC |
+| `/api/driver/wallet` | GET | Driver USDC + credits |
+| `/api/driver/wallet/withdraw` | POST | Cash out credits |
+| `/internal/trips/:id/release` | POST | Operator release |
+| `/internal/trips/:id/refund` | POST | Operator refund |
+
+**See**: [driver-wallet.md](driver-wallet.md) and [contracts/README.md](../contracts/README.md)
 
 ## Shared Packages
 
@@ -467,9 +499,9 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 - `LOG_LEVEL` - Logging level
 
 **Service-specific**:
-- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`
+- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`, `PAYMENT_PORT`
 - `LOCATION_GRPC_URL`, `NOTIFY_GRPC_URL`, `GRPC_LOGGING`
-- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL` (optional driver cash-out)
+- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`
 
 ## Monitoring
 
@@ -482,6 +514,8 @@ curl http://localhost:4001/health      # Auth
 curl http://localhost:4002/health      # Location
 curl http://localhost:4003/health      # Ride
 curl http://localhost:4004/health      # Notify
+curl http://localhost:4005/health      # Admin
+curl http://localhost:4006/health      # Payment
 ```
 
 **Response**:
@@ -518,8 +552,9 @@ logger.error('Database error', { error });
 - [H3 Geospatial Matching](h3-matchmaking.md)
 - [gRPC Implementation](grpc.md)
 - [Redis Caching](caching.md)
+- [Arc Testnet USDC payments](driver-wallet.md)
 - [Docker Setup](docker.md)
 
 ---
 
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-06
