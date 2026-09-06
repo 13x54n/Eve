@@ -134,12 +134,23 @@ async function main() {
   const redisUrl = process.env.REDIS_URL?.trim();
   if (redisUrl) {
     const redis = createClient({ url: redisUrl });
-    await redis.connect();
-    for await (const key of redis.scanIterator({ MATCH: "h3:trips:*", COUNT: 200 })) {
-      await redis.del(key);
+    try {
+      await redis.connect();
+      for await (const key of redis.scanIterator({ MATCH: "h3:trips:*", COUNT: 200 })) {
+        if (key) await redis.del(String(key));
+      }
+      if (await redis.exists("h3:pos:trips")) {
+        await redis.del("h3:pos:trips");
+      }
+    } catch (error) {
+      console.warn("Redis trip-index reset skipped:", error);
+    } finally {
+      try {
+        await redis.quit();
+      } catch {
+        await redis.disconnect().catch(() => undefined);
+      }
     }
-    await redis.del("h3:pos:trips");
-    await redis.quit();
   }
 
   writeFileSync(
