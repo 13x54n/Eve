@@ -484,7 +484,7 @@ const drivers = await nearbyDriversGrpc({
 
 ### Apache Kafka
 
-Auth, ride, admin, and payment publish domain events. Notify consumes them for Socket.IO. Payment consumes `eve.payment.events` for replica-safe escrow follow-up. Location GPS is not on Kafka. If `KAFKA_BROKERS` is unset, an in-process bus is used and notify keeps local / gRPC / HTTP emit.
+Auth, ride, admin, and payment publish domain events. Notify consumes them for Socket.IO. Payment consumes `eve.payment.events` for replica-safe escrow follow-up. Location GPS is not on Kafka; coarse `driver:presence.changed` is. If `KAFKA_BROKERS` is unset, an in-process bus is used and notify keeps local / gRPC / HTTP emit.
 
 ### Hybrid Approach
 

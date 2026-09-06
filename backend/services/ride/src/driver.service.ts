@@ -1024,7 +1024,7 @@ async function notifyOpsTicket(
     subject,
     kind,
     requesterName: requester?.name ?? "Unknown",
-  });
+  }, ticketId);
 }
 
 export async function listSupportTickets(userId: string) {

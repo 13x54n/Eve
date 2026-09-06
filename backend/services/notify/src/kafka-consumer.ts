@@ -1,6 +1,7 @@
 import { EVE_TOPICS, isKafkaEnabled, subscribeEveTopic, type EveEvent } from "@eve/shared/kafka";
 import {
   emitAdminEventLocal,
+  emitTripAndUserEventLocal,
   emitTripEventLocal,
   emitUserEventLocal,
 } from "./emit.js";
@@ -17,6 +18,16 @@ export async function startNotifyKafkaConsumers() {
     groupId: "eve-notify",
     topic: EVE_TOPICS.trip,
     handler: (event) => {
+      if (event.notifyUser) {
+        emitTripAndUserEventLocal(
+          event.key,
+          event.notifyUser.role,
+          event.notifyUser.userId,
+          event.type,
+          event.payload,
+        );
+        return;
+      }
       emitTripEventLocal(event.key, event.type, event.payload);
     },
   });

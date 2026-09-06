@@ -39,7 +39,7 @@ async function notifyOpsTicket(
     subject,
     kind,
     requesterName: requester?.name ?? "Unknown",
-  });
+  }, ticketId);
 }
 
 type Viewer = { userId: string; riderId: string };

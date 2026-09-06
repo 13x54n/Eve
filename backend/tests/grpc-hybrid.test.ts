@@ -3,7 +3,13 @@ import * as locationGrpc from "../services/location/src/grpc-client.js";
 import * as locationMatching from "../services/location/src/matching.js";
 import { nearbyDrivers, recordDriverLocation } from "../services/location/src/client.js";
 import * as notifyGrpc from "../services/notify/src/grpc-client.js";
-import { emitTripEvent, setSocketServer } from "../services/notify/src/emit.js";
+import { emitTripAndUserEvent, emitTripEvent, setSocketServer } from "../services/notify/src/emit.js";
+import {
+  EVE_TOPICS,
+  resetKafkaMemoryForTests,
+  subscribeEveTopic,
+  type EveEvent,
+} from "@eve/shared/kafka";
 
 const nearbyInput = {
   pickupLat: 37.7749,
@@ -66,6 +72,7 @@ describe("notify hybrid emit", () => {
     setSocketServer(null);
     vi.unstubAllGlobals();
     delete process.env.NOTIFY_URL;
+    resetKafkaMemoryForTests();
   });
 
   it("emits on the local socket server and skips gRPC", async () => {
@@ -110,5 +117,42 @@ describe("notify hybrid emit", () => {
       event: "trip.updated",
       payload: { ok: true },
     });
+  });
+
+  it("publishes trip-and-user as one trip event with notifyUser", async () => {
+    const trip: EveEvent[] = [];
+    const user: EveEvent[] = [];
+    await subscribeEveTopic({
+      groupId: "eve-notify",
+      topic: EVE_TOPICS.trip,
+      handler: (event) => {
+        trip.push(event);
+      },
+    });
+    await subscribeEveTopic({
+      groupId: "eve-notify",
+      topic: EVE_TOPICS.user,
+      handler: (event) => {
+        user.push(event);
+      },
+    });
+    vi.spyOn(notifyGrpc, "emitTripAndUserEventGrpc").mockResolvedValue(undefined);
+
+    await emitTripAndUserEvent("trip-1", "RIDER", "rider-1", "trip:completed", { ok: true });
+
+    expect(trip).toHaveLength(1);
+    expect(trip[0]).toMatchObject({
+      type: "trip:completed",
+      key: "trip-1",
+      notifyUser: { role: "RIDER", userId: "rider-1" },
+    });
+    expect(user).toHaveLength(0);
+    expect(notifyGrpc.emitTripAndUserEventGrpc).toHaveBeenCalledWith(
+      "trip-1",
+      "RIDER",
+      "rider-1",
+      "trip:completed",
+      { ok: true },
+    );
   });
 });

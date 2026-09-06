@@ -1,5 +1,5 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare, invalidateFareCache } from "@eve/db";
-import { emitUserEvent } from "@eve/notify";
+import { emitAdminEvent, emitUserEvent } from "@eve/notify";
 import { indexSearchingTripClient, nearbyDriversClient } from "@eve/location";
 import {
   money,
@@ -495,6 +495,12 @@ export async function updateRider(
     ip,
   });
 
+  if (body.accountStatus && body.accountStatus !== user.accountStatus) {
+    void emitUserEvent("RIDER", id, "account:status.updated", {
+      accountStatus: body.accountStatus,
+    });
+  }
+
   return getRider(id);
 }
 
@@ -670,6 +676,11 @@ export async function reviewDriver(
     },
   });
 
+  const approvalStatus =
+    expired > 0 && body.approvalStatus !== "DEACTIVATED"
+      ? "SUSPENDED"
+      : (body.approvalStatus ?? driver.approvalStatus);
+
   await writeAudit({
     actorId,
     action: "driver.review",
@@ -677,6 +688,11 @@ export async function reviewDriver(
     entityId: id,
     metadata: body as Prisma.InputJsonValue,
     ip,
+  });
+
+  void emitUserEvent("DRIVER", driver.userId, "driver:approval.updated", {
+    approvalStatus,
+    notes: body.notes ?? driver.notes,
   });
 
   return getDriver(id);
@@ -1388,6 +1404,20 @@ export async function updateIncident(
     metadata: body as Prisma.InputJsonValue,
     ip,
   });
+
+  if (incident.type === "SOS") {
+    const trip = incident.tripId
+      ? await prisma.trip.findUnique({
+          where: { id: incident.tripId },
+          select: { bookingCode: true },
+        })
+      : null;
+    void emitAdminEvent(
+      "admin:sos",
+      { id: incident.id, bookingCode: trip?.bookingCode, status: incident.status },
+      incident.id,
+    );
+  }
 
   return incident;
 }

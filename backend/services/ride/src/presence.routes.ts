@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import { getDriverProfile } from "@eve/db";
 import { requireAuth, skipRateLimit, type AuthenticatedRequest } from "@eve/http";
 import { updateDriverPresence } from "@eve/location";
+import { emitAdminEvent } from "@eve/notify";
 
 const presenceSchema = z.object({
   presence: z.enum(["ONLINE", "OFFLINE", "IDLE", "ON_TRIP"]),
@@ -25,7 +26,13 @@ presenceRouter.patch("/presence", limiter, requireAuth, async (req, res, next) =
     const user = (req as AuthenticatedRequest).user;
     const data = presenceSchema.parse(req.body);
     await updateDriverPresence(user.id, data);
-    res.status(200).json({ driver: await getDriverProfile(user.id) });
+    const driver = await getDriverProfile(user.id);
+    void emitAdminEvent(
+      "driver:presence.changed",
+      { userId: user.id, presence: data.presence },
+      user.id,
+    );
+    res.status(200).json({ driver });
   } catch (error) {
     next(error);
   }

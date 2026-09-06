@@ -77,4 +77,32 @@ describe("Eve Kafka in-process bus", () => {
     });
     expect(seen).toEqual(["auth:user.registered"]);
   });
+
+  it("carries notifyUser on trip events without a second user-topic copy", async () => {
+    const trip: EveEvent[] = [];
+    const user: EveEvent[] = [];
+    await subscribeEveTopic({
+      groupId: "eve-notify",
+      topic: EVE_TOPICS.trip,
+      handler: (event) => {
+        trip.push(event);
+      },
+    });
+    await subscribeEveTopic({
+      groupId: "eve-notify",
+      topic: EVE_TOPICS.user,
+      handler: (event) => {
+        user.push(event);
+      },
+    });
+    await publishEveEvent(EVE_TOPICS.trip, {
+      type: "trip:completed",
+      key: "trip-9",
+      payload: { ok: true },
+      notifyUser: { role: "RIDER", userId: "rider-1" },
+    });
+    expect(trip).toHaveLength(1);
+    expect(trip[0]?.notifyUser).toEqual({ role: "RIDER", userId: "rider-1" });
+    expect(user).toHaveLength(0);
+  });
 });

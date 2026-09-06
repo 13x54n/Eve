@@ -11,6 +11,8 @@ export const EVE_TOPICS = {
 
 export type EveTopic = (typeof EVE_TOPICS)[keyof typeof EVE_TOPICS];
 
+export type EveNotifyUser = { role: "RIDER" | "DRIVER"; userId: string };
+
 export type EveEvent = {
   type: string;
   source: string;
@@ -18,6 +20,8 @@ export type EveEvent = {
   key: string;
   occurredAt: string;
   payload: unknown;
+  /** When set, notify fans out once to the trip room and this user room (no duplicate). */
+  notifyUser?: EveNotifyUser;
 };
 
 export type EveEventHandler = (event: EveEvent) => Promise<void> | void;
@@ -57,7 +61,9 @@ export function resetKafkaMemoryForTests() {
   memorySubs.length = 0;
 }
 
-function envelope(partial: Omit<EveEvent, "occurredAt" | "source" | "instance"> & { source?: string }): EveEvent {
+function envelope(
+  partial: Omit<EveEvent, "occurredAt" | "source" | "instance"> & { source?: string },
+): EveEvent {
   return {
     type: partial.type,
     key: partial.key,
@@ -65,6 +71,7 @@ function envelope(partial: Omit<EveEvent, "occurredAt" | "source" | "instance"> 
     source: partial.source ?? eventSource(),
     instance: eventInstance(),
     occurredAt: new Date().toISOString(),
+    ...(partial.notifyUser ? { notifyUser: partial.notifyUser } : {}),
   };
 }
 

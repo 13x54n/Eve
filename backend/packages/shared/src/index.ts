@@ -35,5 +35,6 @@ export {
   subscribeEveTopic,
   type EveEvent,
   type EveEventHandler,
+  type EveNotifyUser,
   type EveTopic,
 } from "./kafka.js";

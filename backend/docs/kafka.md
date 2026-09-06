@@ -1,22 +1,31 @@
 # Apache Kafka (Eve event bus)
 
-Domain events between Eve services go through Apache Kafka. gRPC stays for **request/response** (location matchmaking, notify emit when Kafka is off). WebSocket on notify still pushes to apps.
+Domain events between Eve services go through Apache Kafka. Use Kafka only where a **side effect** should fan out to other services or sockets. Keep request/response and high-frequency GPS off the bus.
 
-GPS used for matching stays on Redis/gRPC and is **not** published on Kafka.
+## Where it belongs
+
+| Use | Mechanism | Examples |
+| --- | --- | --- |
+| Domain facts other processes should react to | Kafka | trip lifecycle, support tickets, driver approval, coarse presence, escrow state, new user |
+| Sync query / command with a reply | gRPC or HTTP | nearby drivers, escrow quote/confirm, JWT exchange |
+| High-frequency location | Redis + Socket.IO | `driver:location` GPS for matching and live map |
+| Local fallback when brokers are unset | in-process bus + notify gRPC/`POST /internal/emit` | Vitest, host without `KAFKA_BROKERS` |
+
+GPS used for matching stays on Redis/gRPC and is **not** published on Kafka. `driver:presence.changed` is online/offline/idle only.
 
 ## Topics
 
 | Topic | Producers | Consumers | Examples |
 | --- | --- | --- | --- |
-| `eve.trip.events` | ride, admin (via `@eve/notify` emit) | notify | `trip:requested`, `trip:completed`, `trip:message` |
-| `eve.user.events` | ride, admin | notify | `offer:rejected`, `support:message` |
-| `eve.admin.events` | ride, admin | notify | `admin:ticket` |
+| `eve.trip.events` | ride, admin (via `@eve/notify` emit) | notify | `trip:requested`, `trip:completed`, `trip:message`. Trip+user emits set `notifyUser` so Socket.IO hits both rooms once. |
+| `eve.user.events` | ride, admin | notify | `offer:rejected`, `support:message`, `driver:approval.updated`, `account:status.updated` |
+| `eve.admin.events` | ride, admin | notify | `admin:ticket`, `admin:sos`, `driver:presence.changed` |
 | `eve.auth.events` | auth | notify (admin ops room) | `auth:user.registered` |
-| `eve.payment.events` | payment | notify, payment | `escrow.settlement.started`, `escrow.disputed`, `escrow.released` |
+| `eve.payment.events` | payment | notify, payment | `escrow.deposit.confirmed`, `escrow.settlement.started`, `escrow.disputed`, `escrow.released`, `escrow.refunded` |
 
-Keys are trip id or user id so partitions stay ordered per entity.
+Keys are trip id, user id, or ticket/incident id so partitions stay ordered per entity.
 
-When Kafka is **on**, ride/admin/auth/payment publish and skip notify gRPC; notify consumes and fans out to Socket.IO.
+When Kafka is **on**, producers skip notify gRPC; notify consumes and fans out to Socket.IO.
 
 When Kafka is **off** (or Vitest), publishes use an in-process bus. Notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`.
 
@@ -29,9 +38,12 @@ When Kafka is **off** (or Vitest), publishes use an in-process bus. Notify emit 
   "instance": "ride:123:eve-ride",
   "key": "trip_abc",
   "occurredAt": "2026-09-06T19:00:00.000Z",
-  "payload": {}
+  "payload": {},
+  "notifyUser": { "role": "RIDER", "userId": "user_abc" }
 }
 ```
+
+`notifyUser` is optional. Notify uses it for a single union emit to `trip:{id}` and `rider|driver:{userId}`.
 
 ## Local
 

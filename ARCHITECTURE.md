@@ -429,9 +429,11 @@ const drivers = await fetch(`${LOCATION_URL}/internal/nearby-drivers`, {
 
 #### Apache Kafka (domain events)
 
-Auth, ride, admin, and payment **publish** domain events on Kafka (`eve.trip.events`, `eve.user.events`, `eve.admin.events`, `eve.auth.events`, `eve.payment.events`). Notify **consumes** them and pushes Socket.IO. Payment also consumes payment events for replica-safe escrow follow-up. Location matchmaking GPS stays on Redis/gRPC and is not a Kafka topic.
+Auth, ride, admin, and payment **publish** domain events on Kafka (`eve.trip.events`, `eve.user.events`, `eve.admin.events`, `eve.auth.events`, `eve.payment.events`). Notify **consumes** them and pushes Socket.IO. Payment also consumes payment events for replica-safe escrow follow-up.
 
-gRPC remains for location **queries**. When Kafka is unset, notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`. See [backend/docs/kafka.md](backend/docs/kafka.md).
+**Kafka is for facts that fan out** (trip lifecycle, tickets, approval, coarse presence, escrow, registration). **gRPC/HTTP is for request/response** (matchmaking, quotes, auth). **Redis + Socket.IO is for GPS** — location pulses are not Kafka topics.
+
+When Kafka is unset, notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`. See [backend/docs/kafka.md](backend/docs/kafka.md).
 
 #### gRPC (always on for matchmaking)
 

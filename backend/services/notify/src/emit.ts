@@ -111,11 +111,7 @@ export async function emitTripAndUserEvent(
     type: event,
     key: tripId,
     payload,
-  });
-  await publishEveEvent(EVE_TOPICS.user, {
-    type: event,
-    key: userId,
-    payload: { role, body: payload },
+    notifyUser: { role, userId },
   });
   await deliverRealtime(
     () => emitTripAndUserEventLocal(tripId, role, userId, event, payload),
@@ -124,10 +120,15 @@ export async function emitTripAndUserEvent(
   );
 }
 
-export async function emitAdminEvent(event: string, payload: unknown) {
+export async function emitAdminEvent(event: string, payload: unknown, key?: string) {
+  const payloadKey =
+    key ??
+    (payload && typeof payload === "object" && "ticketId" in payload && typeof (payload as { ticketId?: unknown }).ticketId === "string"
+      ? (payload as { ticketId: string }).ticketId
+      : event);
   await publishEveEvent(EVE_TOPICS.admin, {
     type: event,
-    key: event,
+    key: payloadKey,
     payload,
   });
   await deliverRealtime(
