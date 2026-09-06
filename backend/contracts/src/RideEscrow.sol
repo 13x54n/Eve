@@ -3,8 +3,9 @@ pragma solidity ^0.8.24;
 
 /// @title RideEscrow
 /// @notice Holds native Arc Testnet USDC for a trip. The rider (payer) deposits;
-///         the driver (payee) starts a 5-minute dispute window, then finalizes.
-///         The rider may dispute in that window and refund. No operator key.
+///         the driver (payee) starts a 5-minute dispute window. If nobody disputes,
+///         the operator (or payee) finalizes. A dispute freezes funds until the
+///         operator resolves release or refund after reviewing the trip.
 /// @dev Native USDC uses 18 decimals for msg.value. ERC-20 USDC at
 ///      0x3600000000000000000000000000000000000000 is 6 decimals of the same
 ///      asset (Circle use-arc). Do not hold or display both as separate funds.
@@ -28,6 +29,7 @@ contract RideEscrow {
         uint64 settleFrom;
     }
 
+    address public immutable operator;
     mapping(bytes32 => Deposit) public deposits;
 
     event Deposited(bytes32 indexed tripId, address indexed payer, address indexed payee, uint256 amount);
@@ -38,12 +40,20 @@ contract RideEscrow {
 
     error NotPayer();
     error NotPayee();
+    error NotOperator();
+    error NotFinalizer();
     error InvalidDeposit();
+    error InvalidOperator();
     error AlreadyExists();
     error BadState();
     error WindowOpen();
     error WindowClosed();
     error TransferFailed();
+
+    constructor(address operator_) {
+        if (operator_ == address(0)) revert InvalidOperator();
+        operator = operator_;
+    }
 
     function deposit(bytes32 tripId, address payee) external payable {
         if (payee == address(0) || msg.value == 0) revert InvalidDeposit();
@@ -79,7 +89,7 @@ contract RideEscrow {
 
     function finalize(bytes32 tripId) external {
         Deposit storage item = deposits[tripId];
-        if (item.payee != msg.sender) revert NotPayee();
+        if (msg.sender != item.payee && msg.sender != operator) revert NotFinalizer();
         if (item.state != State.Settling) revert BadState();
         if (block.timestamp < item.settleFrom) revert WindowOpen();
         item.state = State.Released;
@@ -91,7 +101,24 @@ contract RideEscrow {
     function refund(bytes32 tripId) external {
         Deposit storage item = deposits[tripId];
         if (item.payer != msg.sender) revert NotPayer();
-        if (item.state != State.Locked && item.state != State.Disputed) revert BadState();
+        if (item.state != State.Locked) revert BadState();
+        item.state = State.Refunded;
+        (bool ok, ) = item.payer.call{value: item.amount}("");
+        if (!ok) revert TransferFailed();
+        emit Refunded(tripId, item.payer, item.amount);
+    }
+
+    function resolve(bytes32 tripId, bool releaseToPayee) external {
+        if (msg.sender != operator) revert NotOperator();
+        Deposit storage item = deposits[tripId];
+        if (item.state != State.Disputed) revert BadState();
+        if (releaseToPayee) {
+            item.state = State.Released;
+            (bool ok, ) = item.payee.call{value: item.amount}("");
+            if (!ok) revert TransferFailed();
+            emit Released(tripId, item.payee, item.amount);
+            return;
+        }
         item.state = State.Refunded;
         (bool ok, ) = item.payer.call{value: item.amount}("");
         if (!ok) revert TransferFailed();

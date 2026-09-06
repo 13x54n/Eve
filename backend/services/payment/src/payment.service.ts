@@ -3,11 +3,17 @@ import { prisma } from "@eve/db";
 import { fail, money } from "@eve/shared";
 import {
   executePayout,
+  getEscrowOperatorAddress,
   getPayoutChainPublicConfig,
   isTreasuryConfigured,
   usdToNativeUsdcWei,
 } from "@eve/shared/treasury";
 import { getUsdcBalance } from "./chain.js";
+import { decideEscrowDispute } from "./dispute-resolver.js";
+import {
+  cancelEscrowFinalize,
+  scheduleEscrowFinalize,
+} from "./escrow-scheduler.js";
 import {
   disputeWindowMs,
   escrowNowMs,
@@ -61,6 +67,7 @@ export function publicPaymentConfig() {
   return {
     ...getPayoutChainPublicConfig(),
     escrowAddress: getEscrowAddress(),
+    escrowOperatorAddress: getEscrowOperatorAddress(),
     escrowConfigured: Boolean(getEscrowAddress()) || Boolean(process.env.VITEST),
     disputeWindowMs: disputeWindowMs(),
   };
@@ -116,7 +123,7 @@ export async function quoteTripDispute(userId: string, tripId: string): Promise<
 export async function quoteTripRefund(userId: string, tripId: string): Promise<CallQuote> {
   const trip = await loadTrip(tripId);
   if (!trip || trip.rider.userId !== userId) fail("Trip not found", "NotFoundError");
-  if (trip.paymentStatus !== "ESCROWED" && trip.paymentStatus !== "DISPUTED") {
+  if (trip.paymentStatus !== "ESCROWED") {
     fail("This trip cannot be refunded", "ConflictError");
   }
   requireRiderWallet(trip);
@@ -143,7 +150,7 @@ function inferAction(trip: TripWithParties, userId: string): EscrowAction {
   if (trip.paymentStatus === "SETTLING" && isDriver && escrowNowMs() >= (trip.escrowSettleFrom?.getTime() ?? 0)) {
     return "finalize";
   }
-  if ((trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED") && isRider) {
+  if (trip.paymentStatus === "ESCROWED" && isRider) {
     return "refund";
   }
   fail("No escrow action is available for this user", "ConflictError");
@@ -231,7 +238,15 @@ export async function confirmTripEscrow(
         escrowSettleFrom: settleFrom,
       },
     });
-    return snapshot({ ...trip, ...updated, escrowSettleFrom: settleFrom, escrowStartTx: confirmed.txHash });
+    await scheduleEscrowFinalize(trip.id, settleFrom.getTime());
+    const latest = await prisma.trip.findUnique({ where: { id: trip.id } });
+    return snapshot({
+      ...trip,
+      ...updated,
+      ...latest,
+      escrowSettleFrom: latest?.escrowSettleFrom ?? settleFrom,
+      escrowStartTx: confirmed.txHash,
+    });
   }
 
   if (confirmed.action === "dispute") {
@@ -242,10 +257,13 @@ export async function confirmTripEscrow(
         escrowDisputeTx: confirmed.txHash,
       },
     });
-    return snapshot({ ...trip, ...updated, paymentStatus: "DISPUTED", escrowDisputeTx: confirmed.txHash });
+    await onEscrowDisputed(trip.id, confirmed.txHash);
+    const latest = await prisma.trip.findUnique({ where: { id: trip.id } });
+    return snapshot({ ...trip, ...updated, ...latest, paymentStatus: latest?.paymentStatus ?? "DISPUTED", escrowDisputeTx: confirmed.txHash });
   }
 
   if (confirmed.action === "finalize") {
+    cancelEscrowFinalize(trip.id);
     await applyFinalize(trip, confirmed.txHash);
     const updated = await prisma.trip.findUnique({ where: { id: trip.id } });
     return snapshot({ ...trip, ...updated! });
@@ -267,19 +285,21 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
   const driverNetEarnings = Number(trip.fareTotal);
 
   await prisma.$transaction(async (tx) => {
-    await tx.trip.update({
-      where: { id: trip.id },
+    const claimed = await tx.trip.updateMany({
+      where: {
+        id: trip.id,
+        paymentStatus: { in: ["SETTLING", "DISPUTED"] },
+      },
       data: {
         paymentStatus: "COMPLETED",
         escrowReleaseTx: txHash,
       },
     });
-    if (trip.paymentStatus !== "COMPLETED") {
-      await tx.driverProfile.update({
-        where: { id: driverProfileId },
-        data: { earningsTotal: { increment: driverNetEarnings } },
-      });
-    }
+    if (claimed.count !== 1) return;
+    await tx.driverProfile.update({
+      where: { id: driverProfileId },
+      data: { earningsTotal: { increment: driverNetEarnings } },
+    });
     const existingCharge = await tx.ledgerEntry.findFirst({
       where: { tripId: trip.id, type: "CHARGE" },
     });
@@ -311,6 +331,7 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
 }
 
 async function applyRefund(trip: TripWithParties, txHash: string) {
+  if (trip.paymentStatus === "CANCELLED" && trip.escrowRefundTx) return;
   await prisma.trip.update({
     where: { id: trip.id },
     data: {
@@ -319,6 +340,10 @@ async function applyRefund(trip: TripWithParties, txHash: string) {
       status: trip.status === "COMPLETED" ? trip.status : "CANCELLED",
     },
   });
+  const existing = await prisma.ledgerEntry.findFirst({
+    where: { tripId: trip.id, type: "REFUND", providerRef: txHash },
+  });
+  if (existing) return;
   await prisma.ledgerEntry.create({
     data: {
       tripId: trip.id,
@@ -329,6 +354,125 @@ async function applyRefund(trip: TripWithParties, txHash: string) {
       amount: trip.fareTotal,
       providerRef: txHash,
       note: `USDC refunded from escrow for trip ${trip.bookingCode}`,
+    },
+  });
+}
+
+export async function operatorFinalizeTrip(tripId: string) {
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.paymentStatus !== "SETTLING" || !trip.escrowStartTx) return;
+  if (escrowNowMs() < (trip.escrowSettleFrom?.getTime() ?? 0)) return;
+  try {
+    const result = await escrowOps().operatorFinalize(tripIdHash(trip.id));
+    await applyFinalize(trip, result.txHash);
+  } catch {
+    /* dispute or already released */
+  }
+}
+
+export async function operatorResolveTrip(tripId: string, releaseToPayee: boolean, note?: string) {
+  const trip = await loadTrip(tripId);
+  if (!trip) fail("Trip not found", "NotFoundError");
+  if (trip.paymentStatus === "COMPLETED" || trip.paymentStatus === "CANCELLED") {
+    fail("This dispute is already resolved", "ConflictError");
+  }
+  if (trip.paymentStatus !== "DISPUTED") {
+    fail("This trip is not held for dispute review", "ConflictError");
+  }
+  const result = await escrowOps().operatorResolve(tripIdHash(trip.id), releaseToPayee);
+  if (releaseToPayee) await applyFinalize(trip, result.txHash);
+  else await applyRefund(trip, result.txHash);
+  if (note) {
+    const ticket = await prisma.supportTicket.findFirst({
+      where: { tripId, category: "escrow_dispute" },
+      orderBy: { createdAt: "desc" },
+    });
+    if (ticket) {
+      await prisma.ticketMessage.create({
+        data: {
+          ticketId: ticket.id,
+          authorId: trip.rider.userId,
+          body: note,
+          internal: true,
+        },
+      });
+      await prisma.supportTicket.update({
+        where: { id: ticket.id },
+        data: { status: "RESOLVED" },
+      });
+    }
+  }
+  const updated = await prisma.trip.findUnique({ where: { id: trip.id } });
+  return snapshot({ ...trip, ...updated! });
+}
+
+export async function onEscrowDisputed(tripId: string, disputeTx: string | null) {
+  cancelEscrowFinalize(tripId);
+  const trip = await loadTrip(tripId);
+  if (!trip) return;
+  if (trip.paymentStatus === "COMPLETED" || trip.paymentStatus === "CANCELLED") return;
+  if (trip.paymentStatus !== "DISPUTED") {
+    if (trip.paymentStatus !== "SETTLING") return;
+    await prisma.trip.update({
+      where: { id: tripId },
+      data: {
+        paymentStatus: "DISPUTED",
+        ...(disputeTx ? { escrowDisputeTx: disputeTx } : {}),
+      },
+    });
+  }
+  await ensureDisputeTicket(tripId);
+  const run = async () => {
+    const latest = await loadTrip(tripId);
+    if (!latest || latest.paymentStatus !== "DISPUTED") return;
+    const decision = await decideEscrowDispute(tripId);
+    await operatorResolveTrip(
+      tripId,
+      decision.decision === "RELEASE",
+      `[admin AI:${decision.source}] ${decision.decision}: ${decision.rationale}`,
+    );
+  };
+  if (process.env.VITEST) await run();
+  else void run().catch(() => undefined);
+}
+
+export async function applyChainRelease(tripId: string, txHash: string) {
+  cancelEscrowFinalize(tripId);
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.paymentStatus === "COMPLETED") return;
+  await applyFinalize(trip, txHash);
+}
+
+export async function applyChainRefund(tripId: string, txHash: string) {
+  cancelEscrowFinalize(tripId);
+  const trip = await loadTrip(tripId);
+  if (!trip || trip.escrowRefundTx) return;
+  await applyRefund(trip, txHash);
+}
+
+async function ensureDisputeTicket(tripId: string) {
+  const trip = await loadTrip(tripId);
+  if (!trip) return;
+  const existing = await prisma.supportTicket.findFirst({
+    where: { tripId, category: "escrow_dispute" },
+  });
+  if (existing) return;
+  await prisma.supportTicket.create({
+    data: {
+      subject: `Escrow dispute ${trip.bookingCode}`,
+      category: "escrow_dispute",
+      priority: "HIGH",
+      channel: "SYSTEM",
+      requesterId: trip.rider.userId,
+      riderId: trip.riderId,
+      tripId: trip.id,
+      messages: {
+        create: {
+          authorId: trip.rider.userId,
+          body: "The rider disputed this fare within the 5-minute window. Funds stay in escrow until review.",
+          internal: false,
+        },
+      },
     },
   });
 }
@@ -362,7 +506,7 @@ function snapshot(trip: {
 export async function refundTripEscrow(tripId: string) {
   const trip = await loadTrip(tripId);
   if (!trip) fail("Trip not found", "NotFoundError");
-  if (trip.paymentStatus !== "ESCROWED" && trip.paymentStatus !== "DISPUTED") {
+  if (trip.paymentStatus !== "ESCROWED") {
     return { txHash: null };
   }
   return { quote: await quoteTripRefund(trip.rider.userId, tripId) };

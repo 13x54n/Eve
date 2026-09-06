@@ -41,6 +41,7 @@ import {
   updateRider,
   updateStaff,
   updateTicket,
+  resolveEscrowDispute,
   vehicles,
 } from "./admin.controller.js";
 import {
@@ -128,6 +129,11 @@ router.patch(
   "/tickets/:id",
   requirePermission("support:write"),
   updateTicket,
+);
+router.post(
+  "/tickets/:id/escrow-resolve",
+  requirePermission("support:write"),
+  resolveEscrowDispute,
 );
 
 router.get("/promos", requirePermission("promotions:write"), promos);

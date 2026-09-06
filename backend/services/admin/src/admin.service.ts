@@ -17,6 +17,7 @@ import {
   type StaffActor,
 } from "@eve/shared";
 import { executePayout, isTreasuryConfigured } from "@eve/shared/treasury";
+import { operatorResolveTrip } from "@eve/payment";
 
 function parseFilters(query: Record<string, unknown>) {
   const city = typeof query.city === "string" && query.city ? query.city : undefined;
@@ -1539,6 +1540,33 @@ export async function updateTicket(
   if (!ticket) return ticket;
   const [hydrated] = await attachTicketAuthors([ticket]);
   return hydrated;
+}
+
+export async function resolveEscrowDispute(
+  ticketId: string,
+  actorId: string,
+  releaseToPayee: boolean,
+  ip?: string,
+) {
+  const ticket = await prisma.supportTicket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, tripId: true, category: true },
+  });
+  if (!ticket) fail("Ticket not found", "NotFoundError");
+  if (!ticket.tripId) fail("This ticket has no trip", "ConflictError");
+  const escrow = await operatorResolveTrip(
+    ticket.tripId,
+    releaseToPayee,
+    `[staff] ${releaseToPayee ? "RELEASE" : "REFUND"} by admin ${actorId}`,
+  );
+  await writeAudit({
+    actorId,
+    action: releaseToPayee ? "escrow.release" : "escrow.refund",
+    entity: "SupportTicket",
+    entityId: ticketId,
+    ip,
+  });
+  return { ticket: await getTicket(ticketId), escrow };
 }
 
 export async function listPromos() {

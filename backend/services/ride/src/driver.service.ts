@@ -740,7 +740,7 @@ export async function cancelTrip(
   }
 
   let refund = null as Awaited<ReturnType<typeof quoteTripRefund>> | null;
-  if (trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED") {
+  if (trip.paymentStatus === "ESCROWED") {
     refund = await quoteTripRefund(trip.rider.userId, tripId);
   }
 

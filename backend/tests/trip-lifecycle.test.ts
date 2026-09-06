@@ -107,8 +107,7 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
 
       await confirmEscrow(driver.token, trip.id, "startSettlement").expect(200);
       const { advanceEscrowNowMs, DISPUTE_WINDOW_MS } = await import("@eve/payment");
-      advanceEscrowNowMs(DISPUTE_WINDOW_MS);
-      await confirmEscrow(driver.token, trip.id, "finalize").expect(200);
+      await advanceEscrowNowMs(DISPUTE_WINDOW_MS);
 
       const ledger = await prisma.ledgerEntry.findFirst({ where: { tripId: trip.id, type: "CHARGE" } });
       expect(ledger).toMatchObject({ type: "CHARGE", status: "COMPLETED" });

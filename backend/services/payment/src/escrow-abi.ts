@@ -2,11 +2,23 @@ import type { Abi } from "viem";
 
 export const ESCROW_ABI = [
   {
+    type: "constructor",
+    inputs: [{ name: "operator_", type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
     type: "function",
     name: "DISPUTE_WINDOW",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint64" }],
+  },
+  {
+    type: "function",
+    name: "operator",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
   },
   {
     type: "function",
@@ -57,6 +69,16 @@ export const ESCROW_ABI = [
     name: "refund",
     stateMutability: "nonpayable",
     inputs: [{ name: "tripId", type: "bytes32" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "resolve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "tripId", type: "bytes32" },
+      { name: "releaseToPayee", type: "bool" },
+    ],
     outputs: [],
   },
   {

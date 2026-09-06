@@ -62,6 +62,20 @@ export function isTreasuryConfigured() {
   return Boolean(process.env.TREASURY_PRIVATE_KEY?.trim() && getChainRpcUrl());
 }
 
+export function treasuryAccount() {
+  const key = process.env.TREASURY_PRIVATE_KEY?.trim();
+  if (!key) return null;
+  const privateKey = (key.startsWith("0x") ? key : `0x${key}`) as Hex;
+  return privateKeyToAccount(privateKey);
+}
+
+/** RideEscrow operator; defaults to the treasury key address. */
+export function getEscrowOperatorAddress(): string | null {
+  const explicit = process.env.ESCROW_OPERATOR_ADDRESS?.trim();
+  if (explicit) return getAddress(explicit);
+  return treasuryAccount()?.address ?? null;
+}
+
 /** ERC-20 USDC for transfers/display. `PAYOUT_TOKEN_ADDRESS=native` forces native sends. */
 export function getPayoutTokenAddress(): string | null {
   const raw = process.env.PAYOUT_TOKEN_ADDRESS?.trim();
@@ -122,24 +136,45 @@ async function eip1559Fees(client: {
   };
 }
 
-export async function sendTreasuryPayout(
-  to: string,
-  usdAmount: number,
-): Promise<PayoutSendResult> {
+function treasuryWallet() {
   if (!isTreasuryConfigured()) {
     fail("Treasury is not configured", "ConflictError");
   }
-
-  const key = process.env.TREASURY_PRIVATE_KEY!.trim();
-  const privateKey = (key.startsWith("0x") ? key : `0x${key}`) as Hex;
-  const account = privateKeyToAccount(privateKey);
+  const account = treasuryAccount();
+  if (!account) fail("Treasury is not configured", "ConflictError");
   const chainId = Number(process.env.PAYOUT_CHAIN_ID || DEFAULT_PAYOUT_CHAIN_ID);
   const chain = chainForId(chainId);
-  const client = createWalletClient({
+  return createWalletClient({
     account,
     chain,
     transport: http(getChainRpcUrl()),
   }).extend(publicActions);
+}
+
+export async function sendTreasuryWriteContract(input: {
+  address: `0x${string}`;
+  abi: readonly unknown[];
+  functionName: string;
+  args: readonly unknown[];
+}): Promise<PayoutSendResult> {
+  const client = treasuryWallet();
+  const fees = await eip1559Fees(client);
+  const hash = await client.writeContract({
+    address: getAddress(input.address),
+    abi: input.abi as typeof ERC20_ABI,
+    functionName: input.functionName as "transfer",
+    args: input.args as never,
+    ...fees,
+  });
+  await client.waitForTransactionReceipt({ hash });
+  return { txHash: hash };
+}
+
+export async function sendTreasuryPayout(
+  to: string,
+  usdAmount: number,
+): Promise<PayoutSendResult> {
+  const client = treasuryWallet();
 
   const rate = Number(process.env.PAYOUT_USD_PER_TOKEN || 1) || 1;
   const tokenAmount = usdAmount / rate;

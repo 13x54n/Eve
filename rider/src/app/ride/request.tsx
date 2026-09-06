@@ -419,7 +419,7 @@ export default function RequestRideScreen() {
           <Text style={styles.paymentInfoTitle}>Payment: USDC on Arc Testnet</Text>
         </View>
         <Text style={styles.paymentInfoText}>
-          When you accept a driver, you sign one Privy transaction that locks the fare in escrow. After the trip the driver starts a 5-minute window; you can dispute in that window. Otherwise they finalize and receive the USDC. Cancelling before settlement lets you sign a refund.
+          When you accept a driver, you sign one Privy transaction that locks the fare in escrow. After the trip the driver starts a 5-minute window; you can dispute in that window. If you do not dispute, the fare releases automatically. A dispute holds funds until review. Cancelling before settlement lets you sign a refund.
         </Text>
         <View style={styles.paymentInfoNote}>
           <Feather name="dollar-sign" size={14} color="#6B7280" />

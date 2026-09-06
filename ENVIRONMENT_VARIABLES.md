@@ -176,7 +176,9 @@ Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC 
 |----------|-------------|---------|----------|
 | `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
 | `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow | — | For live chain |
-| `TREASURY_PRIVATE_KEY` | Hex key for platform-credit cash-out only (not escrow) | — | For on-chain send |
+| `ESCROW_OPERATOR_ADDRESS` | RideEscrow operator (finalize/resolve). Defaults to treasury address | — | For live operator txs |
+| `TREASURY_PRIVATE_KEY` | Hex key for platform-credit cash-out and escrow operator calls | — | For on-chain send |
+| `OPENAI_API_KEY` | Optional LLM for escrow dispute review (else heuristic) | — | No |
 | `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
 | `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
 | `PAYOUT_CHAIN_NAME` | Display name | `Arc Testnet` | No |
@@ -186,7 +188,7 @@ Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC 
 | `PAYOUT_TOKEN_DECIMALS` | ERC-20 USDC view decimals | `6` | No |
 | `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 USDC | `1` | No |
 
-Treasury gas and payout value are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+Treasury gas, payout value, and escrow operator calls are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING` and live auto-finalize cannot send. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Email Configuration (Optional)
 

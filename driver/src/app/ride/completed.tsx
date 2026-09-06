@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { confirmEscrow, getSettlementQuote } from "@/services/payment";
+import { getTripEarnings } from "@/services/driver";
 import { useSendEscrowTx } from "@/lib/send-escrow";
 
 export default function CompletedScreen() {
@@ -13,7 +14,7 @@ export default function CompletedScreen() {
     tripId?: string;
   }>();
   const [rating, setRating] = useState(0);
-  const [status, setStatus] = useState<"settling" | "ready" | "released" | "idle">(
+  const [status, setStatus] = useState<"settling" | "released" | "disputed" | "idle">(
     tripId ? "settling" : "idle",
   );
   const [remainingSec, setRemainingSec] = useState(300);
@@ -22,7 +23,7 @@ export default function CompletedScreen() {
   const destination = dropoff ?? "your dropoff";
   const hasTrip = Boolean(dropoff || fare || net || tripId);
 
-  const tryFinalize = useCallback(async () => {
+  const syncSettlement = useCallback(async () => {
     if (!tripId) return;
     try {
       const quote = await getSettlementQuote(tripId);
@@ -30,18 +31,26 @@ export default function CompletedScreen() {
         await confirmEscrow(tripId, await sendEscrowTx(quote), "startSettlement");
         return;
       }
-      if (quote.action === "finalize") {
-        setStatus("ready");
-        const txHash = await sendEscrowTx(quote);
-        await confirmEscrow(tripId, txHash, "finalize");
-        setStatus("released");
-      } else if (quote.settleFrom) {
-        const ms = new Date(quote.settleFrom).getTime() - Date.now();
-        setRemainingSec(Math.max(0, Math.ceil(ms / 1000)));
-        setStatus("settling");
-      }
     } catch {
-      /* window still open or disputed */
+      /* already started, disputed, or released */
+    }
+    try {
+      const trip = await getTripEarnings(tripId);
+      if (trip.paymentStatus === "COMPLETED") {
+        setStatus("released");
+        return;
+      }
+      if (trip.paymentStatus === "DISPUTED") {
+        setStatus("disputed");
+        return;
+      }
+      const settleFrom = trip.escrowSettleFrom ? new Date(trip.escrowSettleFrom).getTime() : 0;
+      if (settleFrom) {
+        setRemainingSec(Math.max(0, Math.ceil((settleFrom - Date.now()) / 1000)));
+      }
+      setStatus("settling");
+    } catch {
+      /* keep current copy */
     }
   }, [sendEscrowTx, tripId]);
 
@@ -51,10 +60,10 @@ export default function CompletedScreen() {
 
   useEffect(() => {
     if (!tripId) return;
-    void tryFinalize();
-    const timer = setInterval(() => void tryFinalize(), 5000);
+    void syncSettlement();
+    const timer = setInterval(() => void syncSettlement(), 5000);
     return () => clearInterval(timer);
-  }, [tripId, tryFinalize]);
+  }, [tripId, syncSettlement]);
 
   if (!hasTrip) {
     return (
@@ -67,9 +76,9 @@ export default function CompletedScreen() {
   const settleCopy =
     status === "released"
       ? "Fare released to your wallet."
-      : status === "ready"
-        ? "Signing finalize…"
-        : `Funds release in ${Math.floor(remainingSec / 60)}:${String(remainingSec % 60).padStart(2, "0")} unless the rider disputes.`;
+      : status === "disputed"
+        ? "The rider disputed. Funds are held until review."
+        : `Funds release automatically in ${Math.floor(remainingSec / 60)}:${String(remainingSec % 60).padStart(2, "0")} unless the rider disputes.`;
 
   return (
     <View style={styles.container}>

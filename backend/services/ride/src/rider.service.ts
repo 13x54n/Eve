@@ -405,7 +405,7 @@ export async function cancelTrip(userId: string, tripId: string) {
     include: { driver: { select: { userId: true } } },
   });
   let refund = null as Awaited<ReturnType<typeof quoteTripRefund>> | null;
-  if (trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED") {
+  if (trip.paymentStatus === "ESCROWED") {
     refund = await quoteTripRefund(userId, tripId);
   }
   await prisma.$transaction(async (tx) => {

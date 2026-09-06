@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ActionButton } from "@/components/action-button";
 import { getTrip, Trip } from "@/services/trips";
-import { confirmEscrow, getDisputeQuote, getRefundQuote } from "@/services/wallet";
+import { confirmEscrow, getDisputeQuote } from "@/services/wallet";
 import { useSendEscrowTx } from "@/lib/send-escrow";
 
 function formatMoney(n: number) {
@@ -93,6 +93,12 @@ export default function CompletedScreen() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!tripId || (trip?.paymentStatus !== "SETTLING" && trip?.paymentStatus !== "DISPUTED")) return;
+    const timer = setInterval(() => void load(), 5000);
+    return () => clearInterval(timer);
+  }, [load, trip?.paymentStatus, tripId]);
+
   async function handleDispute() {
     if (!trip) return;
     try {
@@ -100,9 +106,6 @@ export default function CompletedScreen() {
       const quote = await getDisputeQuote(trip.id);
       const txHash = await sendEscrowTx(quote);
       await confirmEscrow(trip.id, txHash, "dispute");
-      const refund = await getRefundQuote(trip.id);
-      const refundHash = await sendEscrowTx(refund);
-      await confirmEscrow(trip.id, refundHash, "refund");
       await load();
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -167,11 +170,18 @@ export default function CompletedScreen() {
                 <Text style={styles.heroAmount}>$0.00</Text>
                 <Text style={styles.heroHint}>No cash is due for this trip.</Text>
               </>
+            ) : trip.paymentStatus === "DISPUTED" ? (
+              <>
+                <Text style={styles.heroAmount}>{formatMoney(trip.fareTotal)}</Text>
+                <Text style={styles.heroHint}>
+                  Dispute received. Funds stay in escrow until review.
+                </Text>
+              </>
             ) : trip.paymentStatus === "SETTLING" ? (
               <>
                 <Text style={styles.heroAmount}>{formatMoney(trip.fareTotal)}</Text>
                 <Text style={styles.heroHint}>
-                  Funds release to the driver in 5 minutes unless you dispute.
+                  Funds release to the driver automatically in 5 minutes unless you dispute.
                 </Text>
               </>
             ) : (

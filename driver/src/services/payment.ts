@@ -24,7 +24,7 @@ export async function getSettlementQuote(tripId: string) {
 export async function confirmEscrow(
   tripId: string,
   txHash: string,
-  action: "startSettlement" | "finalize",
+  action: "startSettlement",
 ) {
   const { data } = await api.post(`/payment/trips/${tripId}/confirm`, { txHash, action });
   return data;

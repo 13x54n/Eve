@@ -77,11 +77,13 @@ export default function lifecycle() {
   );
   check(startedSettle, { "settlement started": (r) => r.status === 200 });
 
-  const finalized = http.post(
-    `${pay}/api/payment/trips/${trip.id}/confirm`,
-    JSON.stringify({ txHash: fakeTxHash(`${trip.id}:fin`), action: "finalize" }),
-    jsonHeaders(pair.driverToken),
-  );
-  check(finalized, { "escrow finalized": (r) => r.status === 200 });
+  const detail = http.get(`${root}/api/driver/trips/${trip.id}`, jsonHeaders(pair.driverToken));
+  check(detail, {
+    "escrow auto-released or settling": (r) => {
+      if (r.status !== 200) return false;
+      const status = r.json("trip.paymentStatus");
+      return status === "COMPLETED" || status === "SETTLING";
+    },
+  });
   sleep(0.5);
 }

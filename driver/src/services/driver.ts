@@ -160,6 +160,7 @@ export type DriverTripDetail = {
   netEarnings: number;
   paymentStatus: string;
   paymentMethod: string;
+  escrowSettleFrom?: string | null;
   riderName: string;
   riderRating: number;
   cancellationReason: string | null;

@@ -8,7 +8,11 @@ import {
   type Hex,
 } from "viem";
 import { fail } from "@eve/shared";
-import { getChainRpcUrl, getPayoutChainPublicConfig } from "@eve/shared/treasury";
+import {
+  getChainRpcUrl,
+  getPayoutChainPublicConfig,
+  sendTreasuryWriteContract,
+} from "@eve/shared/treasury";
 import { ESCROW_ABI } from "./escrow-abi.js";
 import { payoutChain } from "./chain.js";
 
@@ -81,6 +85,8 @@ export type EscrowOps = {
   }) => CallQuote;
   quoteCall: (action: Exclude<EscrowAction, "deposit">, tripIdHash: Hex) => CallQuote;
   confirm: (input: EscrowConfirmInput) => Promise<EscrowConfirmResult>;
+  operatorFinalize: (tripIdHash: Hex) => Promise<{ txHash: string }>;
+  operatorResolve: (tripIdHash: Hex, releaseToPayee: boolean) => Promise<{ txHash: string }>;
 };
 
 const memory = new Map<string, MemoryDeposit>();
@@ -90,6 +96,7 @@ let frozenNowMs: number | null = null;
 export function setEscrowForTests(ops: EscrowOps | null) {
   escrowOverride = ops;
   if (!ops) memory.clear();
+  void import("./escrow-scheduler.js").then((mod) => mod.clearEscrowTimers());
 }
 
 export function setEscrowNowMs(ms: number | null) {
@@ -98,6 +105,7 @@ export function setEscrowNowMs(ms: number | null) {
 
 export function advanceEscrowNowMs(deltaMs: number) {
   frozenNowMs = escrowNowMs() + deltaMs;
+  return import("./escrow-scheduler.js").then((mod) => mod.flushDueEscrowSettlements());
 }
 
 export function escrowNowMs() {
@@ -290,7 +298,7 @@ export function memoryEscrowOps(): EscrowOps {
         if (item.state === "refunded") {
           return { txHash: item.refundTx || input.txHash, action };
         }
-        if (item.state !== "locked" && item.state !== "disputed") {
+        if (item.state !== "locked") {
           fail("This trip cannot be refunded yet", "ConflictError");
         }
         if (item.payer !== input.expectedFrom.toLowerCase()) {
@@ -303,6 +311,37 @@ export function memoryEscrowOps(): EscrowOps {
       }
 
       fail("Unknown escrow action", "ValidationError");
+    },
+    async operatorFinalize(tripIdHash) {
+      const item = memory.get(tripIdHash);
+      if (!item) fail("No escrow deposit for this trip", "ConflictError");
+      if (item.state === "released" && item.releaseTx) {
+        return { txHash: item.releaseTx };
+      }
+      if (item.state !== "settling") fail("Escrow is not settling", "ConflictError");
+      if (escrowNowMs() < item.settleFromMs) fail("Wait for the 5-minute dispute window", "ConflictError");
+      item.state = "released";
+      item.releaseTx = fakeHash("rel", tripIdHash);
+      memory.set(tripIdHash, item);
+      return { txHash: item.releaseTx };
+    },
+    async operatorResolve(tripIdHash, releaseToPayee) {
+      const item = memory.get(tripIdHash);
+      if (!item) fail("No escrow deposit for this trip", "ConflictError");
+      if (releaseToPayee) {
+        if (item.state === "released" && item.releaseTx) return { txHash: item.releaseTx };
+        if (item.state !== "disputed") fail("This trip is not disputed", "ConflictError");
+        item.state = "released";
+        item.releaseTx = fakeHash("rel", tripIdHash);
+        memory.set(tripIdHash, item);
+        return { txHash: item.releaseTx };
+      }
+      if (item.state === "refunded" && item.refundTx) return { txHash: item.refundTx };
+      if (item.state !== "disputed") fail("This trip is not disputed", "ConflictError");
+      item.state = "refunded";
+      item.refundTx = fakeHash("ref", tripIdHash);
+      memory.set(tripIdHash, item);
+      return { txHash: item.refundTx };
     },
   };
 }
@@ -318,7 +357,6 @@ function inferMemoryAction(item: MemoryDeposit | undefined, from: string): Escro
   if (item.state === "settling" && sender === item.payee && escrowNowMs() >= item.settleFromMs) {
     return "finalize";
   }
-  if (item.state === "disputed" && sender === item.payer) return "refund";
   fail("Could not infer escrow action from trip state", "ValidationError");
 }
 
@@ -409,6 +447,22 @@ export function liveEscrowOps(): EscrowOps {
         action,
         settleFromMs: settleFromFromLogs(logs, input.tripIdHash),
       };
+    },
+    async operatorFinalize(tripIdHash) {
+      return sendTreasuryWriteContract({
+        address: to(),
+        abi: ESCROW_ABI,
+        functionName: "finalize",
+        args: [tripIdHash],
+      });
+    },
+    async operatorResolve(tripIdHash, releaseToPayee) {
+      return sendTreasuryWriteContract({
+        address: to(),
+        abi: ESCROW_ABI,
+        functionName: "resolve",
+        args: [tripIdHash, releaseToPayee],
+      });
     },
   };
 }

@@ -8,11 +8,12 @@ contract RideEscrowTest is Test {
     RideEscrow internal escrow;
     address internal rider = address(0xB0B);
     address internal driver = address(0xD00D);
+    address internal operator = address(0xA11CE);
     bytes32 internal tripId = keccak256("trip-1");
 
     function setUp() public {
         vm.deal(rider, 100 ether);
-        escrow = new RideEscrow();
+        escrow = new RideEscrow(operator);
     }
 
     function testDepositThenFinalizeAfterWindow() public {
@@ -33,6 +34,17 @@ contract RideEscrowTest is Test {
         assertEq(driver.balance, 2 ether);
     }
 
+    function testOperatorCanFinalizeAfterWindow() public {
+        vm.prank(rider);
+        escrow.deposit{value: 2 ether}(tripId, driver);
+        vm.prank(driver);
+        escrow.startSettlement(tripId);
+        vm.warp(block.timestamp + 5 minutes);
+        vm.prank(operator);
+        escrow.finalize(tripId);
+        assertEq(driver.balance, 2 ether);
+    }
+
     function testDepositRefundBeforeSettlement() public {
         uint256 before = rider.balance;
         vm.prank(rider);
@@ -42,7 +54,7 @@ contract RideEscrowTest is Test {
         assertEq(rider.balance, before);
     }
 
-    function testDisputeThenRefund() public {
+    function testDisputeThenOperatorRefund() public {
         uint256 before = rider.balance;
         vm.prank(rider);
         escrow.deposit{value: 1 ether}(tripId, driver);
@@ -50,9 +62,24 @@ contract RideEscrowTest is Test {
         escrow.startSettlement(tripId);
         vm.prank(rider);
         escrow.dispute(tripId);
+        vm.expectRevert(RideEscrow.BadState.selector);
         vm.prank(rider);
         escrow.refund(tripId);
+        vm.prank(operator);
+        escrow.resolve(tripId, false);
         assertEq(rider.balance, before);
+    }
+
+    function testDisputeThenOperatorRelease() public {
+        vm.prank(rider);
+        escrow.deposit{value: 1 ether}(tripId, driver);
+        vm.prank(driver);
+        escrow.startSettlement(tripId);
+        vm.prank(rider);
+        escrow.dispute(tripId);
+        vm.prank(operator);
+        escrow.resolve(tripId, true);
+        assertEq(driver.balance, 1 ether);
     }
 
     function testCannotDisputeAfterWindow() public {
@@ -90,5 +117,22 @@ contract RideEscrowTest is Test {
         vm.expectRevert(RideEscrow.BadState.selector);
         vm.prank(rider);
         escrow.refund(tripId);
+    }
+
+    function testNonOperatorCannotResolve() public {
+        vm.prank(rider);
+        escrow.deposit{value: 1 ether}(tripId, driver);
+        vm.prank(driver);
+        escrow.startSettlement(tripId);
+        vm.prank(rider);
+        escrow.dispute(tripId);
+        vm.expectRevert(RideEscrow.NotOperator.selector);
+        vm.prank(driver);
+        escrow.resolve(tripId, false);
+    }
+
+    function testRejectsZeroOperator() public {
+        vm.expectRevert(RideEscrow.InvalidOperator.selector);
+        new RideEscrow(address(0));
     }
 }

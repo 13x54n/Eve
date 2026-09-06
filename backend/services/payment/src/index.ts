@@ -9,6 +9,8 @@ export {
   confirmTripEscrow,
   getDriverWallet,
   getRiderWallet,
+  operatorFinalizeTrip,
+  operatorResolveTrip,
   publicPaymentConfig,
   quoteStartSettlementForTrip,
   quoteTripDeposit,
@@ -19,4 +21,5 @@ export {
   withdrawDriverWallet,
 } from "./payment.service.js";
 export { advanceEscrowNowMs, DISPUTE_WINDOW_MS, setEscrowForTests, setEscrowNowMs } from "./escrow.js";
+export { clearEscrowTimers, flushDueEscrowSettlements } from "./escrow-scheduler.js";
 export { getUsdcBalance, setBalanceReaderForTests } from "./chain.js";

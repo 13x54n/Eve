@@ -203,6 +203,19 @@ export const updateTicket = handle(async (req, res) => {
   );
 });
 
+export const resolveEscrowDispute = handle(async (req, res) => {
+  const auth = actor(req);
+  const releaseToPayee = Boolean((req.body as { releaseToPayee?: boolean }).releaseToPayee);
+  res.json(
+    await admin.resolveEscrowDispute(
+      String(req.params.id),
+      auth.user.id,
+      releaseToPayee,
+      req.ip,
+    ),
+  );
+});
+
 export const promos = handle(async (_req, res) => {
   res.json(await admin.listPromos());
 });
