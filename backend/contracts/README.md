@@ -64,3 +64,5 @@ forge verify-contract $ESCROW_CONTRACT_ADDRESS src/RideEscrow.sol:RideEscrow \
 ```
 
 Set `ESCROW_CONTRACT_ADDRESS` in `backend/.env`. Platform credit cash-out and escrow operator txs use `TREASURY_PRIVATE_KEY` unless `ESCROW_OPERATOR_ADDRESS` is set to another wallet you control.
+
+Do **not** `forge init` a Counter sample. This repo already has `src/RideEscrow.sol`. A testnet instance is already deployed for local apps — addresses and env are in [backend/docs/driver-wallet.md](../docs/driver-wallet.md). Redeploy only when you change the operator or contract code. Rider and driver never hardcode the address; they read `GET /api/payment/config`. Restart payment after updating `.env`. Leave `LOAD_ESCROW` unset for the live contract.

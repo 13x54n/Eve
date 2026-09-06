@@ -329,6 +329,8 @@ npm test
 
 Point rider/driver at auth, ride, payment, and notify. On a phone or simulator, use your machine’s LAN IP instead of `localhost`.
 
+Arc Testnet RideEscrow is already deployed. Apps **do not** set the contract address — they read `GET /api/payment/config` via `EXPO_PUBLIC_PAYMENT_URL`. Backend needs `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, and `TREASURY_PRIVATE_KEY` in `backend/.env` (restart payment after changing them; leave `LOAD_ESCROW` unset). Fund each rider’s Privy embedded Ethereum wallet from [faucet.circle.com](https://faucet.circle.com). Addresses and env: [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+
 `rider/.env` and `driver/.env`:
 
 ```

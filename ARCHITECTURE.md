@@ -229,7 +229,10 @@ stateDiagram-v2
 
 USDC on Arc is one asset with two views (Circle `use-arc`): native 18-decimal `msg.value` for escrow gas math; ERC-20 `0x3600…0000` for balances and cash-out. Never sum the two.
 
+Live testnet RideEscrow: [`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`](https://testnet.arcscan.app/address/0xde6f01794e74afdbad4c783123241285c1947f4c). Rider and driver never hardcode it; they call `GET /api/payment/config` and the quote endpoints. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+
 **Key Operations**:
+- `GET /api/payment/config`
 - `GET /api/driver/wallet` / `POST /api/driver/wallet/withdraw`
 - `GET /api/rider/wallet`
 - `GET /api/payment/trips/:id/deposit|settlement|dispute|refund`

@@ -398,7 +398,7 @@ USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefi
 | `/api/driver/wallet` | GET | Driver USDC + credits |
 | `/api/driver/wallet/withdraw` | POST | Cash out credits |
 
-**See**: [driver-wallet.md](driver-wallet.md) and [contracts/README.md](../contracts/README.md)
+**See**: [driver-wallet.md](driver-wallet.md) (live Arc Testnet address) and [contracts/README.md](../contracts/README.md). Rider/driver apps never set the contract in Expo env.
 
 ## Shared Packages
 
@@ -509,7 +509,7 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 **Service-specific**:
 - `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`, `PAYMENT_PORT`
 - `LOCATION_GRPC_URL`, `NOTIFY_GRPC_URL`, `GRPC_LOGGING`
-- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`
+- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`
 
 ## Monitoring
 

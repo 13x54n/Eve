@@ -61,6 +61,8 @@ The Driver app enables drivers to:
 - Platform credits (`walletBalance`) cash out as ERC-20 USDC
 - Admin credits and payouts
 
+Arc escrow (canonical: [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md)): live RideEscrow `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Do **not** put the contract in Expo env — `EXPO_PUBLIC_PAYMENT_URL` plus `GET /api/payment/config` and settlement quotes. After complete, the driver signs `startSettlement` with the Privy Ethereum wallet. Physical devices need a LAN IP. Faucet: [faucet.circle.com](https://faucet.circle.com) if the embedded wallet needs gas.
+
 ### Communication
 - In-trip chat with rider
 - Push notifications
@@ -174,6 +176,8 @@ EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 # Mapbox
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 ```
+
+No escrow contract in this file. See [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md).
 
 ### 3. Build Development Client
 

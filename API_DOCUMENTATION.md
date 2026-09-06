@@ -523,7 +523,7 @@ Base: `http://localhost:4006/api`. JWT required.
 | `GET` | `/driver/wallet` | driver | ERC-20 USDC, platform credits, ledger |
 | `POST` | `/driver/wallet/withdraw` | driver | Cash out credits as ERC-20 USDC |
 
-Accepting an offer on ride (`POST /api/rider/trips/:id/offers/:offerId/accept`) returns `{ trip, deposit }`. The rider app sends `deposit` with Privy `eth_sendTransaction` (chain `5042002`), then confirms. Native `msg.value` is 18 decimals; displayed balances use the ERC-20 view. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+Accepting an offer on ride (`POST /api/rider/trips/:id/offers/:offerId/accept`) returns `{ trip, deposit }`. The rider app sends `deposit` with Privy `eth_sendTransaction` (chain `5042002`), then confirms. Native `msg.value` is 18 decimals; displayed balances use the ERC-20 view. Live RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Apps read `to` / `chainId` from quotes and `GET /payment/config` — do not put the contract in Expo env. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Admin Endpoints
 

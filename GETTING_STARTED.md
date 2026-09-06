@@ -280,6 +280,8 @@ Payment service running on port 4006
 
 This starts six processes: auth :4001, location :4002, ride :4003, notify :4004, admin :4005, payment :4006.
 
+Live Arc Testnet RideEscrow is documented in [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) (`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`). Set `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, and `TREASURY_PRIVATE_KEY` in `backend/.env`, then restart payment. Rider and driver apps do **not** hardcode that address; they use `EXPO_PUBLIC_PAYMENT_URL` and `GET /api/payment/config`. Leave `LOAD_ESCROW` unset. Fund the rider Privy embedded wallet (and the operator) from [faucet.circle.com](https://faucet.circle.com) (Arc Testnet).
+
 ### 5.1 Verify Backend is Running
 
 Open a new terminal and test the API:
@@ -405,6 +407,8 @@ URL cheat sheet (backend already up via `npm run dev` or `docker compose up` fro
 | iOS Simulator | `http://localhost:4001/api`, `:4003/api`, `:4006/api`, `:4004` |
 | Android Emulator | `adb reverse` those four ports and use `localhost`, **or** `http://10.0.2.2:4001/api` (and `4003` / `4006` / `4004`) |
 | Physical device | `http://<LAN_IP>:4001/api` (etc.) |
+
+Do not put `ESCROW_CONTRACT_ADDRESS` in `rider/.env` or `driver/.env`. Apps load the live RideEscrow from `GET /api/payment/config`. After Privy login, fund the **embedded** Ethereum address at [faucet.circle.com](https://faucet.circle.com) (Arc Testnet). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 Find your LAN IP:
 ```bash

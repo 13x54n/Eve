@@ -190,11 +190,13 @@ IMAGEKIT_DRIVER_FOLDER=/eve/drivers
 
 Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC (6 decimals at `0x3600…0000`). Trip fares lock in RideEscrow as native Arc USDC (18-decimal `msg.value`) — the same asset, not a second token.
 
+Live Arc Testnet RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Operator / treasury: `0xf4Ea0728c0EEc26c590a651A27a388121e1fA8e3`. Rider and driver apps do **not** take a contract address in Expo env; they use `EXPO_PUBLIC_PAYMENT_URL` and `GET /api/payment/config`. Restart payment after changing these vars. Leave `LOAD_ESCROW` unset for the live contract. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
-| `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow | — | For live chain |
-| `ESCROW_OPERATOR_ADDRESS` | RideEscrow operator (finalize/resolve). Defaults to treasury address | — | For live operator txs |
+| `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow (`0xdE6f01794e74AfDbAd4C783123241285c1947f4C` on Arc Testnet) | — | For live chain |
+| `ESCROW_OPERATOR_ADDRESS` | RideEscrow operator (finalize/resolve). Defaults to the treasury key address | — | For live operator txs |
 | `TREASURY_PRIVATE_KEY` | Hex key for platform-credit cash-out and escrow operator calls | — | For on-chain send |
 | `OPENAI_API_KEY` | Optional LLM for escrow dispute review (else heuristic) | — | No |
 | `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
@@ -288,6 +290,7 @@ CORS_ORIGINS=https://admin.example.com
 - Use your machine's **LAN IP**, not `localhost`, for mobile devices
 - Prefix all variables with `EXPO_PUBLIC_` to expose to client
 - Restart Metro bundler after changing env vars: `npx expo start --clear`
+- Do **not** put `ESCROW_CONTRACT_ADDRESS` in Expo env. Payment `GET /api/payment/config` returns the live RideEscrow (`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`). Optional `EXPO_PUBLIC_CHAIN_RPC_URL` defaults to `https://rpc.testnet.arc.io`. Fund the Privy **embedded** Ethereum wallet from https://faucet.circle.com. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 - Rebuild dev client after changing Privy native config: `npx expo run:ios`
 
 **Find your LAN IP**:
@@ -326,7 +329,7 @@ Same variables as Rider app:
 | `EXPO_PUBLIC_PRIVY_RELYING_PARTY` | Passkey relying party URL | ✅ Yes |
 | `EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN` | Mapbox token | ✅ Yes |
 
-**Note**: Rider and driver apps should use **different** Privy app clients.
+**Note**: Rider and driver apps should use **different** Privy app clients. Same payment URL rule: no contract address in Expo env; faucet the driver embedded wallet only if they need on-chain USDC for gas on `startSettlement`.
 
 ## Web Applications
 

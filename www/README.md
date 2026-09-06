@@ -13,3 +13,5 @@ npm run dev
 ```
 
 Open [http://localhost:3020](http://localhost:3020). Set `NEXT_PUBLIC_GITHUB_URL` to the public repository URL (no trailing slash) so Docs and View source point at GitHub.
+
+This site does not call payment. Live rider/driver fares use Arc Testnet RideEscrow; see [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md).

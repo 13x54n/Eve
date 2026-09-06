@@ -8,6 +8,8 @@ Stress ride (`npm run dev`, port 4003) against the same Postgres you use locally
 - [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed (`brew install k6`)
 Scripts hit auth `:4001`, ride `:4003`, payment `:4006`, admin `:4005`, location `:4002`, and notify `:4004`. Set `LOAD_ESCROW=1` on the payment process (no live contract) so lifecycle can confirm a synthetic deposit hash. Set `LOAD_TESTING=1` on every service so k6 is not blocked by 15-minute IP rate limiters (never set that in production). Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Privy instead.
 
+Live rider/driver trips need the deployed RideEscrow (`ESCROW_CONTRACT_ADDRESS` in `backend/.env`) and **unset** `LOAD_ESCROW`. Addresses: [docs/driver-wallet.md](../docs/driver-wallet.md).
+
 ## Commands
 
 ```bash

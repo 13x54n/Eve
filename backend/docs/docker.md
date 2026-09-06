@@ -26,6 +26,8 @@ From `backend/`:
 ```bash
 cp .env.example .env
 # Set JWT_ACCESS_SECRET (and any ImageKit/SMTP values you need)
+# For live escrow: ESCROW_CONTRACT_ADDRESS, ESCROW_OPERATOR_ADDRESS, TREASURY_PRIVATE_KEY
+# (Compose already interpolates those; see docs/driver-wallet.md). Restart payment after changes.
 
 docker compose up --build
 ```

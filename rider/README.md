@@ -31,6 +31,8 @@ The Rider app enables passengers to:
 - Pay matched fares in Arc Testnet USDC from the Privy wallet
 - Profile → Wallet for the ERC-20 USDC balance
 
+Arc escrow (canonical: [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md)): RideEscrow is on Arc Testnet at `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. This app does **not** take a contract address in Expo env — only `EXPO_PUBLIC_PAYMENT_URL` (and optional `EXPO_PUBLIC_CHAIN_RPC_URL`). After Privy login, fund the **embedded** Ethereum wallet from [faucet.circle.com](https://faucet.circle.com). Physical devices need a LAN IP, not `localhost`.
+
 ## Features
 
 ### Authentication
@@ -179,6 +181,8 @@ EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 # Mapbox Access Token
 EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token
 ```
+
+Do **not** add `ESCROW_CONTRACT_ADDRESS` here. Payment quotes include `to` / `chainId`. Fund the Privy embedded wallet (Arc Testnet USDC) so `deposit` can pay `msg.value`. See [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md).
 
 **Find your LAN IP**:
 ```bash

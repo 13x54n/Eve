@@ -30,6 +30,8 @@ The Admin Console is a web application for Eve platform operations staff to:
 - Handle support requests
 - Manage safety incidents
 
+Arc escrow: tickets can `POST /api/admin/tickets/:id/escrow-resolve` (`releaseToPayee`). That call uses `TREASURY_PRIVATE_KEY` as the RideEscrow operator. Point `PAYMENT_PROXY_TARGET` at payment `:4006`. Live contract and env: [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md). The console does not store the contract address.
+
 ## Features
 
 ### Dashboard
@@ -189,6 +191,8 @@ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 - Browser calls `/api/*` (same-origin)
 - Next.js rewrites each prefix to `AUTH_PROXY_TARGET`, `RIDE_PROXY_TARGET`, `NOTIFY_PROXY_TARGET`, `ADMIN_PROXY_TARGET`, `PAYMENT_PROXY_TARGET`
 - No CORS issues
+
+Dispute resolve and driver wallet credit go through this payment proxy. Operator txs need `TREASURY_PRIVATE_KEY` on the **payment** process, not in `admin/.env.local`.
 
 ### 3. Start Development Server
 

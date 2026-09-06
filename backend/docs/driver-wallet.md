@@ -25,7 +25,19 @@ Follow Circle [`use-arc`](https://github.com/circlefin/skills/blob/master/plugin
 8. Without a dispute, payment finalizes when the window ends (chain/app events). Payment credits `earningsTotal` and sets `COMPLETED`.
 9. Cancel while still locked: HTTP cancel returns a `refund` quote; the rider (payer) must confirm `refund`.
 
-Deploy the contract: [backend/contracts/README.md](../contracts/README.md). Constructor takes the **operator** address.
+Redeploy only if you need a new operator or bytecode: [backend/contracts/README.md](../contracts/README.md). Constructor takes the **operator** address.
+
+## Current Arc Testnet deployment
+
+Live instance (chain id `5042002`). Restart `@eve/payment` after changing `backend/.env`. Leave `LOAD_ESCROW` unset so quotes hit this contract.
+
+| | |
+| --- | --- |
+| RideEscrow | [`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`](https://testnet.arcscan.app/address/0xde6f01794e74afdbad4c783123241285c1947f4c) |
+| Operator / treasury | `0xf4Ea0728c0EEc26c590a651A27a388121e1fA8e3` |
+| RPC | `https://rpc.testnet.arc.io` |
+
+**Apps do not set the contract address.** Rider and driver call `GET /api/payment/config` and the deposit/settlement/dispute/refund quotes. They only need `EXPO_PUBLIC_PAYMENT_URL` (optional `EXPO_PUBLIC_CHAIN_RPC_URL`). Fund each rider’s **Privy embedded** Ethereum address from [faucet.circle.com](https://faucet.circle.com) (Arc Testnet), not only the operator.
 
 ## HTTP
 
@@ -48,6 +60,6 @@ Admin credits: `POST /api/admin/drivers/:profileId/wallet/credit` on the **admin
 
 ## Env
 
-`PAYMENT_PORT=4006`, `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`. Default `PAYOUT_TOKEN_ADDRESS` is Arc ERC-20 USDC. Set `PAYOUT_TOKEN_ADDRESS=native` only to force native treasury sends.
+`PAYMENT_PORT=4006`, `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`. Default `PAYOUT_TOKEN_ADDRESS` is Arc ERC-20 USDC. Set `PAYOUT_TOKEN_ADDRESS=native` only to force native treasury sends. `ESCROW_OPERATOR_ADDRESS` defaults to the treasury key address if unset; it must match the contract constructor.
 
 Apps need `EXPO_PUBLIC_PAYMENT_URL` (e.g. `http://localhost:4006/api`). Admin: `PAYMENT_PROXY_TARGET=http://127.0.0.1:4006`.

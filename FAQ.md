@@ -48,7 +48,7 @@ netstat -ano | findstr :4003  # Windows
 
 ### Q: How do trip fares get paid?
 
-**A:** On Arc Testnet, the rider pays USDC from a Privy embedded wallet into `RideEscrow` (one signature). Completing the trip releases to the driver; cancel refunds the rider. Wallets show the ERC-20 USDC view (6 decimals). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md). Fund test wallets at https://faucet.circle.com.
+**A:** On Arc Testnet, the rider pays USDC from a Privy embedded wallet into `RideEscrow` (one signature). Completing the trip: the driver signs `startSettlement`; after 5 minutes with no dispute the operator auto-finalizes. Cancel before settlement: the rider signs `refund`. Wallets show the ERC-20 USDC view (6 decimals). Live contract: [`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`](https://testnet.arcscan.app/address/0xde6f01794e74afdbad4c783123241285c1947f4c). Apps do not hardcode it — `GET /api/payment/config` via `EXPO_PUBLIC_PAYMENT_URL`. Fund the **embedded** rider wallet (and the operator) at https://faucet.circle.com (Arc Testnet). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Q: Do I need Privy to run the backend?
 

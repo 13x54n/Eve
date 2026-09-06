@@ -10,7 +10,7 @@ From `backend/`:
 
 ```bash
 cp .env.example .env
-# Set JWT_ACCESS_SECRET, PRIVY_*, and optional TREASURY_* / ESCROW_CONTRACT_ADDRESS for Arc USDC
+# Set JWT_ACCESS_SECRET, PRIVY_*, TREASURY_PRIVATE_KEY, ESCROW_CONTRACT_ADDRESS, ESCROW_OPERATOR_ADDRESS for Arc USDC
 
 docker compose up --build
 ```
@@ -45,7 +45,7 @@ Until a prod Compose file exists, run the same six processes with production `NO
 - `/socket.io` → notify :4004
 - WebSocket upgrade on notify
 
-Set `INTERNAL_SERVICE_SECRET`, strong `JWT_ACCESS_SECRET`, and gRPC URLs to the location/notify hosts. Arc Testnet escrow: `ESCROW_CONTRACT_ADDRESS` and `TREASURY_PRIVATE_KEY` ([backend/docs/driver-wallet.md](backend/docs/driver-wallet.md)).
+Set `INTERNAL_SERVICE_SECRET`, strong `JWT_ACCESS_SECRET`, and gRPC URLs to the location/notify hosts. Arc Testnet escrow: `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, and `TREASURY_PRIVATE_KEY`. Apps read the contract from `GET /api/payment/config` (no Expo contract env). Live addresses: [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md). Restart payment after changing `.env`. Leave `LOAD_ESCROW` unset.
 
 Do not expose Postgres or Redis publicly.
 
