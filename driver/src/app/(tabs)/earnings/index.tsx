@@ -282,9 +282,6 @@ export default function Earnings() {
               <Text style={styles.balanceText}>
                 {hidden ? '••••' : `${onChain.toFixed(2)} ${symbol}`}
               </Text>
-              <Text style={styles.walletFooterHint}>
-                USDC on Arc Testnet (ERC-20 view). Same asset as gas — trip fares settle here from rider escrow.
-              </Text>
 
               <TouchableOpacity style={styles.addressRow} onPress={() => void onReceive()}>
                 <Text style={styles.addressLabel}>
@@ -312,32 +309,6 @@ export default function Earnings() {
               ) : null}
             </View>
 
-            {showCashOut && wallet?.ethereumWallet ? (
-              <View style={styles.cashOutRow}>
-                <TextInput
-                  style={styles.cashOutInput}
-                  keyboardType="decimal-pad"
-                  placeholder={`Credits $${credits.toFixed(2)}`}
-                  placeholderTextColor="#9CA3AF"
-                  value={amount}
-                  onChangeText={setAmount}
-                />
-                <TouchableOpacity style={styles.cashOutButton} onPress={() => void onCashOut()} disabled={cashingOut}>
-                  {cashingOut ? <ActivityIndicator color="#2E4ED2" /> : <Text style={styles.cashOutText}>Send</Text>}
-                </TouchableOpacity>
-              </View>
-            ) : null}
-
-            <View style={styles.tokenRow}>
-              <View style={styles.tokenIcon}>
-                <Text style={styles.tokenIconText}>$</Text>
-              </View>
-              <View style={styles.txMiddle}>
-                <Text style={styles.txTitle}>{symbol}</Text>
-                <Text style={styles.txTime}>Arc Testnet · USDC</Text>
-              </View>
-              <Text style={styles.tokenAmount}>{hidden ? '••••' : onChain.toFixed(2)}</Text>
-            </View>
 
             {credits > 0 ? (
               <View style={styles.tokenRow}>

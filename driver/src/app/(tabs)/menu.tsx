@@ -123,26 +123,6 @@ export default function MenuScreen() {
       detail: 'License, insurance, background check',
       onPress: () => router.push('/onboarding/documents' as Href),
     },
-    {
-      icon: 'credit-card',
-      title: 'Ethereum wallet',
-      detail: truncateWalletAddress(sessionUser?.ethereumWallet) || 'Created on sign-in',
-      onPress: () =>
-        Alert.alert(
-          'Ethereum wallet',
-          sessionUser?.ethereumWallet || 'Your Privy embedded Ethereum wallet is created when you sign in.',
-        ),
-    },
-    {
-      icon: 'credit-card',
-      title: 'Solana wallet',
-      detail: truncateWalletAddress(sessionUser?.solanaWallet) || 'Created on sign-in',
-      onPress: () =>
-        Alert.alert(
-          'Solana wallet',
-          sessionUser?.solanaWallet || 'Your Privy embedded Solana wallet is created when you sign in.',
-        ),
-    },
   ];
 
   const resourceRows: MenuRow[] = [
@@ -179,9 +159,7 @@ export default function MenuScreen() {
         showsVerticalScrollIndicator={false}
         alwaysBounceVertical
         refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
-      >
-        <Text style={styles.topBarTitle}>Menu</Text>
-        
+      > 
         <View
           style={styles.list}
         >
