@@ -1,6 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { requireAuth, type AuthenticatedRequest } from "@eve/http";
+import { requireAuth, skipRateLimit, type AuthenticatedRequest } from "@eve/http";
 import {
   changePassword,
   exchangePrivySession,
@@ -28,14 +28,12 @@ import {
   updateProfileSchema,
 } from "./validation.js";
 
-const skipInVitest = () => Boolean(process.env.VITEST);
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipInVitest,
+  skip: skipRateLimit,
 });
 
 const driverLimiter = rateLimit({
@@ -43,7 +41,7 @@ const driverLimiter = rateLimit({
   limit: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipInVitest,
+  skip: skipRateLimit,
 });
 
 export const authRouter = Router();

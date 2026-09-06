@@ -20,6 +20,7 @@
     "@eve/http": "*",
     "@eve/location": "*",
     "@eve/notify": "*",
+    "@eve/payment": "*",
     "@eve/shared": "*",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",

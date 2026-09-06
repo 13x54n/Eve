@@ -95,8 +95,12 @@ export type WalletChain = {
   explorerTxUrl: string;
   tokenSymbol: string;
   tokenAddress: string | null;
+  tokenDecimals?: number;
+  nativeDecimals?: number;
   treasuryConfigured: boolean;
   usdPerToken: number;
+  escrowAddress?: string | null;
+  escrowConfigured?: boolean;
 };
 
 export type WalletLedgerEntry = {
@@ -114,8 +118,10 @@ export type WalletLedgerEntry = {
 
 export type DriverWallet = {
   walletBalance: number;
+  onChainUsdc: number;
   lifetimeEarnings: number;
   ethereumWallet: string | null;
+  ethereumWalletId?: string | null;
   solanaWallet: string | null;
   chain: WalletChain;
   minWithdrawUsd: number;
@@ -154,6 +160,7 @@ export type DriverTripDetail = {
   netEarnings: number;
   paymentStatus: string;
   paymentMethod: string;
+  escrowSettleFrom?: string | null;
   riderName: string;
   riderRating: number;
   cancellationReason: string | null;
@@ -285,7 +292,11 @@ export async function startTrip(tripId: string) {
 }
 
 export async function completeTrip(tripId: string, input: { rating?: number; feedback?: string } = {}) {
-  const { data } = await api.post<{ trip: ActiveTrip; earnings: { netEarnings: number } }>(`/driver/trips/${tripId}/complete`, input);
+  const { data } = await api.post<{
+    trip: ActiveTrip;
+    earnings: { netEarnings: number; pending?: boolean };
+    settlement?: { startQuote: import("./payment").CallQuote };
+  }>(`/driver/trips/${tripId}/complete`, input);
   return data;
 }
 

@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check } from "k6";
 import { baseUrl } from "./lib.js";
 
-const path = __ENV.PATH || "/health";
+const healthPath = __ENV.HEALTH_PATH || "/health";
 const startRate = Number(__ENV.START_RATE || 200);
 const peakRate = Number(__ENV.PEAK_RATE || 4000);
 
@@ -31,6 +31,6 @@ export const options = {
 };
 
 export default function capacity() {
-  const res = http.get(`${baseUrl()}${path}`);
+  const res = http.get(`${baseUrl()}${healthPath}`);
   check(res, { "status 200": (r) => r.status === 200 });
 }

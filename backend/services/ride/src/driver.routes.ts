@@ -24,14 +24,10 @@ import {
   trips,
   acceptDispatch,
   declineDispatch,
-  wallet,
-  withdrawWallet,
 } from "./driver.controller.js";
-import { requireAuth, requireRole } from "@eve/http";
+import { requireAuth, requireRole, skipRateLimit } from "@eve/http";
 
 const router = Router();
-
-const skipInVitest = () => Boolean(process.env.VITEST);
 
 const driverApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -39,7 +35,7 @@ const driverApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) =>
-    skipInVitest() ||
+    skipRateLimit() ||
     (req.method === "GET" && req.path.endsWith("/trips/incoming")),
 });
 
@@ -64,8 +60,6 @@ router.post("/trips/:id/start", startTrip);
 router.post("/trips/:id/complete", completeTrip);
 router.post("/trips/:id/cancel", cancelTrip);
 router.get("/earnings", earnings);
-router.get("/wallet", wallet);
-router.post("/wallet/withdraw", withdrawWallet);
 router.get("/support", listSupport);
 router.post("/support", createSupport);
 router.get("/support/:id", getSupport);

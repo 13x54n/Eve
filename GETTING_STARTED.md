@@ -21,7 +21,7 @@ This guide will help you set up local development in under 1 hour.
 
 ## Choose a Startup Mode
 
-Use one of these paths for a complete development environment. Both paths run PostgreSQL, Redis, all five backend services, and the optional admin console, marketing site, and mobile clients described below.
+Use one of these paths for a complete development environment. Both paths run PostgreSQL, Redis, all six backend services, and the optional admin console, marketing site, and mobile clients described below.
 
 ### Local backend processes
 
@@ -32,7 +32,7 @@ cd backend
 cp .env.example .env
 # Set JWT_ACCESS_SECRET and any Privy, ImageKit, or SMTP values you need.
 npm install
-docker compose up postgres redis -d
+docker compose up postgres redis kafka -d
 npm run db:generate
 npm run db:migrate
 npm run db:seed
@@ -52,7 +52,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Compose starts PostgreSQL and Redis, runs Prisma Client generation and `prisma migrate deploy` in the one-shot `migrate` service, and only then starts auth, location, ride, notify, and admin. The admin console is still a separate host process; Rider and Driver Expo apps are never built inside this Compose stack.
+Compose starts PostgreSQL, Redis, and Kafka, runs Prisma Client generation and `prisma migrate deploy` in the one-shot `migrate` service, and only then starts auth, location, ride, notify, admin, and payment. The admin console is still a separate host process; Rider and Driver Expo apps are never built inside this Compose stack.
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ Before starting, ensure you have:
 - [ ] Docker Desktop installed and running
 - [ ] At least 8GB RAM available
 - [ ] 10GB free disk space
-- [ ] Ports 3000, 3020, 4001-4005, 5432, 6379, 8081 available
+- [ ] Ports 3000, 3020, 4001-4006, 5432, 6379, 8081, 9094 available
 - [ ] (Optional) Xcode 15+ for iOS development
 - [ ] (Optional) Android Studio for Android development
 
@@ -123,15 +123,15 @@ This sets up:
 
 ## Step 2: Infrastructure Setup
 
-Eve requires PostgreSQL and Redis. We'll use Docker for both.
+Eve requires PostgreSQL, Redis, and (for the full event bus) Kafka. We'll use Docker for all three.
 
 ### 2.1 Start Infrastructure Services
 
 ```bash
 cd backend
 
-# Start PostgreSQL and Redis
-docker compose up postgres redis -d
+# Start PostgreSQL, Redis, and Kafka
+docker compose up postgres redis kafka -d
 
 # Verify services are running
 docker compose ps
@@ -142,6 +142,7 @@ Expected output:
 NAME            STATUS          PORTS
 eve-postgres    Up 10 seconds   0.0.0.0:5432->5432/tcp
 eve-redis       Up 10 seconds   0.0.0.0:6379->6379/tcp
+eve-kafka       Up 10 seconds   0.0.0.0:9092->9092/tcp, 0.0.0.0:9094->9094/tcp
 ```
 
 ### 2.2 Verify Database Connection
@@ -259,7 +260,7 @@ This creates:
 
 ## Step 5: Start Backend Services
 
-Run all five Node services:
+Run all six Node services:
 
 ```bash
 # Still in backend directory
@@ -274,9 +275,10 @@ Location gRPC server ready on port 50051
 Ride service running on port 4003
 Notify service HTTP running on port 4004
 Admin service running on port 4005
+Payment service running on port 4006
 ```
 
-This starts five processes: auth :4001, location :4002, ride :4003, notify :4004, admin :4005.
+This starts six processes: auth :4001, location :4002, ride :4003, notify :4004, admin :4005, payment :4006.
 
 ### 5.1 Verify Backend is Running
 
@@ -285,6 +287,7 @@ Open a new terminal and test the API:
 ```bash
 curl http://localhost:4001/health
 curl http://localhost:4003/health
+curl http://localhost:4006/health
 ```
 
 ## Step 6: Admin Console Setup (optional)
@@ -317,6 +320,7 @@ AUTH_PROXY_TARGET=http://127.0.0.1:4001
 RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
@@ -384,6 +388,7 @@ cp .env.example .env
 # Edit .env and set:
 # EXPO_PUBLIC_AUTH_URL=http://<YOUR_LAN_IP>:4001/api
 # EXPO_PUBLIC_API_URL=http://<YOUR_LAN_IP>:4003/api
+# EXPO_PUBLIC_PAYMENT_URL=http://<YOUR_LAN_IP>:4006/api
 # EXPO_PUBLIC_WS_URL=http://<YOUR_LAN_IP>:4004
 # EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 # EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
@@ -395,10 +400,10 @@ cp .env.example .env
 
 URL cheat sheet (backend already up via `npm run dev` or `docker compose up` from `backend/`):
 
-| Client | Auth / Ride / Notify |
+| Client | Auth / Ride / Payment / Notify |
 | --- | --- |
-| iOS Simulator | `http://localhost:4001/api`, `:4003/api`, `:4004` |
-| Android Emulator | `adb reverse` those three ports and use `localhost`, **or** `http://10.0.2.2:4001/api` (and `4003` / `4004`) |
+| iOS Simulator | `http://localhost:4001/api`, `:4003/api`, `:4006/api`, `:4004` |
+| Android Emulator | `adb reverse` those four ports and use `localhost`, **or** `http://10.0.2.2:4001/api` (and `4003` / `4006` / `4004`) |
 | Physical device | `http://<LAN_IP>:4001/api` (etc.) |
 
 Find your LAN IP:
@@ -477,6 +482,7 @@ curl http://localhost:4002/health  # Location
 curl http://localhost:4003/health  # Ride
 curl http://localhost:4004/health  # Notify
 curl http://localhost:4005/health  # Admin API
+curl http://localhost:4006/health  # Payment
 ```
 
 ## Next Steps
@@ -637,8 +643,8 @@ If you're stuck:
 
 You should now have:
 
-- ✅ PostgreSQL and Redis running in Docker
-- ✅ Backend services on http://localhost:4001–4005
+- ✅ PostgreSQL, Redis, and Kafka running in Docker
+- ✅ Backend services on http://localhost:4001–4006
 - ✅ Admin console running on http://localhost:3000
 - ✅ (Optional) Marketing site on http://localhost:3020
 - ✅ Database seeded with test data
@@ -648,4 +654,4 @@ You should now have:
 
 ---
 
-**Last Updated**: 2026-09-05
+**Last Updated**: 2026-09-06

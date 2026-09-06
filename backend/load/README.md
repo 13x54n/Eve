@@ -6,17 +6,18 @@ Stress ride (`npm run dev`, port 4003) against the same Postgres you use locally
 
 - Postgres migrated and seeded
 - [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) installed (`brew install k6`)
-- Ride running: `npm run dev` in `backend/`
-- `JWT_ACCESS_SECRET` in `.env` (seed writes JWTs with that secret)
-- Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Privy instead; see [docs/auth.md](../docs/auth.md).
+Scripts hit auth `:4001`, ride `:4003`, payment `:4006`, admin `:4005`, location `:4002`, and notify `:4004`. Set `LOAD_ESCROW=1` on the payment process (no live contract) so lifecycle can confirm a synthetic deposit hash. Set `LOAD_TESTING=1` on every service so k6 is not blocked by 15-minute IP rate limiters (never set that in production). Password `POST /api/auth/login` is still used by `auth.js` / seed tokens. Rider and driver **apps** use Privy instead.
 
 ## Commands
 
 ```bash
 npm run load:seed          # creates load-*@eve-load.test users and load/.tokens.json
-k6 run -e BASE_URL=http://localhost:4003 load/health.js
-k6 run -e BASE_URL=http://localhost:4003 load/lifecycle.js
-npm run load:smoke         # health then a short lifecycle run
+k6 run -e AUTH_URL=http://localhost:4001 load/auth.js
+k6 run load/services-health.js
+k6 run load/payment-wallet.js
+k6 run load/admin-dashboard.js
+npm run load:smoke         # health then a short lifecycle run (needs LOAD_ESCROW=1)
+npm run load:all           # health, auth, payment, admin, presence, search, offers, lifecycle, matchmaking, capacity
 npm run load:capacity      # ramp GET /health until latency or errors break
 npm run load:cleanup       # deletes @eve-load.test users, trips, offers, ledger
 ```
@@ -31,7 +32,7 @@ With services on `npm run dev`:
 npm run load:capacity
 ```
 
-That ramps from 200 toward 4000 requests/second against `GET /health` (no auth, no trip rules). Watch:
+That ramps from 200 toward 4000 requests/second against `GET /health` (no auth, no trip rules). Use `HEALTH_PATH` if you need a different path — do not set `PATH` (that is the shell executable path). Watch:
 
 | Metric | Meaning |
 | --- | --- |
@@ -56,15 +57,20 @@ Start at **20 VUs / 1m**, then **50 VUs / 2m**.
 
 ## Scripts
 
-| File | Purpose |
-|---|---|
-| `health.js` | Smoke `GET /api/health` |
-| `auth.js` | Login/me bursts; **429 is expected** (auth limiter is 20/15m) |
-| `search-storm.js` | Many `POST /api/rider/trips` |
-| `offer-market.js` | Incoming + offers; **409 is expected** (one pending offer) |
-| `lifecycle.js` | Create → offer → accept → start → complete |
-| `presence.js` | GPS/presence patches (location throttle is 15s; not every ping persists) |
+| File | Service | Purpose |
+|---|---|---|
+| `services-health.js` | all six | Smoke `GET /health` |
+| `geo-notify-health.js` | location, notify | Health on `:4002` / `:4004` |
+| `health.js` | ride | Smoke `GET /health` |
+| `auth.js` | auth `:4001` | Login/me bursts (429 only if `LOAD_TESTING` is unset) |
+| `payment-wallet.js` | payment `:4006` | Config + rider/driver wallets |
+| `admin-dashboard.js` | admin `:4005` | Staff login + dashboard |
+| `search-storm.js` | ride | Many `POST /api/rider/trips` |
+| `offer-market.js` | ride | Incoming + offers; **409 is expected** (one pending offer) |
+| `lifecycle.js` | ride + payment | Create → escrow → complete → startSettlement → finalize |
+| `presence.js` | ride | GPS/presence patches (location throttle is 15s; not every ping persists) |
+| `matchmaking-geo.js` | ride + location | Cross-city create/incoming/cancel |
 
-Treat 409s on the offer market and 429s on auth as expected, not as SLO failures. Tune `http_req_duration` thresholds after a baseline run.
+Treat 409s on the offer market as expected (one pending offer per driver). With `LOAD_TESTING=1`, auth/payment 429s should not appear. `load:all` uses a lighter capacity ramp (`PEAK_RATE=400` unless overridden). Tune `http_req_duration` after a baseline.
 
 Never point these scripts at a database you cannot wipe of `@eve-load.test` rows.

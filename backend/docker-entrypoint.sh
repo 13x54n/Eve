@@ -9,7 +9,7 @@ LOCK_STAMP=node_modules/.eve-lock-stamp
 exec 9>node_modules/.eve-npm.lock
 flock 9
 if [ ! -x node_modules/.bin/tsx ] \
-  || [ ! -d node_modules/viem ] \
+  || [ ! -d node_modules/kafkajs ] \
   || [ ! -f "$LOCK_STAMP" ] \
   || [ package-lock.json -nt "$LOCK_STAMP" ]; then
   echo "eve: syncing node_modules from package-lock.json"

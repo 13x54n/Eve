@@ -5,6 +5,8 @@ import { ActivityIndicator, Alert, Linking, Pressable, Share, StyleSheet, Text, 
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as ExpoLinking from "expo-linking";
 import { cancelTrip, getTrip, getTripMessages, addTripStop, updateTripDestination, Trip } from "@/services/trips";
+import { confirmEscrow, getRefundQuote } from "@/services/wallet";
+import { useSendEscrowTx } from "@/lib/send-escrow";
 import { MapLocationPicker } from "@/components/map-location-picker";
 import { addSocketListener, connectSocket, subscribeTrip } from "@/services/socket";
 import { useAuth } from "@/context/auth-context";
@@ -44,6 +46,7 @@ export default function TrackingScreen() {
   const [loadError, setLoadError] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const sendEscrowTx = useSendEscrowTx();
   const [unreadCount, setUnreadCount] = useState(0);
   const [routeEdit, setRouteEdit] = useState<"stop" | "dropoff" | null>(null);
 
@@ -59,11 +62,22 @@ export default function TrackingScreen() {
     if (next.status === "COMPLETED") {
       router.replace({ pathname: "/ride/completed", params: { tripId: next.id } });
     } else if (next.status === "CANCELLED") {
-      router.replace("/(tabs)/home");
+      void (async () => {
+        if (next.paymentStatus === "ESCROWED" || next.paymentStatus === "DISPUTED") {
+          try {
+            const quote = await getRefundQuote(next.id);
+            const txHash = await sendEscrowTx(quote);
+            await confirmEscrow(next.id, txHash, "refund");
+          } catch {
+            /* already refunded or quote unavailable */
+          }
+        }
+        router.replace("/(tabs)/home");
+      })();
     } else if (next.status === "SEARCHING" && next.viewerRole !== "recipient") {
       router.replace({ pathname: "/ride/searching", params: { tripId: next.id } });
     }
-  }, []);
+  }, [sendEscrowTx]);
 
   const refresh = useCallback(async (isFirst = false) => {
     if (!tripId) return;
@@ -136,7 +150,11 @@ export default function TrackingScreen() {
           void (async () => {
             try {
               setBusy(true);
-              await cancelTrip(tripId);
+              const result = await cancelTrip(tripId);
+              if (result.refund) {
+                const txHash = await sendEscrowTx(result.refund);
+                await confirmEscrow(tripId, txHash, "refund");
+              }
               router.replace("/(tabs)/home");
             } catch {
               Alert.alert("Could not cancel trip", "Please try again.");
@@ -302,7 +320,7 @@ export default function TrackingScreen() {
                 {ratingLabel ? <Text style={styles.rating}>★ {ratingLabel}</Text> : null}
               </View>
               <Text style={styles.vehicle} numberOfLines={1}>{vehicleLabel}</Text>
-              {isRecipient ? null : <Text style={styles.fare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>}
+              {isRecipient ? null : <Text style={styles.fare}>USDC · ${Number(trip.fareTotal).toFixed(2)}</Text>}
               {trip.recipientName ? (
                 <Text style={styles.fare}>
                   {isCourier ? `To ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}

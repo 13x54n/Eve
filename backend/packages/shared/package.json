@@ -15,12 +15,19 @@
       "development": "./src/treasury.ts",
       "import": "./dist/treasury.js",
       "default": "./dist/treasury.js"
+    },
+    "./kafka": {
+      "types": "./src/kafka.ts",
+      "development": "./src/kafka.ts",
+      "import": "./dist/kafka.js",
+      "default": "./dist/kafka.js"
     }
   },
   "dependencies": {
     "argon2": "^0.44.0",
     "dotenv": "^17.2.1",
     "jsonwebtoken": "^9.0.3",
+    "kafkajs": "^2.2.4",
     "viem": "^2.37.0"
   }
 }

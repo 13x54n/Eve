@@ -4,6 +4,7 @@ import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import {
   cleanupMarketplaceUsers,
+  confirmEscrow,
   incomingTripIds,
   nycTripPayload,
   spawnApprovedOnlineDriver,
@@ -65,6 +66,17 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         driverId: driver.profileId,
         fareTotal: proposedFare,
       });
+      expect(acceptRes.body.deposit).toMatchObject({
+        chainId: 5042002,
+        tokenSymbol: "USDC",
+      });
+
+      await request(app)
+        .post(`/api/driver/trips/${trip.id}/start`)
+        .set("Authorization", `Bearer ${driver.token}`)
+        .expect(409);
+
+      await confirmEscrow(rider.token, trip.id).expect(200);
 
       const assignedDriver = await request(app)
         .get("/api/driver/me")
@@ -89,11 +101,17 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
         .send({ rating: 5 })
         .expect(200);
       expect(completed.body.trip.status).toBe("COMPLETED");
+      expect(completed.body.trip.paymentStatus).toBe("SETTLING");
       expect(completed.body.earnings.netEarnings).toBe(proposedFare);
+      expect(completed.body.earnings.pending).toBe(true);
 
-      const ledger = await prisma.ledgerEntry.findFirst({ where: { tripId: trip.id } });
+      await confirmEscrow(driver.token, trip.id, "startSettlement").expect(200);
+      const { advanceEscrowNowMs, DISPUTE_WINDOW_MS } = await import("@eve/payment");
+      await advanceEscrowNowMs(DISPUTE_WINDOW_MS);
+
+      const ledger = await prisma.ledgerEntry.findFirst({ where: { tripId: trip.id, type: "CHARGE" } });
       expect(ledger).toMatchObject({ type: "CHARGE", status: "COMPLETED" });
-      expect(ledger?.note).toMatch(/off-platform/i);
+      expect(ledger?.note).toMatch(/Arc Testnet/i);
 
       const after = await request(app)
         .get("/api/driver/me")
@@ -156,6 +174,7 @@ describe("Trip lifecycle", { timeout: 20000 }, () => {
       .post(`/api/rider/trips/${trip.id}/offers/${offer.body.offer.id}/accept`)
       .set("Authorization", `Bearer ${rider.token}`)
       .expect(200);
+    await confirmEscrow(rider.token, trip.id).expect(200);
 
     const cancelled = await request(app)
       .post(`/api/driver/trips/${trip.id}/cancel`)

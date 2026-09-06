@@ -23,3 +23,18 @@ export {
   type StaffActor,
 } from "./permissions.js";
 export { cache, CacheService, withCache } from "./cache.js";
+export {
+  EVE_TOPICS,
+  disconnectKafka,
+  eventInstance,
+  eventSource,
+  isKafkaEnabled,
+  kafkaBrokers,
+  publishEveEvent,
+  resetKafkaMemoryForTests,
+  subscribeEveTopic,
+  type EveEvent,
+  type EveEventHandler,
+  type EveNotifyUser,
+  type EveTopic,
+} from "./kafka.js";

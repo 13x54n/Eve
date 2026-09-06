@@ -25,13 +25,21 @@ const ERC20_ABI = [
   },
 ] as const;
 
-/** Circle Arc Testnet. Native gas is USDC. */
+/**
+ * Circle Arc Testnet (`use-arc`): USDC is one asset with two views.
+ * Native 18-decimal units are only for gas and `msg.value`.
+ * ERC-20 6-decimal units at `ARC_USDC_ERC20_ADDRESS` are for balances,
+ * transfers, approvals, and display. Do not sum or swap the two views.
+ */
 export const DEFAULT_PAYOUT_CHAIN_ID = 5042002;
 export const DEFAULT_CHAIN_RPC_URL = "https://rpc.testnet.arc.io";
+export const ARC_USDC_ERC20_ADDRESS =
+  "0x3600000000000000000000000000000000000000" as const;
+export const ARC_USDC_ERC20_DECIMALS = 6;
+export const ARC_NATIVE_DECIMALS = 18;
 const DEFAULT_EXPLORER_TX = "https://testnet.arcscan.app/tx/";
 const MIN_MAX_FEE_PER_GAS = parseGwei("20");
 const DEFAULT_PRIORITY_FEE = parseGwei("1");
-const NATIVE_USDC_DECIMALS = 6;
 
 export type PayoutSendResult = { txHash: string };
 
@@ -54,9 +62,39 @@ export function isTreasuryConfigured() {
   return Boolean(process.env.TREASURY_PRIVATE_KEY?.trim() && getChainRpcUrl());
 }
 
+export function treasuryAccount() {
+  const key = process.env.TREASURY_PRIVATE_KEY?.trim();
+  if (!key) return null;
+  const privateKey = (key.startsWith("0x") ? key : `0x${key}`) as Hex;
+  return privateKeyToAccount(privateKey);
+}
+
+/** RideEscrow operator; defaults to the treasury key address. */
+export function getEscrowOperatorAddress(): string | null {
+  const explicit = process.env.ESCROW_OPERATOR_ADDRESS?.trim();
+  if (explicit) return getAddress(explicit);
+  return treasuryAccount()?.address ?? null;
+}
+
+/** ERC-20 USDC for transfers/display. `PAYOUT_TOKEN_ADDRESS=native` forces native sends. */
+export function getPayoutTokenAddress(): string | null {
+  const raw = process.env.PAYOUT_TOKEN_ADDRESS?.trim();
+  if (!raw || raw.toLowerCase() === "usdc") return ARC_USDC_ERC20_ADDRESS;
+  if (raw.toLowerCase() === "native") return null;
+  return raw;
+}
+
+export function getUsdcErc20Decimals() {
+  return Number(process.env.PAYOUT_TOKEN_DECIMALS || ARC_USDC_ERC20_DECIMALS);
+}
+
+export function usdToNativeUsdcWei(amountUsd: number) {
+  const rate = Number(process.env.PAYOUT_USD_PER_TOKEN || 1) || 1;
+  return parseUnits((amountUsd / rate).toFixed(2), ARC_NATIVE_DECIMALS);
+}
+
 export function getPayoutChainPublicConfig() {
   const chainId = Number(process.env.PAYOUT_CHAIN_ID || DEFAULT_PAYOUT_CHAIN_ID);
-  const tokenAddress = process.env.PAYOUT_TOKEN_ADDRESS?.trim() || null;
   return {
     chainId,
     chainName: process.env.PAYOUT_CHAIN_NAME?.trim() || defaultChainName(chainId),
@@ -64,7 +102,9 @@ export function getPayoutChainPublicConfig() {
       process.env.PAYOUT_EXPLORER_TX_URL?.trim() || DEFAULT_EXPLORER_TX,
     tokenSymbol:
       process.env.PAYOUT_TOKEN_SYMBOL?.trim() || "USDC",
-    tokenAddress,
+    tokenAddress: getPayoutTokenAddress(),
+    tokenDecimals: getUsdcErc20Decimals(),
+    nativeDecimals: ARC_NATIVE_DECIMALS,
     treasuryConfigured: isTreasuryConfigured(),
     usdPerToken: Number(process.env.PAYOUT_USD_PER_TOKEN || 1),
   };
@@ -96,33 +136,54 @@ async function eip1559Fees(client: {
   };
 }
 
-export async function sendTreasuryPayout(
-  to: string,
-  usdAmount: number,
-): Promise<PayoutSendResult> {
+function treasuryWallet() {
   if (!isTreasuryConfigured()) {
     fail("Treasury is not configured", "ConflictError");
   }
-
-  const key = process.env.TREASURY_PRIVATE_KEY!.trim();
-  const privateKey = (key.startsWith("0x") ? key : `0x${key}`) as Hex;
-  const account = privateKeyToAccount(privateKey);
+  const account = treasuryAccount();
+  if (!account) fail("Treasury is not configured", "ConflictError");
   const chainId = Number(process.env.PAYOUT_CHAIN_ID || DEFAULT_PAYOUT_CHAIN_ID);
   const chain = chainForId(chainId);
-  const client = createWalletClient({
+  return createWalletClient({
     account,
     chain,
     transport: http(getChainRpcUrl()),
   }).extend(publicActions);
+}
+
+export async function sendTreasuryWriteContract(input: {
+  address: `0x${string}`;
+  abi: readonly unknown[];
+  functionName: string;
+  args: readonly unknown[];
+}): Promise<PayoutSendResult> {
+  const client = treasuryWallet();
+  const fees = await eip1559Fees(client);
+  const hash = await client.writeContract({
+    address: getAddress(input.address),
+    abi: input.abi as typeof ERC20_ABI,
+    functionName: input.functionName as "transfer",
+    args: input.args as never,
+    ...fees,
+  });
+  await client.waitForTransactionReceipt({ hash });
+  return { txHash: hash };
+}
+
+export async function sendTreasuryPayout(
+  to: string,
+  usdAmount: number,
+): Promise<PayoutSendResult> {
+  const client = treasuryWallet();
 
   const rate = Number(process.env.PAYOUT_USD_PER_TOKEN || 1) || 1;
   const tokenAmount = usdAmount / rate;
   const toAddr = getAddress(to);
-  const token = process.env.PAYOUT_TOKEN_ADDRESS?.trim();
+  const token = getPayoutTokenAddress();
   const fees = await eip1559Fees(client);
 
   if (token) {
-    const decimals = Number(process.env.PAYOUT_TOKEN_DECIMALS || NATIVE_USDC_DECIMALS);
+    const decimals = getUsdcErc20Decimals();
     const hash = await client.writeContract({
       address: getAddress(token),
       abi: ERC20_ABI,
@@ -136,7 +197,7 @@ export async function sendTreasuryPayout(
 
   const hash = await client.sendTransaction({
     to: toAddr,
-    value: parseUnits(tokenAmount.toFixed(NATIVE_USDC_DECIMALS), NATIVE_USDC_DECIMALS),
+    value: parseUnits(tokenAmount.toFixed(ARC_NATIVE_DECIMALS), ARC_NATIVE_DECIMALS),
     ...fees,
   });
   await client.waitForTransactionReceipt({ hash });

@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { CallQuote } from './wallet';
 
 export type RiderVehicleType = 'BIKE' | 'CAR';
 export type RideType = 'STANDARD' | 'AIRPORT' | 'MULTI_STOP' | 'SCHEDULED' | 'CORPORATE' | 'COURIER';
@@ -41,6 +42,24 @@ export type Trip = {
   vehicle?: { make: string; model: string; plateNumber: string; color?: string };
   offers?: TripOffer[];
   createdAt: string;
+  paymentStatus?: string;
+  escrowSettleFrom?: string | null;
+};
+
+export type AcceptOfferResult = {
+  trip: Trip;
+  deposit: {
+    chainId: number;
+    chainName: string;
+    to: string;
+    value: string;
+    data: `0x${string}`;
+    tripIdHash: `0x${string}`;
+    amountUsd: number;
+    tokenSymbol: string;
+    decimals: number;
+    explorerTxUrl: string;
+  } | null;
 };
 
 export type TripStop = {
@@ -119,15 +138,15 @@ export async function markTripMessagesRead(tripId: string) {
 }
 
 export async function acceptOffer(tripId: string, offerId: string) {
-  const { data } = await api.post<{ trip: Trip }>(
+  const { data } = await api.post<AcceptOfferResult>(
     `/rider/trips/${tripId}/offers/${offerId}/accept`,
   );
-  return data.trip;
+  return data;
 }
 
 export async function cancelTrip(id: string) {
-  const { data } = await api.post<{ trip: Trip }>(`/rider/trips/${id}/cancel`);
-  return data.trip;
+  const { data } = await api.post<{ trip: Trip; refund?: CallQuote | null }>(`/rider/trips/${id}/cancel`);
+  return data;
 }
 
 export async function addTripStop(tripId: string, input: { address: string; lat: number; lng: number }) {

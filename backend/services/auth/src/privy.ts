@@ -7,6 +7,7 @@ export type PrivyIdentity = {
   phone?: string;
   name?: string;
   ethereumWallet?: string;
+  ethereumWalletId?: string;
   solanaWallet?: string;
 };
 
@@ -44,6 +45,7 @@ export function identityFromPrivyUser(user: User): PrivyIdentity {
   let phone: string | undefined;
   let name: string | undefined;
   let ethereumWallet: string | undefined;
+  let ethereumWalletId: string | undefined;
   let solanaWallet: string | undefined;
 
   for (const account of user.linked_accounts ?? []) {
@@ -63,6 +65,7 @@ export function identityFromPrivyUser(user: User): PrivyIdentity {
       const address = stringField(record, "address");
       if (chainType === "ethereum" && address) {
         ethereumWallet ??= address;
+        ethereumWalletId ??= stringField(record, "id", "wallet_id", "walletId");
       }
       if (chainType === "solana" && address) {
         solanaWallet ??= address;
@@ -81,6 +84,7 @@ export function identityFromPrivyUser(user: User): PrivyIdentity {
     phone,
     name,
     ethereumWallet,
+    ethereumWalletId,
     solanaWallet,
   };
 }

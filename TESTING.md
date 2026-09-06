@@ -13,7 +13,7 @@ npm run test:coverage
 npm run test:contracts   # OpenAPI contract suite (partial)
 ```
 
-Requires PostgreSQL (`DATABASE_URL`) and, for matchmaking tests, Redis (`REDIS_URL`). Tests talk to an in-process Express app ([backend/tests/helpers/test-app.ts](backend/tests/helpers/test-app.ts)) that mounts the same prefixes as the split services — there is no gateway.
+Requires PostgreSQL (`DATABASE_URL`) and, for matchmaking tests, Redis (`REDIS_URL`). Tests talk to an in-process Express app ([backend/tests/helpers/test-app.ts](backend/tests/helpers/test-app.ts)) that mounts the same prefixes as the split services — there is no gateway. Escrow coverage lives in `tests/payment-escrow.test.ts` (in-memory escrow when `VITEST` is set and no contract address is configured).
 
 Password `POST /api/auth/login` and `/api/auth/driver/register` exist for tests and k6. Mobile apps use Privy.
 
@@ -25,7 +25,7 @@ From `admin/`:
 npm run test:e2e
 ```
 
-Needs the five backend services (or at least auth `:4001` and admin `:4005`) plus seeded staff. The console proxies `/api` to those ports — not `:4000`.
+Needs the six backend services (or at least auth `:4001` and admin `:4005`) plus seeded staff. The console proxies `/api` to those ports — not `:4000`. Wallet and escrow routes go to payment `:4006`.
 
 ## Load (k6)
 
@@ -36,7 +36,7 @@ npm run load:seed
 npm run load:smoke
 ```
 
-Scripts hit ride `:4003` and still log in with passwords. See [backend/load/README.md](backend/load/README.md).
+Scripts hit all six HTTP services. Set `LOAD_ESCROW=1` on payment (synthetic deposits) and `LOAD_TESTING=1` on every process (skip IP rate limiters). See [backend/load/README.md](backend/load/README.md). `npm run load:all` runs health, auth, wallets, admin, presence, search, offers, lifecycle, matchmaking, and a capacity ramp.
 
 ## Mobile (Jest)
 

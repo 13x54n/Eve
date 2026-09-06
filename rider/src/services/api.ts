@@ -1,12 +1,13 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
-import { requireApiBaseUrl, requireAuthBaseUrl } from '@/lib/public-env';
+import { requireApiBaseUrl, requireAuthBaseUrl, requirePaymentBaseUrl } from '@/lib/public-env';
 import { OfflineStorage } from '@/lib/offline-storage';
 import { actionQueue } from '@/lib/action-queue';
 
 const API_BASE = requireApiBaseUrl('rider');
 const AUTH_BASE = requireAuthBaseUrl('rider');
+const PAYMENT_BASE = requirePaymentBaseUrl('rider');
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -49,8 +50,21 @@ export function isAuthRequest(url?: string) {
   return /^(driver\/(login|register|privy))(\/|$)/.test(path);
 }
 
+export function isPaymentRequest(url?: string) {
+  const path = (url ?? "").replace(/^\//, "");
+  return (
+    path.startsWith("payment/") ||
+    path === "rider/wallet" ||
+    path.startsWith("rider/wallet/")
+  );
+}
+
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  config.baseURL = isAuthRequest(config.url) ? AUTH_BASE : API_BASE;
+  config.baseURL = isAuthRequest(config.url)
+    ? AUTH_BASE
+    : isPaymentRequest(config.url)
+      ? PAYMENT_BASE
+      : API_BASE;
   const accessToken = await SecureStore.getItemAsync('access_token');
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;

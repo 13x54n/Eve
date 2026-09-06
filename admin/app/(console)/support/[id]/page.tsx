@@ -32,6 +32,7 @@ type Ticket = {
     id: string;
     bookingCode: string;
     status: string;
+    paymentStatus?: string;
     rider: { id: string; user: { id: string; name: string; phone: string | null } };
     driver: { id: string; user: { id: string; name: string; phone: string | null } } | null;
     vehicle: { plateNumber: string; make: string; model: string } | null;
@@ -102,6 +103,23 @@ export default function SupportTicketPage({
   const counterpart = data?.requester?.role === "DRIVER" ? "driver" : "rider";
   const riderUser = data?.rider?.user ?? data?.trip?.rider.user ?? null;
   const driverProfile = data?.trip?.driver ?? null;
+  const disputed = data?.category === "escrow_dispute" && data.trip?.paymentStatus === "DISPUTED";
+
+  async function resolveEscrow(releaseToPayee: boolean) {
+    try {
+      setSending(true);
+      await api(`/admin/tickets/${id}/escrow-resolve`, {
+        method: "POST",
+        body: JSON.stringify({ releaseToPayee }),
+      });
+      await reload();
+      toast.success(releaseToPayee ? "Fare released to the driver" : "Fare refunded to the rider");
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
+    } finally {
+      setSending(false);
+    }
+  }
 
   return (
     <Guard allowed={can(user, "support:read")}>
@@ -231,7 +249,10 @@ export default function SupportTicketPage({
                           <EntityLink href={`/trips/${data.trip.id}`} className="font-mono">
                             {data.trip.bookingCode}
                           </EntityLink>
-                          <p className="text-[12px] text-muted-foreground">{data.trip.status}</p>
+                          <p className="text-[12px] text-muted-foreground">
+                            {data.trip.status}
+                            {data.trip.paymentStatus ? ` · ${data.trip.paymentStatus}` : ""}
+                          </p>
                         </>
                       ) : (
                         <span className="text-muted-foreground">No linked trip</span>
@@ -255,6 +276,20 @@ export default function SupportTicketPage({
                 </p>
                 {write ? (
                   <div className="mt-4 flex flex-col gap-2">
+                    {disputed ? (
+                      <>
+                        <Button disabled={sending} onClick={() => void resolveEscrow(true)}>
+                          Release to driver
+                        </Button>
+                        <Button
+                          tone="ghost"
+                          disabled={sending}
+                          onClick={() => void resolveEscrow(false)}
+                        >
+                          Refund rider
+                        </Button>
+                      </>
+                    ) : null}
                     <Button
                       disabled={sending}
                       onClick={() =>

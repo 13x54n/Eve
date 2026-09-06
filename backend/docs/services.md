@@ -10,17 +10,19 @@ Detailed documentation for Eve's microservices architecture.
 - [Location Service](#location-service)
 - [Ride Service](#ride-service)
 - [Notify Service](#notify-service)
+- [Payment Service](#payment-service)
 - [Shared Packages](#shared-packages)
 - [Service Communication](#service-communication)
 
 ## Overview
 
-Eve's backend consists of five Node services:
+Eve's backend consists of six Node services:
 - **Auth**: Authentication and user management
 - **Location**: GPS tracking and geospatial matching (gRPC)
 - **Ride**: Trip lifecycle, offers, and driver presence HTTP
 - **Notify**: Real-time events via WebSocket
 - **Admin**: Staff console API (`/api/admin`)
+- **Payment**: Arc Testnet USDC wallets, ride escrow, and treasury cash-out
 
 See [services-ports.md](services-ports.md) for ports. Clients call services directly (no HTTP gateway).
 
@@ -275,10 +277,11 @@ fare = max(fare, minFare)
 
 **When rider accepts offer**:
 1. Update trip (`status = ASSIGNED`, assign driver)
-2. Remove trip from geo index
-3. Update driver status (`ON_TRIP`)
-4. Emit `trip:assigned` to both parties
-5. Create chat room
+2. Return a payment deposit quote (`to`, native `value`, `data`)
+3. Remove trip from geo index
+4. Update driver status (`ON_TRIP`)
+5. Emit `trip:assigned` to both parties
+6. Rider confirms the escrow tx; `paymentStatus` becomes `ESCROWED`
 
 **Code**: `backend/services/ride/src/dispatch.ts`
 
@@ -365,6 +368,38 @@ WebSocket connections authenticated via JWT:
 
 **Code**: `backend/services/notify/src/realtime.ts`
 
+## Payment Service
+
+**Port**: 4006  
+**Package**: `@eve/payment`  
+**Location**: `backend/services/payment/`
+
+### Responsibilities
+
+- Arc Testnet USDC wallet reads (ERC-20 6-decimal view)
+- RideEscrow quotes and confirm (`deposit`, `startSettlement`, `dispute`, `refund`)
+- Event-driven operator `finalize` after the dispute window; operator `resolve` after a dispute
+- Driver platform-credit cash-out (ERC-20 transfer; treasury key)
+
+USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md)): native 18-decimal `msg.value` for escrow; ERC-20 `0x3600…0000` for display and cash-out. Never sum the two.
+
+### Key Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/payment/config` | GET | Chain and escrow config |
+| `/api/payment/trips/:id/deposit` | GET | Quote native deposit tx |
+| `/api/payment/trips/:id/settlement` | GET | Quote startSettlement or finalize |
+| `/api/payment/trips/:id/dispute` | GET | Quote dispute |
+| `/api/payment/trips/:id/refund` | GET | Quote refund |
+| `/api/payment/trips/:id/confirm` | POST | Confirm app-signed tx hash |
+| `/api/admin/tickets/:id/escrow-resolve` | POST | Staff operator resolve (`releaseToPayee`) |
+| `/api/rider/wallet` | GET | Rider on-chain USDC |
+| `/api/driver/wallet` | GET | Driver USDC + credits |
+| `/api/driver/wallet/withdraw` | POST | Cash out credits |
+
+**See**: [driver-wallet.md](driver-wallet.md) and [contracts/README.md](../contracts/README.md)
+
 ## Shared Packages
 
 ### @eve/db
@@ -398,6 +433,7 @@ WebSocket connections authenticated via JWT:
 - Permission checking
 - Distance calculations (Haversine)
 - Cache service (Redis)
+- Kafka event bus (`@eve/shared/kafka`)
 - Constants (match radius, limits, etc.)
 
 **Location**: `backend/packages/shared/`
@@ -444,7 +480,11 @@ const drivers = await nearbyDriversGrpc({
 });
 ```
 
-**See**: [grpc.md](grpc.md)
+**See**: [grpc.md](grpc.md) and [kafka.md](kafka.md)
+
+### Apache Kafka
+
+Auth, ride, admin, and payment publish domain events. Notify consumes them for Socket.IO. Payment consumes `eve.payment.events` for replica-safe escrow follow-up. Location GPS is not on Kafka; coarse `driver:presence.changed` is. If `KAFKA_BROKERS` is unset, an in-process bus is used and notify keeps local / gRPC / HTTP emit.
 
 ### Hybrid Approach
 
@@ -462,13 +502,14 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 **Common**:
 - `DATABASE_URL` - PostgreSQL connection
 - `REDIS_URL` - Redis connection
+- `KAFKA_BROKERS` - Kafka bootstrap (optional on host)
 - `NODE_ENV` - Environment (development/production)
 - `LOG_LEVEL` - Logging level
 
 **Service-specific**:
-- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`
+- `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`, `PAYMENT_PORT`
 - `LOCATION_GRPC_URL`, `NOTIFY_GRPC_URL`, `GRPC_LOGGING`
-- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL` (optional driver cash-out)
+- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`
 
 ## Monitoring
 
@@ -481,6 +522,8 @@ curl http://localhost:4001/health      # Auth
 curl http://localhost:4002/health      # Location
 curl http://localhost:4003/health      # Ride
 curl http://localhost:4004/health      # Notify
+curl http://localhost:4005/health      # Admin
+curl http://localhost:4006/health      # Payment
 ```
 
 **Response**:
@@ -517,8 +560,9 @@ logger.error('Database error', { error });
 - [H3 Geospatial Matching](h3-matchmaking.md)
 - [gRPC Implementation](grpc.md)
 - [Redis Caching](caching.md)
+- [Arc Testnet USDC payments](driver-wallet.md)
 - [Docker Setup](docker.md)
 
 ---
 
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-06

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { requireAuth, requireRole } from "@eve/http";
+import { requireAuth, requireRole, skipRateLimit } from "@eve/http";
 import {
   acceptOffer,
   cancelTrip,
@@ -28,6 +28,7 @@ const riderApiLimiter = rateLimit({
   limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipRateLimit,
 });
 
 router.use(riderApiLimiter, requireAuth, requireRole("RIDER"));

@@ -6,7 +6,7 @@
 [![Expo](https://img.shields.io/badge/Expo-57-000020.svg)](https://expo.dev/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 
-Community ride-matching marketplace. Riders request a trip, drivers send fare offers, the rider accepts a match, and payment happens off-platform (for example cash). Eve records a **suggested fare** and the **matched fare** for audit. It does not collect ride payments and does not take commission. Vehicle types: bike and car.
+Community ride-matching marketplace. Riders request a trip, drivers send fare offers, and the rider accepts a match. Matched fares lock as **USDC on Circle Arc Testnet** in `RideEscrow` until the trip completes (release to the driver) or cancels (refund to the rider). Eve records a **suggested fare** and the **matched fare** for audit and does not take commission. Vehicle types: bike and car.
 
 ## Table of Contents
 
@@ -29,6 +29,7 @@ Eve is a full-stack ride-matching platform featuring:
 - **Native mobile apps** for riders and drivers (iOS/Android) — built on the host or EAS, not Docker
 - **Admin dashboard** for operations and support
 - **Privy integration** for SMS, passkeys, and embedded wallets
+- **Arc Testnet USDC escrow** for trip fares (`@eve/payment` on `:4006`)
 - **WebSocket** real-time updates for live tracking
 
 ## Technology Stack
@@ -86,7 +87,7 @@ Eve/
 
 ## Architecture
 
-Eve uses **separate Node microservices**. Clients call auth, ride, admin, and notify directly (no HTTP gateway).
+Eve uses **separate Node microservices**. Clients call auth, ride, payment, admin, and notify directly (no HTTP gateway).
 
 ### System Architecture
 
@@ -105,6 +106,7 @@ graph TB
         Ride[Ride Service :4003<br/>Trips and presence]
         Notify[Notify Service :4004<br/>Real-time events]
         AdminApi[Admin Service :4005<br/>Staff API]
+        Payment[Payment Service :4006<br/>Arc USDC escrow]
     end
 
     subgraph Data["Data Layer"]
@@ -114,13 +116,16 @@ graph TB
 
     Rider --> Auth
     Rider --> Ride
+    Rider --> Payment
     Rider --> Notify
     Driver --> Auth
     Driver --> Ride
+    Driver --> Payment
     Driver --> Notify
     Admin --> Auth
     Admin --> AdminApi
     Admin --> Ride
+    Admin --> Payment
     Admin --> Notify
 
     Auth --> PG
@@ -131,6 +136,7 @@ graph TB
     Ride -.gRPC.-> Location
     Ride -.gRPC.-> Notify
     AdminApi --> PG
+    Payment --> PG
     Notify --> PG
 ```
 
@@ -148,7 +154,10 @@ Public prefixes:
 | `/api/auth` | auth :4001 | Privy exchange, admin login, `/me` |
 | `/api/driver/login` `register` `privy` | auth :4001 | Driver auth |
 | `/api/driver` | ride :4003 | Presence, trips, earnings |
+| `/api/driver/wallet` | payment :4006 | Driver USDC wallet and cash-out |
 | `/api/rider` | ride :4003 | Rider trips and offer accept |
+| `/api/rider/wallet` | payment :4006 | Rider USDC wallet |
+| `/api/payment` | payment :4006 | Escrow quote, confirm, config |
 | `/api/admin` | admin :4005 | Staff console (RBAC) |
 | `/socket.io` | notify :4004 | Realtime |
 
@@ -164,6 +173,7 @@ Public prefixes:
 | `@eve/ride` | Matching, offers, trip lifecycle, presence (`RIDE_PORT`, default 4003) |
 | `@eve/notify` | Notifications + Socket.IO (`NOTIFY_PORT`, default 4004) |
 | `@eve/admin` | Staff HTTP API (`ADMIN_PORT`, default 4005) |
+| `@eve/payment` | Arc USDC wallets and RideEscrow (`PAYMENT_PORT`, default 4006) |
 
 ## Prerequisites
 
@@ -189,6 +199,7 @@ Ensure these ports are available:
 - `4003` - Ride
 - `4004` - Notify
 - `4005` - Admin API
+- `4006` - Payment
 - `5432` - PostgreSQL
 - `6379` - Redis
 - `3000` - Admin console
@@ -209,7 +220,7 @@ docker --version
 docker compose version
 
 # Check available ports
-lsof -i :4001  # Auth; also keep 4002–4005 free
+lsof -i :4001  # Auth; also keep 4002–4006 free
 ```
 
 ## Quick Start
@@ -282,7 +293,7 @@ Optional:
 
 | Variable | When |
 | --- | --- |
-| `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT` | Service listen ports |
+| `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`, `PAYMENT_PORT` | Service listen ports |
 | `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_DRIVER_FOLDER` | Driver document upload auth |
 | `CORS_ORIGINS` | Comma-separated browser origins allowed to call the API (default `http://localhost:3000`, `http://127.0.0.1:3000`, `http://localhost:8081`, `http://127.0.0.1:8081`). Native apps omit `Origin` and are allowed through. Production example: `CORS_ORIGINS=https://admin.example.com` |
 
@@ -298,14 +309,14 @@ npm run db:seed
 
 ### 4. Run the API
 
-Five services (`npm run dev`):
+Six services (`npm run dev`):
 
 ```bash
 cd backend
 npm run dev
 ```
 
-Health: `GET http://localhost:4001/health` (auth), `:4002` (location), `:4003` (ride), `:4004` (notify), `:4005` (admin).
+Health: `GET http://localhost:4001/health` (auth), `:4002` (location), `:4003` (ride), `:4004` (notify), `:4005` (admin), `:4006` (payment).
 
 Tests:
 
@@ -316,13 +327,14 @@ npm test
 
 ### 5. Apps
 
-Point rider/driver at auth, ride, and notify. On a phone or simulator, use your machine’s LAN IP instead of `localhost`.
+Point rider/driver at auth, ride, payment, and notify. On a phone or simulator, use your machine’s LAN IP instead of `localhost`.
 
 `rider/.env` and `driver/.env`:
 
 ```
 EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api
 EXPO_PUBLIC_API_URL=http://localhost:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://localhost:4006/api
 EXPO_PUBLIC_WS_URL=http://localhost:4004
 EXPO_PUBLIC_PRIVY_APP_ID=your-privy-app-id
 EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-client-id
@@ -339,6 +351,7 @@ AUTH_PROXY_TARGET=http://127.0.0.1:4001
 RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 ```
 
@@ -380,11 +393,11 @@ Do not use these credentials outside local development.
 
 ## Apps in more detail
 
-**Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
+**Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, pay the fare in Arc Testnet USDC (one Privy signature into escrow), track, complete, ride history, Profile → Wallet.
 
-**Driver** — Privy SMS/email OTP sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, matched-fare earnings, Eve Wallet cash-out to Privy Ethereum.
+**Driver** — Privy SMS/email OTP sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, matched-fare earnings, Arc USDC wallet (escrow releases plus Eve credits cash-out).
 
-**Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; driver Eve Wallet credit/payout; safety and support. Eve does not collect trip fares or take commission.
+**Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; driver Eve Wallet credit/payout; safety and support. Eve escrow holds trip USDC and does not take commission.
 
 ## Documentation
 
@@ -400,7 +413,7 @@ Do not use these credentials outside local development.
 ### Backend Documentation
 - [Backend services](backend/docs/services-ports.md) - Ports and process layout
 - [Authentication](backend/docs/auth.md) - Privy integration
-- [Driver Eve Wallet](backend/docs/driver-wallet.md) - Platform credits and Privy cash-out
+- [Arc Testnet USDC payments](backend/docs/driver-wallet.md) - Escrow, wallets, and cash-out
 - [Docker Setup](backend/docs/docker.md) - Backend Compose (mobile stays on the host)
 - [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
 - [gRPC Implementation](backend/docs/grpc.md) - Inter-service communication

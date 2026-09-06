@@ -8,6 +8,7 @@ beforeAll(async () => {
   process.env.PRIVY_APP_ID ??= "test-privy-app-id";
   process.env.PRIVY_APP_SECRET ??= "test-privy-app-secret";
   process.env.REDIS_URL ??= "redis://127.0.0.1:6379";
+  delete process.env.KAFKA_BROKERS;
 
   const reachable = await Promise.race([
     pingRedis(),

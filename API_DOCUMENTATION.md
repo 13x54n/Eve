@@ -15,6 +15,7 @@ Complete API reference for the Eve platform backend.
   - [Authentication](#authentication-endpoints)
   - [Rider](#rider-endpoints)
   - [Driver](#driver-endpoints)
+  - [Payment](#payment-endpoints)
   - [Admin](#admin-endpoints)
   - [Public](#public-endpoints)
 - [WebSocket Events](#websocket-events)
@@ -22,7 +23,7 @@ Complete API reference for the Eve platform backend.
 
 ## Overview
 
-The Eve API is a RESTful API that uses JSON for request and response payloads. Rider and driver apps call **auth** (`:4001`) and **ride** (`:4003`) directly. Socket.IO connects to **notify** (`:4004`).
+The Eve API is a RESTful API that uses JSON for request and response payloads. Rider and driver apps call **auth** (`:4001`), **ride** (`:4003`), and **payment** (`:4006`) directly. Socket.IO connects to **notify** (`:4004`).
 
 **Current Version**: 1.0  
 **Protocol**: HTTP/HTTPS  
@@ -33,9 +34,10 @@ The Eve API is a RESTful API that uses JSON for request and response payloads. R
 
 ### Development
 ```
-Auth:  http://localhost:4001/api
-Ride:  http://localhost:4003/api
-WS:    http://localhost:4004
+Auth:     http://localhost:4001/api
+Ride:     http://localhost:4003/api
+Payment:  http://localhost:4006/api
+WS:       http://localhost:4004
 ```
 
 ### Production
@@ -491,7 +493,7 @@ GET /api/driver/wallet
 POST /api/driver/wallet/withdraw
 ```
 
-`GET /earnings` returns today/week/lifetime **matched fares** plus `walletBalance`. `GET /wallet` returns withdrawable platform credits, Privy addresses, chain config, and ledger rows. `POST /wallet/withdraw` `{ "amount": 10, "idempotencyKey": "optional" }` cashes out to `User.ethereumWallet`. Admin: `POST /api/admin/drivers/:id/wallet/credit`, `POST /api/admin/payouts`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+`GET /earnings` remains on **ride** (`:4003`). Wallet routes are on **payment** (`:4006`). See [Payment endpoints](#payment-endpoints) and [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 **Response** (`GET /driver/earnings`):
 ```json
@@ -507,6 +509,21 @@ POST /api/driver/wallet/withdraw
   "recentTrips": []
 }
 ```
+
+### Payment Endpoints
+
+Base: `http://localhost:4006/api`. JWT required.
+
+| Method | Path | Role | Purpose |
+| --- | --- | --- | --- |
+| `GET` | `/payment/config` | any | Arc chain id, ERC-20 USDC address, escrow address |
+| `GET` | `/payment/trips/:id/deposit` | rider | Native `value` + calldata for `RideEscrow.deposit` |
+| `POST` | `/payment/trips/:id/confirm` | rider | `{ "txHash": "0x…" }` → `ESCROWED` |
+| `GET` | `/rider/wallet` | rider | ERC-20 USDC balance (6 decimals), address, ledger |
+| `GET` | `/driver/wallet` | driver | ERC-20 USDC, platform credits, ledger |
+| `POST` | `/driver/wallet/withdraw` | driver | Cash out credits as ERC-20 USDC |
+
+Accepting an offer on ride (`POST /api/rider/trips/:id/offers/:offerId/accept`) returns `{ trip, deposit }`. The rider app sends `deposit` with Privy `eth_sendTransaction` (chain `5042002`), then confirms. Native `msg.value` is 18 decimals; displayed balances use the ERC-20 view. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Admin Endpoints
 

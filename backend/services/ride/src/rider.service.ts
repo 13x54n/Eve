@@ -8,6 +8,7 @@ import {
   syncDriverGeoClient,
 } from "@eve/location";
 import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
+import { quoteTripDeposit, quoteTripRefund } from "@eve/payment";
 import { createTripDispatches, voidPendingDispatches } from "./dispatch.js";
 
 async function getRider(userId: string) {
@@ -38,7 +39,7 @@ async function notifyOpsTicket(
     subject,
     kind,
     requesterName: requester?.name ?? "Unknown",
-  });
+  }, ticketId);
 }
 
 type Viewer = { userId: string; riderId: string };
@@ -149,7 +150,7 @@ export async function createTrip(userId: string, input: {
       durationMin: duration,
       suggestedFare: fare,
       fareTotal: fare,
-      paymentMethod: "CASH",
+      paymentMethod: "WALLET",
       recipientName: forSomeoneElse ? input.recipientName ?? null : null,
       recipientPhone: forSomeoneElse ? input.recipientPhone ?? null : null,
       packageNote: isCourier ? input.packageNote ?? null : null,
@@ -383,7 +384,8 @@ export async function acceptOffer(userId: string, tripId: string, offerId: strin
   for (const driverUserId of rejectedDriverUserIds) {
     emitUserEvent("DRIVER", driverUserId, "offer:rejected", { tripId });
   }
-  return result;
+  const deposit = await quoteTripDeposit(userId, tripId);
+  return { trip: result, deposit };
 }
 
 export async function getOffers(userId: string, tripId: string) {
@@ -402,8 +404,22 @@ export async function cancelTrip(userId: string, tripId: string) {
     where: { tripId, status: "PENDING" },
     include: { driver: { select: { userId: true } } },
   });
+  let refund = null as Awaited<ReturnType<typeof quoteTripRefund>> | null;
+  if (trip.paymentStatus === "ESCROWED") {
+    refund = await quoteTripRefund(userId, tripId);
+  }
   await prisma.$transaction(async (tx) => {
-    await tx.trip.update({ where: { id: tripId }, data: { status: "CANCELLED", cancellationReason: "Cancelled by rider" } });
+    await tx.trip.update({
+      where: { id: tripId },
+      data: {
+        status: "CANCELLED",
+        cancellationReason: "Cancelled by rider",
+        paymentStatus:
+          trip.paymentStatus === "ESCROWED" || trip.paymentStatus === "DISPUTED"
+            ? trip.paymentStatus
+            : "CANCELLED",
+      },
+    });
     await tx.tripOffer.updateMany({ where: { tripId, status: "PENDING" }, data: { status: "REJECTED", respondedAt: new Date() } });
     if (trip.driverId) {
       await tx.driverProfile.update({ where: { id: trip.driverId }, data: { presence: "ONLINE" } });
@@ -425,7 +441,7 @@ export async function cancelTrip(userId: string, tripId: string) {
   for (const row of pendingDrivers) {
     emitUserEvent("DRIVER", row.driver.userId, "offer:rejected", { tripId });
   }
-  return result;
+  return { trip: result, refund };
 }
 
 export async function getGreeting(userId: string) {

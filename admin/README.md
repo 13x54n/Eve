@@ -119,7 +119,7 @@ app/
 
 ### API Integration
 
-The browser calls same-origin `/api`. Next.js rewrites to auth `:4001`, ride `:4003`, notify `:4004`, and admin `:4005`. There is no HTTP gateway.
+The browser calls same-origin `/api`. Next.js rewrites to auth `:4001`, ride `:4003`, notify `:4004`, admin `:4005`, and payment `:4006`. There is no HTTP gateway.
 
 ```typescript
 // lib/api.ts
@@ -180,13 +180,14 @@ AUTH_PROXY_TARGET=http://127.0.0.1:4001
 RIDE_PROXY_TARGET=http://127.0.0.1:4003
 NOTIFY_PROXY_TARGET=http://127.0.0.1:4004
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 NEXT_PUBLIC_NOTIFY_URL=http://127.0.0.1:4004
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 ```
 
 **How it works**:
 - Browser calls `/api/*` (same-origin)
-- Next.js rewrites each prefix to `AUTH_PROXY_TARGET`, `RIDE_PROXY_TARGET`, `NOTIFY_PROXY_TARGET`, `ADMIN_PROXY_TARGET`
+- Next.js rewrites each prefix to `AUTH_PROXY_TARGET`, `RIDE_PROXY_TARGET`, `NOTIFY_PROXY_TARGET`, `ADMIN_PROXY_TARGET`, `PAYMENT_PROXY_TARGET`
 - No CORS issues
 
 ### 3. Start Development Server
@@ -364,6 +365,7 @@ AUTH_PROXY_TARGET=http://auth:4001
 RIDE_PROXY_TARGET=http://ride:4003
 NOTIFY_PROXY_TARGET=http://notify:4004
 ADMIN_PROXY_TARGET=http://admin:4005
+PAYMENT_PROXY_TARGET=http://payment:4006
 NEXT_PUBLIC_NOTIFY_URL=https://notify.example.com
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.production_token
 ```
@@ -432,7 +434,9 @@ Verify `.env.local`:
 ```bash
 NEXT_PUBLIC_API_URL=/api
 AUTH_PROXY_TARGET=http://127.0.0.1:4001
+RIDE_PROXY_TARGET=http://127.0.0.1:4003
 ADMIN_PROXY_TARGET=http://127.0.0.1:4005
+PAYMENT_PROXY_TARGET=http://127.0.0.1:4006
 ```
 
 ### Page not updating with real-time data

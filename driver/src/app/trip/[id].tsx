@@ -23,6 +23,8 @@ import {
   startTrip,
 } from '@/services/driver';
 import { addDriverSocketListener, connectDriverSocket, disconnectDriverSocket, sendDriverLocation, subscribeTrip } from '@/services/socket';
+import { confirmEscrow } from '@/services/payment';
+import { useSendEscrowTx } from '@/lib/send-escrow';
 import { useAuth } from '@/context/auth-context';
 import { ActionButton } from '@/components/action-button';
 import { EveMap, EveMarker, EveRoute } from '@/components/map/eve-map';
@@ -59,6 +61,7 @@ export default function ActiveTripScreen() {
   const [loadError, setLoadError] = useState(false);
   const [hasArrived, setHasArrived] = useState(false);
   const [busy, setBusy] = useState(false);
+  const sendEscrowTx = useSendEscrowTx();
   const [unreadCount, setUnreadCount] = useState(0);
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
@@ -193,9 +196,15 @@ export default function ActiveTripScreen() {
     try {
       setBusy(true);
       const result = await completeTrip(trip.id);
+      const startQuote = result.settlement?.startQuote;
+      if (startQuote) {
+        const txHash = await sendEscrowTx(startQuote);
+        await confirmEscrow(trip.id, txHash, "startSettlement");
+      }
       router.replace({
         pathname: '/ride/completed',
         params: {
+          tripId: trip.id,
           dropoff: trip.dropoffAddress,
           fare: String(result.trip?.fareTotal ?? trip.fareTotal),
           net: String(result.earnings?.netEarnings ?? trip.fareTotal),
@@ -332,7 +341,7 @@ export default function ActiveTripScreen() {
                 {isCourier ? `Deliver to ${trip.recipientName}` : `Passenger: ${trip.recipientName}`}
               </Text>
             ) : null}
-            <Text style={styles.riderFare}>Cash · ${Number(trip.fareTotal).toFixed(2)}</Text>
+            <Text style={styles.riderFare}>USDC · ${Number(trip.fareTotal).toFixed(2)}</Text>
           </View>
           {trip.recipientPhone ? (
             <TouchableOpacity

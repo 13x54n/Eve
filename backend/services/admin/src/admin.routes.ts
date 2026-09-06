@@ -41,6 +41,7 @@ import {
   updateRider,
   updateStaff,
   updateTicket,
+  resolveEscrowDispute,
   vehicles,
 } from "./admin.controller.js";
 import {
@@ -48,16 +49,15 @@ import {
   requireAuth,
   requirePermission,
   requireStaffAccess,
+  skipRateLimit,
 } from "@eve/http";
-
-const skipInVitest = () => Boolean(process.env.VITEST);
 
 const adminApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 600,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipInVitest,
+  skip: skipRateLimit,
 });
 
 const router = Router();
@@ -129,6 +129,11 @@ router.patch(
   "/tickets/:id",
   requirePermission("support:write"),
   updateTicket,
+);
+router.post(
+  "/tickets/:id/escrow-resolve",
+  requirePermission("support:write"),
+  resolveEscrowDispute,
 );
 
 router.get("/promos", requirePermission("promotions:write"), promos);

@@ -75,6 +75,11 @@ describe("Driver Privy wallet cash-out", () => {
     expect(response.body.chain.chainId).toBe(5042002);
     expect(response.body.chain.chainName).toBe("Arc Testnet");
     expect(response.body.chain.tokenSymbol).toBe("USDC");
+    expect(response.body.chain.tokenAddress).toBe(
+      "0x3600000000000000000000000000000000000000",
+    );
+    expect(response.body.chain.tokenDecimals).toBe(6);
+    expect(response.body.chain.nativeDecimals).toBe(18);
     expect(response.body.chain.treasuryConfigured).toBe(false);
   });
 

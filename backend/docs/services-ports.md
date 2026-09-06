@@ -9,6 +9,7 @@ Auth, location, ride, notify, and admin each run as their own Node process. Ther
 | `@eve/ride` | 4003 | Rider/driver/public HTTP, including `PATCH /api/driver/presence` |
 | `@eve/notify` | 4004 HTTP + Socket.IO, 50052 gRPC | Realtime |
 | `@eve/admin` | 4005 | Staff `/api/admin` |
+| `@eve/payment` | 4006 | Wallet, Arc escrow, treasury payouts |
 
 Local: `npm run dev` from `backend/`. Docker: `docker compose up`.
 

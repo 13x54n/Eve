@@ -62,6 +62,7 @@ EXPO_PUBLIC_PRIVY_CLIENT_ID=your-privy-app-client-id
 EXPO_PUBLIC_PRIVY_RELYING_PARTY=https://your-domain.com
 EXPO_PUBLIC_AUTH_URL=http://localhost:4001/api
 EXPO_PUBLIC_API_URL=http://localhost:4003/api
+EXPO_PUBLIC_PAYMENT_URL=http://localhost:4006/api
 EXPO_PUBLIC_WS_URL=http://localhost:4004
 ```
 
@@ -73,4 +74,4 @@ Passkeys need a device passcode. Face ID/Touch ID is optional once the native cl
 
 `npm run db:seed` still creates riders/drivers/admins with password `Admin123!`. Those passwords work on the leftover password API routes and the **admin** console. They do **not** open the rider/driver apps. Sign in there with Privy SMS or email OTP; a matching phone or email that already exists in Postgres is linked on first exchange.
 
-Driver platform credits and cash-out to the embedded Ethereum wallet: [driver-wallet.md](driver-wallet.md).
+Arc Testnet USDC escrow, wallets, and credit cash-out: [driver-wallet.md](driver-wallet.md).
