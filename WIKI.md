@@ -41,39 +41,39 @@ services during development and deployment.
 
 ## Repository map
 
-| Directory | Responsibility |
-| --- | --- |
-| `backend/` | npm-workspaces backend, Prisma schema, migrations, packages, services, and tests |
-| `rider/` | Expo mobile application for passengers |
-| `driver/` | Expo mobile application for drivers |
-| `admin/` | Next.js operations and support console |
-| `www/` | Next.js public marketing site |
-| `e2e/` | Mobile E2E guidance; current mobile tests are Jest-based |
-| Root `*.md` | Shared setup, architecture, security, deployment, and contributor documentation |
+| Directory   | Responsibility                                                                   |
+| ----------- | -------------------------------------------------------------------------------- |
+| `backend/`  | npm-workspaces backend, Prisma schema, migrations, packages, services, and tests |
+| `rider/`    | Expo mobile application for passengers                                           |
+| `driver/`   | Expo mobile application for drivers                                              |
+| `admin/`    | Next.js operations and support console                                           |
+| `www/`      | Next.js public marketing site                                                    |
+| `e2e/`      | Mobile E2E guidance; current mobile tests are Jest-based                         |
+| Root `*.md` | Shared setup, architecture, security, deployment, and contributor documentation  |
 
 ## Runtime architecture
 
 ### Service endpoints
 
-| Service | Default port | Main responsibility |
-| --- | ---: | --- |
-| Auth | `4001` | Privy exchange, JWTs, admin login, profiles, sessions |
-| Location | `4002` | GPS state, H3 indexing, nearby-driver/trip queries |
-| Ride | `4003` | Trips, offers, fares, lifecycle, driver presence HTTP |
-| Notify | `4004` | Socket.IO connections and event broadcasting |
-| Admin | `4005` | Staff operations API, RBAC, audit, support, safety, and configuration |
+| Service  | Default port | Main responsibility                                                   |
+| -------- | -----------: | --------------------------------------------------------------------- |
+| Auth     |       `4001` | Privy exchange, JWTs, admin login, profiles, sessions                 |
+| Location |       `4002` | GPS state, H3 indexing, nearby-driver/trip queries                    |
+| Ride     |       `4003` | Trips, offers, fares, lifecycle, driver presence HTTP                 |
+| Notify   |       `4004` | Socket.IO connections and event broadcasting                          |
+| Admin    |       `4005` | Staff operations API, RBAC, audit, support, safety, and configuration |
 
 Location also exposes its gRPC server on `50051` by default. All services expose
 `/health`.
 
 ### Internal packages
 
-| Package | Purpose |
-| --- | --- |
-| `@eve/db` | Prisma client, database access, fare and profile helpers |
-| `@eve/http` | Express application setup, CORS, auth, validation, and shared middleware |
+| Package       | Purpose                                                                           |
+| ------------- | --------------------------------------------------------------------------------- |
+| `@eve/db`     | Prisma client, database access, fare and profile helpers                          |
+| `@eve/http`   | Express application setup, CORS, auth, validation, and shared middleware          |
 | `@eve/shared` | JWT, password, permission, cache, distance, serialization, and treasury utilities |
-| `@eve/grpc` | Protocol Buffer and gRPC client/server helpers |
+| `@eve/grpc`   | Protocol Buffer and gRPC client/server helpers                                    |
 
 ### Communication model
 
