@@ -32,6 +32,28 @@ docker compose up --build
 
 `docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and gRPC hosts to Docker DNS names (`postgres`, `redis`, `location`, `notify`). Keep localhost values in `.env` for host-side `npm run dev`.
 
+The startup order is intentional:
+
+1. PostgreSQL and Redis become healthy.
+2. `migrate` removes stale generated Prisma output, runs `prisma generate`, and runs `prisma migrate deploy`.
+3. The five application services start after `migrate` exits successfully.
+
+For a fresh database, seed it after the stack is running:
+
+```bash
+docker compose exec auth npm run db:seed
+```
+
+If an existing database reports `The column DriverProfile.walletBalance does not exist`, stop the application services and run the migration job explicitly:
+
+```bash
+docker compose up -d postgres redis
+docker compose up migrate
+docker compose up -d
+```
+
+Do not use `docker compose down -v` unless you intend to delete the local Postgres and Redis data. The migration job is safe to rerun; it applies only migrations not already recorded by Prisma.
+
 ## Health
 
 | URL | Service |
@@ -54,6 +76,8 @@ docker compose exec postgres psql -U eve -d eve
 ```
 
 Migrations run automatically via the `migrate` service on `up`. Containers share a `eve_node_modules` volume and sync it from `package-lock.json` on start, so new packages (for example `viem` on `@eve/shared`) install without wiping Postgres. Rebuild the image after Dockerfile changes: `docker compose up --build`.
+
+On Windows, ensure shell scripts use LF line endings. The repository enforces this through `.gitattributes`, and the Docker build also normalizes `docker-entrypoint.sh`; if an existing checkout still produces `exec ... eve-entrypoint.sh: no such file or directory`, rebuild the image with `docker compose up --build` after refreshing the checkout.
 
 ## Mobile apps and emulators (host)
 

@@ -24,11 +24,24 @@ cp .env.example .env
 docker compose up --build
 ```
 
-See **[docs/docker.md](docs/docker.md)** for health URLs, logs, seed, and host emulator networking. Rider/driver apps are not in Compose. Driver wallet cash-out: **[docs/driver-wallet.md](docs/driver-wallet.md)**.
+The `migrate` service generates Prisma Client, applies all pending migrations, and must exit with code 0 before the five application services start. See **[docs/docker.md](docs/docker.md)** for health URLs, logs, seed, recovery from an existing database volume, and host emulator networking. Rider/driver apps are not in Compose. Driver wallet cash-out: **[docs/driver-wallet.md](docs/driver-wallet.md)**.
 
 ### Without Docker
 
-Run Postgres and Redis, then from `backend/`: `npm run dev` (starts all five services). See **[docs/auth.md](docs/auth.md)** for Privy (rider/driver) and admin password login.
+Run Postgres and Redis, install dependencies, generate Prisma Client, apply migrations, and seed the database before starting the services:
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+docker compose up postgres redis -d
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+See **[docs/auth.md](docs/auth.md)** for Privy (rider/driver) and admin password login.
 
 ## Scripts (from `backend/`)
 

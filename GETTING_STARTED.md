@@ -19,6 +19,41 @@ This guide will help you set up local development in under 1 hour.
 - [Next Steps](#next-steps)
 - [Common Issues](#common-issues)
 
+## Choose a Startup Mode
+
+Use one of these paths for a complete development environment. Both paths run PostgreSQL, Redis, all five backend services, and the optional admin console, marketing site, and mobile clients described below.
+
+### Local backend processes
+
+Use this path when you want hot reload for the backend services:
+
+```bash
+cd backend
+cp .env.example .env
+# Set JWT_ACCESS_SECRET and any Privy, ImageKit, or SMTP values you need.
+npm install
+docker compose up postgres redis -d
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+The `db:generate` step must run after dependency installation, and `db:migrate` must run before any service handles requests. Keep this terminal open; start the optional clients in separate terminals.
+
+### Full backend in Docker
+
+Use this path when you want Docker to build and run the complete backend stack:
+
+```bash
+cd backend
+cp .env.example .env
+# Set JWT_ACCESS_SECRET and any Privy, ImageKit, or SMTP values you need.
+docker compose up --build
+```
+
+Compose starts PostgreSQL and Redis, runs Prisma Client generation and `prisma migrate deploy` in the one-shot `migrate` service, and only then starts auth, location, ride, notify, and admin. The admin console is still a separate host process; Rider and Driver Expo apps are never built inside this Compose stack.
+
 ## Prerequisites
 
 ### Checklist

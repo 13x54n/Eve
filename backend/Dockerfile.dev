@@ -25,7 +25,8 @@ COPY services/admin/package.json ./services/admin/
 RUN npm ci
 
 COPY docker-entrypoint.sh /usr/local/bin/eve-entrypoint.sh
-RUN chmod +x /usr/local/bin/eve-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/eve-entrypoint.sh && \
+    chmod +x /usr/local/bin/eve-entrypoint.sh
 
 COPY . .
 
