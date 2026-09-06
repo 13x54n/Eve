@@ -66,6 +66,7 @@ export type EarningsSummary = {
   weekEarnings: number;
   weekTrips: number;
   lifetimeEarnings: number;
+  walletBalance?: number;
   rating: number;
   acceptanceRate: number;
   cancellationRate: number;
@@ -85,6 +86,53 @@ export type EarningsTrip = {
 
 export async function getEarnings() {
   const { data } = await api.get<{ summary: EarningsSummary; recentTrips: EarningsTrip[] }>('/driver/earnings');
+  return data;
+}
+
+export type WalletChain = {
+  chainId: number;
+  chainName: string;
+  explorerTxUrl: string;
+  tokenSymbol: string;
+  tokenAddress: string | null;
+  treasuryConfigured: boolean;
+  usdPerToken: number;
+};
+
+export type WalletLedgerEntry = {
+  id: string;
+  type: string;
+  status: string;
+  method: string;
+  amount: number;
+  currency: string;
+  brand: string | null;
+  providerRef: string | null;
+  note: string | null;
+  createdAt: string;
+};
+
+export type DriverWallet = {
+  walletBalance: number;
+  lifetimeEarnings: number;
+  ethereumWallet: string | null;
+  solanaWallet: string | null;
+  chain: WalletChain;
+  minWithdrawUsd: number;
+  entries: WalletLedgerEntry[];
+};
+
+export async function getWallet() {
+  const { data } = await api.get<DriverWallet>('/driver/wallet');
+  return data;
+}
+
+export async function withdrawWallet(amount: number, idempotencyKey?: string) {
+  const { data } = await api.post<{
+    entry: WalletLedgerEntry;
+    walletBalance: number;
+    replayed: boolean;
+  }>('/driver/wallet/withdraw', { amount, idempotencyKey });
   return data;
 }
 

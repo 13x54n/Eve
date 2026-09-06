@@ -2854,6 +2854,7 @@ export const DriverProfileScalarFieldEnum = {
   cancellationRate: 'cancellationRate',
   onlineHours: 'onlineHours',
   earningsTotal: 'earningsTotal',
+  walletBalance: 'walletBalance',
   city: 'city',
   latitude: 'latitude',
   longitude: 'longitude',

@@ -56,7 +56,7 @@ Code: [`services/location/src/geo.ts`](../services/location/src/geo.ts) and [`se
 
 On boot, the location service calls `rebuildGeoIndexes()`: `SCAN`/`UNLINK` the H3 (and leftover GEO) namespace, then re-index every eligible driver and `SEARCHING` trip from Postgres. That heals a Redis restart and Prisma-only seeds (for example load-test users).
 
-Connection: `REDIS_URL` (default `redis://127.0.0.1:6379`). Compose: `redis:7` in [`docker-compose.yml.temp`](../docker-compose.yml.temp). Production (EC2/pm2) must already have Redis reachable; deploy does not install it.
+Connection: `REDIS_URL` (default `redis://127.0.0.1:6379`). Compose: `redis:7-alpine` in [`docker-compose.yml`](../docker-compose.yml). Production hosts must already have Redis reachable; deploy does not install it.
 
 ## How to change the 15 km radius
 

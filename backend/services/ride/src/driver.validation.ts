@@ -78,3 +78,8 @@ export const driverOfferSchema = z.object({
 export const chatMessageSchema = z.object({
   body: z.string().trim().min(1).max(1000),
 });
+
+export const walletWithdrawSchema = z.object({
+  amount: z.coerce.number().positive().max(10000),
+  idempotencyKey: z.string().trim().min(8).max(80).optional(),
+});

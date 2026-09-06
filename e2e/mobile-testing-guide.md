@@ -1,6 +1,8 @@
 # Mobile E2E Testing Guide for Rider & Driver Apps
 
-This guide covers E2E testing setup for the React Native apps (rider and driver).
+This guide is **aspirational**. There are no Maestro `flows/` or Detox configs in the apps today. Use Jest unit tests (`npm test` in `rider/` / `driver/`) and manual emulator runs.
+
+Production mobile auth is **Privy OTP**, not email/password. Backend ports are **4001 / 4003 / 4004**, not `:4000`.
 
 ## Recommended Tools
 

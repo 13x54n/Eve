@@ -9,7 +9,9 @@ import {
   driverOfferSchema,
   supportTicketSchema,
   tripActionSchema,
+  walletWithdrawSchema,
 } from "./driver.validation.js";
+import * as walletService from "./wallet.service.js";
 
 function getAuthUser(req: Request) {
   return (req as AuthenticatedRequest).user;
@@ -227,6 +229,34 @@ export async function earnings(
     const user = getAuthUser(req);
     const result = await driverService.getDriverEarningsOverview(user.id);
     res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function wallet(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const user = getAuthUser(req);
+    res.status(200).json(await walletService.getDriverWallet(user.id));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function withdrawWallet(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const user = getAuthUser(req);
+    const data = walletWithdrawSchema.parse(req.body);
+    const result = await walletService.withdrawDriverWallet(user.id, data);
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }

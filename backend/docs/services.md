@@ -429,11 +429,11 @@ const response = await fetch(`${LOCATION_URL}/internal/nearby-drivers`, {
 
 **Security**: `X-Internal-Secret` header required
 
-### gRPC (Optional)
+### gRPC
 
-**Enable**: `GRPC_ENABLED=true`
+gRPC is always on for location and notify. There is no `GRPC_ENABLED` flag.
 
-**Performance**: 3-10x faster than HTTP
+**Performance**: typically faster than HTTP when the peer is up
 
 **Pattern**:
 ```typescript
@@ -449,7 +449,7 @@ const drivers = await nearbyDriversGrpc({
 ### Hybrid Approach
 
 Services use automatic fallback:
-1. Try gRPC (if enabled)
+1. Try gRPC
 2. Fall back to HTTP
 3. Fall back to local matching in the same process if gRPC is unreachable
 
@@ -467,8 +467,8 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 
 **Service-specific**:
 - `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`
-- `GRPC_ENABLED`, `GRPC_LOGGING`
-- `MATCH_RADIUS_KM`
+- `LOCATION_GRPC_URL`, `NOTIFY_GRPC_URL`, `GRPC_LOGGING`
+- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL` (optional driver cash-out)
 
 ## Monitoring
 

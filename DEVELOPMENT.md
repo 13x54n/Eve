@@ -557,7 +557,7 @@ Suggestion: Add error handling and connection cleanup.
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Gateway",
+      "name": "Debug backend",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "cwd": "${workspaceFolder}/backend",

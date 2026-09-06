@@ -484,30 +484,27 @@ PATCH /driver/trips/:id
 - `DRIVER_ARRIVING` → `IN_PROGRESS`
 - `IN_PROGRESS` → `COMPLETED`
 
-#### Get Earnings
+#### Get earnings and Eve Wallet
 ```
-GET /driver/earnings?period=today
+GET /api/driver/earnings
+GET /api/driver/wallet
+POST /api/driver/wallet/withdraw
 ```
 
-**Query Parameters**:
-- `period` - `today`, `week`, `month`, `all` (default: `today`)
+`GET /earnings` returns today/week/lifetime **matched fares** plus `walletBalance`. `GET /wallet` returns withdrawable platform credits, Privy addresses, chain config, and ledger rows. `POST /wallet/withdraw` `{ "amount": 10, "idempotencyKey": "optional" }` cashes out to `User.ethereumWallet`. Admin: `POST /api/admin/drivers/:id/wallet/credit`, `POST /api/admin/payouts`. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
-**Response**:
+**Response** (`GET /driver/earnings`):
 ```json
 {
-  "earnings": {
-    "period": "today",
-    "totalEarnings": 150.00,
-    "tripCount": 8,
-    "averageFare": 18.75,
-    "trips": [
-      {
-        "id": 123,
-        "fare": 18.00,
-        "completedAt": "2026-09-01T10:00:00Z"
-      }
-    ]
-  }
+  "summary": {
+    "todayEarnings": 40,
+    "weekEarnings": 120,
+    "lifetimeEarnings": 900,
+    "walletBalance": 25,
+    "todayTrips": 2,
+    "weekTrips": 8
+  },
+  "recentTrips": []
 }
 ```
 

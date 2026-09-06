@@ -5,8 +5,8 @@ Rider and driver apps sign in with **Privy** (SMS OTP and passkeys). The API sti
 ## Flow (rider and driver)
 
 1. The app wraps the tree in `PrivyProvider` (`@privy-io/expo`). This needs a **custom development build** — it does not work in Expo Go.
-2. The user authenticates with SMS (`useLoginWithSMS`) or a passkey (`useLoginWithPasskey` / `useSignupWithPasskey`).
-3. The app reads the Privy **identity token** (`useIdentityToken().getIdentityToken()`) and `POST`s it to auth (`:4001`).
+2. The user authenticates with SMS or email OTP (`PrivyAuthForm`). Passkeys may be enabled in the Privy dashboard but the apps currently use OTP.
+3. The app creates embedded Ethereum (and Solana) wallets if needed, reads the Privy **identity token**, and `POST`s it to auth (`:4001`).
 4. `@eve/auth` verifies the identity token with `@privy-io/node`, finds or creates a Prisma `User`, stores embedded wallet addresses, and returns `{ accessToken, user }` (Eve JWT).
 5. The app stores the Eve token in Secure Store and sends `Authorization: Bearer` on later API and socket calls.
 
@@ -71,4 +71,6 @@ Passkeys need a device passcode. Face ID/Touch ID is optional once the native cl
 
 ## Local seed vs the apps
 
-`npm run db:seed` still creates riders/drivers/admins with password `Admin123!`. Those passwords work on the leftover password API routes and the **admin** console. They do **not** open the rider/driver apps. Sign in there with Privy SMS or a passkey; a matching phone or email that already exists in Postgres is linked on first exchange.
+`npm run db:seed` still creates riders/drivers/admins with password `Admin123!`. Those passwords work on the leftover password API routes and the **admin** console. They do **not** open the rider/driver apps. Sign in there with Privy SMS or email OTP; a matching phone or email that already exists in Postgres is linked on first exchange.
+
+Driver platform credits and cash-out to the embedded Ethereum wallet: [driver-wallet.md](driver-wallet.md).

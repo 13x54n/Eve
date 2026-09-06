@@ -29,48 +29,41 @@ The Driver app enables drivers to:
 - View incoming trips nearby
 - Submit competitive fare offers
 - Navigate to pickup and dropoff locations
-- Track trip status and earnings
-- Manage vehicle and document information
+- Track trip status, matched fares, and Eve Wallet
+- Cash out platform credits to the Privy Ethereum wallet
 
 ## Features
 
 ### Authentication & Onboarding
-- Privy SMS / passkeys
-- Multi-step onboarding wizard
-- Vehicle registration (type, year, color, plate)
-- Document upload (license, insurance, vehicle registration)
-- ImageKit integration for photo uploads
+- Privy SMS / email OTP
+- Multi-step onboarding (vehicle, documents)
+- ImageKit uploads
 - Approval workflow
 
 ### Trip Management
 - Real-time trip requests nearby
 - Submit custom fare offers
-- View trip details and route
-- Trip status management (arriving, in progress, complete)
-- Trip history and earnings
+- Trip status (arrived, start, complete)
+- Trip history
 
 ### Navigation & Location
-- GPS tracking every 5 seconds
-- Live rider location updates
-- Mapbox turn-by-turn navigation
-- Offline mode support
+- GPS while online
+- Mapbox maps
+- Offline-tolerant presence
 
 ### Presence System
-- Online/Offline toggle
-- Idle detection
-- Auto-offline on low battery
-- Geospatial indexing for matching
+- Online / offline / idle / on trip
+- H3 indexing for matching
 
-### Earnings
-- Daily, weekly, monthly summaries
-- Per-trip breakdown
-- Total lifetime earnings
-- Export reports
+### Eve Wallet
+- Available platform credits (`walletBalance`), separate from lifetime matched fares
+- Cash-out to Privy embedded Ethereum wallet
+- Admin credits and payouts
+- Trip fares remain off-platform cash
 
 ### Communication
 - In-trip chat with rider
 - Push notifications
-- Trip status updates
 
 ## Architecture
 
@@ -79,13 +72,12 @@ The Driver app enables drivers to:
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | Expo | 57 | React Native framework |
-| React Native | 0.76+ | Mobile UI |
+| React Native | 0.86.x | Mobile UI |
 | TypeScript | 5.9+ | Type safety |
 | Privy | @privy-io/expo | Authentication and wallets |
 | Mapbox | @rnmapbox/maps | Maps & navigation |
 | Socket.IO | socket.io-client | Real-time events |
-| Zustand | 4.x | State management |
-| expo-document-picker | Latest | Document uploads |
+| React Context | — | Auth, network, theme |
 
 ### Navigation
 
@@ -94,26 +86,32 @@ File-based routing:
 ```
 src/app/
   (auth)/
-    login.tsx           # SMS / passkey login
-    onboarding/
-      vehicle.tsx       # Vehicle info
-      documents.tsx     # Upload docs
-      approval.tsx      # Pending approval
+    welcome.tsx
+    login.tsx
+    register.tsx
+    forgot-password.tsx
   (tabs)/
-    home.tsx           # Online/Offline, incoming trips
-    trips.tsx          # Trip history
-    earnings.tsx       # Earnings dashboard
-    profile.tsx        # Profile & vehicle
+    home.tsx
+    earnings/            # Eve Wallet + trip list
+    menu.tsx
+  onboarding/
+    vehicle.tsx
+    documents.tsx
   trip/
-    [id].tsx           # Active trip screen
-    navigation.tsx     # Turn-by-turn
+    [id].tsx
+    offer.tsx
+    chat.tsx
+    support.tsx
+  ride/
+    completed.tsx
+  legal/
+  profile/
 ```
 
 ### State Management
 
-- **Zustand** for global state (presence, active trip, earnings)
-- **React Query** for API data
-- **Context** for theme and settings
+- React context — not Zustand
+- REST via `src/services/driver.ts` (`getWallet`, `withdrawWallet`, `getEarnings`)
 
 ### Key Services
 

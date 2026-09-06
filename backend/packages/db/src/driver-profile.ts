@@ -84,6 +84,7 @@ export async function getDriverProfile(userId: string) {
     cancellationRate: money(profile.cancellationRate),
     onlineHours: money(profile.onlineHours),
     earningsTotal: money(profile.earningsTotal),
+    walletBalance: money(profile.walletBalance),
     city: profile.city || profile.user.city || "New York",
     lat: profile.latitude,
     lng: profile.longitude,

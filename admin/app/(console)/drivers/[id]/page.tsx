@@ -12,6 +12,7 @@ import {
   Panel,
   StatCard,
   Table,
+  Input,
   money,
   statusTone,
 } from "@/components/ui";
@@ -39,9 +40,18 @@ type Driver = {
   cancellationRate: number;
   onlineHours: number;
   earningsTotal: number;
+  walletBalance: number;
   city: string | null;
   notes: string | null;
-  user: { name: string; email: string; phone: string | null; accountStatus: string };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    accountStatus: string;
+    ethereumWallet: string | null;
+    solanaWallet: string | null;
+  };
   fleetCompany: { name: string } | null;
   vehicles: { id: string; plateNumber: string; make: string; model: string; vehicleType: "BIKE" | "CAR" }[];
   documents: DriverDocument[];
@@ -159,7 +169,10 @@ export default function DriverDetailPage({
   const { user } = useAuth();
   const { data, reload, error, loading } = useApi<Driver>(`/admin/drivers/${id}`);
   const write = can(user, "drivers:approve");
+  const finance = can(user, "payments:payout");
   const [preview, setPreview] = useState<DriverDocument | null>(null);
+  const [credit, setCredit] = useState("10");
+  const [payout, setPayout] = useState("10");
 
   async function review(body: Record<string, unknown>) {
     try {
@@ -190,11 +203,12 @@ export default function DriverDetailPage({
             subtitle={`${data.user.email} · ${data.presence.toLowerCase()} · ${data.city ?? "No city"}`}
             actions={<Badge tone={statusTone(data.approvalStatus)}>{data.approvalStatus}</Badge>}
           />
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
             <StatCard label="Rating" value={data.rating ? `★ ${data.rating.toFixed(1)}` : "—"} />
             <StatCard label="Acceptance" value={`${data.acceptanceRate}%`} />
             <StatCard label="Cancellations" value={`${data.cancellationRate}%`} />
             <StatCard label="Matched fares" value={money(data.earningsTotal)} />
+            <StatCard label="Eve wallet" value={money(data.walletBalance)} />
           </div>
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
             <div className="space-y-5">
@@ -303,6 +317,85 @@ export default function DriverDetailPage({
               </Panel>
             </div>
             <div className="space-y-5">
+              <Panel title="Eve Wallet">
+                <dl className="grid gap-3 text-[13px]">
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Available credits
+                    </dt>
+                    <dd className="mt-1 font-semibold text-emerald-700">{money(data.walletBalance)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Privy Ethereum
+                    </dt>
+                    <dd className="mt-1 break-all font-mono text-[12px]">
+                      {data.user.ethereumWallet ?? "Not linked"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Privy Solana
+                    </dt>
+                    <dd className="mt-1 break-all font-mono text-[12px]">
+                      {data.user.solanaWallet ?? "Not linked"}
+                    </dd>
+                  </div>
+                </dl>
+                <p className="mt-3 text-[12px] text-muted-foreground">
+                  Trip fares stay off-platform. Credits here can be cashed out to the Privy Ethereum
+                  address.
+                </p>
+                {finance ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Input
+                      aria-label="Credit amount"
+                      value={credit}
+                      onChange={(event) => setCredit(event.target.value)}
+                    />
+                    <Button
+                      tone="ghost"
+                      onClick={() => {
+                        const value = Number(credit);
+                        if (!Number.isFinite(value) || value === 0) return;
+                        api(`/admin/drivers/${id}/wallet/credit`, {
+                          method: "POST",
+                          body: JSON.stringify({ amount: value }),
+                        })
+                          .then(() => reload())
+                          .then(() => toast.success("Wallet credited"))
+                          .catch((caught) => toast.error(apiErrorMessage(caught)));
+                      }}
+                    >
+                      Add credit
+                    </Button>
+                    <Input
+                      aria-label="Payout amount"
+                      value={payout}
+                      onChange={(event) => setPayout(event.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        const value = Number(payout);
+                        if (!Number.isFinite(value) || value <= 0) return;
+                        api("/admin/payouts", {
+                          method: "POST",
+                          body: JSON.stringify({
+                            userId: data.user.id,
+                            amount: value,
+                            note: "Admin payout to Privy wallet",
+                          }),
+                        })
+                          .then(() => reload())
+                          .then(() => toast.success("Payout recorded"))
+                          .catch((caught) => toast.error(apiErrorMessage(caught)));
+                      }}
+                    >
+                      Payout to Privy
+                    </Button>
+                  </div>
+                ) : null}
+              </Panel>
               {write ? (
                 <Panel title="Review">
                   <div className="flex flex-col gap-2">

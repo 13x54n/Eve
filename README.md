@@ -25,8 +25,8 @@ Community ride-matching marketplace. Riders request a trip, drivers send fare of
 
 Eve is a full-stack ride-matching platform featuring:
 - **Real-time matching** using Uber H3 geospatial indexing
-- **Microservices architecture** with optional gRPC support
-- **Native mobile apps** for riders and drivers (iOS/Android)
+- **Microservices architecture** with gRPC between location/notify and ride/admin
+- **Native mobile apps** for riders and drivers (iOS/Android) — built on the host or EAS, not Docker
 - **Admin dashboard** for operations and support
 - **Privy integration** for SMS, passkeys, and embedded wallets
 - **WebSocket** real-time updates for live tracking
@@ -43,7 +43,7 @@ Eve is a full-stack ride-matching platform featuring:
 | PostgreSQL | 16 | Primary database |
 | Redis | 7 | Caching and geospatial indexing |
 | Socket.IO | 4.x | Real-time communication |
-| gRPC | @grpc/grpc-js | Inter-service communication (optional) |
+| gRPC | @grpc/grpc-js | Inter-service communication (always on; HTTP fallback if the peer is down) |
 
 ### Frontend - Mobile Apps
 | Technology | Version | Purpose |
@@ -81,7 +81,7 @@ Eve/
   driver/    Expo 57 driver app — Privy SMS/passkey, onboarding, presence, offers, trip lifecycle, earnings
   admin/     Next.js 16 console — dashboard, riders, drivers, trips, vehicles, pricing, safety, support
   www/       Next.js 16 marketing site — open-source landing page (port 3020)
-  backend/   API: npm workspaces (packages, services, gateway) + Prisma/Postgres
+  backend/   API: npm workspaces (packages, services) + Prisma/Postgres — no HTTP gateway
 ```
 
 ## Architecture
@@ -382,9 +382,9 @@ Do not use these credentials outside local development.
 
 **Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, track, complete, ride history.
 
-**Driver** — Privy SMS/passkey sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, earnings.
+**Driver** — Privy SMS/email OTP sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, matched-fare earnings, Eve Wallet cash-out to Privy Ethereum.
 
-**Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; safety and support. No in-app commission or rider payment collection.
+**Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; driver Eve Wallet credit/payout; safety and support. Eve does not collect trip fares or take commission.
 
 ## Documentation
 
@@ -394,12 +394,14 @@ Do not use these credentials outside local development.
 - [Environment Variables](ENVIRONMENT_VARIABLES.md) - Configuration reference
 - [Deployment Guide](DEPLOYMENT.md) - Production deployment
 - [Development Workflow](DEVELOPMENT.md) - Git workflow and standards
+- [Contributing](CONTRIBUTING.md) - How to contribute
 - [FAQ & Troubleshooting](FAQ.md) - Common issues and solutions
 
 ### Backend Documentation
 - [Backend services](backend/docs/services-ports.md) - Ports and process layout
 - [Authentication](backend/docs/auth.md) - Privy integration
-- [Docker Setup](backend/docs/docker.md) - Container orchestration
+- [Driver Eve Wallet](backend/docs/driver-wallet.md) - Platform credits and Privy cash-out
+- [Docker Setup](backend/docs/docker.md) - Backend Compose (mobile stays on the host)
 - [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
 - [gRPC Implementation](backend/docs/grpc.md) - Inter-service communication
 - [Redis Caching](backend/docs/caching.md) - Cache strategies
@@ -472,13 +474,10 @@ For more solutions, see [FAQ.md](FAQ.md).
 
 ## Contributing
 
-### Development Setup
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+1. Follow [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Create a feature branch
 3. Follow the [Development Workflow](DEVELOPMENT.md) guide
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+4. Open a Pull Request
 
 ### Code Standards
 - TypeScript for all new code
@@ -515,4 +514,4 @@ For issues and questions:
 
 ---
 
-**Last Updated**: 2026-09-02
+**Last Updated**: 2026-09-05

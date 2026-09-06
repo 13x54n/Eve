@@ -36,8 +36,8 @@ Common questions and solutions for the Eve platform.
 - `5432` - PostgreSQL (required)
 - `6379` - Redis (required)
 - `3000` - Admin console
-- `3010` - Monitor dashboard
-- `8081` - Expo dev server
+- `3020` - Marketing site (`www`)
+- `8081` - Expo Metro
 
 Check ports:
 ```bash
