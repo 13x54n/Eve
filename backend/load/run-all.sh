@@ -44,6 +44,11 @@ run -e BASE_URL="$AUTH_URL" load/auth.js
 run load/health.js
 run load/payment-wallet.js
 run load/admin-dashboard.js
+
+echo ""
+echo "=== load:seed (reset leftover SEARCHING trips / geo) ==="
+LOAD_COUNT="${LOAD_COUNT:-10}" npm run load:seed
+
 run --vus "$VUS" --duration "$DURATION" load/presence.js
 run --vus "$VUS" --duration "$DURATION" load/search-storm.js
 run --vus "$VUS" --duration "$DURATION" load/offer-market.js

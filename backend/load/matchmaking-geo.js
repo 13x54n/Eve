@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import { SharedArray } from "k6/data";
 import { Trend } from "k6/metrics";
-import { baseUrl, cancelActiveTrip, jsonHeaders, loadTokens, marketForPair, tripBody } from "./lib.js";
+import { baseUrl, cancelActiveTrip, jsonHeaders, loadTokens, marketForPair, PICKUP, tripBody } from "./lib.js";
 
 const pairs = new SharedArray("pairs", () => loadTokens().pairs);
 
@@ -28,6 +28,16 @@ export default function matchmakingGeo() {
   const root = baseUrl();
   http.setResponseCallback(http.expectedStatuses(200, 201, 409));
 
+  http.patch(
+    `${root}/api/driver/presence`,
+    JSON.stringify({
+      presence: "ONLINE",
+      latitude: market.pickup?.lat || PICKUP.lat,
+      longitude: market.pickup?.lng || PICKUP.lng,
+    }),
+    jsonHeaders(pair.driverToken, { city, name: "Presence" }),
+  );
+
   cancelActiveTrip(root, pair.riderToken, { city, name: "ActiveTrip" });
 
   const created = http.post(
@@ -45,14 +55,18 @@ export default function matchmakingGeo() {
   }
 
   const trip = created.json("trip");
-  sleep(0.05);
-
-  const incoming = http.get(
-    `${root}/api/driver/trips/incoming`,
-    jsonHeaders(pair.driverToken, { city, name: "IncomingTrips" }),
-  );
-  incomingTrend.add(incoming.timings.duration, { city });
-  const trips = incoming.json("trips") || [];
+  let incoming;
+  let trips = [];
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    sleep(0.05 + attempt * 0.05);
+    incoming = http.get(
+      `${root}/api/driver/trips/incoming`,
+      jsonHeaders(pair.driverToken, { city, name: "IncomingTrips" }),
+    );
+    incomingTrend.add(incoming.timings.duration, { city });
+    trips = incoming.json("trips") || [];
+    if (trips.some((row) => row.id === trip.id)) break;
+  }
   check(incoming, {
     "incoming 200": (r) => r.status === 200,
     "same-city trip in incoming": () => trips.some((row) => row.id === trip.id),

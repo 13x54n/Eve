@@ -3,6 +3,7 @@ import "dotenv/config";
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createClient } from "redis";
 import { prisma } from "@eve/db";
 import { createAccessToken, hashPassword } from "@eve/shared";
 
@@ -120,6 +121,25 @@ async function main() {
       riderToken: createAccessToken({ id: rider.id, role: "RIDER" }),
       driverToken: createAccessToken({ id: driver.id, role: "DRIVER" }),
     });
+  }
+
+  await prisma.trip.updateMany({
+    where: {
+      status: { in: ["SEARCHING", "ASSIGNED", "ONGOING"] },
+      rider: { user: { email: { endsWith: `@${LOAD_DOMAIN}` } } },
+    },
+    data: { status: "CANCELLED", cancellationReason: "load seed reset" },
+  });
+
+  const redisUrl = process.env.REDIS_URL?.trim();
+  if (redisUrl) {
+    const redis = createClient({ url: redisUrl });
+    await redis.connect();
+    for await (const key of redis.scanIterator({ MATCH: "h3:trips:*", COUNT: 200 })) {
+      await redis.del(key);
+    }
+    await redis.del("h3:pos:trips");
+    await redis.quit();
   }
 
   writeFileSync(
