@@ -97,7 +97,9 @@ graph TB
 
 ### Local development
 
-From `backend/`, `npm run dev` starts five Node processes (auth, location, ride, notify, admin). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with in-process fallback.
+From `backend/`, `npm run dev` starts five Node processes (auth, location, ride, notify, admin). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with local function fallback when a gRPC peer is unavailable. Host-side services use the `DATABASE_URL` and `REDIS_URL` from `backend/.env`; Docker Compose overrides those values with its Postgres and Redis service names.
+
+For the complete startup order, see [GETTING_STARTED.md](GETTING_STARTED.md) and [backend/docs/docker.md](backend/docs/docker.md). Host development must run `npm run db:generate` and `npx prisma migrate deploy` against the database named by `DATABASE_URL` before starting the services. Docker runs the equivalent migration job automatically.
 
 ## Microservices
 
@@ -162,8 +164,8 @@ stateDiagram-v2
     SEARCHING --> ASSIGNED: Rider accepts offer
     SEARCHING --> CANCELLED: Rider cancels
     ASSIGNED --> DRIVER_ARRIVING: Driver confirms
-    DRIVER_ARRIVING --> IN_PROGRESS: Driver starts trip
-    IN_PROGRESS --> COMPLETED: Driver completes
+    DRIVER_ARRIVING --> ONGOING: Driver starts trip
+    ONGOING --> COMPLETED: Driver completes
     ASSIGNED --> CANCELLED: Driver/Rider cancels
     DRIVER_ARRIVING --> CANCELLED: Driver/Rider cancels
     COMPLETED --> [*]
@@ -213,24 +215,22 @@ stateDiagram-v2
 erDiagram
     User ||--o{ RiderProfile : has
     User ||--o{ DriverProfile : has
-    User ||--o{ StaffProfile : has
+    User ||--o{ AuditLog : creates
     
     RiderProfile ||--o{ Trip : creates
-    Trip ||--o{ Offer : receives
-    DriverProfile ||--o{ Offer : submits
+    Trip ||--o{ TripOffer : receives
+    DriverProfile ||--o{ TripOffer : submits
     Trip }o--|| DriverProfile : assigned_to
     
     DriverProfile ||--o{ Vehicle : owns
-    Vehicle }o--|| VehicleModel : is_a
-    
-    Trip ||--o{ TripLocation : has
-    Trip ||--o{ ChatMessage : has
+    Trip ||--o{ TripStop : has
+    Trip ||--o{ TripMessage : has
     
     FareConfig ||--|| Market : belongs_to
     Market ||--o{ Zone : contains
 
     User {
-        int id PK
+        string id PK
         string email UK
         string privyDid UK
         enum role
@@ -239,50 +239,54 @@ erDiagram
     }
     
     RiderProfile {
-        int id PK
-        int userId FK
-        string phoneNumber
+        string id PK
+        string userId FK UK
+        decimal walletBalance
     }
     
     DriverProfile {
-        int id PK
-        int userId FK
-        string phoneNumber
+        string id PK
+        string userId FK UK
         enum approvalStatus
-        enum onlineStatus
+        enum presence
+        decimal walletBalance
         float latitude
         float longitude
     }
     
     Trip {
-        int id PK
-        int riderId FK
-        int driverId FK
+        string id PK
+        string bookingCode UK
+        string riderId FK
+        string driverId FK
         enum status
+        enum rideType
         enum vehicleType
+        string city
         float pickupLat
         float pickupLng
         float dropoffLat
         float dropoffLng
         decimal suggestedFare
-        decimal matchedFare
+        decimal fareTotal
         timestamp createdAt
     }
     
-    Offer {
-        int id PK
-        int tripId FK
-        int driverId FK
+    TripOffer {
+        string id PK
+        string tripId FK
+        string driverId FK
+        enum status
         decimal fare
         timestamp createdAt
     }
     
     Vehicle {
-        int id PK
-        int driverProfileId FK
-        int vehicleModelId FK
-        string licensePlate
-        enum type
+        string id PK
+        string driverId FK
+        string plateNumber UK
+        enum vehicleType
+        enum inspectionStatus
     }
 ```
 
@@ -293,10 +297,10 @@ erDiagram
 **Key Tables**:
 - `User` - All users (riders, drivers, admin)
 - `RiderProfile` - Rider-specific data
-- `DriverProfile` - Driver-specific data (location, status)
+- `DriverProfile` - Driver-specific data (location, presence, earnings, wallet balance)
 - `Trip` - All trip requests and completed trips
-- `Offer` - Fare offers from drivers
-- `Vehicle` - Driver vehicles
+- `TripOffer` - Fare offers from drivers
+- `Vehicle` - Driver vehicles and inspection state
 - `FareConfig` - Pricing configurations
 - `Market` - Geographic markets
 - `Zone` - Pricing zones within markets
@@ -305,7 +309,7 @@ erDiagram
 - `Trip.riderId, Trip.status` - Rider's active trips
 - `Trip.driverId, Trip.status` - Driver's active trips
 - `Trip.status` - Fast searches for SEARCHING trips
-- `DriverProfile.userId, DriverProfile.approvalStatus, DriverProfile.onlineStatus` - Online driver queries
+- `DriverProfile.userId, DriverProfile.approvalStatus, DriverProfile.presence` - Online driver queries
 - `Offer.tripId, Offer.createdAt` - Trip offers sorted by time
 
 **Files**:
@@ -401,7 +405,7 @@ service LocationService {
 **Performance Comparison**:
 - HTTP: 15-30ms latency
 - gRPC: 2-5ms latency when the peer is up
-- There is no `GRPC_ENABLED` flag. Clients fall back to HTTP if gRPC is unreachable.
+- There is no `GRPC_ENABLED` flag. Location and notify clients fall back to local functions when gRPC is unreachable; this is not an HTTP fallback path.
 
 **Files**:
 - `backend/proto/*.proto` - Protocol definitions
@@ -576,8 +580,8 @@ sequenceDiagram
     Ride->>Notify: Emit trip:driver-arriving
     
     Driver->>Ride: Start Trip
-    Ride->>DB: Update (status=IN_PROGRESS)
-    Ride->>Notify: Emit trip:in-progress
+    Ride->>DB: Update (status=ONGOING)
+    Ride->>Notify: Emit trip:ongoing
     
     Driver->>Ride: Complete Trip
     Ride->>DB: Update (status=COMPLETED)
@@ -796,4 +800,4 @@ Eve's architecture balances:
 
 ---
 
-**Last Updated**: 2026-09-01
+**Last Updated**: 2026-09-05

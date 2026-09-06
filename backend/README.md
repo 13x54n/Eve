@@ -41,6 +41,8 @@ npm run db:seed
 npm run dev
 ```
 
+`npm run db:migrate` updates the database selected by `backend/.env`. This may be the shared Prisma Postgres database rather than the local Docker Postgres container. Check `npx prisma migrate status` if a service reports a missing column, then run `npx prisma migrate deploy` and restart `npm run dev`.
+
 See **[docs/auth.md](docs/auth.md)** for Privy (rider/driver) and admin password login.
 
 ## Scripts (from `backend/`)

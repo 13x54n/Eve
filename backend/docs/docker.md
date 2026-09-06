@@ -30,7 +30,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-`docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and gRPC hosts to Docker DNS names (`postgres`, `redis`, `location`, `notify`). Keep localhost values in `.env` for host-side `npm run dev`.
+`docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and gRPC hosts to Docker DNS names (`postgres`, `redis`, `location`, `notify`). The Docker stack therefore uses its local `postgres_data` volume, while host-side `npm run dev` uses the database selected by `backend/.env`; migrate each target separately when switching modes.
 
 The startup order is intentional:
 
