@@ -36,7 +36,7 @@ npm run load:seed
 npm run load:smoke
 ```
 
-Scripts hit ride `:4003` and still log in with passwords. See [backend/load/README.md](backend/load/README.md).
+Scripts hit all six HTTP services. Set `LOAD_ESCROW=1` on payment (synthetic deposits) and `LOAD_TESTING=1` on every process (skip IP rate limiters). See [backend/load/README.md](backend/load/README.md). `npm run load:all` runs health, auth, wallets, admin, presence, search, offers, lifecycle, matchmaking, and a capacity ramp.
 
 ## Mobile (Jest)
 

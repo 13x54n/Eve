@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { SharedArray } from "k6/data";
-import { baseUrl, jsonHeaders, loadTokens, tripBody } from "./lib.js";
+import { cancelActiveTrip, jsonHeaders, loadTokens, paymentUrl, rideUrl, tripBody, fakeTxHash } from "./lib.js";
 
 const pairs = new SharedArray("pairs", () => loadTokens().pairs);
 
@@ -16,9 +16,17 @@ export const options = {
 
 export default function lifecycle() {
   const pair = pairs[(__VU - 1) % pairs.length];
-  const root = baseUrl();
+  const root = rideUrl();
+  const pay = paymentUrl();
+  http.setResponseCallback(http.expectedStatuses(200, 201, 409));
 
-  const created = http.post(`${root}/api/rider/trips`, tripBody(), jsonHeaders(pair.riderToken));
+  cancelActiveTrip(root, pair.riderToken);
+
+  let created = http.post(`${root}/api/rider/trips`, tripBody(), jsonHeaders(pair.riderToken));
+  if (created.status === 409) {
+    cancelActiveTrip(root, pair.riderToken);
+    created = http.post(`${root}/api/rider/trips`, tripBody(), jsonHeaders(pair.riderToken));
+  }
   const createdOk = check(created, { "trip created": (r) => r.status === 201 });
   if (!createdOk) {
     return;
@@ -44,6 +52,13 @@ export default function lifecycle() {
     jsonHeaders(pair.riderToken),
   );
   check(accepted, { "offer accepted": (r) => r.status === 200 });
+
+  const funded = http.post(
+    `${pay}/api/payment/trips/${trip.id}/confirm`,
+    JSON.stringify({ txHash: fakeTxHash(trip.id) }),
+    jsonHeaders(pair.riderToken),
+  );
+  check(funded, { "escrow confirmed": (r) => r.status === 200 });
 
   http.post(`${root}/api/driver/trips/${trip.id}/arrived`, null, jsonHeaders(pair.driverToken));
   const started = http.post(`${root}/api/driver/trips/${trip.id}/start`, null, jsonHeaders(pair.driverToken));

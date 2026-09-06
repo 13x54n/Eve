@@ -48,16 +48,15 @@ import {
   requireAuth,
   requirePermission,
   requireStaffAccess,
+  skipRateLimit,
 } from "@eve/http";
-
-const skipInVitest = () => Boolean(process.env.VITEST);
 
 const adminApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 600,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: skipInVitest,
+  skip: skipRateLimit,
 });
 
 const router = Router();

@@ -25,11 +25,9 @@ import {
   acceptDispatch,
   declineDispatch,
 } from "./driver.controller.js";
-import { requireAuth, requireRole } from "@eve/http";
+import { requireAuth, requireRole, skipRateLimit } from "@eve/http";
 
 const router = Router();
-
-const skipInVitest = () => Boolean(process.env.VITEST);
 
 const driverApiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -37,7 +35,7 @@ const driverApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) =>
-    skipInVitest() ||
+    skipRateLimit() ||
     (req.method === "GET" && req.path.endsWith("/trips/incoming")),
 });
 

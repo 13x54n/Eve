@@ -2,7 +2,7 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import { SharedArray } from "k6/data";
 import { Trend } from "k6/metrics";
-import { baseUrl, jsonHeaders, loadTokens, marketForPair, tripBody } from "./lib.js";
+import { baseUrl, cancelActiveTrip, jsonHeaders, loadTokens, marketForPair, tripBody } from "./lib.js";
 
 const pairs = new SharedArray("pairs", () => loadTokens().pairs);
 
@@ -21,21 +21,6 @@ export const options = {
   },
 };
 
-function cancelActive(root, riderToken, city) {
-  const active = http.get(
-    `${root}/api/rider/trips/active`,
-    jsonHeaders(riderToken, { city, name: "ActiveTrip" }),
-  );
-  const trip = active.status === 200 ? active.json("trip") : null;
-  if (trip && trip.id) {
-    http.post(
-      `${root}/api/rider/trips/${trip.id}/cancel`,
-      null,
-      jsonHeaders(riderToken, { city, name: "CancelTrip" }),
-    );
-  }
-}
-
 export default function matchmakingGeo() {
   const pair = pairs[(__VU - 1) % pairs.length];
   const market = marketForPair(pair);
@@ -43,7 +28,7 @@ export default function matchmakingGeo() {
   const root = baseUrl();
   http.setResponseCallback(http.expectedStatuses(200, 201, 409));
 
-  cancelActive(root, pair.riderToken, city);
+  cancelActiveTrip(root, pair.riderToken, { city, name: "ActiveTrip" });
 
   const created = http.post(
     `${root}/api/rider/trips`,

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import "dotenv/config";
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,6 +13,10 @@ const count = Number(process.env.LOAD_COUNT ?? 20);
 
 const outPath = join(dirname(fileURLToPath(import.meta.url)), ".tokens.json");
 
+function testEthAddress(seed: string) {
+  return `0x${createHash("sha256").update(seed).digest("hex").slice(0, 40)}`;
+}
+
 async function main() {
   const passwordHash = await hashPassword(password);
   const pairs: Array<{
@@ -20,6 +25,24 @@ async function main() {
     riderToken: string;
     driverToken: string;
   }> = [];
+
+  const adminEmail = `load-admin@${LOAD_DOMAIN}`;
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: { adminStaffRole: "OWNER", role: "ADMIN" },
+    create: {
+      name: "Load Admin",
+      email: adminEmail,
+      passwordHash,
+      role: "ADMIN",
+      adminStaffRole: "OWNER",
+    },
+  });
+  const adminToken = createAccessToken({
+    id: admin.id,
+    role: "ADMIN",
+    adminStaffRole: "OWNER",
+  });
 
   for (let i = 1; i <= count; i += 1) {
     const riderEmail = `load-rider-${i}@${LOAD_DOMAIN}`;
@@ -80,6 +103,17 @@ async function main() {
       },
     });
 
+    const riderEth = testEthAddress(`load-rider:${rider.id}`);
+    const driverEth = testEthAddress(`load-driver:${driver.id}`);
+    await prisma.user.update({
+      where: { id: rider.id },
+      data: { ethereumWallet: riderEth },
+    });
+    await prisma.user.update({
+      where: { id: driver.id },
+      data: { ethereumWallet: driverEth },
+    });
+
     pairs.push({
       riderEmail,
       driverEmail,
@@ -90,7 +124,7 @@ async function main() {
 
   writeFileSync(
     outPath,
-    `${JSON.stringify({ password, pairs }, null, 2)}\n`,
+    `${JSON.stringify({ password, adminEmail, adminPassword: password, adminToken, pairs }, null, 2)}\n`,
     "utf8",
   );
   console.log(`Wrote ${pairs.length} load pairs to ${outPath}`);

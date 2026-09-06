@@ -84,7 +84,10 @@ function requireEscrowAddress() {
 }
 
 function useMemoryEscrow() {
-  return Boolean(process.env.VITEST) && !isEscrowConfigured();
+  return (
+    !isEscrowConfigured() &&
+    (Boolean(process.env.VITEST) || process.env.LOAD_ESCROW === "1")
+  );
 }
 
 function quotePayload(tripIdHash: Hex, payee: string, amountWei: bigint, to: string): DepositQuote {

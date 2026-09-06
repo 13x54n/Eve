@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { getDriverProfile } from "@eve/db";
-import { requireAuth, type AuthenticatedRequest } from "@eve/http";
+import { requireAuth, skipRateLimit, type AuthenticatedRequest } from "@eve/http";
 import { updateDriverPresence } from "@eve/location";
 
 const presenceSchema = z.object({
@@ -17,6 +17,7 @@ const limiter = rateLimit({
   limit: 150,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipRateLimit,
 });
 
 presenceRouter.patch("/presence", limiter, requireAuth, async (req, res, next) => {

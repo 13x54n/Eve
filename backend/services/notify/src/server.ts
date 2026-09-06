@@ -22,5 +22,4 @@ httpServer.listen(httpPort, "0.0.0.0", () => {
 // Start gRPC server
 startNotifyGrpcServer(grpcPort).catch((error) => {
   console.error('Failed to start Notify gRPC server:', error);
-  process.exit(1);
 });

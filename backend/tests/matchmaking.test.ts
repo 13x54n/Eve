@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import app from "./helpers/test-app.js";
 import { prisma } from "@eve/db";
 import { createAccessToken } from "@eve/shared";
-import { incomingTripIds } from "./helpers/marketplace.js";
+import { incomingTripIds, testEthAddress } from "./helpers/marketplace.js";
 
 const createdEmails: string[] = [];
 
@@ -80,10 +80,18 @@ describe("Rider-driver matchmaking", () => {
     async () => {
     const riderRes = await registerRider().expect(201);
     const riderToken = riderRes.body.accessToken;
+    await prisma.user.update({
+      where: { id: riderRes.body.user.id },
+      data: { ethereumWallet: testEthAddress(riderRes.body.user.id) },
+    });
 
     const driverRes = await registerDriver().expect(201);
     const driverToken = driverRes.body.accessToken;
     const driverProfileId = driverRes.body.driverProfile.id;
+    await prisma.user.update({
+      where: { id: driverRes.body.user.id },
+      data: { ethereumWallet: testEthAddress(`driver:${driverRes.body.user.id}`) },
+    });
 
     await approveDriver(driverProfileId);
     await goOnline(driverToken, PICKUP);

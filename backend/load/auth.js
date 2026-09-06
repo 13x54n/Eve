@@ -1,7 +1,7 @@
 import http from "k6/http";
 import { check, sleep } from "k6";
 import { SharedArray } from "k6/data";
-import { baseUrl, jsonHeaders, loadTokens } from "./lib.js";
+import { authUrl, jsonHeaders, loadTokens } from "./lib.js";
 
 const tokens = new SharedArray("tokens", () => {
   const data = loadTokens();
@@ -13,8 +13,8 @@ const tokens = new SharedArray("tokens", () => {
 });
 
 export const options = {
-  vus: 20,
-  duration: "30s",
+  vus: Number(__ENV.VUS || 5),
+  duration: __ENV.DURATION || "20s",
   thresholds: {
     checks: ["rate>0.9"],
   },
@@ -22,7 +22,7 @@ export const options = {
 
 export default function auth() {
   const account = tokens[(__VU - 1) % tokens.length];
-  const root = baseUrl();
+  const root = authUrl();
   http.setResponseCallback(http.expectedStatuses(200, 401, 429));
 
   const login = http.post(

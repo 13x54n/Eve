@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, requireInternalService, requireRole } from "@eve/http";
+import { requireAuth, requireInternalService, requireRole, skipRateLimit } from "@eve/http";
 import rateLimit from "express-rate-limit";
 import * as controller from "./payment.controller.js";
 
@@ -8,6 +8,7 @@ const paymentRateLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipRateLimit,
 });
 
 export const paymentRouter = Router();
