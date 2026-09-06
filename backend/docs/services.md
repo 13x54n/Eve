@@ -433,6 +433,7 @@ USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefi
 - Permission checking
 - Distance calculations (Haversine)
 - Cache service (Redis)
+- Kafka event bus (`@eve/shared/kafka`)
 - Constants (match radius, limits, etc.)
 
 **Location**: `backend/packages/shared/`
@@ -479,7 +480,11 @@ const drivers = await nearbyDriversGrpc({
 });
 ```
 
-**See**: [grpc.md](grpc.md)
+**See**: [grpc.md](grpc.md) and [kafka.md](kafka.md)
+
+### Apache Kafka
+
+Auth, ride, admin, and payment publish domain events. Notify consumes them for Socket.IO. Payment consumes `eve.payment.events` for replica-safe escrow follow-up. Location GPS is not on Kafka. If `KAFKA_BROKERS` is unset, an in-process bus is used and notify keeps local / gRPC / HTTP emit.
 
 ### Hybrid Approach
 
@@ -497,6 +502,7 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 **Common**:
 - `DATABASE_URL` - PostgreSQL connection
 - `REDIS_URL` - Redis connection
+- `KAFKA_BROKERS` - Kafka bootstrap (optional on host)
 - `NODE_ENV` - Environment (development/production)
 - `LOG_LEVEL` - Logging level
 

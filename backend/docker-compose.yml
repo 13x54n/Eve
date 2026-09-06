@@ -1,4 +1,4 @@
-# Local split-stack: Postgres, Redis, and six Node services
+# Local split-stack: Postgres, Redis, Kafka, and six Node services
 # (auth, location, ride, notify, admin, payment).
 # Usage (from backend/): docker compose up --build
 # Compose loads backend/.env for ${DATABASE_URL} at build time.
@@ -52,6 +52,38 @@ services:
     networks:
       - eve
 
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: eve-kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    networks:
+      - eve
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+
   migrate:
     build: *dev-build
     container_name: eve-migrate
@@ -81,11 +113,15 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       PRIVY_APP_ID: ${PRIVY_APP_ID}
       PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: auth
     ports:
       - "4001:4001"
     depends_on:
       migrate:
         condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     networks:
       - eve
     restart: unless-stopped
@@ -105,6 +141,8 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       LOCATION_GRPC_PORT: 50051
       LOCATION_GRPC_URL: location:50051
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: location
     ports:
       - "4002:4002"
       - "50051:50051"
@@ -112,6 +150,8 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     networks:
       - eve
@@ -135,6 +175,8 @@ services:
       IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY:-}
       IMAGEKIT_PUBLIC_KEY: ${IMAGEKIT_PUBLIC_KEY:-}
       IMAGEKIT_DRIVER_FOLDER: ${IMAGEKIT_DRIVER_FOLDER:-/eve/drivers}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: ride
     ports:
       - "4003:4003"
     depends_on:
@@ -146,6 +188,8 @@ services:
         condition: service_started
       notify:
         condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - eve
     restart: unless-stopped
@@ -164,6 +208,8 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       NOTIFY_GRPC_PORT: 50052
       NOTIFY_GRPC_URL: notify:50052
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: notify
     ports:
       - "4004:4004"
       - "50052:50052"
@@ -172,6 +218,8 @@ services:
         condition: service_completed_successfully
       location:
         condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - eve
     restart: unless-stopped
@@ -191,6 +239,8 @@ services:
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
       LOCATION_GRPC_URL: location:50051
       NOTIFY_GRPC_URL: notify:50052
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: admin
     ports:
       - "4005:4005"
     depends_on:
@@ -202,6 +252,8 @@ services:
         condition: service_started
       notify:
         condition: service_started
+      kafka:
+        condition: service_healthy
     networks:
       - eve
     restart: unless-stopped
@@ -221,11 +273,15 @@ services:
       TREASURY_PRIVATE_KEY: ${TREASURY_PRIVATE_KEY:-}
       CHAIN_RPC_URL: ${CHAIN_RPC_URL:-https://rpc.testnet.arc.io}
       ESCROW_CONTRACT_ADDRESS: ${ESCROW_CONTRACT_ADDRESS:-}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: payment
     ports:
       - "4006:4006"
     depends_on:
       migrate:
         condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
     networks:
       - eve
     restart: unless-stopped
@@ -237,4 +293,5 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  kafka_data:
   eve_node_modules:

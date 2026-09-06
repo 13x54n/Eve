@@ -2,6 +2,7 @@ import { createPublicClient, http, parseAbiItem, type Hex } from "viem";
 import { getChainRpcUrl } from "@eve/shared/treasury";
 import { getEscrowAddress, isEscrowConfigured } from "./escrow.js";
 import { payoutChain } from "./chain.js";
+import { publishPaymentEvent } from "./payment-events.js";
 import {
   cancelEscrowFinalize,
   findTripIdByHash,
@@ -31,7 +32,9 @@ export function startEscrowEventWatch() {
         logs.map(async (log) => {
           const tripId = await findTripIdByHash(String(log.args.tripId));
           if (!tripId || log.args.settleFrom == null) return;
-          await scheduleEscrowFinalize(tripId, Number(log.args.settleFrom) * 1000);
+          const settleFromMs = Number(log.args.settleFrom) * 1000;
+          await publishPaymentEvent("escrow.settlement.started", tripId, { settleFromMs });
+          await scheduleEscrowFinalize(tripId, settleFromMs);
         }),
       );
     },
@@ -46,6 +49,7 @@ export function startEscrowEventWatch() {
           const tripId = await findTripIdByHash(String(log.args.tripId));
           if (!tripId) return;
           cancelEscrowFinalize(tripId);
+          await publishPaymentEvent("escrow.disputed", tripId, {});
           const { onEscrowDisputed } = await import("./payment.service.js");
           await onEscrowDisputed(tripId, null);
         }),

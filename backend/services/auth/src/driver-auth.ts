@@ -1,5 +1,6 @@
 import { getDriverProfile, prisma, sanitizeDriverUser } from "@eve/db";
 import { createAccessToken, hashPassword, verifyPassword } from "@eve/shared";
+import { publishAuthEvent } from "./auth-events.js";
 
 export async function registerDriver(input: {
   name: string;
@@ -113,6 +114,8 @@ export async function registerDriver(input: {
   });
 
   const fullProfile = await getDriverProfile(user.id);
+
+  void publishAuthEvent("auth:user.registered", user.id, { role: "DRIVER" });
 
   return {
     accessToken: createAccessToken(user),

@@ -32,7 +32,7 @@ cd backend
 cp .env.example .env
 # Set JWT_ACCESS_SECRET and any Privy, ImageKit, or SMTP values you need.
 npm install
-docker compose up postgres redis -d
+docker compose up postgres redis kafka -d
 npm run db:generate
 npm run db:migrate
 npm run db:seed
@@ -52,7 +52,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Compose starts PostgreSQL and Redis, runs Prisma Client generation and `prisma migrate deploy` in the one-shot `migrate` service, and only then starts auth, location, ride, notify, admin, and payment. The admin console is still a separate host process; Rider and Driver Expo apps are never built inside this Compose stack.
+Compose starts PostgreSQL, Redis, and Kafka, runs Prisma Client generation and `prisma migrate deploy` in the one-shot `migrate` service, and only then starts auth, location, ride, notify, admin, and payment. The admin console is still a separate host process; Rider and Driver Expo apps are never built inside this Compose stack.
 
 ## Prerequisites
 
@@ -65,7 +65,7 @@ Before starting, ensure you have:
 - [ ] Docker Desktop installed and running
 - [ ] At least 8GB RAM available
 - [ ] 10GB free disk space
-- [ ] Ports 3000, 3020, 4001-4006, 5432, 6379, 8081 available
+- [ ] Ports 3000, 3020, 4001-4006, 5432, 6379, 8081, 9094 available
 - [ ] (Optional) Xcode 15+ for iOS development
 - [ ] (Optional) Android Studio for Android development
 
@@ -123,15 +123,15 @@ This sets up:
 
 ## Step 2: Infrastructure Setup
 
-Eve requires PostgreSQL and Redis. We'll use Docker for both.
+Eve requires PostgreSQL, Redis, and (for the full event bus) Kafka. We'll use Docker for all three.
 
 ### 2.1 Start Infrastructure Services
 
 ```bash
 cd backend
 
-# Start PostgreSQL and Redis
-docker compose up postgres redis -d
+# Start PostgreSQL, Redis, and Kafka
+docker compose up postgres redis kafka -d
 
 # Verify services are running
 docker compose ps
@@ -142,6 +142,7 @@ Expected output:
 NAME            STATUS          PORTS
 eve-postgres    Up 10 seconds   0.0.0.0:5432->5432/tcp
 eve-redis       Up 10 seconds   0.0.0.0:6379->6379/tcp
+eve-kafka       Up 10 seconds   0.0.0.0:9092->9092/tcp, 0.0.0.0:9094->9094/tcp
 ```
 
 ### 2.2 Verify Database Connection
@@ -642,7 +643,7 @@ If you're stuck:
 
 You should now have:
 
-- ✅ PostgreSQL and Redis running in Docker
+- ✅ PostgreSQL, Redis, and Kafka running in Docker
 - ✅ Backend services on http://localhost:4001–4006
 - ✅ Admin console running on http://localhost:3000
 - ✅ (Optional) Marketing site on http://localhost:3020

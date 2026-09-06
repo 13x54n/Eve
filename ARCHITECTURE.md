@@ -22,7 +22,7 @@ Eve is a **microservices-based** ride-matching platform designed for scalability
 
 1. **Microservices Architecture**: Separate, independently deployable services
 2. **Direct client-to-service HTTP**: Rider/driver call auth, ride, and notify (no API gateway)
-3. **Real-time Communication**: WebSocket on notify `:4004`
+3. **Real-time Communication**: WebSocket on notify `:4004`, domain events on Kafka
 4. **Geospatial Optimization**: H3 hexagonal indexing for fast matching
 5. **Privy Integration**: SMS, passkeys, and embedded wallets
 6. **Type Safety**: TypeScript across the entire stack
@@ -56,6 +56,7 @@ graph TB
     subgraph DataLayer["Data Layer"]
         PG[(PostgreSQL 16<br/>Relational Data)]
         Redis[(Redis 7<br/>Cache & Geo Index)]
+        Kafka[(Apache Kafka<br/>Domain events)]
     end
 
     subgraph External["External Services"]
@@ -85,6 +86,12 @@ graph TB
     Ride --> Redis
     Payment --> PG
     Notify --> PG
+    Auth -.-> Kafka
+    Ride -.-> Kafka
+    AdminApi -.-> Kafka
+    Payment -.-> Kafka
+    Kafka -.-> Notify
+    Kafka -.-> Payment
 
     Ride -.gRPC.-> Location
     Ride -.gRPC.-> Notify
@@ -102,7 +109,7 @@ graph TB
 
 ### Local development
 
-From `backend/`, `npm run dev` starts six Node processes (auth, location, ride, notify, admin, payment). Clients call those ports directly. Inter-service matching and events use gRPC (`50051` / `50052`) with local function fallback when a gRPC peer is unavailable. Host-side services use the `DATABASE_URL` and `REDIS_URL` from `backend/.env`; Docker Compose overrides those values with its Postgres and Redis service names.
+From `backend/`, `npm run dev` starts six Node processes (auth, location, ride, notify, admin, payment). Clients call those ports directly. Matchmaking stays gRPC (`50051`). Domain events go through Apache Kafka when `KAFKA_BROKERS` is set, with gRPC/local Socket.IO fallback for notify when it is not. Host-side services use `DATABASE_URL`, `REDIS_URL`, and optional `KAFKA_BROKERS` from `backend/.env`; Docker Compose overrides those values with `postgres`, `redis`, and `kafka`.
 
 For the complete startup order, see [GETTING_STARTED.md](GETTING_STARTED.md) and [backend/docs/docker.md](backend/docs/docker.md). Host development must run `npm run db:generate` and `npx prisma migrate deploy` against the database named by `DATABASE_URL` before starting the services. Docker runs the equivalent migration job automatically.
 
@@ -118,6 +125,7 @@ For the complete startup order, see [GETTING_STARTED.md](GETTING_STARTED.md) and
 - Admin email/password authentication
 - Session management
 - User profile retrieval
+- Publishes `auth:user.registered` on `eve.auth.events`
 
 **Key Operations**:
 - `POST /api/auth/privy` - Rider Privy exchange
@@ -136,7 +144,7 @@ For the complete startup order, see [GETTING_STARTED.md](GETTING_STARTED.md) and
 - Maintain H3 geospatial index in Redis
 - Find nearby drivers for rider requests
 - Find nearby trips for drivers
-- Calculate distances
+- GPS stays on Redis/gRPC (not Kafka)
 
 **Key Operations**:
 - `PATCH /api/driver/presence` on **ride** (`:4003`) — driver online/offline
@@ -205,7 +213,7 @@ stateDiagram-v2
 
 **Key Operations**:
 - WebSocket connections at `/socket.io`
-- `POST /internal/emit` - Emit events to rooms/users
+- `POST /internal/emit` - HTTP emit fallback (Kafka off / gRPC down)
 
 **Key Files**:
 - `backend/services/notify/src/server.ts`
@@ -419,7 +427,13 @@ const drivers = await fetch(`${LOCATION_URL}/internal/nearby-drivers`, {
 });
 ```
 
-#### gRPC (always on)
+#### Apache Kafka (domain events)
+
+Auth, ride, admin, and payment **publish** domain events on Kafka (`eve.trip.events`, `eve.user.events`, `eve.admin.events`, `eve.auth.events`, `eve.payment.events`). Notify **consumes** them and pushes Socket.IO. Payment also consumes payment events for replica-safe escrow follow-up. Location matchmaking GPS stays on Redis/gRPC and is not a Kafka topic.
+
+gRPC remains for location **queries**. When Kafka is unset, notify emit uses local Socket.IO, then gRPC, then `POST /internal/emit`. See [backend/docs/kafka.md](backend/docs/kafka.md).
+
+#### gRPC (always on for matchmaking)
 
 ```protobuf
 service LocationService {
@@ -430,7 +444,7 @@ service LocationService {
 **Performance Comparison**:
 - HTTP: 15-30ms latency
 - gRPC: 2-5ms latency when the peer is up
-- There is no `GRPC_ENABLED` flag. Location and notify clients fall back to local functions when gRPC is unreachable; this is not an HTTP fallback path.
+- There is no `GRPC_ENABLED` flag. Location falls back to in-process matching when gRPC is unreachable. Notify emit falls back to `POST /internal/emit` when Kafka is off and gRPC fails.
 
 **Files**:
 - `backend/proto/*.proto` - Protocol definitions
@@ -443,12 +457,14 @@ sequenceDiagram
     participant Client
     participant Notify
     participant Ride
+    participant Kafka
 
     Client->>Notify: WebSocket Connect :4004
     Notify->>Notify: Authenticate Eve JWT
     Notify->>Client: Connection Established
 
-    Ride->>Notify: Emit Event trip updated
+    Ride->>Kafka: Publish trip:completed
+    Kafka->>Notify: Consume eve.trip.events
     Notify->>Client: Push Event
     Client->>Client: Update UI
 ```

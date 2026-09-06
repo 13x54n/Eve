@@ -12,6 +12,7 @@ import {
 } from "@eve/shared";
 import { verifyPrivyIdentityToken } from "./privy.js";
 import { verificationCodeSender } from "./verification-code.js";
+import { publishAuthEvent } from "./auth-events.js";
 
 const resetCodeLifetimeMs = 10 * 60 * 1000;
 const adminRefreshTtlMs = 7 * 24 * 60 * 60 * 1000;
@@ -129,6 +130,8 @@ export async function registerRider(input: {
       riderProfile: { create: {} },
     },
   });
+
+  void publishAuthEvent("auth:user.registered", user.id, { role: "RIDER" });
 
   return {
     accessToken: createAccessToken(user),
@@ -567,6 +570,7 @@ export async function exchangePrivySession(
   const ethereumWalletId = claims.ethereumWalletId ?? wallets?.ethereumWalletId ?? null;
   const solanaWallet = claims.solanaWallet ?? wallets?.solanaWallet ?? null;
 
+  let created = false;
   let user = await prisma.user.findUnique({ where: { privyDid: claims.privyDid } });
 
   if (!user && phone) {
@@ -649,6 +653,7 @@ export async function exchangePrivySession(
               riderProfile: { create: {} },
             },
           });
+    created = true;
   } else {
     rejectAdminOnMobile(user);
     if (!user.isActive) {
@@ -673,6 +678,10 @@ export async function exchangePrivySession(
   }
 
   const session = sessionUser(user, role);
+
+  if (created) {
+    void publishAuthEvent("auth:user.registered", user.id, { role, via: "privy" });
+  }
 
   if (role === "DRIVER") {
     const fullProfile = await getDriverProfile(user.id);

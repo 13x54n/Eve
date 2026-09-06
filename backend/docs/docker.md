@@ -1,6 +1,6 @@
 # Docker (local split stack)
 
-Postgres, Redis, a one-shot Prisma migrate job, and six Node processes (auth, location, ride, notify, admin, payment) on one Compose network.
+Postgres, Redis, Kafka, a one-shot Prisma migrate job, and six Node processes (auth, location, ride, notify, admin, payment) on one Compose network.
 
 This stack is **backend-only**. `Dockerfile.dev` does not install the Android SDK, Xcode, or Expo. Rider and driver apps stay on the host (or [EAS](../../STORE.md)) so you can open them in the iOS Simulator or Android Emulator later.
 
@@ -30,11 +30,11 @@ cp .env.example .env
 docker compose up --build
 ```
 
-`docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, and gRPC hosts to Docker DNS names (`postgres`, `redis`, `location`, `notify`). The Docker stack therefore uses its local `postgres_data` volume, while host-side `npm run dev` uses the database selected by `backend/.env`; migrate each target separately when switching modes.
+`docker-compose.yml` overrides `DATABASE_URL`, `REDIS_URL`, `KAFKA_BROKERS`, and gRPC hosts to Docker DNS names (`postgres`, `redis`, `kafka`, `location`, `notify`). The Docker stack therefore uses its local `postgres_data` volume, while host-side `npm run dev` uses the database selected by `backend/.env`; migrate each target separately when switching modes.
 
 The startup order is intentional:
 
-1. PostgreSQL and Redis become healthy.
+1. PostgreSQL, Redis, and Kafka become healthy.
 2. `migrate` removes stale generated Prisma output, runs `prisma generate`, and runs `prisma migrate deploy`.
 3. The six application services start after `migrate` exits successfully.
 
@@ -64,19 +64,20 @@ Do not use `docker compose down -v` unless you intend to delete the local Postgr
 | `http://localhost:4004/health` | notify |
 | `http://localhost:4005/health` | admin |
 | `http://localhost:4006/health` | payment |
+| `localhost:9094` | Kafka (host advertised listener) |
 
 ## Common commands
 
 ```bash
 docker compose down
-docker compose down -v          # also drop Postgres/Redis volumes
+docker compose down -v          # also drop Postgres/Redis/Kafka volumes
 docker compose logs -f ride
 docker compose exec auth npx prisma studio
 docker compose exec auth npm run db:seed
 docker compose exec postgres psql -U eve -d eve
 ```
 
-Migrations run automatically via the `migrate` service on `up`. Containers share a `eve_node_modules` volume and sync it from `package-lock.json` on start, so new packages (for example `viem` on `@eve/shared`) install without wiping Postgres. Rebuild the image after Dockerfile changes: `docker compose up --build`.
+Migrations run automatically via the `migrate` service on `up`. Containers share a `eve_node_modules` volume and sync it from `package-lock.json` on start, so new packages (for example `viem` and `kafkajs` on `@eve/shared`) install without wiping Postgres. Rebuild the image after Dockerfile changes: `docker compose up --build`. See [kafka.md](kafka.md) for topics and consumer groups.
 
 On Windows, ensure shell scripts use LF line endings. The repository enforces this through `.gitattributes`, and the Docker build also normalizes `docker-entrypoint.sh`; if an existing checkout still produces `exec ... eve-entrypoint.sh: no such file or directory`, rebuild the image with `docker compose up --build` after refreshing the checkout.
 

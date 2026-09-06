@@ -14,6 +14,7 @@ import {
   cancelEscrowFinalize,
   scheduleEscrowFinalize,
 } from "./escrow-scheduler.js";
+import { publishPaymentEvent } from "./payment-events.js";
 import {
   disputeWindowMs,
   escrowNowMs,
@@ -223,6 +224,9 @@ export async function confirmTripEscrow(
         note: `USDC escrowed on Arc Testnet for trip ${trip.bookingCode}`,
       },
     });
+    await publishPaymentEvent("escrow.deposit.confirmed", trip.id, {
+      txHash: confirmed.txHash,
+    });
     return snapshot({ ...trip, ...updated });
   }
 
@@ -239,6 +243,10 @@ export async function confirmTripEscrow(
       },
     });
     await scheduleEscrowFinalize(trip.id, settleFrom.getTime());
+    await publishPaymentEvent("escrow.settlement.started", trip.id, {
+      txHash: confirmed.txHash,
+      settleFromMs: settleFrom.getTime(),
+    });
     const latest = await prisma.trip.findUnique({ where: { id: trip.id } });
     return snapshot({
       ...trip,
@@ -256,6 +264,9 @@ export async function confirmTripEscrow(
         paymentStatus: "DISPUTED",
         escrowDisputeTx: confirmed.txHash,
       },
+    });
+    await publishPaymentEvent("escrow.disputed", trip.id, {
+      txHash: confirmed.txHash,
     });
     await onEscrowDisputed(trip.id, confirmed.txHash);
     const latest = await prisma.trip.findUnique({ where: { id: trip.id } });
@@ -283,6 +294,7 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
   const driverProfileId = trip.driverId;
   if (!driverUserId || !driverProfileId) fail("Driver is missing", "ConflictError");
   const driverNetEarnings = Number(trip.fareTotal);
+  let released = false;
 
   await prisma.$transaction(async (tx) => {
     const claimed = await tx.trip.updateMany({
@@ -296,6 +308,7 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
       },
     });
     if (claimed.count !== 1) return;
+    released = true;
     await tx.driverProfile.update({
       where: { id: driverProfileId },
       data: { earningsTotal: { increment: driverNetEarnings } },
@@ -328,6 +341,7 @@ async function applyFinalize(trip: TripWithParties, txHash: string) {
       });
     }
   });
+  if (released) await publishPaymentEvent("escrow.released", trip.id, { txHash });
 }
 
 async function applyRefund(trip: TripWithParties, txHash: string) {
@@ -356,6 +370,7 @@ async function applyRefund(trip: TripWithParties, txHash: string) {
       note: `USDC refunded from escrow for trip ${trip.bookingCode}`,
     },
   });
+  await publishPaymentEvent("escrow.refunded", trip.id, { txHash });
 }
 
 export async function operatorFinalizeTrip(tripId: string) {

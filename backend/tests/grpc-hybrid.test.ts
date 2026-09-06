@@ -11,45 +11,19 @@ const nearbyInput = {
   vehicleType: "CAR" as const,
 };
 
-describe("location hybrid client", () => {
+describe("location gRPC-first client", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
-    delete process.env.GRPC_ENABLED;
     delete process.env.LOCATION_URL;
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
-    delete process.env.GRPC_ENABLED;
     delete process.env.LOCATION_URL;
   });
 
-  it("uses HTTP when gRPC is disabled and LOCATION_URL is set", async () => {
-    process.env.LOCATION_URL = "http://location.test";
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ drivers: [{ id: "http-1" }] }),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-    vi.spyOn(locationMatching, "nearbyDrivers").mockResolvedValue([{ id: "local-1" } as any]);
-    vi.spyOn(locationGrpc, "nearbyDriversGrpc").mockResolvedValue([{ id: "grpc-1" } as any]);
-
-    await expect(nearbyDrivers(nearbyInput)).resolves.toEqual([{ id: "http-1" }]);
-    expect(locationGrpc.nearbyDriversGrpc).not.toHaveBeenCalled();
-    expect(locationMatching.nearbyDrivers).not.toHaveBeenCalled();
-    expect(fetchMock).toHaveBeenCalled();
-  });
-
-  it("uses local matching when gRPC is disabled and LOCATION_URL is unset", async () => {
-    vi.spyOn(locationMatching, "nearbyDrivers").mockResolvedValue([{ id: "local-1" } as any]);
-    const grpcSpy = vi.spyOn(locationGrpc, "nearbyDriversGrpc");
-    await expect(nearbyDrivers(nearbyInput)).resolves.toEqual([{ id: "local-1" }]);
-    expect(grpcSpy).not.toHaveBeenCalled();
-  });
-
-  it("uses gRPC when enabled and the call succeeds", async () => {
-    process.env.GRPC_ENABLED = "true";
+  it("uses gRPC when the call succeeds", async () => {
     process.env.LOCATION_URL = "http://location.test";
     vi.spyOn(locationGrpc, "nearbyDriversGrpc").mockResolvedValue([{ id: "grpc-1" } as any]);
     vi.spyOn(locationMatching, "nearbyDrivers").mockResolvedValue([{ id: "local-1" } as any]);
@@ -61,27 +35,21 @@ describe("location hybrid client", () => {
     expect(locationMatching.nearbyDrivers).not.toHaveBeenCalled();
   });
 
-  it("falls back from gRPC to HTTP for nearbyDrivers", async () => {
-    process.env.GRPC_ENABLED = "true";
-    process.env.LOCATION_URL = "http://location.test";
+  it("falls back to local matching when gRPC fails", async () => {
     vi.spyOn(locationGrpc, "nearbyDriversGrpc").mockRejectedValue(new Error("unavailable"));
     vi.spyOn(locationMatching, "nearbyDrivers").mockResolvedValue([{ id: "local-1" } as any]);
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ drivers: [{ id: "http-2" }] }),
-    });
+    const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(nearbyDrivers(nearbyInput)).resolves.toEqual([{ id: "http-2" }]);
-    expect(locationMatching.nearbyDrivers).not.toHaveBeenCalled();
+    await expect(nearbyDrivers(nearbyInput)).resolves.toEqual([{ id: "local-1" }]);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("falls back from gRPC and HTTP to local recordDriverLocation", async () => {
-    process.env.GRPC_ENABLED = "true";
+  it("falls back to local recordDriverLocation when gRPC fails", async () => {
     process.env.LOCATION_URL = "http://location.test";
     vi.spyOn(locationGrpc, "recordDriverLocationGrpc").mockRejectedValue(new Error("unavailable"));
     vi.spyOn(locationMatching, "recordDriverLocation").mockResolvedValue(["trip-local"]);
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    vi.stubGlobal("fetch", vi.fn());
 
     await expect(recordDriverLocation("driver-1", 1, 2)).resolves.toEqual(["trip-local"]);
   });
@@ -91,14 +59,12 @@ describe("notify hybrid emit", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     setSocketServer(null);
-    delete process.env.GRPC_ENABLED;
     delete process.env.NOTIFY_URL;
   });
 
   afterEach(() => {
     setSocketServer(null);
     vi.unstubAllGlobals();
-    delete process.env.GRPC_ENABLED;
     delete process.env.NOTIFY_URL;
   });
 
@@ -106,7 +72,6 @@ describe("notify hybrid emit", () => {
     const emit = vi.fn();
     const to = vi.fn().mockReturnValue({ emit });
     setSocketServer({ to } as any);
-    process.env.GRPC_ENABLED = "true";
     vi.spyOn(notifyGrpc, "emitTripEventGrpc").mockResolvedValue(undefined);
 
     await emitTripEvent("trip-1", "trip.updated", { ok: true });
@@ -116,8 +81,7 @@ describe("notify hybrid emit", () => {
     expect(notifyGrpc.emitTripEventGrpc).not.toHaveBeenCalled();
   });
 
-  it("uses gRPC when there is no local io and GRPC_ENABLED is true", async () => {
-    process.env.GRPC_ENABLED = "true";
+  it("uses gRPC when there is no local io", async () => {
     vi.spyOn(notifyGrpc, "emitTripEventGrpc").mockResolvedValue(undefined);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
@@ -129,7 +93,6 @@ describe("notify hybrid emit", () => {
   });
 
   it("falls back to HTTP /internal/emit when gRPC fails", async () => {
-    process.env.GRPC_ENABLED = "true";
     process.env.NOTIFY_URL = "http://notify.test";
     vi.spyOn(notifyGrpc, "emitTripEventGrpc").mockRejectedValue(new Error("unavailable"));
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });

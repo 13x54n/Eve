@@ -70,6 +70,24 @@ REDIS_SENTINEL_HOSTS=host1:26379,host2:26379
 REDIS_SENTINEL_NAME=mymaster
 ```
 
+### Apache Kafka
+
+Domain events. Optional on the host; Compose always starts a broker. See [backend/docs/kafka.md](backend/docs/kafka.md).
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `KAFKA_BROKERS` | Comma-separated bootstrap brokers | unset (in-process bus) | Docker stack |
+| `KAFKA_CLIENT_ID` | Producer/consumer identity | npm package name | No |
+
+```bash
+# Host npm run dev against Compose Kafka
+KAFKA_BROKERS=localhost:9094
+KAFKA_CLIENT_ID=ride
+
+# Docker
+KAFKA_BROKERS=kafka:9092
+```
+
 ### JWT and Authentication
 
 | Variable | Description | Example | Required |
