@@ -389,6 +389,7 @@ Do not use these credentials outside local development.
 ## Documentation
 
 ### Core Documentation
+- [Repository Wiki](WIKI.md) - Architecture-oriented documentation map
 - [Getting Started Guide](GETTING_STARTED.md) - Complete setup walkthrough
 - [Architecture Overview](ARCHITECTURE.md) - System design and data flows
 - [Environment Variables](ENVIRONMENT_VARIABLES.md) - Configuration reference
