@@ -27,6 +27,7 @@ import {
   type WalletLedgerEntry,
 } from "@/services/wallet";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
+import { getArcUsdcBalance } from "@/lib/arc-chain";
 
 function formatAmount(entry: WalletLedgerEntry) {
   const negative = entry.type === "REFUND" || entry.type === "WALLET_WITHDRAW";
@@ -53,14 +54,18 @@ export default function RiderWalletScreen() {
     try {
       setLoading(true);
       const next = await getRiderWallet();
-      setWallet(next);
-      // #region agent log
-      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'rider/wallet.tsx:load',message:'rider wallet API payload',data:{onChainUsdc:next.onChainUsdc,hasEthWallet:Boolean(next.ethereumWallet),tokenAddress:next.chain?.tokenAddress??null,tokenDecimals:next.chain?.tokenDecimals??null,tokenSymbol:next.chain?.tokenSymbol??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-    } catch (loadErr) {
-      // #region agent log
-      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'rider/wallet.tsx:load',message:'rider wallet load failed',data:{err:loadErr instanceof Error?loadErr.message:'unknown'},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+      let onChainUsdc = next.onChainUsdc;
+      try {
+        onChainUsdc = await getArcUsdcBalance(
+          next.ethereumWallet,
+          next.chain?.tokenAddress,
+          next.chain?.tokenDecimals ?? 6,
+        );
+      } catch {
+        /* keep API value if RPC is unreachable */
+      }
+      setWallet({ ...next, onChainUsdc });
+    } catch {
       setWallet(null);
     } finally {
       setLoading(false);
