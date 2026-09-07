@@ -115,6 +115,13 @@ services:
       PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: auth
+      # Feature Flags for Architecture Refactoring
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4001:4001"
     depends_on:
