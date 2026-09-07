@@ -65,6 +65,14 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Eve uses the camera to scan wallet QR codes when cashing out.",
+          "barcodeScannerEnabled": true,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
