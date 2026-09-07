@@ -1,6 +1,12 @@
 export { prisma } from "./prisma.js";
 export { PrismaClient, Prisma } from "./generated/prisma/client.js";
 export { calculateFare, getMinFare, invalidateFareCache } from "./fare.js";
+export { 
+  fareCache, 
+  getCachedFareConfig, 
+  invalidateFareCacheMemory,
+  broadcastFareInvalidation 
+} from "./fare-cache.js";
 export { recordTripEvent, writeAudit } from "./audit.js";
 export { getDriverProfile, sanitizeDriverUser } from "./driver-profile.js";
 export {

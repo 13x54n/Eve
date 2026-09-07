@@ -61,6 +61,12 @@ export {
   isTracingEnabled,
 } from "./tracing.js";
 export {
+  asyncWriter,
+  enqueueWrite,
+  flushWrites,
+  getAsyncWriterStats,
+} from "./async-writer.js";
+export {
   EVE_TOPICS,
   disconnectKafka,
   eventInstance,

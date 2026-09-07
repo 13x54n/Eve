@@ -1,5 +1,6 @@
 import type { Prisma } from "./generated/prisma/client.js";
 import { prisma } from "./prisma.js";
+import { enqueueWrite } from "@eve/shared";
 
 export async function writeAudit(input: {
   actorId?: string;
@@ -9,16 +10,19 @@ export async function writeAudit(input: {
   metadata?: Prisma.InputJsonValue;
   ip?: string;
 }) {
-  await prisma.auditLog.create({
-    data: {
-      actorId: input.actorId,
-      action: input.action,
-      entity: input.entity,
-      entityId: input.entityId,
-      metadata: input.metadata,
-      ip: input.ip,
-    },
-  });
+  // Async write - non-blocking for audit logs
+  enqueueWrite(() =>
+    prisma.auditLog.create({
+      data: {
+        actorId: input.actorId,
+        action: input.action,
+        entity: input.entity,
+        entityId: input.entityId,
+        metadata: input.metadata,
+        ip: input.ip,
+      },
+    })
+  );
 }
 
 export async function recordTripEvent(input: {
@@ -27,12 +31,15 @@ export async function recordTripEvent(input: {
   action: string;
   details?: Prisma.InputJsonValue;
 }) {
-  await prisma.tripEvent.create({
-    data: {
-      tripId: input.tripId,
-      actorId: input.actorId,
-      action: input.action,
-      details: input.details,
-    },
-  });
+  // Async write - non-blocking for trip events
+  enqueueWrite(() =>
+    prisma.tripEvent.create({
+      data: {
+        tripId: input.tripId,
+        actorId: input.actorId,
+        action: input.action,
+        details: input.details,
+      },
+    })
+  );
 }
