@@ -1,9 +1,23 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare, invalidateFareCache } from "@eve/db";
 import { emitAdminEvent as emitAdminEventKafka, emitUserEvent as emitUserEventKafka } from "@eve/notify";
 import * as directNotify from "@eve/notify-client";
-import { featureFlags } from "@eve/shared";
+import { featureFlags, money,
+  startOfDay,
+  distanceKm,
+  durationMinutes,
+  DISPATCH_SECONDS,
+  fail,
+  hashPassword,
+  canCreateStaff,
+  canManageTargetStaff,
+  isDepartmentStaffRole,
+  type AdminStaffRole,
+  type AdminStaffTitle,
+  type StaffActor,
+} from "@eve/shared";
 import { indexSearchingTripClient, nearbyDriversClient } from "@eve/location";
-import {
+import { executePayout, isTreasuryConfigured } from "@eve/shared/treasury";
+import { operatorResolveTrip } from "@eve/payment";
 
 // Feature-flagged notify wrappers
 async function emitAdminEvent(event: string, payload: unknown) {
@@ -21,22 +35,6 @@ async function emitUserEvent(role: 'RIDER' | 'DRIVER', userId: string, event: st
     await emitUserEventKafka(role, userId, event, payload);
   }
 }
-  money,
-  startOfDay,
-  distanceKm,
-  durationMinutes,
-  DISPATCH_SECONDS,
-  fail,
-  hashPassword,
-  canCreateStaff,
-  canManageTargetStaff,
-  isDepartmentStaffRole,
-  type AdminStaffRole,
-  type AdminStaffTitle,
-  type StaffActor,
-} from "@eve/shared";
-import { executePayout, isTreasuryConfigured } from "@eve/shared/treasury";
-import { operatorResolveTrip } from "@eve/payment";
 
 function parseFilters(query: Record<string, unknown>) {
   const city = typeof query.city === "string" && query.city ? query.city : undefined;

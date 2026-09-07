@@ -14,6 +14,8 @@ import {
   expireTimedOutDispatches,
   refreshAcceptanceRate,
   serializeActiveDispatch,
+  voidPendingDispatches,
+} from "./dispatch.js";
 
 // Feature-flagged notify wrappers
 async function emitAdminEvent(event: string, payload: unknown) {
@@ -31,8 +33,6 @@ async function emitTripAndUserEvent(tripId: string, role: 'RIDER' | 'DRIVER', us
     await emitTripAndUserEventKafka(tripId, role, userId, event, payload);
   }
 }
-  voidPendingDispatches,
-} from "./dispatch.js";
 
 export { getDriverProfile };
 
