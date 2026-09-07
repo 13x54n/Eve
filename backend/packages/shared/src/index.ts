@@ -32,6 +32,14 @@ export {
   tripDetailKey,
   writeTripConfirmationCache,
 } from "./trip-cache.js";
+export { 
+  featureFlags, 
+  isEnabled, 
+  override, 
+  resetOverrides, 
+  getAllFlags,
+  type FeatureFlag 
+} from "./feature-flags.js";
 export {
   EVE_TOPICS,
   disconnectKafka,

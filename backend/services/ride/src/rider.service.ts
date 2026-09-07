@@ -1,15 +1,49 @@
 import { randomBytes } from "node:crypto";
 import { calculateFare, prisma, recordTripEvent, selectGreetingTemplate } from "@eve/db";
-import { distanceKm, durationMinutes, fail, money, getCachedActiveTripId, getCachedTripDetail, writeTripConfirmationCache } from "@eve/shared";
+import { distanceKm, durationMinutes, fail, money, getCachedActiveTripId, getCachedTripDetail, writeTripConfirmationCache, featureFlags } from "@eve/shared";
 import {
   indexSearchingTripClient,
   nearbyDriversClient,
   removeSearchingTripClient,
   syncDriverGeoClient,
 } from "@eve/location";
-import { emitAdminEvent, emitTripAndUserEvent, emitTripEvent, emitUserEvent } from "@eve/notify";
+import { emitAdminEvent as emitAdminEventKafka, emitTripAndUserEvent as emitTripAndUserEventKafka, emitTripEvent as emitTripEventKafka, emitUserEvent as emitUserEventKafka } from "@eve/notify";
+import * as directNotify from "@eve/notify-client";
 import { quoteTripDeposit, quoteTripRefund } from "@eve/payment";
 import { createTripDispatches, voidPendingDispatches } from "./dispatch.js";
+
+// Feature-flagged notify wrappers
+async function emitTripEvent(tripId: string, event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY', tripId)) {
+    await directNotify.emitTripEvent(tripId, event, payload);
+  } else {
+    await emitTripEventKafka(tripId, event, payload);
+  }
+}
+
+async function emitUserEvent(role: 'RIDER' | 'DRIVER', userId: string, event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY', userId)) {
+    await directNotify.emitUserEvent(role, userId, event, payload);
+  } else {
+    await emitUserEventKafka(role, userId, event, payload);
+  }
+}
+
+async function emitTripAndUserEvent(tripId: string, role: 'RIDER' | 'DRIVER', userId: string, event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY', tripId)) {
+    await directNotify.emitTripAndUserEvent(tripId, role, userId, event, payload);
+  } else {
+    await emitTripAndUserEventKafka(tripId, role, userId, event, payload);
+  }
+}
+
+async function emitAdminEvent(event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY')) {
+    await directNotify.emitAdminEvent(event, payload);
+  } else {
+    await emitAdminEventKafka(event, payload);
+  }
+}
 
 async function getRider(userId: string) {
   const rider = await prisma.riderProfile.findUnique({ where: { userId } });

@@ -1,7 +1,26 @@
 import { Prisma, prisma, recordTripEvent, writeAudit, calculateFare, invalidateFareCache } from "@eve/db";
-import { emitAdminEvent, emitUserEvent } from "@eve/notify";
+import { emitAdminEvent as emitAdminEventKafka, emitUserEvent as emitUserEventKafka } from "@eve/notify";
+import * as directNotify from "@eve/notify-client";
+import { featureFlags } from "@eve/shared";
 import { indexSearchingTripClient, nearbyDriversClient } from "@eve/location";
 import {
+
+// Feature-flagged notify wrappers
+async function emitAdminEvent(event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY')) {
+    await directNotify.emitAdminEvent(event, payload);
+  } else {
+    await emitAdminEventKafka(event, payload);
+  }
+}
+
+async function emitUserEvent(role: 'RIDER' | 'DRIVER', userId: string, event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY', userId)) {
+    await directNotify.emitUserEvent(role, userId, event, payload);
+  } else {
+    await emitUserEventKafka(role, userId, event, payload);
+  }
+}
   money,
   startOfDay,
   distanceKm,

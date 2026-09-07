@@ -1,18 +1,36 @@
 import { createHmac, randomBytes } from "node:crypto";
 import { getDriverProfile, getMinFare, prisma, recordTripEvent } from "@eve/db";
-import { MATCH_RADIUS_KM, fail, money, startOfDay, invalidateTripConfirmationCache, writeTripConfirmationCache } from "@eve/shared";
+import { MATCH_RADIUS_KM, fail, money, startOfDay, invalidateTripConfirmationCache, writeTripConfirmationCache, featureFlags } from "@eve/shared";
 import {
   distanceToPickupClient,
   nearbySearchingTripsClient,
   removeSearchingTripClient,
   syncDriverGeoClient,
 } from "@eve/location";
-import { emitAdminEvent, emitTripAndUserEvent } from "@eve/notify";
+import { emitAdminEvent as emitAdminEventKafka, emitTripAndUserEvent as emitTripAndUserEventKafka } from "@eve/notify";
+import * as directNotify from "@eve/notify-client";
 import { quoteStartSettlementForTrip, quoteTripRefund } from "@eve/payment";
 import {
   expireTimedOutDispatches,
   refreshAcceptanceRate,
   serializeActiveDispatch,
+
+// Feature-flagged notify wrappers
+async function emitAdminEvent(event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY')) {
+    await directNotify.emitAdminEvent(event, payload);
+  } else {
+    await emitAdminEventKafka(event, payload);
+  }
+}
+
+async function emitTripAndUserEvent(tripId: string, role: 'RIDER' | 'DRIVER', userId: string, event: string, payload: unknown) {
+  if (featureFlags.isEnabled('USE_DIRECT_NOTIFY', tripId)) {
+    await directNotify.emitTripAndUserEvent(tripId, role, userId, event, payload);
+  } else {
+    await emitTripAndUserEventKafka(tripId, role, userId, event, payload);
+  }
+}
   voidPendingDispatches,
 } from "./dispatch.js";
 
