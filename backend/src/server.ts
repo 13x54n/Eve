@@ -24,11 +24,8 @@ if (process.env.ENABLE_TRACING === 'true') {
   initTracing('eve-monolith');
 }
 
-// Module routers (will be imported as we migrate)
-// import { authRouter } from './modules/auth/routes.js';
-// import { rideRouter } from './modules/ride/routes.js';
-// import { adminRouter } from './modules/admin/routes.js';
-// import { paymentRouter } from './modules/payment/routes.js';
+// Module routers
+import { authRouter } from './modules/auth/routes.js';
 
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -92,7 +89,7 @@ app.get('/metrics', async (req, res) => {
 });
 
 // Mount module routers
-// app.use('/api/auth', authRouter);
+app.use('/api/auth', authRouter);
 // app.use('/api/rider', rideRouter);
 // app.use('/api/driver', rideRouter);
 // app.use('/api/admin', adminRouter);
