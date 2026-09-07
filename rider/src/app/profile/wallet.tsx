@@ -52,8 +52,15 @@ export default function RiderWalletScreen() {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      setWallet(await getRiderWallet());
-    } catch {
+      const next = await getRiderWallet();
+      setWallet(next);
+      // #region agent log
+      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'rider/wallet.tsx:load',message:'rider wallet API payload',data:{onChainUsdc:next.onChainUsdc,hasEthWallet:Boolean(next.ethereumWallet),tokenAddress:next.chain?.tokenAddress??null,tokenDecimals:next.chain?.tokenDecimals??null,tokenSymbol:next.chain?.tokenSymbol??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    } catch (loadErr) {
+      // #region agent log
+      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'rider/wallet.tsx:load',message:'rider wallet load failed',data:{err:loadErr instanceof Error?loadErr.message:'unknown'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setWallet(null);
     } finally {
       setLoading(false);

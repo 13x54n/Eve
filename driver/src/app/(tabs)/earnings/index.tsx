@@ -176,7 +176,13 @@ export default function Earnings() {
       setSummary(earningsResult.summary);
       setRecentTrips(earningsResult.recentTrips);
       setWallet(walletResult);
-    } catch {
+      // #region agent log
+      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'driver/earnings/index.tsx:load',message:'driver wallet API payload',data:{onChainUsdc:walletResult.onChainUsdc,dbWalletBalance:walletResult.walletBalance,hasEthWallet:Boolean(walletResult.ethereumWallet),tokenAddress:walletResult.chain?.tokenAddress??null,tokenDecimals:walletResult.chain?.tokenDecimals??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+    } catch (loadErr) {
+      // #region agent log
+      fetch('http://127.0.0.1:7543/ingest/ac1371f8-8dc3-4f47-81e9-ffb1ee8fc7f0',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'288cb3'},body:JSON.stringify({sessionId:'288cb3',runId:'pre-fix',hypothesisId:'E',location:'driver/earnings/index.tsx:load',message:'driver wallet load failed',data:{err:loadErr instanceof Error?loadErr.message:'unknown'},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setError(true);
     } finally {
       setLoading(false);
