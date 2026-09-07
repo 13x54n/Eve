@@ -1,6 +1,54 @@
-# Apache Kafka (Eve event bus)
+# Apache Kafka (Eve event bus) - **DEPRECATED**
+
+> **⚠️ DEPRECATION NOTICE**: Kafka is being phased out in favor of direct notify client calls.  
+> **Migration Status**: Feature flag `USE_DIRECT_NOTIFY` enables direct calls.  
+> **Target Removal**: Phase 4 of architecture refactoring.  
+> **See**: [Direct Notify Client Migration](#migration-to-direct-notify-client)
 
 Domain events between Eve services go through Apache Kafka. Use Kafka only where a **side effect** should fan out to other services or sockets. Keep request/response and high-frequency GPS off the bus.
+
+## Migration to Direct Notify Client
+
+### Why We're Removing Kafka
+
+**Problem**: Kafka adds 30-40ms latency for what is essentially 1-to-1 communication:
+```
+Service → Kafka Publish (10ms)
+  → Kafka Broker (20ms)
+  → Notify Consumer (5ms)
+  → Socket.IO
+Total: 35ms overhead
+```
+
+**Solution**: Direct calls with circuit breaker:
+```
+Service → Notify gRPC (5ms)
+  → Socket.IO
+Total: 5ms
+Savings: 30ms per event (86% reduction)
+```
+
+### Migration Path
+
+**Phase 1**: Feature Flag Rollout (Current)
+```typescript
+// Services now use feature-flagged routing
+if (featureFlags.isEnabled('USE_DIRECT_NOTIFY')) {
+  await emitTripEvent(tripId, event, payload);  // Direct
+} else {
+  await publishEveEvent(EVE_TOPICS.trip, {...}); // Kafka
+}
+```
+
+**Phase 2**: Gradual Rollout
+1. Enable for 10% of traffic: `USE_DIRECT_NOTIFY=true` + `DIRECT_NOTIFY_ROLLOUT=10`
+2. Monitor latency and errors
+3. Increase to 50%, then 100%
+
+**Phase 3**: Remove Kafka (Phase 4)
+- Delete Kafka consumers
+- Remove Kafka client code
+- Remove from infrastructure
 
 ## Where it belongs
 

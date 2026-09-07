@@ -53,5 +53,14 @@
     "tsx": "^4.20.3",
     "typescript": "^5.9.2",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.80.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
+    "@opentelemetry/resources": "^2.11.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/sdk-trace-base": "^2.11.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "prom-client": "^15.1.3"
   }
 }

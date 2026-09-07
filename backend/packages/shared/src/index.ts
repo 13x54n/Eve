@@ -41,6 +41,26 @@ export {
   type FeatureFlag 
 } from "./feature-flags.js";
 export {
+  notifyLatency,
+  notifyErrors,
+  circuitBreakerState,
+  featureFlagUsage,
+  kafkaLatency,
+  serviceCallLatency,
+  dbQueryLatency,
+  redisLatency,
+  getMetrics,
+  getMetricsJSON,
+  clearMetrics,
+  startTimer,
+  trackNotifyEmit,
+} from "./metrics.js";
+export {
+  initTracing,
+  shutdownTracing,
+  isTracingEnabled,
+} from "./tracing.js";
+export {
   EVE_TOPICS,
   disconnectKafka,
   eventInstance,
