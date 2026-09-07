@@ -720,6 +720,49 @@ export { serializeLedger };
 const MIN_WITHDRAW_USD = 1;
 const MAX_WITHDRAW_USD = 10_000;
 
+export async function recordOnChainTransfer(
+  userId: string,
+  body: { amount: number; txHash: string; address: string },
+) {
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount < MIN_WITHDRAW_USD) {
+    fail(`Minimum cash-out is $${MIN_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+  if (amount > MAX_WITHDRAW_USD) {
+    fail(`Maximum cash-out is $${MAX_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+  const txHash = body.txHash?.trim() ?? "";
+  if (!/^0x[a-fA-F0-9]{64}$/.test(txHash)) {
+    fail("Provide a valid transaction hash", "ValidationError");
+  }
+  const destination = body.address?.trim() ?? "";
+  if (!/^0x[a-fA-F0-9]{40}$/.test(destination)) {
+    fail("Provide a valid Ethereum address", "ValidationError");
+  }
+
+  const existing = await prisma.ledgerEntry.findFirst({
+    where: { userId, type: "WALLET_WITHDRAW", providerRef: txHash },
+  });
+  if (existing) {
+    return { entry: serializeLedger(existing), replayed: true };
+  }
+
+  const rounded = Number(amount.toFixed(2));
+  const entry = await prisma.ledgerEntry.create({
+    data: {
+      userId,
+      type: "WALLET_WITHDRAW",
+      status: "COMPLETED",
+      method: "WALLET",
+      amount: rounded,
+      providerRef: txHash,
+      brand: destination,
+      note: `Cash-out to ${destination}`,
+    },
+  });
+  return { entry: serializeLedger(entry), replayed: false };
+}
+
 export async function withdrawRiderWallet(
   userId: string,
   body: { amount: number; idempotencyKey?: string; address?: string },

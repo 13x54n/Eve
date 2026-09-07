@@ -20,6 +20,12 @@ const withdrawSchema = z.object({
   address: z.string().trim().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
+const transferSchema = z.object({
+  amount: z.coerce.number().positive().max(10000),
+  txHash: z.string().trim().regex(/^0x[a-fA-F0-9]{64}$/),
+  address: z.string().trim().regex(/^0x[a-fA-F0-9]{40}$/),
+});
+
 export async function config(_req: Request, res: Response, next: NextFunction) {
   try {
     res.json(paymentService.publicPaymentConfig());
@@ -108,6 +114,15 @@ export async function withdrawRiderWallet(req: Request, res: Response, next: Nex
   try {
     const data = withdrawSchema.parse(req.body);
     res.status(201).json(await paymentService.withdrawRiderWallet(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function recordWalletTransfer(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = transferSchema.parse(req.body);
+    res.status(201).json(await paymentService.recordOnChainTransfer(userId(req), data));
   } catch (error) {
     next(error);
   }

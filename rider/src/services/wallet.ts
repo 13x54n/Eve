@@ -95,3 +95,11 @@ export async function withdrawRiderWallet(amount: number, address?: string, idem
   }>("/rider/wallet/withdraw", { amount, address, idempotencyKey });
   return data;
 }
+
+export async function recordRiderTransfer(amount: number, txHash: string, address: string) {
+  const { data } = await api.post<{
+    entry: WalletLedgerEntry;
+    replayed: boolean;
+  }>("/rider/wallet/transfers", { amount, txHash, address });
+  return data;
+}

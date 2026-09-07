@@ -93,6 +93,43 @@ describe("Driver Privy wallet cash-out", () => {
     expect(response.body.message).toMatch(/Insufficient/i);
   });
 
+  it("records an on-chain transfer without debiting Eve credits", async () => {
+    const txHash = `0x${"ab".repeat(32)}`;
+    const first = await request(app)
+      .post("/api/driver/wallet/transfers")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .send({
+        amount: 5,
+        txHash,
+        address: "0x2222222222222222222222222222222222222222",
+      })
+      .expect(201);
+
+    expect(first.body.replayed).toBe(false);
+    expect(first.body.entry.type).toBe("WALLET_WITHDRAW");
+    expect(first.body.entry.status).toBe("COMPLETED");
+    expect(first.body.entry.providerRef).toBe(txHash);
+    expect(first.body.entry.amount).toBe(5);
+
+    const replay = await request(app)
+      .post("/api/driver/wallet/transfers")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .send({
+        amount: 5,
+        txHash,
+        address: "0x2222222222222222222222222222222222222222",
+      })
+      .expect(201);
+    expect(replay.body.replayed).toBe(true);
+
+    const wallet = await request(app)
+      .get("/api/driver/wallet")
+      .set("Authorization", `Bearer ${driverToken}`)
+      .expect(200);
+    expect(wallet.body.walletBalance).toBe(0);
+    expect(wallet.body.entries.some((entry: { providerRef: string }) => entry.providerRef === txHash)).toBe(true);
+  });
+
   it("credits the driver wallet and leaves cash-out pending without treasury", async () => {
     await request(app)
       .post(`/api/admin/drivers/${driverProfileId}/wallet/credit`)

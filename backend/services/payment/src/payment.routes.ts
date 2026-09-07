@@ -24,10 +24,12 @@ export const riderWalletRouter = Router();
 riderWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("RIDER"));
 riderWalletRouter.get("/wallet", controller.riderWallet);
 riderWalletRouter.post("/wallet/withdraw", controller.withdrawRiderWallet);
+riderWalletRouter.post("/wallet/transfers", controller.recordWalletTransfer);
 
 export const driverWalletRouter = Router();
 driverWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("DRIVER"));
 driverWalletRouter.get("/wallet", controller.driverWallet);
 driverWalletRouter.post("/wallet/withdraw", controller.withdrawWallet);
+driverWalletRouter.post("/wallet/transfers", controller.recordWalletTransfer);
 
 export const paymentInternalRouter = Router();

@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import { Camera, CameraView } from 'expo-camera';
+import * as Clipboard from 'expo-clipboard';
 import {
   DriverWallet,
   EarningsSummary,
@@ -27,12 +28,15 @@ import {
   WalletLedgerEntry,
   getEarnings,
   getWallet,
-  withdrawWallet,
+  recordDriverTransfer,
 } from '@/services/driver';
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 import { useCompletePrivySession } from '@/lib/complete-privy-session';
 import { truncateWalletAddress } from '@/lib/privy';
 import { getArcUsdcBalance } from '@/lib/arc-chain';
+import { useSendUsdcTransfer } from '@/lib/send-escrow';
+import { lightImpact } from '@/lib/haptics';
+import { notifyRideEvent } from '@/services/notifications';
 
 type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund';
 
@@ -154,6 +158,7 @@ function formatMoney(n: number) {
 
 export default function Earnings() {
   const completePrivy = useCompletePrivySession();
+  const sendUsdc = useSendUsdcTransfer();
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
   const [wallet, setWallet] = useState<DriverWallet | null>(null);
@@ -168,6 +173,20 @@ export default function Earnings() {
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [cashOutAddress, setCashOutAddress] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast || cashingOut) return;
+    const timer = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(timer);
+  }, [toast, cashingOut]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -233,6 +252,15 @@ export default function Earnings() {
     await Share.share({ message: addr });
   }
 
+  async function onCopyAddress() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
+    await Clipboard.setStringAsync(addr);
+    lightImpact();
+    setCopied(true);
+    setToast('Address copied');
+  }
+
   async function onScanQR() {
     const { status } = await Camera.requestCameraPermissionsAsync();
     setHasPermission(status === 'granted');
@@ -272,27 +300,46 @@ export default function Earnings() {
       Alert.alert('Cash out', 'Enter a valid Ethereum address');
       return;
     }
+    if (value > (wallet?.onChainUsdc ?? 0)) {
+      Alert.alert('Cash out', 'Amount exceeds your on-chain USDC balance');
+      return;
+    }
+
+    const destination = address || wallet?.ethereumWallet;
+    const tokenAddress = wallet?.chain.tokenAddress;
+    if (!destination || !tokenAddress) {
+      Alert.alert('Cash out', 'Link a Privy wallet before cashing out');
+      return;
+    }
+
     try {
       setCashingOut(true);
-      const result = await withdrawWallet(value, `mobile-${Date.now()}`);
+      setToast(`Sending ${value.toFixed(2)} USDC…`);
+      const hash = await sendUsdc({
+        to: destination,
+        amountUsd: value,
+        tokenAddress,
+        chainId: wallet.chain.chainId,
+        decimals: wallet.chain.tokenDecimals ?? 6,
+      });
+      try {
+        await recordDriverTransfer(value, hash, destination);
+      } catch {
+        /* chain send already succeeded */
+      }
+      lightImpact();
       setAmount('');
       setCashOutAddress('');
       setShowCashOut(false);
       await load({ silent: true });
-      const status = result.entry.status;
-      const extra = result.entry.providerRef ? `\nTx ${result.entry.providerRef}` : '';
-      Alert.alert(
-        'Cash out',
-        status === 'COMPLETED'
-          ? `Sent ${symbol} to your wallet on Arc Testnet.${extra}`
-          : status === 'PENDING'
-            ? 'Requested. An admin will complete the on-chain send when the treasury is configured.'
-            : `Status: ${status}`,
-      );
+      setToast(`Sent ${value.toFixed(2)} USDC`);
+      void notifyRideEvent('USDC sent', `${value.toFixed(2)} USDC sent on Arc Testnet`, { screen: 'wallet' });
     } catch (caught: unknown) {
       const message =
         (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         (caught instanceof Error ? caught.message : 'Cash-out failed');
+      setToast('Cash-out failed');
+      void notifyRideEvent('Cash-out failed', message, { screen: 'wallet' });
       Alert.alert('Cash out', message);
     } finally {
       setCashingOut(false);
@@ -302,6 +349,11 @@ export default function Earnings() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
+      {toast ? (
+        <View style={styles.toast} pointerEvents="none">
+          <Text style={styles.toastText}>{toast}</Text>
+        </View>
+      ) : null}
 
       <Modal
         visible={showReceiveQR}
@@ -323,10 +375,16 @@ export default function Earnings() {
               ) : null}
             </View>
             <Text style={styles.qrAddress}>{wallet?.ethereumWallet}</Text>
-            <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
-              <Ionicons name="share-outline" size={18} color="#2E4ED2" />
-              <Text style={styles.shareButtonText}>Share address</Text>
-            </Pressable>
+            <View style={styles.receiveActions}>
+              <Pressable style={styles.shareButton} onPress={() => void onCopyAddress()}>
+                <Ionicons name="copy-outline" size={18} color="#2E4ED2" />
+                <Text style={styles.shareButtonText}>{copied ? 'Copied' : 'Copy address'}</Text>
+              </Pressable>
+              <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
+                <Ionicons name="share-outline" size={18} color="#2E4ED2" />
+                <Text style={styles.shareButtonText}>Share address</Text>
+              </Pressable>
+            </View>
           </View>
         </Pressable>
       </Modal>
@@ -403,7 +461,7 @@ export default function Earnings() {
                 <Ionicons name="arrow-down" size={18} color="#2E4ED2" />
                 <Text style={styles.actionLabel}>Receive</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionBtn} onPress={() => setShowCashOut((value) => !value)}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => setShowCashOut((value) => !value)} disabled={cashingOut}>
                 <Ionicons name="arrow-up" size={18} color="#2E4ED2" />
                 <Text style={styles.actionLabel}>Cash out</Text>
               </TouchableOpacity>
@@ -426,6 +484,7 @@ export default function Earnings() {
                   keyboardType="decimal-pad"
                   value={amount}
                   onChangeText={setAmount}
+                  editable={!cashingOut}
                 />
                 <Text style={styles.inputLabel}>Destination address (optional)</Text>
                 <View style={styles.cashOutRow}>
@@ -434,8 +493,9 @@ export default function Earnings() {
                     placeholder={wallet?.ethereumWallet ? 'Your wallet' : '0x...'}
                     value={cashOutAddress}
                     onChangeText={setCashOutAddress}
+                    editable={!cashingOut}
                   />
-                  <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()}>
+                  <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()} disabled={cashingOut}>
                     <Ionicons name="qr-code-outline" size={18} color="#2E4ED2" />
                   </TouchableOpacity>
                 </View>
@@ -444,7 +504,8 @@ export default function Earnings() {
                   onPress={() => void onCashOut()}
                   disabled={cashingOut}
                 >
-                  <Text style={styles.cashOutConfirmText}>{cashingOut ? 'Processing...' : 'Confirm'}</Text>
+                  {cashingOut ? <ActivityIndicator color="#FFFFFF" /> : null}
+                  <Text style={styles.cashOutConfirmText}>{cashingOut ? 'Sending…' : 'Confirm'}</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
@@ -523,7 +584,7 @@ export default function Earnings() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f7f8ef' },
+  safeArea: { flex: 1, backgroundColor: '#f7f8ef', position: 'relative' },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -663,10 +724,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     backgroundColor: '#F8F9FA',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    marginTop: 16,
+    marginTop: 12,
+  },
+  receiveActions: {
+    width: '100%',
+    marginTop: 4,
+  },
+  toast: {
+    position: 'absolute',
+    top: 52,
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
   shareButtonText: {
     color: '#2E4ED2',
@@ -727,6 +809,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
     marginTop: 16,
   },
   cashOutConfirmDisabled: {

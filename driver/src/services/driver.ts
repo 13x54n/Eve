@@ -142,6 +142,14 @@ export async function withdrawWallet(amount: number, idempotencyKey?: string) {
   return data;
 }
 
+export async function recordDriverTransfer(amount: number, txHash: string, address: string) {
+  const { data } = await api.post<{
+    entry: WalletLedgerEntry;
+    replayed: boolean;
+  }>('/driver/wallet/transfers', { amount, txHash, address });
+  return data;
+}
+
 export type DriverTripDetail = {
   id: string;
   bookingCode: string;

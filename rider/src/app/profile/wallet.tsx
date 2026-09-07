@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -16,18 +16,22 @@ import { router, useFocusEffect } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
 import QRCode from "react-native-qrcode-svg";
 import { Camera, CameraView } from "expo-camera";
+import * as Clipboard from "expo-clipboard";
 import { Brand } from "@/constants/theme";
 import { useBrand } from "@/context/theme-context";
 import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 import { truncateWalletAddress } from "@/lib/privy";
 import {
   getRiderWallet,
-  withdrawRiderWallet,
+  recordRiderTransfer,
   type RiderWallet,
   type WalletLedgerEntry,
 } from "@/services/wallet";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
 import { getArcUsdcBalance } from "@/lib/arc-chain";
+import { useSendUsdcTransfer } from "@/lib/send-escrow";
+import { lightImpact } from "@/lib/haptics";
+import { notifyRideEvent } from "@/services/notifications";
 
 function formatAmount(entry: WalletLedgerEntry) {
   const negative = entry.type === "REFUND" || entry.type === "WALLET_WITHDRAW";
@@ -38,6 +42,7 @@ function formatAmount(entry: WalletLedgerEntry) {
 export default function RiderWalletScreen() {
   const brand = useBrand();
   const completePrivy = useCompletePrivySession();
+  const sendUsdc = useSendUsdcTransfer();
   const [wallet, setWallet] = useState<RiderWallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
@@ -49,6 +54,20 @@ export default function RiderWalletScreen() {
   const [cashingOut, setCashingOut] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast || cashingOut) return;
+    const timer = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(timer);
+  }, [toast, cashingOut]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
 
   const load = useCallback(async () => {
     try {
@@ -88,6 +107,14 @@ export default function RiderWalletScreen() {
   async function onShareAddress() {
     if (!wallet?.ethereumWallet) return;
     await Share.share({ message: wallet.ethereumWallet });
+  }
+
+  async function onCopyAddress() {
+    if (!wallet?.ethereumWallet) return;
+    await Clipboard.setStringAsync(wallet.ethereumWallet);
+    lightImpact();
+    setCopied(true);
+    setToast("Address copied");
   }
 
   async function onLink() {
@@ -141,27 +168,46 @@ export default function RiderWalletScreen() {
       return;
     }
 
+    if (amount > (wallet?.onChainUsdc ?? 0)) {
+      Alert.alert("Cash out", "Amount exceeds your on-chain USDC balance");
+      return;
+    }
+
+    const destination = address || wallet?.ethereumWallet;
+    const tokenAddress = wallet?.chain.tokenAddress;
+    if (!destination || !tokenAddress) {
+      Alert.alert("Cash out", "Link a Privy wallet before cashing out");
+      return;
+    }
+
     try {
       setCashingOut(true);
-      const result = await withdrawRiderWallet(amount, address || undefined, `mobile-${Date.now()}`);
+      setToast(`Sending ${amount.toFixed(2)} USDC…`);
+      const hash = await sendUsdc({
+        to: destination,
+        amountUsd: amount,
+        tokenAddress,
+        chainId: wallet.chain.chainId,
+        decimals: wallet.chain.tokenDecimals ?? 6,
+      });
+      try {
+        await recordRiderTransfer(amount, hash, destination);
+      } catch {
+        /* chain send already succeeded */
+      }
+      lightImpact();
       setCashOutAmount("");
       setCashOutAddress("");
       setShowCashOut(false);
       await load();
-      const status = result.entry.status;
-      const extra = result.entry.providerRef ? `\nTx ${result.entry.providerRef}` : "";
-      Alert.alert(
-        "Cash out",
-        status === "COMPLETED"
-          ? `Sent ${symbol} to your wallet on ${wallet?.chain.chainName ?? "Arc Testnet"}.${extra}`
-          : status === "PENDING"
-            ? "Requested. An admin will complete the on-chain send when the treasury is configured."
-            : `Status: ${status}`,
-      );
+      setToast(`Sent ${amount.toFixed(2)} USDC`);
+      void notifyRideEvent("USDC sent", `${amount.toFixed(2)} USDC sent on Arc Testnet`, { screen: "wallet" });
     } catch (error: unknown) {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         (error instanceof Error ? error.message : "Cash-out failed");
+      setToast("Cash-out failed");
+      void notifyRideEvent("Cash-out failed", message, { screen: "wallet" });
       Alert.alert("Cash out", message);
     } finally {
       setCashingOut(false);
@@ -173,6 +219,11 @@ export default function RiderWalletScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: brand.canvas }]} edges={["top"]}>
+      {toast ? (
+        <View style={styles.toast} pointerEvents="none">
+          <Text style={styles.toastText}>{toast}</Text>
+        </View>
+      ) : null}
       <Modal
         visible={showReceiveQR}
         transparent
@@ -193,10 +244,16 @@ export default function RiderWalletScreen() {
               ) : null}
             </View>
             <Text style={styles.qrAddress}>{wallet?.ethereumWallet}</Text>
-            <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
-              <Feather name="share" size={18} color={Brand.accent} />
-              <Text style={styles.shareButtonText}>Share address</Text>
-            </Pressable>
+            <View style={styles.receiveActions}>
+              <Pressable style={styles.shareButton} onPress={() => void onCopyAddress()}>
+                <Feather name="copy" size={18} color={Brand.accent} />
+                <Text style={styles.shareButtonText}>{copied ? "Copied" : "Copy address"}</Text>
+              </Pressable>
+              <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
+                <Feather name="share" size={18} color={Brand.accent} />
+                <Text style={styles.shareButtonText}>Share address</Text>
+              </Pressable>
+            </View>
           </View>
         </Pressable>
       </Modal>
@@ -205,13 +262,13 @@ export default function RiderWalletScreen() {
         visible={showCashOut}
         transparent
         animationType="slide"
-        onRequestClose={() => setShowCashOut(false)}
+        onRequestClose={() => { if (!cashingOut) setShowCashOut(false); }}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowCashOut(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => { if (!cashingOut) setShowCashOut(false); }}>
           <View style={styles.cashOutContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Cash out</Text>
-              <Pressable onPress={() => setShowCashOut(false)} accessibilityLabel="Close">
+              <Pressable onPress={() => { if (!cashingOut) setShowCashOut(false); }} accessibilityLabel="Close" disabled={cashingOut}>
                 <Feather name="x" size={24} color={Brand.ink} />
               </Pressable>
             </View>
@@ -222,6 +279,7 @@ export default function RiderWalletScreen() {
               keyboardType="decimal-pad"
               value={cashOutAmount}
               onChangeText={setCashOutAmount}
+              editable={!cashingOut}
             />
             <Text style={styles.inputLabel}>Destination address (optional)</Text>
             <View style={styles.addressRow}>
@@ -230,8 +288,9 @@ export default function RiderWalletScreen() {
                 placeholder={wallet?.ethereumWallet ? "Your wallet" : "0x..."}
                 value={cashOutAddress}
                 onChangeText={setCashOutAddress}
+                editable={!cashingOut}
               />
-              <Pressable style={styles.scanButton} onPress={() => void onScanQR()}>
+              <Pressable style={styles.scanButton} onPress={() => void onScanQR()} disabled={cashingOut}>
                 <Feather name="maximize" size={18} color={Brand.accent} />
               </Pressable>
             </View>
@@ -240,7 +299,8 @@ export default function RiderWalletScreen() {
               onPress={() => void onCashOut()}
               disabled={cashingOut}
             >
-              <Text style={styles.cashOutConfirmText}>{cashingOut ? "Processing..." : "Confirm"}</Text>
+              {cashingOut ? <ActivityIndicator color="#FFFFFF" /> : null}
+              <Text style={styles.cashOutConfirmText}>{cashingOut ? "Sending…" : "Confirm"}</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -305,11 +365,6 @@ export default function RiderWalletScreen() {
             </Pressable>
           ) : null}
         </View>
-        <View style={styles.token}>
-          <Text style={styles.tokenTitle}>{symbol}</Text>
-          <Text style={styles.tokenMeta}>Arc Testnet · ERC-20 view</Text>
-          <Text style={styles.tokenValue}>{hidden ? "••••" : onChain.toFixed(2)}</Text>
-        </View>
         <Text style={styles.section}>Activity</Text>
         {loading ? <ActivityIndicator color={Brand.accent} /> : null}
         {(wallet?.entries ?? []).map((entry) => (
@@ -330,7 +385,7 @@ export default function RiderWalletScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1 },
+  safe: { flex: 1, position: "relative" },
   topBar: {
     flexDirection: "row",
     alignItems: "center",
@@ -417,10 +472,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     backgroundColor: "#F8F9FA",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    marginTop: 16,
+    marginTop: 12,
+  },
+  receiveActions: {
+    width: "100%",
+    marginTop: 4,
+  },
+  toast: {
+    position: "absolute",
+    top: 52,
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    backgroundColor: "#0F172A",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+  },
+  toastText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
   },
   shareButtonText: {
     color: Brand.accent,
@@ -470,6 +546,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
     marginTop: 24,
   },
   cashOutConfirmDisabled: {
