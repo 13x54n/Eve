@@ -150,6 +150,11 @@ services:
       LOCATION_GRPC_URL: location:50051
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: location
+      # Feature Flags
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4002:4002"
       - "50051:50051"
@@ -184,6 +189,13 @@ services:
       IMAGEKIT_DRIVER_FOLDER: ${IMAGEKIT_DRIVER_FOLDER:-/eve/drivers}
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: ride
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4003:4003"
     depends_on:
@@ -217,6 +229,9 @@ services:
       NOTIFY_GRPC_URL: notify:50052
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: notify
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4004:4004"
       - "50052:50052"
@@ -248,6 +263,13 @@ services:
       NOTIFY_GRPC_URL: notify:50052
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: admin
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4005:4005"
     depends_on:
@@ -283,6 +305,12 @@ services:
       ESCROW_OPERATOR_ADDRESS: ${ESCROW_OPERATOR_ADDRESS:-}
       KAFKA_BROKERS: kafka:9092
       KAFKA_CLIENT_ID: payment
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
     ports:
       - "4006:4006"
     depends_on:
