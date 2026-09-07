@@ -14,6 +14,7 @@ import {
   fail 
 } from '@eve/shared';
 import { requireAuth, type AuthRequest } from '../../shared/middleware.js';
+import { authLimiter, authenticatedLimiter } from '../../shared/rate-limit.js';
 import { publishAuthEvent } from './events.js';
 
 export const authRouter = Router();
@@ -21,7 +22,7 @@ export const authRouter = Router();
 /**
  * POST /api/auth/privy - Rider Privy authentication
  */
-authRouter.post('/privy', async (req: Request, res: Response) => {
+authRouter.post('/privy', authLimiter, async (req: Request, res: Response) => {
   try {
     const { identityToken } = req.body;
     
@@ -72,7 +73,7 @@ authRouter.post('/privy', async (req: Request, res: Response) => {
 /**
  * POST /api/auth/driver/privy - Driver Privy authentication
  */
-authRouter.post('/driver/privy', async (req: Request, res: Response) => {
+authRouter.post('/driver/privy', authLimiter, async (req: Request, res: Response) => {
   try {
     const { identityToken } = req.body;
     
@@ -123,7 +124,7 @@ authRouter.post('/driver/privy', async (req: Request, res: Response) => {
 /**
  * POST /api/auth/admin/login - Admin email/password login
  */
-authRouter.post('/admin/login', async (req: Request, res: Response) => {
+authRouter.post('/admin/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -161,7 +162,7 @@ authRouter.post('/admin/login', async (req: Request, res: Response) => {
 /**
  * GET /api/auth/me - Get current user
  */
-authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
+authRouter.get('/me', authenticatedLimiter, requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
@@ -186,7 +187,7 @@ authRouter.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 /**
  * PATCH /api/auth/me - Update current user
  */
-authRouter.patch('/me', requireAuth, async (req: AuthRequest, res: Response) => {
+authRouter.patch('/me', authenticatedLimiter, requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const { name, phone } = req.body;
 
