@@ -720,6 +720,123 @@ export { serializeLedger };
 const MIN_WITHDRAW_USD = 1;
 const MAX_WITHDRAW_USD = 10_000;
 
+export async function withdrawRiderWallet(
+  userId: string,
+  body: { amount: number; idempotencyKey?: string; address?: string },
+) {
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount < MIN_WITHDRAW_USD) {
+    fail(`Minimum cash-out is $${MIN_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+  if (amount > MAX_WITHDRAW_USD) {
+    fail(`Maximum cash-out is $${MAX_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+
+  const rounded = Number(amount.toFixed(2));
+  const idempotencyKey = body.idempotencyKey?.trim() || null;
+
+  if (idempotencyKey) {
+    const existing = await prisma.ledgerEntry.findFirst({
+      where: {
+        userId,
+        type: "WALLET_WITHDRAW",
+        brand: `idemp:${idempotencyKey}`,
+      },
+    });
+    if (existing) {
+      const profile = await prisma.riderProfile.findUnique({ where: { userId } });
+      return {
+        entry: serializeLedger(existing),
+        walletBalance: money(profile?.walletBalance),
+        replayed: true,
+      };
+    }
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { riderProfile: true },
+  });
+
+  if (!user?.riderProfile) {
+    fail("Rider profile not found", "NotFoundError");
+  }
+
+  const destination = body.address?.trim() || user.ethereumWallet?.trim();
+  if (!destination || !/^0x[a-fA-F0-9]{40}$/.test(destination)) {
+    fail("Provide a valid Ethereum address or link a Privy Ethereum wallet", "ValidationError");
+  }
+
+  if (Number(user.riderProfile.walletBalance) < rounded) {
+    fail("Insufficient Eve wallet balance", "ConflictError");
+  }
+
+  const entry = await prisma.$transaction(async (tx) => {
+    const updated = await tx.riderProfile.updateMany({
+      where: {
+        userId,
+        walletBalance: { gte: rounded },
+      },
+      data: { walletBalance: { decrement: rounded } },
+    });
+
+    if (updated.count !== 1) {
+      fail("Insufficient Eve wallet balance", "ConflictError");
+    }
+
+    return tx.ledgerEntry.create({
+      data: {
+        userId,
+        type: "WALLET_WITHDRAW",
+        status: "PENDING",
+        method: "WALLET",
+        amount: rounded,
+        brand: idempotencyKey ? `idemp:${idempotencyKey}` : destination,
+        note: `Cash-out to ${destination}`,
+      },
+    });
+  });
+
+  if (isTreasuryConfigured()) {
+    try {
+      const providerRef = await executePayout(destination, rounded);
+      const completed = await prisma.ledgerEntry.update({
+        where: { id: entry.id },
+        data: { status: "COMPLETED", providerRef },
+      });
+      publishPaymentEvent("wallet.withdraw.completed", {
+        userId,
+        amount: rounded,
+        destination,
+        txHash: providerRef,
+      });
+      return {
+        entry: serializeLedger(completed),
+        walletBalance: money(Number(user.riderProfile.walletBalance) - rounded),
+        replayed: false,
+      };
+    } catch (error) {
+      await prisma.ledgerEntry.update({
+        where: { id: entry.id },
+        data: { status: "FAILED" },
+      });
+      fail("On-chain payout failed", "ConflictError", error);
+    }
+  }
+
+  publishPaymentEvent("wallet.withdraw.pending", {
+    userId,
+    amount: rounded,
+    destination,
+  });
+
+  return {
+    entry: serializeLedger(entry),
+    walletBalance: money(Number(user.riderProfile.walletBalance) - rounded),
+    replayed: false,
+  };
+}
+
 export async function withdrawDriverWallet(
   userId: string,
   body: { amount: number; idempotencyKey?: string },

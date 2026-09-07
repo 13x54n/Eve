@@ -11,11 +11,15 @@ import {
   Alert,
   Share,
   ActivityIndicator,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
+import { Camera, CameraView } from 'expo-camera';
 import {
   DriverWallet,
   EarningsSummary,
@@ -159,6 +163,10 @@ export default function Earnings() {
   const [linking, setLinking] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [showCashOut, setShowCashOut] = useState(false);
+  const [showReceiveQR, setShowReceiveQR] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [cashOutAddress, setCashOutAddress] = useState('');
 
   const load = useCallback(async (opts?: { silent?: boolean }) => {
     try {
@@ -205,24 +213,60 @@ export default function Earnings() {
   async function onReceive() {
     const addr = wallet?.ethereumWallet;
     if (!addr) return;
+    setShowReceiveQR(true);
+  }
+
+  async function onShareAddress() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
     await Share.share({ message: addr });
+  }
+
+  async function onScanQR() {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === 'granted');
+    if (status === 'granted') {
+      setShowQRScanner(true);
+    } else {
+      Alert.alert('Camera', 'Camera permission is required to scan QR codes');
+    }
+  }
+
+  function onQRScanned(data: string) {
+    setShowQRScanner(false);
+    if (/^0x[a-fA-F0-9]{40}$/.test(data)) {
+      setCashOutAddress(data);
+      setShowCashOut(true);
+    } else {
+      Alert.alert('Invalid QR', 'The scanned QR code is not a valid Ethereum address');
+    }
   }
 
   async function onCashOut() {
     const value = Number(amount);
     const min = wallet?.minWithdrawUsd ?? 1;
+    const address = cashOutAddress.trim();
+
     if (!Number.isFinite(value) || value < min) {
       Alert.alert('Cash out', `Enter at least $${min.toFixed(2)}.`);
       return;
     }
-    if (!wallet?.ethereumWallet) {
-      Alert.alert('Cash out', 'Link your Privy Ethereum wallet first.');
+
+    if (!wallet?.ethereumWallet && !address) {
+      Alert.alert('Cash out', 'Link your Privy Ethereum wallet or scan an address.');
+      return;
+    }
+
+    if (address && !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      Alert.alert('Cash out', 'Enter a valid Ethereum address');
       return;
     }
     try {
       setCashingOut(true);
       const result = await withdrawWallet(value, `mobile-${Date.now()}`);
       setAmount('');
+      setCashOutAddress('');
+      setShowCashOut(false);
       await load({ silent: true });
       const status = result.entry.status;
       const extra = result.entry.providerRef ? `\nTx ${result.entry.providerRef}` : '';
@@ -247,6 +291,57 @@ export default function Earnings() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
+
+      <Modal
+        visible={showReceiveQR}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReceiveQR(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowReceiveQR(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Receive {symbol}</Text>
+              <Pressable onPress={() => setShowReceiveQR(false)} accessibilityLabel="Close">
+                <Ionicons name="close" size={24} color="#0F172A" />
+              </Pressable>
+            </View>
+            <View style={styles.qrContainer}>
+              {wallet?.ethereumWallet ? (
+                <QRCode value={wallet.ethereumWallet} size={220} />
+              ) : null}
+            </View>
+            <Text style={styles.qrAddress}>{wallet?.ethereumWallet}</Text>
+            <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
+              <Ionicons name="share-outline" size={18} color="#2E4ED2" />
+              <Text style={styles.shareButtonText}>Share address</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showQRScanner} animationType="slide" onRequestClose={() => setShowQRScanner(false)}>
+        <View style={styles.scannerContainer}>
+          {hasPermission ? (
+            <CameraView
+              style={StyleSheet.absoluteFillObject}
+              facing="back"
+              onBarcodeScanned={(result) => {
+                if (result.data) {
+                  onQRScanned(result.data);
+                }
+              }}
+            />
+          ) : (
+            <View style={styles.scannerPlaceholder}>
+              <Text style={styles.scannerText}>No camera permission</Text>
+            </View>
+          )}
+          <Pressable style={styles.scannerClose} onPress={() => setShowQRScanner(false)}>
+            <Ionicons name="close" size={28} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </Modal>
 
       <View style={styles.topBar}>
         <View style={styles.backButton} />
@@ -309,6 +404,39 @@ export default function Earnings() {
               ) : null}
             </View>
 
+
+            {showCashOut ? (
+              <View style={styles.cashOutSection}>
+                <Text style={styles.cashOutTitle}>Cash out to wallet</Text>
+                <Text style={styles.inputLabel}>Amount (USD)</Text>
+                <TextInput
+                  style={styles.cashOutInput}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={amount}
+                  onChangeText={setAmount}
+                />
+                <Text style={styles.inputLabel}>Destination address (optional)</Text>
+                <View style={styles.cashOutRow}>
+                  <TextInput
+                    style={[styles.cashOutInput, { flex: 1, marginTop: 0 }]}
+                    placeholder={wallet?.ethereumWallet ? 'Your wallet' : '0x...'}
+                    value={cashOutAddress}
+                    onChangeText={setCashOutAddress}
+                  />
+                  <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()}>
+                    <Ionicons name="qr-code-outline" size={18} color="#2E4ED2" />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={[styles.cashOutConfirm, cashingOut && styles.cashOutConfirmDisabled]}
+                  onPress={() => void onCashOut()}
+                  disabled={cashingOut}
+                >
+                  <Text style={styles.cashOutConfirmText}>{cashingOut ? 'Processing...' : 'Confirm'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
 
             {credits > 0 ? (
               <View style={styles.tokenRow}>
@@ -480,4 +608,122 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 40, color: '#6B7280', fontSize: 16, textAlign: 'center' },
   retryButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: '#2E4ED5' },
   retryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  qrContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#EAECEF',
+  },
+  qrAddress: {
+    marginTop: 16,
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: '#2E4ED2',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  scannerPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scannerText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  scannerClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  cashOutSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 14,
+  },
+  cashOutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  scanButton: {
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cashOutConfirm: {
+    backgroundColor: '#2E4ED2',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  cashOutConfirmDisabled: {
+    opacity: 0.5,
+  },
+  cashOutConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
 });

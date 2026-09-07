@@ -86,3 +86,12 @@ export async function confirmEscrow(
 export async function confirmDeposit(tripId: string, txHash: string) {
   return confirmEscrow(tripId, txHash, "deposit");
 }
+
+export async function withdrawRiderWallet(amount: number, address?: string, idempotencyKey?: string) {
+  const { data } = await api.post<{
+    entry: WalletLedgerEntry;
+    walletBalance: number;
+    replayed: boolean;
+  }>("/rider/wallet/withdraw", { amount, address, idempotencyKey });
+  return data;
+}

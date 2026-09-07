@@ -23,6 +23,7 @@ paymentRouter.post("/trips/:id/confirm", controller.confirmEscrow);
 export const riderWalletRouter = Router();
 riderWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("RIDER"));
 riderWalletRouter.get("/wallet", controller.riderWallet);
+riderWalletRouter.post("/wallet/withdraw", controller.withdrawRiderWallet);
 
 export const driverWalletRouter = Router();
 driverWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("DRIVER"));

@@ -17,6 +17,7 @@ const confirmSchema = z.object({
 const withdrawSchema = z.object({
   amount: z.coerce.number().positive().max(10000),
   idempotencyKey: z.string().trim().min(8).max(80).optional(),
+  address: z.string().trim().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
 export async function config(_req: Request, res: Response, next: NextFunction) {
@@ -98,6 +99,15 @@ export async function withdrawWallet(req: Request, res: Response, next: NextFunc
   try {
     const data = withdrawSchema.parse(req.body);
     res.status(201).json(await paymentService.withdrawDriverWallet(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function withdrawRiderWallet(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = withdrawSchema.parse(req.body);
+    res.status(201).json(await paymentService.withdrawRiderWallet(userId(req), data));
   } catch (error) {
     next(error);
   }

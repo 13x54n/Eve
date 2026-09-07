@@ -2,21 +2,30 @@ import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Modal,
   Pressable,
   ScrollView,
   Share,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import Feather from "@expo/vector-icons/Feather";
+import QRCode from "react-native-qrcode-svg";
+import { Camera, CameraView } from "expo-camera";
 import { Brand } from "@/constants/theme";
 import { useBrand } from "@/context/theme-context";
 import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 import { truncateWalletAddress } from "@/lib/privy";
-import { getRiderWallet, type RiderWallet, type WalletLedgerEntry } from "@/services/wallet";
+import {
+  getRiderWallet,
+  withdrawRiderWallet,
+  type RiderWallet,
+  type WalletLedgerEntry,
+} from "@/services/wallet";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
 
 function formatAmount(entry: WalletLedgerEntry) {
@@ -32,6 +41,13 @@ export default function RiderWalletScreen() {
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [showReceiveQR, setShowReceiveQR] = useState(false);
+  const [showCashOut, setShowCashOut] = useState(false);
+  const [cashOutAmount, setCashOutAmount] = useState("");
+  const [cashOutAddress, setCashOutAddress] = useState("");
+  const [cashingOut, setCashingOut] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -54,6 +70,11 @@ export default function RiderWalletScreen() {
 
   async function onReceive() {
     if (!wallet?.ethereumWallet) return;
+    setShowReceiveQR(true);
+  }
+
+  async function onShareAddress() {
+    if (!wallet?.ethereumWallet) return;
     await Share.share({ message: wallet.ethereumWallet });
   }
 
@@ -69,11 +90,173 @@ export default function RiderWalletScreen() {
     }
   }
 
+  async function onScanQR() {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === "granted");
+    if (status === "granted") {
+      setShowQRScanner(true);
+    } else {
+      Alert.alert("Camera", "Camera permission is required to scan QR codes");
+    }
+  }
+
+  function onQRScanned(data: string) {
+    setShowQRScanner(false);
+    if (/^0x[a-fA-F0-9]{40}$/.test(data)) {
+      setCashOutAddress(data);
+      setShowCashOut(true);
+    } else {
+      Alert.alert("Invalid QR", "The scanned QR code is not a valid Ethereum address");
+    }
+  }
+
+  async function onCashOut() {
+    const amount = Number(cashOutAmount);
+    const address = cashOutAddress.trim();
+
+    if (!Number.isFinite(amount) || amount < 1) {
+      Alert.alert("Cash out", "Enter at least $1.00");
+      return;
+    }
+
+    if (!address && !wallet?.ethereumWallet) {
+      Alert.alert("Cash out", "Enter a wallet address or link your Privy wallet");
+      return;
+    }
+
+    if (address && !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      Alert.alert("Cash out", "Enter a valid Ethereum address");
+      return;
+    }
+
+    try {
+      setCashingOut(true);
+      const result = await withdrawRiderWallet(amount, address || undefined, `mobile-${Date.now()}`);
+      setCashOutAmount("");
+      setCashOutAddress("");
+      setShowCashOut(false);
+      await load();
+      const status = result.entry.status;
+      const extra = result.entry.providerRef ? `\nTx ${result.entry.providerRef}` : "";
+      Alert.alert(
+        "Cash out",
+        status === "COMPLETED"
+          ? `Sent ${symbol} to your wallet on ${wallet?.chain.chainName ?? "Arc Testnet"}.${extra}`
+          : status === "PENDING"
+            ? "Requested. An admin will complete the on-chain send when the treasury is configured."
+            : `Status: ${status}`,
+      );
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (error instanceof Error ? error.message : "Cash-out failed");
+      Alert.alert("Cash out", message);
+    } finally {
+      setCashingOut(false);
+    }
+  }
+
   const onChain = wallet?.onChainUsdc ?? 0;
   const symbol = wallet?.chain.tokenSymbol ?? "USDC";
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: brand.canvas }]} edges={["top"]}>
+      <Modal
+        visible={showReceiveQR}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReceiveQR(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowReceiveQR(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Receive {symbol}</Text>
+              <Pressable onPress={() => setShowReceiveQR(false)} accessibilityLabel="Close">
+                <Feather name="x" size={24} color={Brand.ink} />
+              </Pressable>
+            </View>
+            <View style={styles.qrContainer}>
+              {wallet?.ethereumWallet ? (
+                <QRCode value={wallet.ethereumWallet} size={220} />
+              ) : null}
+            </View>
+            <Text style={styles.qrAddress}>{wallet?.ethereumWallet}</Text>
+            <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
+              <Feather name="share" size={18} color={Brand.accent} />
+              <Text style={styles.shareButtonText}>Share address</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={showCashOut}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCashOut(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowCashOut(false)}>
+          <View style={styles.cashOutContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Cash out</Text>
+              <Pressable onPress={() => setShowCashOut(false)} accessibilityLabel="Close">
+                <Feather name="x" size={24} color={Brand.ink} />
+              </Pressable>
+            </View>
+            <Text style={styles.inputLabel}>Amount (USD)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="0.00"
+              keyboardType="decimal-pad"
+              value={cashOutAmount}
+              onChangeText={setCashOutAmount}
+            />
+            <Text style={styles.inputLabel}>Destination address (optional)</Text>
+            <View style={styles.addressRow}>
+              <TextInput
+                style={[styles.textInput, { flex: 1 }]}
+                placeholder={wallet?.ethereumWallet ? "Your wallet" : "0x..."}
+                value={cashOutAddress}
+                onChangeText={setCashOutAddress}
+              />
+              <Pressable style={styles.scanButton} onPress={() => void onScanQR()}>
+                <Feather name="maximize" size={18} color={Brand.accent} />
+              </Pressable>
+            </View>
+            <Pressable
+              style={[styles.cashOutConfirm, cashingOut && styles.cashOutConfirmDisabled]}
+              onPress={() => void onCashOut()}
+              disabled={cashingOut}
+            >
+              <Text style={styles.cashOutConfirmText}>{cashingOut ? "Processing..." : "Confirm"}</Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showQRScanner} animationType="slide" onRequestClose={() => setShowQRScanner(false)}>
+        <View style={styles.scannerContainer}>
+          {hasPermission ? (
+            <CameraView
+              style={StyleSheet.absoluteFillObject}
+              facing="back"
+              onBarcodeScanned={(result) => {
+                if (result.data) {
+                  onQRScanned(result.data);
+                }
+              }}
+            />
+          ) : (
+            <View style={styles.scannerPlaceholder}>
+              <Text style={styles.scannerText}>No camera permission</Text>
+            </View>
+          )}
+          <Pressable style={styles.scannerClose} onPress={() => setShowQRScanner(false)}>
+            <Feather name="x" size={28} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </Modal>
+
       <View style={styles.topBar}>
         <Pressable onPress={() => router.back()} accessibilityLabel="Back">
           <Feather name="chevron-left" size={24} color={Brand.ink} />
@@ -98,6 +281,10 @@ export default function RiderWalletScreen() {
           <Pressable style={styles.action} onPress={() => void onReceive()} disabled={!wallet?.ethereumWallet}>
             <Feather name="arrow-down" size={18} color={Brand.accent} />
             <Text style={styles.actionText}>Receive</Text>
+          </Pressable>
+          <Pressable style={styles.action} onPress={() => setShowCashOut(true)}>
+            <Feather name="arrow-up" size={18} color={Brand.accent} />
+            <Text style={styles.actionText}>Cash out</Text>
           </Pressable>
           {!wallet?.ethereumWallet ? (
             <Pressable style={styles.action} onPress={() => void onLink()} disabled={linking}>
@@ -174,4 +361,132 @@ const styles = StyleSheet.create({
   rowMeta: { color: "#9CA3AF", fontSize: 12, marginTop: 2 },
   rowAmount: { fontWeight: "700", color: "#16A34A" },
   empty: { color: "#6B7280", marginTop: 8 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    width: "85%",
+    maxWidth: 400,
+    alignItems: "center",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  qrContainer: {
+    backgroundColor: "#FFFFFF",
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: "#EAECEF",
+  },
+  qrAddress: {
+    marginTop: 16,
+    fontSize: 12,
+    color: "#6B7280",
+    textAlign: "center",
+  },
+  shareButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 16,
+  },
+  shareButtonText: {
+    color: Brand.accent,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  cashOutContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: "#F9FAFB",
+    borderWidth: 1,
+    borderColor: "#EAECEF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#0F172A",
+  },
+  addressRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  scanButton: {
+    backgroundColor: "#F8F9FA",
+    borderWidth: 1,
+    borderColor: "#EAECEF",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cashOutConfirm: {
+    backgroundColor: Brand.accent,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginTop: 24,
+  },
+  cashOutConfirmDisabled: {
+    opacity: 0.5,
+  },
+  cashOutConfirmText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: "#000000",
+  },
+  scannerPlaceholder: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scannerText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+  },
+  scannerClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    padding: 8,
+  },
 });
