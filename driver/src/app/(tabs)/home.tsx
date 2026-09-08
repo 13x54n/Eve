@@ -46,6 +46,7 @@ export default function Home() {
   pathnameRef.current = pathname;
   const [incomingTrips, setIncomingTrips] = useState<IncomingTrip[]>([]);
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
+  const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
   const [pendingEscrowTrip, setPendingEscrowTrip] = useState<PendingEscrowTrip | null>(null);
   const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
