@@ -9,6 +9,12 @@
       "development": "./src/index.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./grpc-client": {
+      "types": "./src/grpc-client.ts",
+      "development": "./src/grpc-client.ts",
+      "import": "./dist/grpc-client.js",
+      "default": "./dist/grpc-client.js"
     }
   },
   "scripts": {
