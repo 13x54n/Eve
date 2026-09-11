@@ -1,0 +1,1316 @@
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  SectionList,
+  Platform,
+  TextInput,
+  Alert,
+  Share,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import QRCode from 'react-native-qrcode-svg';
+import { Camera, CameraView } from 'expo-camera';
+import * as Clipboard from 'expo-clipboard';
+import {
+  DriverWallet,
+  EarningsSummary,
+  EarningsTrip,
+  WalletLedgerEntry,
+  PrivyBankAccount,
+  PrivyPayoutResponse,
+  getBankAccounts,
+  createFiatPayout,
+  getPayoutStatus,
+  getEarnings,
+  getWallet,
+  recordDriverTransfer,
+} from '@/services/driver';
+import { BankAccountModal } from '@/components/bank-account-modal';
+import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
+import { useCompletePrivySession } from '@/lib/complete-privy-session';
+import { truncateWalletAddress } from '@/lib/privy';
+import { getArcUsdcBalance } from '@/lib/arc-chain';
+import { useSendUsdcTransfer } from '@/lib/send-escrow';
+import { lightImpact } from '@/lib/haptics';
+import { notifyRideEvent } from '@/services/notifications';
+
+type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund';
+
+type Transaction = {
+  id: string;
+  type: TxType;
+  title: string;
+  time: string;
+  amount: number;
+  tripId?: string;
+  status?: string;
+  rawEntry?: WalletLedgerEntry;
+};
+
+type Section = {
+  title: string;
+  total: number;
+  data: Transaction[];
+};
+
+function ledgerType(entry: WalletLedgerEntry): TxType {
+  if (entry.type === 'CREDIT') return 'credit';
+  if (entry.type === 'WALLET_WITHDRAW') return 'withdraw';
+  if (entry.type === 'CHARGE') return 'charge';
+  if (entry.type === 'REFUND') return 'refund';
+  return 'payout';
+}
+
+function ledgerTitle(entry: WalletLedgerEntry) {
+  if (entry.type === 'CREDIT') return entry.note || 'Platform credit';
+  if (entry.type === 'CHARGE') return entry.note || 'Trip USDC';
+  if (entry.type === 'REFUND') return entry.note || 'Escrow refund';
+  if (entry.type === 'WALLET_WITHDRAW') {
+    const status = entry.status === 'COMPLETED' ? 'Cashed out' : entry.status === 'FAILED' ? 'Cash-out failed' : 'Cash-out pending';
+    return status;
+  }
+  if (entry.type === 'PAYOUT') {
+    const status = entry.status === 'COMPLETED' ? 'Settled' : entry.status === 'FAILED' ? 'Failed' : 'Settling';
+    return entry.note ? `${entry.note} (${status})` : `Bank payout (${status})`;
+  }
+  return entry.note || 'Admin payout';
+}
+
+function groupHistory(
+  trips: EarningsTrip[],
+  entries: WalletLedgerEntry[],
+): Section[] {
+  const todayLabel = new Date().toDateString();
+  const byDay = new Map<string, Transaction[]>();
+
+  function push(_createdAt: string, tx: Omit<Transaction, 'time'> & { created: Date }) {
+    const dayKey = tx.created.toDateString();
+    const title =
+      dayKey === todayLabel
+        ? 'Today'
+        : tx.created.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const list = byDay.get(title) ?? [];
+    list.push({
+      id: tx.id,
+      type: tx.type,
+      title: tx.title,
+      amount: tx.amount,
+      tripId: tx.tripId,
+      status: tx.status,
+      rawEntry: tx.rawEntry,
+      time: tx.created.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }),
+    });
+    byDay.set(title, list);
+  }
+
+  for (const trip of trips) {
+    const created = new Date(trip.createdAt);
+    push(trip.createdAt, {
+      id: `trip-${trip.id}`,
+      type: 'trip',
+      title: 'Trip fare',
+      amount: trip.netEarnings,
+      tripId: trip.id,
+      created,
+    });
+  }
+  for (const entry of entries) {
+    const created = new Date(entry.createdAt);
+    const signed =
+      entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT' || entry.type === 'REFUND'
+        ? -Math.abs(entry.amount)
+        : Math.abs(entry.amount);
+    push(entry.createdAt, {
+      id: entry.id,
+      type: ledgerType(entry),
+      title: ledgerTitle(entry),
+      amount: signed,
+      status: entry.status,
+      rawEntry: entry,
+      created,
+    });
+  }
+
+  return Array.from(byDay.entries()).map(([title, data]) => ({
+    title,
+    total: data.reduce((sum, item) => sum + (item.type === 'trip' ? item.amount : 0), 0),
+    data: data.sort((a, b) => b.time.localeCompare(a.time)),
+  }));
+}
+
+const TX_ICON: Record<TxType, { name: any; lib: 'ion' | 'mci'; bg: string; fg: string }> = {
+  trip: { name: 'car', lib: 'mci', bg: '#EFF6FF', fg: '#3B82F6' },
+  credit: { name: 'gift', lib: 'ion', bg: '#F0FDF4', fg: '#16A34A' },
+  withdraw: { name: 'arrow-down-circle', lib: 'ion', bg: '#FEF2F2', fg: '#DC2626' },
+  payout: { name: 'business', lib: 'ion', bg: '#EFF6FF', fg: '#2E4ED2' },
+  charge: { name: 'arrow-down', lib: 'ion', bg: '#ECFDF5', fg: '#059669' },
+  refund: { name: 'return-up-back', lib: 'ion', bg: '#F8FAFC', fg: '#64748B' },
+};
+
+function TxIcon({ type }: { type: TxType }) {
+  const cfg = TX_ICON[type];
+  const IconComp = cfg.lib === 'ion' ? Ionicons : MaterialCommunityIcons;
+  return (
+    <View style={[styles.txIcon, { backgroundColor: cfg.bg }]}>
+      <IconComp name={cfg.name} size={18} color={cfg.fg} />
+    </View>
+  );
+}
+
+function formatMoney(n: number) {
+  const sign = n < 0 ? '-' : '+';
+  return `${sign}$${Math.abs(n).toFixed(2)}`;
+}
+
+export default function Earnings() {
+  const insets = useSafeAreaInsets();
+  const completePrivy = useCompletePrivySession();
+  const sendUsdc = useSendUsdcTransfer();
+  const [summary, setSummary] = useState<EarningsSummary | null>(null);
+  const [recentTrips, setRecentTrips] = useState<EarningsTrip[]>([]);
+  const [wallet, setWallet] = useState<DriverWallet | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [amount, setAmount] = useState('');
+  const [cashingOut, setCashingOut] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [showCashOut, setShowCashOut] = useState(false);
+  const [showReceiveQR, setShowReceiveQR] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [cashOutAddress, setCashOutAddress] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  // Privy Fiat Payout state
+  const [bankAccounts, setBankAccounts] = useState<PrivyBankAccount[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<PrivyBankAccount | null>(null);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [showBankPayout, setShowBankPayout] = useState(false);
+  const [bankPayoutAmount, setBankPayoutAmount] = useState('');
+  const [payingOut, setPayingOut] = useState(false);
+  const [payoutDetailsModal, setPayoutDetailsModal] = useState<WalletLedgerEntry | null>(null);
+  const [payoutStatusDetails, setPayoutStatusDetails] = useState<PrivyPayoutResponse | null>(null);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
+
+  useEffect(() => {
+    if (!toast || cashingOut) return;
+    if (!toast || cashingOut || payingOut) return;
+    const timer = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(timer);
+  }, [toast, cashingOut, payingOut]);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(timer);
+  }, [copied]);
+
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    try {
+      if (!opts?.silent) setLoading(true);
+      setError(false);
+      const [earningsResult, walletResult] = await Promise.all([getEarnings(), getWallet()]);
+      setSummary(earningsResult.summary);
+      setRecentTrips(earningsResult.recentTrips);
+      let onChainUsdc = walletResult.onChainUsdc;
+      try {
+        onChainUsdc = await getArcUsdcBalance(
+          walletResult.ethereumWallet,
+          walletResult.chain?.tokenAddress,
+          walletResult.chain?.tokenDecimals ?? 6,
+        );
+      } catch {
+        /* keep API value if RPC is unreachable */
+      }
+      setWallet({ ...walletResult, onChainUsdc });
+
+      try {
+        const accounts = await getBankAccounts();
+        setBankAccounts(accounts);
+        if (accounts.length > 0) {
+          setSelectedAccount((prev) => (prev ? accounts.find((a) => a.id === prev.id) ?? accounts[0] : accounts[0]));
+        } else {
+          setSelectedAccount(null);
+        }
+      } catch {
+        /* ignore if not linked yet */
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const { refreshing, onRefresh } = usePullToRefresh(() => load({ silent: true }));
+
+  const sections = useMemo(
+    () => groupHistory(recentTrips, wallet?.entries ?? []),
+    [recentTrips, wallet?.entries],
+  );
+  const onChain = wallet?.onChainUsdc ?? 0;
+  const credits = wallet?.walletBalance ?? summary?.walletBalance ?? 0;
+  const symbol = wallet?.chain.tokenSymbol ?? 'USDC';
+
+  async function onLinkWallet() {
+    try {
+      setLinking(true);
+      await completePrivy();
+      await load({ silent: true });
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : 'Could not link Privy wallet';
+      Alert.alert('Wallet', message);
+    } finally {
+      setLinking(false);
+    }
+  }
+
+  async function onReceive() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
+    setShowReceiveQR(true);
+  }
+
+  async function onShareAddress() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
+    await Share.share({ message: addr });
+  }
+
+  async function onCopyAddress() {
+    const addr = wallet?.ethereumWallet;
+    if (!addr) return;
+    await Clipboard.setStringAsync(addr);
+    lightImpact();
+    setCopied(true);
+    setToast('Address copied');
+  }
+
+  async function onScanQR() {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasPermission(status === 'granted');
+    if (status === 'granted') {
+      setShowQRScanner(true);
+    } else {
+      Alert.alert('Camera', 'Camera permission is required to scan QR codes');
+    }
+  }
+
+  function onQRScanned(data: string) {
+    setShowQRScanner(false);
+    if (/^0x[a-fA-F0-9]{40}$/.test(data)) {
+      setCashOutAddress(data);
+      setShowCashOut(true);
+    } else {
+      Alert.alert('Invalid QR', 'The scanned QR code is not a valid Ethereum address');
+    }
+  }
+
+  async function onCashOut() {
+    const value = Number(amount);
+    const min = wallet?.minWithdrawUsd ?? 1;
+    const address = cashOutAddress.trim();
+
+    if (!Number.isFinite(value) || value < min) {
+      Alert.alert('Cash out', `Enter at least $${min.toFixed(2)}.`);
+      return;
+    }
+
+    if (!wallet?.ethereumWallet && !address) {
+      Alert.alert('Cash out', 'Link your Privy Ethereum wallet or scan an address.');
+      return;
+    }
+
+    if (address && !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      Alert.alert('Cash out', 'Enter a valid Ethereum address');
+      return;
+    }
+    if (value > (wallet?.onChainUsdc ?? 0)) {
+      Alert.alert('Cash out', 'Amount exceeds your on-chain USDC balance');
+      return;
+    }
+
+    const destination = address || wallet?.ethereumWallet;
+    const tokenAddress = wallet?.chain.tokenAddress;
+    if (!destination || !tokenAddress) {
+      Alert.alert('Cash out', 'Link a Privy wallet before cashing out');
+      return;
+    }
+
+    try {
+      setCashingOut(true);
+      setToast(`Sending ${value.toFixed(2)} USDC…`);
+      const hash = await sendUsdc({
+        to: destination,
+        amountUsd: value,
+        tokenAddress,
+        chainId: wallet.chain.chainId,
+        decimals: wallet.chain.tokenDecimals ?? 6,
+      });
+      try {
+        await recordDriverTransfer(value, hash, destination);
+      } catch {
+        /* chain send already succeeded */
+      }
+      lightImpact();
+      setAmount('');
+      setCashOutAddress('');
+      setShowCashOut(false);
+      await load({ silent: true });
+      setToast(`Sent ${value.toFixed(2)} USDC`);
+      void notifyRideEvent('USDC sent', `${value.toFixed(2)} USDC sent on Arc Testnet`, { screen: 'wallet' });
+    } catch (caught: unknown) {
+      const message =
+        (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (caught instanceof Error ? caught.message : 'Cash-out failed');
+      setToast('Cash-out failed');
+      void notifyRideEvent('Cash-out failed', message, { screen: 'wallet' });
+      Alert.alert('Cash out', message);
+    } finally {
+      setCashingOut(false);
+    }
+  }
+
+  async function onBankPayout() {
+    const value = Number(bankPayoutAmount);
+    const min = 1;
+    if (!Number.isFinite(value) || value < min) {
+      Alert.alert('Withdraw to Bank', `Enter at least $${min.toFixed(2)}.`);
+      return;
+    }
+    if (!selectedAccount) {
+      Alert.alert('Withdraw to Bank', 'Please select or link a bank account first.');
+      setShowBankModal(true);
+      return;
+    }
+    if (value > (wallet?.onChainUsdc ?? 0)) {
+      Alert.alert('Withdraw to Bank', 'Amount exceeds your on-chain USDC balance');
+      return;
+    }
+
+    try {
+      setPayingOut(true);
+      setToast(`Submitting $${value.toFixed(2)} bank withdrawal…`);
+      await createFiatPayout({
+        amount: value,
+        fiatAccountId: selectedAccount.id,
+      });
+      lightImpact();
+      setBankPayoutAmount('');
+      setShowBankPayout(false);
+      await load({ silent: true });
+      setToast(`Bank withdrawal pending ($${value.toFixed(2)})`);
+      void notifyRideEvent(
+        'Bank withdrawal initiated',
+        `$${value.toFixed(2)} withdrawal to ${selectedAccount.bank_name || 'Bank'} (••••${selectedAccount.last_4}) initiated via Privy`,
+        { screen: 'wallet' },
+      );
+    } catch (caught: unknown) {
+      const message =
+        (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (caught instanceof Error ? caught.message : 'Bank withdrawal failed');
+      setToast('Withdrawal failed');
+      void notifyRideEvent('Withdrawal failed', message, { screen: 'wallet' });
+      Alert.alert('Withdraw to Bank', message);
+    } finally {
+      setPayingOut(false);
+    }
+  }
+
+  async function openPayoutDetails(entry: WalletLedgerEntry) {
+    setPayoutDetailsModal(entry);
+    setPayoutStatusDetails(null);
+    if (entry.providerRef) {
+      try {
+        setRefreshingStatus(true);
+        const { payout } = await getPayoutStatus(entry.providerRef);
+        setPayoutStatusDetails(payout);
+      } catch {
+        /* keep existing entry */
+      } finally {
+        setRefreshingStatus(false);
+      }
+    }
+  }
+
+
+  return (
+    <View style={[styles.safeArea, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" />
+      {toast ? (
+        <View style={styles.toast} pointerEvents="none">
+          <Text style={styles.toastText}>{toast}</Text>
+        </View>
+      ) : null}
+
+      <Modal
+        visible={showReceiveQR}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReceiveQR(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowReceiveQR(false)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Receive {symbol}</Text>
+              <Pressable onPress={() => setShowReceiveQR(false)} accessibilityLabel="Close">
+                <Ionicons name="close" size={24} color="#0F172A" />
+              </Pressable>
+            </View>
+            <View style={styles.qrContainer}>
+              {wallet?.ethereumWallet ? (
+                <QRCode value={wallet.ethereumWallet} size={220} />
+              ) : null}
+            </View>
+            <Text style={styles.qrAddress}>{wallet?.ethereumWallet}</Text>
+            <View style={styles.receiveActions}>
+              <Pressable style={styles.shareButton} onPress={() => void onCopyAddress()}>
+                <Ionicons name="copy-outline" size={18} color="#2E4ED2" />
+                <Text style={styles.shareButtonText}>{copied ? 'Copied' : 'Copy address'}</Text>
+              </Pressable>
+              <Pressable style={styles.shareButton} onPress={() => void onShareAddress()}>
+                <Ionicons name="share-outline" size={18} color="#2E4ED2" />
+                <Text style={styles.shareButtonText}>Share address</Text>
+              </Pressable>
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
+
+      <Modal visible={showQRScanner} animationType="slide" onRequestClose={() => setShowQRScanner(false)}>
+        <View style={styles.scannerContainer}>
+          {hasPermission ? (
+            <CameraView
+              style={StyleSheet.absoluteFill}
+              facing="back"
+              onBarcodeScanned={(result) => {
+                if (result.data) {
+                  onQRScanned(result.data);
+                }
+              }}
+            />
+          ) : (
+            <View style={styles.scannerPlaceholder}>
+              <Text style={styles.scannerText}>No camera permission</Text>
+            </View>
+          )}
+          <Pressable style={styles.scannerClose} onPress={() => setShowQRScanner(false)}>
+            <Ionicons name="close" size={28} color="#FFFFFF" />
+          </Pressable>
+        </View>
+      </Modal>
+
+      <View style={styles.topBar}>
+        <View style={styles.backButton} />
+        <Text style={styles.topBarTitle}>Wallet</Text>
+        <View style={styles.backButton} />
+      </View>
+
+      <SectionList
+        style={{ flex: 1 }}
+        sections={sections}
+        keyExtractor={(item) => item.id}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<PullRefresh refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+        ListHeaderComponent={
+          <>
+            <LinearGradient
+              colors={['#2E4ED2', '#3B82F6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.walletCard}
+            >
+              <View style={styles.walletCardTopRow}>
+                <View style={styles.walletChip}>
+                  <MaterialCommunityIcons name="circle-slice-8" size={14} color="#FFFFFF" />
+                  <Text style={styles.walletChipText}>{wallet?.chain.chainName ?? 'Arc Testnet'}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setHidden((value) => !value)}>
+                  <Ionicons name={hidden ? 'eye-off-outline' : 'eye-outline'} size={18} color="rgba(255,255,255,0.85)" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.balanceText}>
+                {hidden ? '••••' : `${onChain.toFixed(2)} ${symbol}`}
+              </Text>
+
+              <TouchableOpacity style={styles.addressRow} onPress={() => void onReceive()}>
+                <Text style={styles.addressLabel}>
+                  {wallet?.ethereumWallet
+                    ? truncateWalletAddress(wallet.ethereumWallet)
+                    : 'No Privy Ethereum wallet yet'}
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionBtn} onPress={() => void onReceive()} disabled={!wallet?.ethereumWallet}>
+                <Ionicons name="arrow-down" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Receive</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionBtn, showCashOut && styles.actionBtnActive]}
+                onPress={() => {
+                  setShowBankPayout(false);
+                  setShowCashOut((value) => !value);
+                }}
+                disabled={cashingOut}
+              >
+                <Ionicons name="arrow-up" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Send</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => router.push('/swap' as any)}
+              >
+                <Ionicons name="swap-horizontal" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Swap</Text>
+              </TouchableOpacity>
+              {!wallet?.ethereumWallet ? (
+                <TouchableOpacity style={styles.actionBtn} onPress={() => void onLinkWallet()} disabled={linking}>
+                  <Ionicons name="link" size={18} color="#2E4ED2" />
+                  <Text style={styles.actionLabel}>{linking ? 'Linking' : 'Link'}</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {showBankPayout ? (
+              <View style={styles.cashOutSection}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.cashOutTitle}>Withdraw USDC to Bank</Text>
+                  <TouchableOpacity onPress={() => setShowBankModal(true)}>
+                    <Text style={styles.bankManageText}>
+                      {selectedAccount ? 'Change Bank' : 'Link Bank'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {selectedAccount ? (
+                  <TouchableOpacity
+                    style={styles.selectedBankCard}
+                    onPress={() => setShowBankModal(true)}
+                  >
+                    <View style={styles.bankIconSmall}>
+                      <Ionicons name="business" size={18} color="#2E4ED2" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.selectedBankTitle}>
+                        {selectedAccount.bank_name || 'Bank Account'} ••••{selectedAccount.last_4}
+                      </Text>
+                      <Text style={styles.selectedBankSubtitle}>
+                        {selectedAccount.account_owner_name} • ACH Settlement
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.linkBankPrompt}
+                    onPress={() => setShowBankModal(true)}
+                  >
+                    <Ionicons name="add-circle-outline" size={20} color="#2E4ED2" />
+                    <Text style={styles.linkBankPromptText}>Link Bank Account to Withdraw</Text>
+                  </TouchableOpacity>
+                )}
+
+                <View style={styles.amountHeaderRow}>
+                  <Text style={styles.inputLabel}>Amount (USD)</Text>
+                  <TouchableOpacity
+                    onPress={() => setBankPayoutAmount(onChain.toFixed(2))}
+                    disabled={payingOut || onChain <= 0}
+                  >
+                    <Text style={styles.maxAmountText}>Max: ${onChain.toFixed(2)}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TextInput
+                  style={styles.cashOutInput}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={bankPayoutAmount}
+                  onChangeText={setBankPayoutAmount}
+                  editable={!payingOut}
+                />
+
+                <Text style={styles.fiatPayoutDisclosure}>
+                  Privy converts wallet USDC to USD fiat and settles directly to your bank account via ACH (1-2 business days).
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.cashOutConfirm,
+                    (payingOut || !selectedAccount || Number(bankPayoutAmount) <= 0) &&
+                      styles.cashOutConfirmDisabled,
+                  ]}
+                  onPress={() => void onBankPayout()}
+                  disabled={payingOut || !selectedAccount || Number(bankPayoutAmount) <= 0}
+                >
+                  {payingOut ? <ActivityIndicator color="#FFFFFF" style={{ marginRight: 8 }} /> : null}
+                  <Text style={styles.cashOutConfirmText}>
+                    {payingOut ? 'Initiating Payout…' : 'Confirm Bank Withdrawal'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {showCashOut ? (
+              <View style={styles.cashOutSection}>
+                <Text style={styles.cashOutTitle}>Cash out to wallet</Text>
+                <Text style={styles.inputLabel}>Amount (USD)</Text>
+                <TextInput
+                  style={styles.cashOutInput}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={amount}
+                  onChangeText={setAmount}
+                  editable={!cashingOut}
+                />
+                <Text style={styles.inputLabel}>Destination address (optional)</Text>
+                <View style={styles.cashOutRow}>
+                  <TextInput
+                    style={[styles.cashOutInput, { flex: 1, marginTop: 0 }]}
+                    placeholder={wallet?.ethereumWallet ? 'Your wallet' : '0x...'}
+                    value={cashOutAddress}
+                    onChangeText={setCashOutAddress}
+                    editable={!cashingOut}
+                  />
+                  <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()} disabled={cashingOut}>
+                    <Ionicons name="qr-code-outline" size={18} color="#2E4ED2" />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={[styles.cashOutConfirm, cashingOut && styles.cashOutConfirmDisabled]}
+                  onPress={() => void onCashOut()}
+                  disabled={cashingOut}
+                >
+                  {cashingOut ? <ActivityIndicator color="#FFFFFF" /> : null}
+                  <Text style={styles.cashOutConfirmText}>{cashingOut ? 'Sending…' : 'Confirm'}</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {credits > 0 ? (
+              <View style={styles.tokenRow}>
+                <View style={[styles.tokenIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="gift" size={16} color="#2E4ED2" />
+                </View>
+                <View style={styles.txMiddle}>
+                  <Text style={styles.txTitle}>Eve credits</Text>
+                  <Text style={styles.txTime}>Cash out to Arc USDC</Text>
+                </View>
+                <Text style={styles.tokenAmount}>{hidden ? '••••' : `$${credits.toFixed(2)}`}</Text>
+              </View>
+            ) : null}
+
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>Today</Text>
+                <Text style={styles.statValue}>${(summary?.todayEarnings ?? 0).toFixed(2)}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>This week</Text>
+                <Text style={styles.statValue}>${(summary?.weekEarnings ?? 0).toFixed(2)}</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statLabel}>Lifetime</Text>
+                <Text style={styles.statValue}>${(summary?.lifetimeEarnings ?? 0).toFixed(2)}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.historyTitle}>Activity</Text>
+          </>
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.txRow}
+            activeOpacity={item.tripId || (item.type === 'payout' && item.rawEntry) ? 0.6 : 1}
+            onPress={() => {
+              if (item.tripId) {
+                router.push({ pathname: '/(tabs)/earnings/[id]', params: { id: item.tripId } });
+              } else if (item.type === 'payout' && item.rawEntry) {
+                void openPayoutDetails(item.rawEntry);
+              }
+            }}
+          >
+            <TxIcon type={item.type} />
+            <View style={styles.txMiddle}>
+              <Text style={styles.txTitle}>{item.title}</Text>
+              <Text style={styles.txTime}>{item.time}</Text>
+            </View>
+            <Text style={[styles.txAmount, { color: item.amount < 0 ? '#DC2626' : '#16A34A' }]}>
+              {formatMoney(item.amount)}
+            </Text>
+            {item.tripId ? <Ionicons name="chevron-forward" size={16} color="#C4C9D4" /> : null}
+            {item.tripId || (item.type === 'payout' && item.rawEntry) ? (
+              <Ionicons name="chevron-forward" size={16} color="#C4C9D4" />
+            ) : null}
+          </TouchableOpacity>
+        )}
+        ItemSeparatorComponent={() => <View style={styles.txSeparator} />}
+        ListEmptyComponent={
+          error ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="alert-circle" size={48} color="#B91C1C" />
+              <Text style={styles.emptyText}>Could not load wallet</Text>
+              <TouchableOpacity style={styles.retryButton} onPress={() => void load()}>
+                <Text style={styles.retryText}>Tap to retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : loading ? (
+            <Text style={styles.loadingText}>Loading wallet...</Text>
+          ) : (
+            <Text style={styles.emptyText}>No wallet activity yet</Text>
+          )
+        }
+      />
+
+      <BankAccountModal
+        visible={showBankModal}
+        onClose={() => setShowBankModal(false)}
+        accounts={bankAccounts}
+        onAccountsUpdated={() => void load({ silent: true })}
+        onSelectAccount={(acc) => {
+          setSelectedAccount(acc);
+          setShowBankPayout(true);
+        }}
+        selectedAccountId={selectedAccount?.id}
+      />
+
+      <Modal
+        visible={Boolean(payoutDetailsModal)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPayoutDetailsModal(null)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setPayoutDetailsModal(null)}>
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Payout Details</Text>
+              <Pressable onPress={() => setPayoutDetailsModal(null)} accessibilityLabel="Close">
+                <Ionicons name="close" size={24} color="#0F172A" />
+              </Pressable>
+            </View>
+
+            {payoutDetailsModal ? (
+              <View style={styles.payoutModalBody}>
+                <View style={styles.payoutAmountContainer}>
+                  <Text style={styles.payoutModalAmount}>
+                    ${Math.abs(payoutDetailsModal.amount).toFixed(2)} USD
+                  </Text>
+                  <View
+                    style={[
+                      styles.payoutStatusBadge,
+                      payoutDetailsModal.status === 'COMPLETED'
+                        ? styles.payoutStatusSuccess
+                        : payoutDetailsModal.status === 'FAILED'
+                        ? styles.payoutStatusFailed
+                        : styles.payoutStatusPending,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.payoutStatusText,
+                        payoutDetailsModal.status === 'COMPLETED'
+                          ? styles.payoutStatusTextSuccess
+                          : payoutDetailsModal.status === 'FAILED'
+                          ? styles.payoutStatusTextFailed
+                          : styles.payoutStatusTextPending,
+                      ]}
+                    >
+                      {payoutDetailsModal.status === 'COMPLETED'
+                        ? 'Settled'
+                        : payoutDetailsModal.status === 'FAILED'
+                        ? 'Failed'
+                        : 'Settling to Bank'}
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.payoutDetailRow}>
+                  <Text style={styles.payoutDetailLabel}>Destination</Text>
+                  <Text style={styles.payoutDetailValue}>
+                    {payoutDetailsModal.brand || payoutDetailsModal.note || 'Bank Account'}
+                  </Text>
+                </View>
+
+                <View style={styles.payoutDetailRow}>
+                  <Text style={styles.payoutDetailLabel}>Date</Text>
+                  <Text style={styles.payoutDetailValue}>
+                    {new Date(payoutDetailsModal.createdAt).toLocaleString()}
+                  </Text>
+                </View>
+
+                {payoutDetailsModal.providerRef ? (
+                  <View style={styles.payoutDetailRow}>
+                    <Text style={styles.payoutDetailLabel}>Privy Action ID</Text>
+                    <Text style={[styles.payoutDetailValue, styles.monoText]}>
+                      {payoutDetailsModal.providerRef.slice(0, 16)}…
+                    </Text>
+                  </View>
+                ) : null}
+
+                {payoutStatusDetails?.failure_reason ? (
+                  <View style={styles.payoutFailureContainer}>
+                    <Ionicons name="alert-circle" size={16} color="#DC2626" />
+                    <Text style={styles.payoutFailureText}>{payoutStatusDetails.failure_reason}</Text>
+                  </View>
+                ) : null}
+
+                {payoutDetailsModal.status === 'PENDING' && payoutDetailsModal.providerRef ? (
+                  <TouchableOpacity
+                    style={styles.refreshStatusBtn}
+                    onPress={() => void openPayoutDetails(payoutDetailsModal)}
+                    disabled={refreshingStatus}
+                  >
+                    {refreshingStatus ? (
+                      <ActivityIndicator size="small" color="#2E4ED2" />
+                    ) : (
+                      <Ionicons name="refresh" size={18} color="#2E4ED2" />
+                    )}
+                    <Text style={styles.refreshStatusText}>
+                      {refreshingStatus ? 'Checking Status…' : 'Check Settlement Status'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            ) : null}
+          </View>
+        </Pressable>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#f7f8ef', position: 'relative' },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 12 : 4,
+    paddingBottom: 8,
+  },
+  backButton: { width: 38, height: 38 },
+  topBarTitle: { fontSize: 27, fontWeight: '700', color: '#0F172A', letterSpacing: -0.2 },
+  listContent: { paddingHorizontal: 16, paddingBottom: 32 },
+  walletCard: {
+    borderRadius: 24,
+    padding: 20,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  walletCardTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  walletChip: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  walletChipText: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.9)' },
+  balanceText: { fontSize: 36, fontWeight: '800', color: '#FFFFFF', letterSpacing: -1, marginTop: 14 },
+  walletFooterHint: { fontSize: 12, fontWeight: '500', color: 'rgba(255,255,255,0.75)', marginTop: 10 },
+  addressRow: { marginTop: 14 },
+  addressLabel: { fontSize: 12, fontWeight: '600', color: 'rgba(255,255,255,0.92)' },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  actionBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 16,
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 4,
+  },
+  actionLabel: { fontSize: 13, fontWeight: '700', color: '#2E4ED2' },
+  cashOutButton: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minWidth: 108,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+  },
+  cashOutText: { fontSize: 14, fontWeight: '700', color: '#2E4ED2' },
+  cashOutRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14 },
+  cashOutInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#0F172A',
+  },
+  tokenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    marginTop: 10,
+    borderRadius: 16,
+  },
+  tokenIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tokenIconText: { fontSize: 18, fontWeight: '800', color: '#16A34A' },
+  tokenAmount: { fontSize: 15, fontWeight: '700', color: '#0F172A' },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  statCard: { flex: 1, paddingVertical: 12, paddingHorizontal: 12, borderWidth: 1, borderColor: '#F0F1EC' },
+  statLabel: { fontSize: 12, fontWeight: '500', color: '#6B7280' },
+  statValue: { fontSize: 16, fontWeight: '700', color: '#0F172A', marginTop: 4 },
+  historyTitle: { fontSize: 17, fontWeight: '700', color: '#0F172A', marginTop: 24, marginBottom: 4 },
+  txRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 12 },
+  txIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  txMiddle: { flex: 1, marginLeft: 12 },
+  txTitle: { fontSize: 14, fontWeight: '600', color: '#0F172A' },
+  txTime: { fontSize: 12, fontWeight: '400', color: '#9CA3AF', marginTop: 2 },
+  txAmount: { fontSize: 15, fontWeight: '700', marginRight: 4 },
+  txSeparator: { height: 8 },
+  emptyContainer: { alignItems: 'center', padding: 40, marginTop: 20 },
+  emptyText: { marginTop: 16, color: '#6B7280', fontSize: 16, textAlign: 'center' },
+  loadingText: { marginTop: 40, color: '#6B7280', fontSize: 16, textAlign: 'center' },
+  retryButton: { marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8, backgroundColor: '#2E4ED5' },
+  retryText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    width: '85%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  qrContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#EAECEF',
+  },
+  qrAddress: {
+    marginTop: 16,
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  receiveActions: {
+    width: '100%',
+    marginTop: 4,
+  },
+  toast: {
+    position: 'absolute',
+    top: 52,
+    left: 16,
+    right: 16,
+    zIndex: 20,
+    backgroundColor: '#0F172A',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  shareButtonText: {
+    color: '#2E4ED2',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  scannerPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scannerText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  scannerClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
+  },
+  cashOutSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 14,
+  },
+  cashOutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 12,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  scanButton: {
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cashOutConfirm: {
+    backgroundColor: '#2E4ED2',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 16,
+  },
+  cashOutConfirmDisabled: {
+    opacity: 0.5,
+  },
+  cashOutConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  actionBtnActive: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#2E4ED2',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  bankManageText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2E4ED2',
+  },
+  selectedBankCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#EAECEF',
+    marginBottom: 12,
+  },
+  bankIconSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  selectedBankTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  selectedBankSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  linkBankPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    borderStyle: 'dashed',
+    backgroundColor: '#F5F7FF',
+    marginBottom: 12,
+  },
+  linkBankPromptText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2E4ED2',
+  },
+  amountHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  maxAmountText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2E4ED2',
+  },
+  fiatPayoutDisclosure: {
+    fontSize: 11,
+    color: '#6B7280',
+    lineHeight: 16,
+    marginTop: 8,
+  },
+  payoutModalBody: {
+    width: '100%',
+    gap: 12,
+  },
+  payoutAmountContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  payoutModalAmount: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  payoutStatusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  payoutStatusSuccess: {
+    backgroundColor: '#DCFCE7',
+  },
+  payoutStatusFailed: {
+    backgroundColor: '#FEE2E2',
+  },
+  payoutStatusPending: {
+    backgroundColor: '#FEF3C7',
+  },
+  payoutStatusText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  payoutStatusTextSuccess: {
+    color: '#16A34A',
+  },
+  payoutStatusTextFailed: {
+    color: '#DC2626',
+  },
+  payoutStatusTextPending: {
+    color: '#D97706',
+  },
+  payoutDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  payoutDetailLabel: {
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  payoutDetailValue: {
+    fontSize: 13,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  monoText: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 12,
+  },
+  payoutFailureContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 4,
+  },
+  payoutFailureText: {
+    fontSize: 12,
+    color: '#DC2626',
+    flex: 1,
+  },
+  refreshStatusBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginTop: 12,
+  },
+  refreshStatusText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2E4ED2',
+  },
+});

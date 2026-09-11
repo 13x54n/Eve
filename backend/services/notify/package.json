@@ -1,0 +1,36 @@
+{
+  "name": "@eve/notify",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./grpc-client": {
+      "types": "./src/grpc-client.ts",
+      "development": "./src/grpc-client.ts",
+      "import": "./dist/grpc-client.js",
+      "default": "./dist/grpc-client.js"
+    }
+  },
+  "scripts": {
+    "dev": "cross-env NODE_OPTIONS=--conditions=development tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@eve/db": "*",
+    "@eve/grpc": "*",
+    "@eve/http": "*",
+    "@eve/location": "*",
+    "@eve/shared": "*",
+    "@grpc/grpc-js": "^1.10.0",
+    "@grpc/proto-loader": "^0.7.10",
+    "express": "^5.1.0",
+    "dotenv": "^17.2.1",
+    "socket.io": "^4.8.3"
+  }
+}

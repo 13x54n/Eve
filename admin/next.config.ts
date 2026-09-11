@@ -1,0 +1,33 @@
+import type { NextConfig } from "next";
+
+function origin(name: string, fallback: string) {
+  return (process.env[name] || fallback).replace(/\/$/, "");
+}
+
+const nextConfig: NextConfig = {
+  async rewrites() {
+    const auth = origin("AUTH_PROXY_TARGET", "http://127.0.0.1:4001");
+    const ride = origin("RIDE_PROXY_TARGET", "http://127.0.0.1:4003");
+    const notify = origin("NOTIFY_PROXY_TARGET", "http://127.0.0.1:4004");
+    const admin = origin("ADMIN_PROXY_TARGET", "http://127.0.0.1:4005");
+    const payment = origin("PAYMENT_PROXY_TARGET", "http://127.0.0.1:4006");
+    return [
+      { source: "/api/auth/:path*", destination: `${auth}/api/auth/:path*` },
+      { source: "/api/admin/:path*", destination: `${admin}/api/admin/:path*` },
+      { source: "/api/payment/:path*", destination: `${payment}/api/payment/:path*` },
+      { source: "/api/driver/login", destination: `${auth}/api/driver/login` },
+      { source: "/api/driver/register", destination: `${auth}/api/driver/register` },
+      { source: "/api/driver/privy", destination: `${auth}/api/driver/privy` },
+      { source: "/api/driver/wallet", destination: `${payment}/api/driver/wallet` },
+      { source: "/api/driver/wallet/:path*", destination: `${payment}/api/driver/wallet/:path*` },
+      { source: "/api/rider/wallet", destination: `${payment}/api/rider/wallet` },
+      { source: "/api/rider/wallet/:path*", destination: `${payment}/api/rider/wallet/:path*` },
+      { source: "/api/driver/:path*", destination: `${ride}/api/driver/:path*` },
+      { source: "/api/rider/:path*", destination: `${ride}/api/rider/:path*` },
+      { source: "/api/public/:path*", destination: `${ride}/api/public/:path*` },
+      { source: "/socket.io/:path*", destination: `${notify}/socket.io/:path*` },
+    ];
+  },
+};
+
+export default nextConfig;

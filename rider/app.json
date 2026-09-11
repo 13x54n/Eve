@@ -1,0 +1,112 @@
+{
+  "expo": {
+    "name": "Eve Rider",
+    "slug": "eve",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "eve",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#208AEF",
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "ca.sherpafoods.eve",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby pickup and drop-off points and to share your position with your driver during a trip.",
+        "NSUserNotificationsUsageDescription": "Eve sends ride updates such as driver offers, arrival, and trip status."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "icon": "./assets/images/icon.png",
+      "package": "ca.sherpafoods.eve",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Eve uses your location to show nearby pickup and drop-off points and to share your position with your driver during a trip.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Eve uses the camera to scan wallet QR codes when cashing out.",
+          "barcodeScannerEnabled": true,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 76,
+          "backgroundColor": "#2e4ed2"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#208AEF",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.23.1"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2a8a9fd4-063a-4f30-8190-c1e9b780aaf0"
+      },
+      "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
+      "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"
+    }
+  }
+}

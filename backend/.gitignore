@@ -1,0 +1,11 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+**/dist
+/load/.tokens.json
+contracts/out
+contracts/cache
+contracts/lib
+contracts/broadcast

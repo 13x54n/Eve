@@ -1,0 +1,333 @@
+# Local split-stack: Postgres, Redis, Kafka, and six Node services
+# (auth, location, ride, notify, admin, payment).
+# Usage (from backend/): docker compose up --build
+# Compose loads backend/.env for ${DATABASE_URL} at build time.
+#
+# Rider/driver Expo apps are not part of this Compose file. Build and run
+# them on the host (or EAS), then open the iOS Simulator / Android Emulator
+# against the published ports (see backend/docs/docker.md).
+
+x-dev-build: &dev-build
+  context: .
+  dockerfile: Dockerfile.dev
+
+# Shared node_modules volume (not host bind). Entrypoint re-runs npm ci when
+# package-lock.json is newer so new deps like viem land without a volume wipe.
+x-app-volumes: &app-volumes
+  - .:/app
+  - eve_node_modules:/app/node_modules
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eve-postgres
+    environment:
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+      POSTGRES_DB: eve
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eve"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eve
+
+  redis:
+    image: redis:7-alpine
+    container_name: eve-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - eve
+
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: eve-kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
+    networks:
+      - eve
+    volumes:
+      - kafka_data:/tmp/kraft-combined-logs
+
+  migrate:
+    build: *dev-build
+    container_name: eve-migrate
+    volumes: *app-volumes
+    command: sh -c "rm -rf packages/db/src/generated/prisma && npx prisma generate && npx prisma migrate deploy"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: "no"
+
+  auth:
+    build: *dev-build
+    container_name: eve-auth
+    volumes: *app-volumes
+    command: npm run dev -w @eve/auth
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      AUTH_PORT: 4001
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      PRIVY_APP_ID: ${PRIVY_APP_ID}
+      PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: auth
+      # Feature Flags for Architecture Refactoring
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4001:4001"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+  location:
+    build: *dev-build
+    container_name: eve-location
+    volumes: *app-volumes
+    command: npm run dev -w @eve/location
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      LOCATION_PORT: 4002
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_PORT: 50051
+      LOCATION_GRPC_URL: location:50051
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: location
+      # Feature Flags
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4002:4002"
+      - "50051:50051"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+  ride:
+    build: *dev-build
+    container_name: eve-ride
+    volumes: *app-volumes
+    command: npm run dev -w @eve/ride
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      RIDE_PORT: 4003
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_URL: location:50051
+      NOTIFY_GRPC_URL: notify:50052
+      IMAGEKIT_PRIVATE_KEY: ${IMAGEKIT_PRIVATE_KEY:-}
+      IMAGEKIT_PUBLIC_KEY: ${IMAGEKIT_PUBLIC_KEY:-}
+      IMAGEKIT_DRIVER_FOLDER: ${IMAGEKIT_DRIVER_FOLDER:-/eve/drivers}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: ride
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4003:4003"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      location:
+        condition: service_started
+      notify:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+  notify:
+    build: *dev-build
+    container_name: eve-notify
+    volumes: *app-volumes
+    command: npm run dev -w @eve/notify
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      NOTIFY_PORT: 4004
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      NOTIFY_GRPC_PORT: 50052
+      NOTIFY_GRPC_URL: notify:50052
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: notify
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4004:4004"
+      - "50052:50052"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      location:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+  admin:
+    build: *dev-build
+    container_name: eve-admin
+    volumes: *app-volumes
+    command: npm run dev -w @eve/admin
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      ADMIN_PORT: 4005
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      LOCATION_GRPC_URL: location:50051
+      NOTIFY_GRPC_URL: notify:50052
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: admin
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      USE_CONSOLIDATED_LOCATION: ${USE_CONSOLIDATED_LOCATION:-false}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4005:4005"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      location:
+        condition: service_started
+      notify:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+  payment:
+    build: *dev-build
+    container_name: eve-payment
+    volumes: *app-volumes
+    command: npm run dev -w @eve/payment
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      PAYMENT_PORT: 4006
+      DATABASE_URL: postgresql://eve:eve@postgres:5432/eve
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      TREASURY_PRIVATE_KEY: ${TREASURY_PRIVATE_KEY:-}
+      CHAIN_RPC_URL: ${CHAIN_RPC_URL:-https://rpc.testnet.arc.io}
+      ESCROW_CONTRACT_ADDRESS: ${ESCROW_CONTRACT_ADDRESS:-}
+      ESCROW_OPERATOR_ADDRESS: ${ESCROW_OPERATOR_ADDRESS:-}
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_CLIENT_ID: payment
+      # Feature Flags
+      USE_DIRECT_NOTIFY: ${USE_DIRECT_NOTIFY:-false}
+      DIRECT_NOTIFY_ROLLOUT: ${DIRECT_NOTIFY_ROLLOUT:-0}
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://jaeger:4318/v1/traces}
+    ports:
+      - "4006:4006"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    networks:
+      - eve
+    restart: unless-stopped
+
+networks:
+  eve:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  kafka_data:
+  eve_node_modules:

@@ -1,0 +1,434 @@
+"use client";
+
+import { use, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { api, apiErrorMessage } from "@/lib/api";
+import {
+  Badge,
+  Button,
+  ErrorBanner,
+  Guard,
+  PageHeader,
+  Panel,
+  StatCard,
+  Table,
+  Input,
+  money,
+  statusTone,
+} from "@/components/ui";
+import { useAuth } from "@/lib/auth-context";
+import { can } from "@/lib/permissions";
+import { useApi } from "@/lib/use-api";
+import { EntityLink } from "@/components/entity-link";
+
+type DriverDocument = {
+  id: string;
+  type: string;
+  status: string;
+  expiresAt: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+};
+
+type Driver = {
+  id: string;
+  approvalStatus: string;
+  presence: string;
+  rating: number;
+  acceptanceRate: number;
+  cancellationRate: number;
+  onlineHours: number;
+  earningsTotal: number;
+  walletBalance: number;
+  city: string | null;
+  notes: string | null;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string | null;
+    accountStatus: string;
+    ethereumWallet: string | null;
+    solanaWallet: string | null;
+  };
+  fleetCompany: { name: string } | null;
+  vehicles: { id: string; plateNumber: string; make: string; model: string; vehicleType: "BIKE" | "CAR" }[];
+  documents: DriverDocument[];
+  trips: { id: string; bookingCode: string; status: string }[];
+  tickets: { id: string; subject: string; status: string }[];
+  incidents: { id: string; type: string; severity: string; tripId: string | null }[];
+  incentives: { kind: string; amount: number; note: string | null }[];
+};
+
+function isPdfDocument(doc: Pick<DriverDocument, "fileUrl" | "fileName" | "mimeType">) {
+  const mime = (doc.mimeType ?? "").toLowerCase();
+  const name = (doc.fileName ?? doc.fileUrl ?? "").toLowerCase();
+  return mime.includes("pdf") || name.includes(".pdf");
+}
+
+function formatDocumentType(type: string) {
+  return type
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function DocumentThumb({
+  doc,
+  onOpen,
+}: {
+  doc: DriverDocument;
+  onOpen: (doc: DriverDocument) => void;
+}) {
+  const url = doc.fileUrl?.trim();
+  if (!url) {
+    return <span className="text-muted-foreground">No file</span>;
+  }
+
+  if (isPdfDocument(doc)) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex h-14 w-14 items-center justify-center rounded-md border border-border bg-muted text-[11px] font-bold tracking-wide text-foreground hover:bg-muted/80"
+      >
+        PDF
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(doc)}
+      className="block h-14 w-14 overflow-hidden rounded-md border border-border bg-muted"
+      aria-label={`Preview ${formatDocumentType(doc.type)}`}
+    >
+      <img src={url} alt="" className="h-full w-full object-cover" />
+    </button>
+  );
+}
+
+function DocumentLightbox({
+  doc,
+  onClose,
+}: {
+  doc: DriverDocument;
+  onClose: () => void;
+}) {
+  const url = doc.fileUrl?.trim();
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (!url) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-6"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${formatDocumentType(doc.type)} preview`}
+    >
+      <div className="flex max-h-full max-w-5xl flex-col gap-3" onClick={(event) => event.stopPropagation()}>
+        <div className="flex items-center justify-between gap-4 text-white">
+          <p className="text-sm font-medium">
+            {formatDocumentType(doc.type)}
+            {doc.fileName ? ` · ${doc.fileName}` : ""}
+          </p>
+          <div className="flex items-center gap-3">
+            <a href={url} target="_blank" rel="noreferrer" className="text-sm font-semibold underline">
+              Open original
+            </a>
+            <button type="button" onClick={onClose} className="text-sm font-semibold">
+              Close
+            </button>
+          </div>
+        </div>
+        <img src={url} alt={formatDocumentType(doc.type)} className="max-h-[80vh] max-w-full rounded-md bg-black object-contain" />
+      </div>
+    </div>
+  );
+}
+
+export default function DriverDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const { user } = useAuth();
+  const { data, reload, error, loading } = useApi<Driver>(`/admin/drivers/${id}`);
+  const write = can(user, "drivers:approve");
+  const finance = can(user, "payments:payout");
+  const [preview, setPreview] = useState<DriverDocument | null>(null);
+  const [credit, setCredit] = useState("10");
+  const [payout, setPayout] = useState("10");
+
+  async function review(body: Record<string, unknown>) {
+    try {
+      await api(`/admin/drivers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      });
+      await reload();
+      toast.success("Driver updated");
+    } catch (caught) {
+      toast.error(apiErrorMessage(caught));
+    }
+  }
+
+  return (
+    <Guard allowed={can(user, "drivers:read")}>
+      {error ? <ErrorBanner>{error}</ErrorBanner> : null}
+      {loading && !data ? (
+        <div className="h-40 animate-pulse rounded-lg border border-border bg-white" />
+      ) : !data ? (
+        <p className="text-[13px] text-muted-foreground">Driver not found.</p>
+      ) : (
+        <div className="space-y-5">
+          <PageHeader
+            backHref="/drivers"
+            backLabel="Drivers"
+            title={data.user.name}
+            subtitle={`${data.user.email} · ${data.presence.toLowerCase()} · ${data.city ?? "No city"}`}
+            actions={<Badge tone={statusTone(data.approvalStatus)}>{data.approvalStatus}</Badge>}
+          />
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5">
+            <StatCard label="Rating" value={data.rating ? `★ ${data.rating.toFixed(1)}` : "—"} />
+            <StatCard label="Acceptance" value={`${data.acceptanceRate}%`} />
+            <StatCard label="Cancellations" value={`${data.cancellationRate}%`} />
+            <StatCard label="Matched fares" value={money(data.earningsTotal)} />
+            <StatCard label="Eve wallet" value={money(data.walletBalance)} />
+          </div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="space-y-5">
+              <Panel title="Documents" flush>
+                <Table
+                  columns={["Preview", "Type", "Status", "Expires", "Action"]}
+                  empty="No documents uploaded yet."
+                  rows={data.documents.map((doc) => [
+                    <DocumentThumb key={doc.id} doc={doc} onOpen={setPreview} />,
+                    <div key="type">
+                      <p className="font-medium">{formatDocumentType(doc.type)}</p>
+                      {doc.fileName ? (
+                        <p className="mt-0.5 truncate text-[12px] text-muted-foreground">{doc.fileName}</p>
+                      ) : null}
+                    </div>,
+                    <Badge key={`${doc.id}-status`} tone={statusTone(doc.status)}>
+                      {doc.status}
+                    </Badge>,
+                    doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "—",
+                    write ? (
+                      <div key="a" className="flex gap-3">
+                        <button
+                          className="cursor-pointer text-[12px] font-semibold text-emerald-700 hover:underline"
+                          onClick={() => void review({ documentId: doc.id, documentStatus: "APPROVED" })}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          className="cursor-pointer text-[12px] font-semibold text-red-600 hover:underline"
+                          onClick={() => void review({ documentId: doc.id, documentStatus: "REJECTED" })}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      "—"
+                    ),
+                  ])}
+                />
+              </Panel>
+              <Panel title="Vehicles" flush>
+                <Table
+                  columns={["Plate", "Vehicle", "Type"]}
+                  rows={data.vehicles.map((vehicle) => [
+                    <span key="p" className="font-mono font-semibold">
+                      {vehicle.plateNumber}
+                    </span>,
+                    `${vehicle.make} ${vehicle.model}`,
+                    vehicle.vehicleType === "BIKE" ? "Bike" : "Car",
+                  ])}
+                />
+              </Panel>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <Panel title="Trip history" flush>
+                  <Table
+                    columns={["Booking", "Status"]}
+                    rows={data.trips.map((trip) => [
+                      <EntityLink key={trip.id} href={`/trips/${trip.id}`} className="font-mono">
+                        {trip.bookingCode}
+                      </EntityLink>,
+                      <Badge key={`${trip.id}-s`} tone={statusTone(trip.status)}>
+                        {trip.status}
+                      </Badge>,
+                    ])}
+                  />
+                </Panel>
+                <Panel title="Tickets" flush>
+                  <Table
+                    columns={["Subject", "Status"]}
+                    empty="No tickets from this driver."
+                    rows={(data.tickets ?? []).map((ticket) => [
+                      <EntityLink key={ticket.id} href={`/support/${ticket.id}`}>
+                        {ticket.subject}
+                      </EntityLink>,
+                      <Badge key={`${ticket.id}-s`} tone={statusTone(ticket.status)}>
+                        {ticket.status}
+                      </Badge>,
+                    ])}
+                  />
+                </Panel>
+              </div>
+              <Panel title="Safety & incentives" flush>
+                <Table
+                  columns={["Record", "Detail"]}
+                  rows={[
+                    ...data.incidents.map((item) => [
+                      item.tripId ? (
+                        <EntityLink key={item.id} href={`/trips/${item.tripId}`}>
+                          {item.type}
+                        </EntityLink>
+                      ) : (
+                        item.type
+                      ),
+                      <Badge key={`${item.id}-s`} tone={statusTone(item.severity)}>
+                        {item.severity}
+                      </Badge>,
+                    ]),
+                    ...data.incentives.map((item) => [
+                      item.kind,
+                      <span key="a" className="font-semibold text-emerald-700">
+                        {money(item.amount)}
+                      </span>,
+                    ]),
+                  ]}
+                />
+              </Panel>
+            </div>
+            <div className="space-y-5">
+              <Panel title="Eve Wallet">
+                <dl className="grid gap-3 text-[13px]">
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Available credits
+                    </dt>
+                    <dd className="mt-1 font-semibold text-emerald-700">{money(data.walletBalance)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Privy Ethereum
+                    </dt>
+                    <dd className="mt-1 break-all font-mono text-[12px]">
+                      {data.user.ethereumWallet ?? "Not linked"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Privy Solana
+                    </dt>
+                    <dd className="mt-1 break-all font-mono text-[12px]">
+                      {data.user.solanaWallet ?? "Not linked"}
+                    </dd>
+                  </div>
+                </dl>
+                <p className="mt-3 text-[12px] text-muted-foreground">
+                  Trip fares stay off-platform. Credits here can be cashed out to the Privy Ethereum
+                  address.
+                </p>
+                {finance ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Input
+                      aria-label="Credit amount"
+                      value={credit}
+                      onChange={(event) => setCredit(event.target.value)}
+                    />
+                    <Button
+                      tone="ghost"
+                      onClick={() => {
+                        const value = Number(credit);
+                        if (!Number.isFinite(value) || value === 0) return;
+                        api(`/admin/drivers/${id}/wallet/credit`, {
+                          method: "POST",
+                          body: JSON.stringify({ amount: value }),
+                        })
+                          .then(() => reload())
+                          .then(() => toast.success("Wallet credited"))
+                          .catch((caught) => toast.error(apiErrorMessage(caught)));
+                      }}
+                    >
+                      Add credit
+                    </Button>
+                    <Input
+                      aria-label="Payout amount"
+                      value={payout}
+                      onChange={(event) => setPayout(event.target.value)}
+                    />
+                    <Button
+                      onClick={() => {
+                        const value = Number(payout);
+                        if (!Number.isFinite(value) || value <= 0) return;
+                        api("/admin/payouts", {
+                          method: "POST",
+                          body: JSON.stringify({
+                            userId: data.user.id,
+                            amount: value,
+                            note: "Admin payout to Privy wallet",
+                          }),
+                        })
+                          .then(() => reload())
+                          .then(() => toast.success("Payout recorded"))
+                          .catch((caught) => toast.error(apiErrorMessage(caught)));
+                      }}
+                    >
+                      Payout to Privy
+                    </Button>
+                  </div>
+                ) : null}
+              </Panel>
+              {write ? (
+                <Panel title="Review">
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={() => void review({ approvalStatus: "APPROVED" })}>Approve</Button>
+                    <Button tone="ghost" onClick={() => void review({ approvalStatus: "NEEDS_INFO" })}>
+                      Request info
+                    </Button>
+                    <Button tone="danger" onClick={() => void review({ approvalStatus: "REJECTED" })}>
+                      Reject
+                    </Button>
+                    <Button tone="ghost" onClick={() => void review({ approvalStatus: "SUSPENDED" })}>
+                      Suspend
+                    </Button>
+                    <Button tone="ghost" onClick={() => void review({ approvalStatus: "DEACTIVATED" })}>
+                      Deactivate
+                    </Button>
+                  </div>
+                </Panel>
+              ) : null}
+              <Panel title="Fleet">
+                <p className="text-[13px]">
+                  {data.fleetCompany?.name ?? "Independent"}
+                  <br />
+                  <span className="text-muted-foreground">
+                    {data.onlineHours}h online
+                  </span>
+                </p>
+              </Panel>
+            </div>
+          </div>
+        </div>
+      )}
+      {preview ? <DocumentLightbox doc={preview} onClose={() => setPreview(null)} /> : null}
+    </Guard>
+  );
+}

@@ -1,0 +1,134 @@
+# Eve Monolith - Simplified Docker Compose
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eve-postgres
+    environment:
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+      POSTGRES_DB: eve
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eve"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eve
+
+  redis:
+    image: redis:7-alpine
+    container_name: eve-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - eve
+
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: eve-pgbouncer
+    environment:
+      DATABASES: eve=host=postgres port=5432 dbname=eve
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 20
+      RESERVE_POOL_SIZE: 5
+      SERVER_IDLE_TIMEOUT: 600
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eve
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.monolith
+    container_name: eve-migrate
+    command: sh -c "npx prisma generate && npx prisma migrate deploy"
+    environment:
+      DATABASE_URL: postgresql://eve:eve@pgbouncer:6432/eve
+    depends_on:
+      pgbouncer:
+        condition: service_started
+    networks:
+      - eve
+    restart: "no"
+
+  eve-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.monolith
+    container_name: eve-server
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://eve:eve@pgbouncer:6432/eve
+      REDIS_URL: redis://redis:6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+      PRIVY_APP_ID: ${PRIVY_APP_ID}
+      PRIVY_APP_SECRET: ${PRIVY_APP_SECRET}
+      # Feature Flags
+      USE_MONOLITH: true
+      USE_DIRECT_NOTIFY: true
+      USE_CONSOLIDATED_LOCATION: true
+      # Monitoring
+      ENABLE_TRACING: ${ENABLE_TRACING:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      # Payment
+      TREASURY_PRIVATE_KEY: ${TREASURY_PRIVATE_KEY:-}
+      CHAIN_RPC_URL: ${CHAIN_RPC_URL:-https://rpc.testnet.arc.io}
+      ESCROW_CONTRACT_ADDRESS: ${ESCROW_CONTRACT_ADDRESS:-}
+      ESCROW_OPERATOR_ADDRESS: ${ESCROW_OPERATOR_ADDRESS:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - eve
+    restart: unless-stopped
+
+  # Optional: Jaeger for distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: eve-jaeger
+    ports:
+      - "16686:16686"  # UI
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    networks:
+      - eve
+    profiles:
+      - monitoring
+
+networks:
+  eve:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

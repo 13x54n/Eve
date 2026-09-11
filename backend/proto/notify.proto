@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package eve.notify;
+
+// Notify Service handles real-time notifications and events
+service NotifyService {
+  // Fire-and-forget event emission
+  rpc EmitTripEvent(EmitTripEventRequest) returns (EmptyResponse);
+  rpc EmitUserEvent(EmitUserEventRequest) returns (EmptyResponse);
+  rpc EmitAdminEvent(EmitAdminEventRequest) returns (EmptyResponse);
+  rpc EmitTripAndUserEvent(EmitTripAndUserEventRequest) returns (EmptyResponse);
+  
+  // Streaming for real-time dashboards
+  rpc StreamAdminEvents(StreamAdminEventsRequest) returns (stream AdminEvent);
+  rpc StreamTripEvents(StreamTripEventsRequest) returns (stream TripEvent);
+}
+
+// Emit trip event request
+message EmitTripEventRequest {
+  string trip_id = 1;
+  string event = 2;
+  string payload = 3; // JSON string
+}
+
+// Emit user event request
+message EmitUserEventRequest {
+  string role = 1; // "RIDER" or "DRIVER"
+  string user_id = 2;
+  string event = 3;
+  string payload = 4; // JSON string
+}
+
+// Emit admin event request
+message EmitAdminEventRequest {
+  string event = 1;
+  string payload = 2; // JSON string
+}
+
+// Emit trip and user event request
+message EmitTripAndUserEventRequest {
+  string trip_id = 1;
+  string role = 2; // "RIDER" or "DRIVER"
+  string user_id = 3;
+  string event = 4;
+  string payload = 5; // JSON string
+}
+
+// Stream admin events request
+message StreamAdminEventsRequest {
+  // Empty - streams all admin events
+}
+
+// Admin event
+message AdminEvent {
+  string event = 1;
+  string payload = 2;
+  int64 timestamp = 3;
+}
+
+// Stream trip events request
+message StreamTripEventsRequest {
+  string trip_id = 1;
+}
+
+// Trip event
+message TripEvent {
+  string trip_id = 1;
+  string event = 2;
+  string payload = 3;
+  int64 timestamp = 4;
+}
+
+// Empty response
+message EmptyResponse {
+  bool success = 1;
+}

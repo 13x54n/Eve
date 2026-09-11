@@ -1,0 +1,118 @@
+{
+  "expo": {
+    "name": "Eve Driver",
+    "slug": "eve-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "eve-driver",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#208AEF",
+    "ios": {
+      "icon": "./assets/images/icon.png",
+      "bundleIdentifier": "ca.sherpafoods.evedriver",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you are online.",
+        "NSUserNotificationsUsageDescription": "Eve sends incoming trip requests, offer updates, and trip status alerts.",
+        "NSPhotoLibraryUsageDescription": "Eve lets you upload licence, insurance, and vehicle documents from your photo library during driver onboarding."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": [
+              "C617.1"
+            ]
+          }
+        ]
+      }
+    },
+    "android": {
+      "icon": "./assets/images/icon.png",
+      "package": "ca.sherpafoods.evedriver",
+      "versionCode": 1,
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "USE_BIOMETRIC"
+      ],
+      "softwareKeyboardLayoutMode": "pan"
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Eve uses your location to show nearby ride requests on the map and to share your position with riders while you are online.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Eve uses the camera to scan wallet QR codes when cashing out.",
+          "barcodeScannerEnabled": true,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/icon.png",
+          "imageWidth": 76,
+          "backgroundColor": "#2e4ed2"
+        }
+      ],
+      "expo-secure-store",
+      "expo-font",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-document-picker",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#208AEF",
+          "defaultChannel": "default"
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsVersion": "11.23.1"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": false
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "42957418-0ab3-4c1f-b8b3-851876e8c87e"
+      },
+      "privacyPolicyUrl": "https://REPLACE_WITH_PUBLIC_PRIVACY_POLICY_URL",
+      "supportUrl": "https://REPLACE_WITH_PUBLIC_SUPPORT_URL"
+    }
+  }
+}

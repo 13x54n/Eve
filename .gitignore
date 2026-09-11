@@ -1,0 +1,14 @@
+**/node_modules
+**/.expo
+**/.next/
+**/.env
+**/.env*.local
+**/*.jks
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/google-service-account.json
+.DS_Store
+
+.agents/
+package-lock.json
