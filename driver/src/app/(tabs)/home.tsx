@@ -48,7 +48,6 @@ export default function Home() {
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null);
   const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
   const [pendingEscrowTrip, setPendingEscrowTrip] = useState<PendingEscrowTrip | null>(null);
-  const [activeDispatch, setActiveDispatch] = useState<ActiveDispatch | null>(null);
   const [offerFare, setOfferFare] = useState<Record<string, string>>({});
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
