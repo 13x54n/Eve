@@ -25,7 +25,10 @@ import {
   DriverWallet,
   EarningsSummary,
   EarningsTrip,
+  SwapEstimate,
   WalletLedgerEntry,
+  estimateDriverSwap,
+  executeDriverSwap,
   getEarnings,
   getWallet,
   recordDriverTransfer,
@@ -33,12 +36,12 @@ import {
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 import { useCompletePrivySession } from '@/lib/complete-privy-session';
 import { truncateWalletAddress } from '@/lib/privy';
-import { getArcUsdcBalance } from '@/lib/arc-chain';
+import { getArcEurcBalance, getArcUsdcBalance } from '@/lib/arc-chain';
 import { useSendUsdcTransfer } from '@/lib/send-escrow';
 import { lightImpact } from '@/lib/haptics';
 import { notifyRideEvent } from '@/services/notifications';
 
-type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund';
+type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund' | 'swap';
 
 type Transaction = {
   id: string;
@@ -56,6 +59,7 @@ type Section = {
 };
 
 function ledgerType(entry: WalletLedgerEntry): TxType {
+  if (entry.brand === 'SWAP' || entry.note?.toLowerCase().includes('swap')) return 'swap';
   if (entry.type === 'CREDIT') return 'credit';
   if (entry.type === 'WALLET_WITHDRAW') return 'withdraw';
   if (entry.type === 'CHARGE') return 'charge';
@@ -64,6 +68,9 @@ function ledgerType(entry: WalletLedgerEntry): TxType {
 }
 
 function ledgerTitle(entry: WalletLedgerEntry) {
+  if (entry.brand === 'SWAP' || entry.note?.toLowerCase().includes('swap')) {
+    return entry.note || 'Token swap';
+  }
   if (entry.type === 'CREDIT') return entry.note || 'Platform credit';
   if (entry.type === 'CHARGE') return entry.note || 'Trip USDC';
   if (entry.type === 'REFUND') return entry.note || 'Escrow refund';
@@ -112,10 +119,13 @@ function groupHistory(
   }
   for (const entry of entries) {
     const created = new Date(entry.createdAt);
+    const isSwap = entry.brand === 'SWAP' || entry.note?.toLowerCase().includes('swap');
     const signed =
-      entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT' || entry.type === 'REFUND'
-        ? -Math.abs(entry.amount)
-        : Math.abs(entry.amount);
+      isSwap
+        ? entry.amount
+        : entry.type === 'WALLET_WITHDRAW' || entry.type === 'PAYOUT' || entry.type === 'REFUND'
+          ? -Math.abs(entry.amount)
+          : Math.abs(entry.amount);
     push(entry.createdAt, {
       id: entry.id,
       type: ledgerType(entry),
@@ -139,6 +149,7 @@ const TX_ICON: Record<TxType, { name: any; lib: 'ion' | 'mci'; bg: string; fg: s
   payout: { name: 'wallet', lib: 'ion', bg: '#FFFBEB', fg: '#D97706' },
   charge: { name: 'arrow-down', lib: 'ion', bg: '#ECFDF5', fg: '#059669' },
   refund: { name: 'return-up-back', lib: 'ion', bg: '#F8FAFC', fg: '#64748B' },
+  swap: { name: 'swap-horizontal', lib: 'ion', bg: '#F3E8FF', fg: '#7C3AED' },
 };
 
 function TxIcon({ type }: { type: TxType }) {
@@ -169,6 +180,13 @@ export default function Earnings() {
   const [linking, setLinking] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [showCashOut, setShowCashOut] = useState(false);
+  const [showSwap, setShowSwap] = useState(false);
+  const [tokenIn, setTokenIn] = useState<'USDC' | 'EURC'>('USDC');
+  const [tokenOut, setTokenOut] = useState<'USDC' | 'EURC'>('EURC');
+  const [swapAmount, setSwapAmount] = useState('');
+  const [swapEstimate, setSwapEstimate] = useState<SwapEstimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
+  const [swapping, setSwapping] = useState(false);
   const [showReceiveQR, setShowReceiveQR] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -177,10 +195,10 @@ export default function Earnings() {
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!toast || cashingOut) return;
+    if (!toast || cashingOut || swapping) return;
     const timer = setTimeout(() => setToast(null), 2500);
     return () => clearTimeout(timer);
-  }, [toast, cashingOut]);
+  }, [toast, cashingOut, swapping]);
 
   useEffect(() => {
     if (!copied) return;
@@ -196,16 +214,26 @@ export default function Earnings() {
       setSummary(earningsResult.summary);
       setRecentTrips(earningsResult.recentTrips);
       let onChainUsdc = walletResult.onChainUsdc;
+      let onChainEurc = walletResult.onChainEurc ?? 0;
       try {
-        onChainUsdc = await getArcUsdcBalance(
-          walletResult.ethereumWallet,
-          walletResult.chain?.tokenAddress,
-          walletResult.chain?.tokenDecimals ?? 6,
-        );
+        const [usdcBal, eurcBal] = await Promise.all([
+          getArcUsdcBalance(
+            walletResult.ethereumWallet,
+            walletResult.chain?.tokenAddress,
+            walletResult.chain?.tokenDecimals ?? 6,
+          ),
+          getArcEurcBalance(
+            walletResult.ethereumWallet,
+            (walletResult.chain as any)?.eurcAddress,
+            6,
+          ),
+        ]);
+        onChainUsdc = usdcBal;
+        onChainEurc = eurcBal;
       } catch {
         /* keep API value if RPC is unreachable */
       }
-      setWallet({ ...walletResult, onChainUsdc });
+      setWallet({ ...walletResult, onChainUsdc, onChainEurc });
     } catch {
       setError(true);
     } finally {
@@ -346,6 +374,101 @@ export default function Earnings() {
     }
   }
 
+  const availableIn = tokenIn === 'USDC' ? onChain : (wallet?.onChainEurc ?? 0);
+  const availableOut = tokenOut === 'USDC' ? onChain : (wallet?.onChainEurc ?? 0);
+
+  function onFlipSwapDirection() {
+    setTokenIn((prev) => (prev === 'USDC' ? 'EURC' : 'USDC'));
+    setTokenOut((prev) => (prev === 'EURC' ? 'USDC' : 'EURC'));
+    setSwapEstimate(null);
+  }
+
+  function onSelectMaxSwap() {
+    if (availableIn > 0) {
+      setSwapAmount(availableIn.toFixed(2));
+    }
+  }
+
+  useEffect(() => {
+    const amountNum = Number(swapAmount);
+    if (!showSwap || !Number.isFinite(amountNum) || amountNum <= 0) {
+      setSwapEstimate(null);
+      return;
+    }
+    let active = true;
+    setEstimating(true);
+    const timer = setTimeout(async () => {
+      try {
+        const est = await estimateDriverSwap({
+          tokenIn,
+          tokenOut,
+          amountIn: amountNum,
+        });
+        if (active) {
+          setSwapEstimate(est);
+        }
+      } catch {
+        if (active) {
+          setSwapEstimate(null);
+        }
+      } finally {
+        if (active) {
+          setEstimating(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [swapAmount, tokenIn, tokenOut, showSwap]);
+
+  async function onConfirmSwap() {
+    const val = Number(swapAmount);
+    if (!Number.isFinite(val) || val <= 0) {
+      Alert.alert('Swap', 'Enter a valid amount to swap');
+      return;
+    }
+    if (val > availableIn) {
+      Alert.alert('Swap', `Insufficient ${tokenIn} balance`);
+      return;
+    }
+    if (!wallet?.ethereumWallet) {
+      Alert.alert('Swap', 'Link a Privy Ethereum wallet before swapping');
+      return;
+    }
+
+    try {
+      setSwapping(true);
+      setToast(`Swapping ${val.toFixed(2)} ${tokenIn}…`);
+      const { result } = await executeDriverSwap({
+        tokenIn,
+        tokenOut,
+        amountIn: val,
+      });
+      lightImpact();
+      setSwapAmount('');
+      setSwapEstimate(null);
+      setShowSwap(false);
+      await load({ silent: true });
+      setToast(`Swapped for ${result.amountOut} ${tokenOut}`);
+      void notifyRideEvent(
+        'Tokens swapped',
+        `Swapped ${val.toFixed(2)} ${tokenIn} for ${result.amountOut} ${tokenOut} on Arc Testnet`,
+        { screen: 'wallet' },
+      );
+    } catch (caught: unknown) {
+      const message =
+        (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (caught instanceof Error ? caught.message : 'Swap failed');
+      setToast('Swap failed');
+      Alert.alert('Swap failed', message);
+    } finally {
+      setSwapping(false);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <StatusBar barStyle="dark-content" />
@@ -393,7 +516,7 @@ export default function Earnings() {
         <View style={styles.scannerContainer}>
           {hasPermission ? (
             <CameraView
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
               facing="back"
               onBarcodeScanned={(result) => {
                 if (result.data) {
@@ -461,9 +584,27 @@ export default function Earnings() {
                 <Ionicons name="arrow-down" size={18} color="#2E4ED2" />
                 <Text style={styles.actionLabel}>Receive</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionBtn} onPress={() => setShowCashOut((value) => !value)} disabled={cashingOut}>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => {
+                  setShowCashOut((value) => !value);
+                  setShowSwap(false);
+                }}
+                disabled={cashingOut || swapping}
+              >
                 <Ionicons name="arrow-up" size={18} color="#2E4ED2" />
                 <Text style={styles.actionLabel}>Cash out</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionBtn}
+                onPress={() => {
+                  setShowSwap((value) => !value);
+                  setShowCashOut(false);
+                }}
+                disabled={cashingOut || swapping || !wallet?.ethereumWallet}
+              >
+                <Ionicons name="swap-horizontal" size={18} color="#2E4ED2" />
+                <Text style={styles.actionLabel}>Swap</Text>
               </TouchableOpacity>
               {!wallet?.ethereumWallet ? (
                 <TouchableOpacity style={styles.actionBtn} onPress={() => void onLinkWallet()} disabled={linking}>
@@ -472,7 +613,6 @@ export default function Earnings() {
                 </TouchableOpacity>
               ) : null}
             </View>
-
 
             {showCashOut ? (
               <View style={styles.cashOutSection}>
@@ -507,6 +647,131 @@ export default function Earnings() {
                   {cashingOut ? <ActivityIndicator color="#FFFFFF" /> : null}
                   <Text style={styles.cashOutConfirmText}>{cashingOut ? 'Sending…' : 'Confirm'}</Text>
                 </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {showSwap ? (
+              <View style={styles.swapSection}>
+                <View style={styles.swapHeader}>
+                  <Text style={styles.swapTitle}>Swap tokens</Text>
+                  <View style={styles.swapNetworkBadge}>
+                    <Text style={styles.swapNetworkBadgeText}>{wallet?.chain.chainName ?? 'Arc Testnet'}</Text>
+                  </View>
+                </View>
+
+                {/* Token In Block */}
+                <View style={styles.swapTokenBlock}>
+                  <View style={styles.swapTokenHeader}>
+                    <Text style={styles.swapBlockLabel}>You pay</Text>
+                    <Text style={styles.swapBalanceText}>
+                      Balance: {availableIn.toFixed(2)} {tokenIn}
+                    </Text>
+                  </View>
+                  <View style={styles.swapInputRow}>
+                    <TextInput
+                      style={styles.swapAmountInput}
+                      placeholder="0.00"
+                      keyboardType="decimal-pad"
+                      value={swapAmount}
+                      onChangeText={setSwapAmount}
+                      editable={!swapping}
+                    />
+                    <TouchableOpacity style={styles.swapMaxBtn} onPress={onSelectMaxSwap} disabled={swapping}>
+                      <Text style={styles.swapMaxText}>MAX</Text>
+                    </TouchableOpacity>
+                    <View style={styles.swapTokenChip}>
+                      <Text style={styles.swapTokenChipText}>{tokenIn}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Flip Direction Button */}
+                <View style={styles.swapFlipRow}>
+                  <TouchableOpacity style={styles.swapFlipBtn} onPress={onFlipSwapDirection} disabled={swapping}>
+                    <Ionicons name="swap-vertical" size={18} color="#2E4ED2" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Token Out Block */}
+                <View style={styles.swapTokenBlock}>
+                  <View style={styles.swapTokenHeader}>
+                    <Text style={styles.swapBlockLabel}>You receive (est.)</Text>
+                    <Text style={styles.swapBalanceText}>
+                      Balance: {availableOut.toFixed(2)} {tokenOut}
+                    </Text>
+                  </View>
+                  <View style={styles.swapInputRow}>
+                    <Text style={styles.swapReceiveAmount}>
+                      {estimating ? 'Estimating…' : swapEstimate ? swapEstimate.estimatedOutput.amount : '0.00'}
+                    </Text>
+                    <View style={styles.swapTokenChip}>
+                      <Text style={styles.swapTokenChipText}>{tokenOut}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Live Quote Details */}
+                {swapEstimate ? (
+                  <View style={styles.swapQuoteDetails}>
+                    <View style={styles.swapQuoteRow}>
+                      <Text style={styles.swapQuoteKey}>Rate</Text>
+                      <Text style={styles.swapQuoteVal}>
+                        1 {tokenIn} ≈ {swapEstimate.exchangeRate.toFixed(4)} {tokenOut}
+                      </Text>
+                    </View>
+                    <View style={styles.swapQuoteRow}>
+                      <Text style={styles.swapQuoteKey}>Provider fee</Text>
+                      <Text style={styles.swapQuoteVal}>
+                        {swapEstimate.fees[0]?.amount} {swapEstimate.fees[0]?.token}
+                      </Text>
+                    </View>
+                    <View style={styles.swapQuoteRow}>
+                      <Text style={styles.swapQuoteKey}>Network fee</Text>
+                      <Text style={styles.swapQuoteVal}>
+                        {swapEstimate.fees[1]?.amount} {swapEstimate.fees[1]?.token}
+                      </Text>
+                    </View>
+                    <View style={styles.swapQuoteRow}>
+                      <Text style={styles.swapQuoteKey}>Stop limit (min. received)</Text>
+                      <Text style={styles.swapQuoteVal}>
+                        {swapEstimate.stopLimit.amount} {tokenOut}
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+
+                {/* Confirm Button */}
+                <TouchableOpacity
+                  style={[
+                    styles.swapConfirmBtn,
+                    (swapping || !swapAmount || Number(swapAmount) <= 0 || Number(swapAmount) > availableIn) &&
+                      styles.swapConfirmBtnDisabled,
+                  ]}
+                  onPress={() => void onConfirmSwap()}
+                  disabled={swapping || !swapAmount || Number(swapAmount) <= 0 || Number(swapAmount) > availableIn}
+                >
+                  {swapping ? <ActivityIndicator color="#FFFFFF" /> : null}
+                  <Text style={styles.swapConfirmText}>
+                    {swapping
+                      ? 'Swapping…'
+                      : Number(swapAmount) > availableIn
+                        ? `Insufficient ${tokenIn}`
+                        : `Swap ${tokenIn} for ${tokenOut}`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+
+            {wallet?.onChainEurc && wallet.onChainEurc > 0 ? (
+              <View style={styles.tokenRow}>
+                <View style={[styles.tokenIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="logo-euro" size={16} color="#2E4ED2" />
+                </View>
+                <View style={styles.txMiddle}>
+                  <Text style={styles.txTitle}>EURC balance</Text>
+                  <Text style={styles.txTime}>Arc Testnet (ERC-20)</Text>
+                </View>
+                <Text style={styles.tokenAmount}>{hidden ? '••••' : `${wallet.onChainEurc.toFixed(2)} EURC`}</Text>
               </View>
             ) : null}
 
@@ -818,6 +1083,160 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   cashOutConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  swapSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 14,
+  },
+  swapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  swapTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  swapNetworkBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  swapNetworkBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#2563EB',
+  },
+  swapTokenBlock: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  swapTokenHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  swapBlockLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  swapBalanceText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  swapInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  swapAmountInput: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    paddingVertical: 4,
+  },
+  swapReceiveAmount: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    paddingVertical: 4,
+  },
+  swapMaxBtn: {
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  swapMaxText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#2E4ED2',
+  },
+  swapTokenChip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  swapTokenChipText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  swapFlipRow: {
+    alignItems: 'center',
+    marginVertical: -8,
+    zIndex: 5,
+  },
+  swapFlipBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  swapQuoteDetails: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 10,
+    gap: 6,
+  },
+  swapQuoteRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  swapQuoteKey: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  swapQuoteVal: {
+    fontSize: 12,
+    color: '#0F172A',
+    fontWeight: '600',
+  },
+  swapConfirmBtn: {
+    backgroundColor: '#2E4ED2',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+  swapConfirmBtnDisabled: {
+    opacity: 0.5,
+  },
+  swapConfirmText: {
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 15,

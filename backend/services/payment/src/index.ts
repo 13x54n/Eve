@@ -21,8 +21,11 @@ export {
   quoteTripSettlement,
   refundTripEscrow,
   withdrawDriverWallet,
+  estimateDriverSwap,
+  executeDriverSwap,
 } from "./payment.service.js";
 export { advanceEscrowNowMs, DISPUTE_WINDOW_MS, setEscrowForTests, setEscrowNowMs } from "./escrow.js";
 export { clearEscrowTimers, findTripIdByHash, flushDueEscrowSettlements } from "./escrow-scheduler.js";
 export { handlePaymentEvent } from "./kafka-consumer.js";
-export { getUsdcBalance, setBalanceReaderForTests } from "./chain.js";
+export { getUsdcBalance, getEurcBalance, setBalanceReaderForTests } from "./chain.js";
+export * from "./swap.js";

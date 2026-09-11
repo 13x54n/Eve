@@ -1,6 +1,7 @@
 process.env.EXPO_PUBLIC_AUTH_URL = 'http://localhost:4001/api';
 process.env.EXPO_PUBLIC_API_URL = 'http://localhost:4003/api';
 process.env.EXPO_PUBLIC_WS_URL = 'http://localhost:4004';
+process.env.EXPO_PUBLIC_PAYMENT_URL = 'http://localhost:4006/api';
 process.env.EXPO_PUBLIC_PRIVY_APP_ID = 'test-privy-app-id';
 process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID = 'test-client-id';
 

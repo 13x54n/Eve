@@ -31,5 +31,7 @@ driverWalletRouter.use(paymentRateLimiter, requireAuth, requireRole("DRIVER"));
 driverWalletRouter.get("/wallet", controller.driverWallet);
 driverWalletRouter.post("/wallet/withdraw", controller.withdrawWallet);
 driverWalletRouter.post("/wallet/transfers", controller.recordWalletTransfer);
+driverWalletRouter.post("/wallet/swap/estimate", controller.estimateSwap);
+driverWalletRouter.post("/wallet/swap", controller.executeSwap);
 
 export const paymentInternalRouter = Router();

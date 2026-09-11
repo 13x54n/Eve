@@ -7,6 +7,8 @@ import {
 } from "viem";
 import { arcTestnet } from "viem/chains";
 import {
+  ARC_EURC_ERC20_ADDRESS,
+  ARC_EURC_ERC20_DECIMALS,
   ARC_USDC_ERC20_ADDRESS,
   ARC_USDC_ERC20_DECIMALS,
   DEFAULT_PAYOUT_CHAIN_ID,
@@ -71,6 +73,36 @@ export async function getUsdcBalance(address: string | null | undefined) {
     });
     const raw = await client.readContract({
       address: getAddress(usdcErc20Address()),
+      abi: ERC20_BALANCE_ABI,
+      functionName: "balanceOf",
+      args: [getAddress(address)],
+    });
+    return Number(formatUnits(raw, decimals));
+  } catch {
+    return 0;
+  }
+}
+
+export function eurcErc20Address() {
+  return ARC_EURC_ERC20_ADDRESS;
+}
+
+/** 6-decimal ERC-20 EURC view. */
+export async function getEurcBalance(address: string | null | undefined) {
+  if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return 0;
+  }
+  const decimals = ARC_EURC_ERC20_DECIMALS;
+  try {
+    if (process.env.VITEST) {
+      return 0;
+    }
+    const client = createPublicClient({
+      chain: payoutChain(),
+      transport: http(getChainRpcUrl()),
+    });
+    const raw = await client.readContract({
+      address: getAddress(eurcErc20Address()),
       abi: ERC20_BALANCE_ABI,
       functionName: "balanceOf",
       args: [getAddress(address)],

@@ -127,3 +127,27 @@ export async function recordWalletTransfer(req: Request, res: Response, next: Ne
     next(error);
   }
 }
+
+const swapSchema = z.object({
+  tokenIn: z.string().trim().min(1),
+  tokenOut: z.string().trim().min(1),
+  amountIn: z.coerce.number().positive().max(100000),
+});
+
+export async function estimateSwap(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = swapSchema.parse(req.body);
+    res.json(await paymentService.estimateDriverSwap(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function executeSwap(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = swapSchema.parse(req.body);
+    res.status(201).json(await paymentService.executeDriverSwap(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}

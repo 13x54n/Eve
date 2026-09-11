@@ -36,6 +36,9 @@ export const DEFAULT_CHAIN_RPC_URL = "https://rpc.testnet.arc.io";
 export const ARC_USDC_ERC20_ADDRESS =
   "0x3600000000000000000000000000000000000000" as const;
 export const ARC_USDC_ERC20_DECIMALS = 6;
+export const ARC_EURC_ERC20_ADDRESS =
+  "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as const;
+export const ARC_EURC_ERC20_DECIMALS = 6;
 export const ARC_NATIVE_DECIMALS = 18;
 const DEFAULT_EXPLORER_TX = "https://testnet.arcscan.app/tx/";
 const MIN_MAX_FEE_PER_GAS = parseGwei("20");
@@ -104,6 +107,9 @@ export function getPayoutChainPublicConfig() {
       process.env.PAYOUT_TOKEN_SYMBOL?.trim() || "USDC",
     tokenAddress: getPayoutTokenAddress(),
     tokenDecimals: getUsdcErc20Decimals(),
+    eurcAddress: ARC_EURC_ERC20_ADDRESS,
+    eurcDecimals: ARC_EURC_ERC20_DECIMALS,
+    supportedSwapTokens: ["USDC", "EURC"] as const,
     nativeDecimals: ARC_NATIVE_DECIMALS,
     treasuryConfigured: isTreasuryConfigured(),
     usdPerToken: Number(process.env.PAYOUT_USD_PER_TOKEN || 1),

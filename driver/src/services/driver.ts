@@ -119,6 +119,7 @@ export type WalletLedgerEntry = {
 export type DriverWallet = {
   walletBalance: number;
   onChainUsdc: number;
+  onChainEurc?: number;
   lifetimeEarnings: number;
   ethereumWallet: string | null;
   ethereumWalletId?: string | null;
@@ -147,6 +148,71 @@ export async function recordDriverTransfer(amount: number, txHash: string, addre
     entry: WalletLedgerEntry;
     replayed: boolean;
   }>('/driver/wallet/transfers', { amount, txHash, address });
+  return data;
+}
+
+export type SwapEstimateFee = {
+  token: string;
+  amount: string;
+  type: string;
+};
+
+export type SwapEstimate = {
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: string;
+  chainIn: string;
+  chainOut: string;
+  chain: string;
+  fromAddress: string;
+  toAddress: string;
+  stopLimit: {
+    amount: string;
+    token: string;
+  };
+  estimatedOutput: {
+    amount: string;
+    token: string;
+  };
+  exchangeRate: number;
+  fees: SwapEstimateFee[];
+};
+
+export type SwapResult = {
+  tokenIn: string;
+  tokenOut: string;
+  chainIn: string;
+  chainOut: string;
+  amountIn: string;
+  fromAddress: string;
+  toAddress: string;
+  txHash: string;
+  explorerUrl: string;
+  fees: { token: string; amount: string; type: string }[];
+  progress: {
+    status: 'DONE' | 'PENDING' | 'FAILED';
+    substatus: string;
+    substatusMessage: string;
+  };
+  amountOut: string;
+};
+
+export type SwapParams = {
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: number;
+};
+
+export async function estimateDriverSwap(input: SwapParams) {
+  const { data } = await api.post<{ estimate: SwapEstimate }>('/driver/wallet/swap/estimate', input);
+  return data.estimate;
+}
+
+export async function executeDriverSwap(input: SwapParams) {
+  const { data } = await api.post<{
+    result: SwapResult;
+    entry: WalletLedgerEntry;
+  }>('/driver/wallet/swap', input);
   return data;
 }
 

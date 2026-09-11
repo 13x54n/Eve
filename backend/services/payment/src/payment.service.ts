@@ -9,7 +9,8 @@ import {
   isTreasuryConfigured,
   usdToNativeUsdcWei,
 } from "@eve/shared/treasury";
-import { getUsdcBalance } from "./chain.js";
+import { getEurcBalance, getUsdcBalance } from "./chain.js";
+import { calculateSwapEstimate, executeTokenSwap } from "./swap.js";
 import { decideEscrowDispute } from "./dispute-resolver.js";
 import {
   cancelEscrowFinalize,
@@ -682,10 +683,12 @@ export async function getDriverWallet(userId: string) {
   }
 
   const onChainUsdc = await getUsdcBalance(user.ethereumWallet);
+  const onChainEurc = await getEurcBalance(user.ethereumWallet);
 
   return {
     walletBalance: money(user.driverProfile.walletBalance),
     onChainUsdc,
+    onChainEurc,
     lifetimeEarnings: money(user.driverProfile.earningsTotal),
     ethereumWallet: user.ethereumWallet,
     ethereumWalletId: user.ethereumWalletId,
@@ -997,4 +1000,74 @@ export async function withdrawDriverWallet(
     const message = error instanceof Error ? error.message : "Payout failed";
     fail(message, "ConflictError");
   }
+}
+
+export async function estimateDriverSwap(
+  userId: string,
+  input: { tokenIn: string; tokenOut: string; amountIn: number | string },
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { driverProfile: true },
+  });
+  if (!user?.driverProfile) {
+    fail("Driver profile not found", "NotFoundError");
+  }
+  const sourceWalletAddress = user.ethereumWallet?.trim();
+  if (!sourceWalletAddress || !/^0x[a-fA-F0-9]{40}$/.test(sourceWalletAddress)) {
+    fail("Link a Privy Ethereum wallet before swapping tokens", "ValidationError");
+  }
+
+  const estimate = calculateSwapEstimate({
+    tokenIn: input.tokenIn,
+    tokenOut: input.tokenOut,
+    amountIn: input.amountIn,
+    sourceWalletAddress,
+  });
+
+  return { estimate };
+}
+
+export async function executeDriverSwap(
+  userId: string,
+  input: { tokenIn: string; tokenOut: string; amountIn: number | string },
+) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { driverProfile: true },
+  });
+  if (!user?.driverProfile) {
+    fail("Driver profile not found", "NotFoundError");
+  }
+  const sourceWalletAddress = user.ethereumWallet?.trim();
+  if (!sourceWalletAddress || !/^0x[a-fA-F0-9]{40}$/.test(sourceWalletAddress)) {
+    fail("Link a Privy Ethereum wallet before swapping tokens", "ValidationError");
+  }
+
+  const result = await executeTokenSwap({
+    tokenIn: input.tokenIn,
+    tokenOut: input.tokenOut,
+    amountIn: input.amountIn,
+    sourceWalletAddress,
+  });
+
+  const roundedAmount = Number(Number(result.amountIn).toFixed(2));
+  const entry = await prisma.ledgerEntry.create({
+    data: {
+      userId,
+      type: "ADJUSTMENT",
+      status: "COMPLETED",
+      method: "WALLET",
+      amount: roundedAmount,
+      currency: result.tokenIn,
+      brand: "SWAP",
+      providerRef: result.txHash,
+      note: `Swapped ${result.amountIn} ${result.tokenIn} for ${result.amountOut} ${result.tokenOut}`,
+    },
+  });
+
+  return {
+    result,
+    entry: serializeLedger(entry),
+  };
 }
