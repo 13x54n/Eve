@@ -13,6 +13,7 @@ Location HTTP is health-only (`:4002`); matchmaking uses gRPC on **50051**.
 
 Arc Testnet RideEscrow is already deployed (`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`). Set `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, and `TREASURY_PRIVATE_KEY` in `.env` (Compose interpolates them; restart payment after changes). Rider and driver do **not** hardcode the address — `GET /api/payment/config` via `EXPO_PUBLIC_PAYMENT_URL`. Leave `LOAD_ESCROW` unset. Details: [docs/driver-wallet.md](docs/driver-wallet.md).
 
+
 ## Quick Start
 
 ### With Docker (recommended)
