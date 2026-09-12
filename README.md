@@ -405,6 +405,10 @@ Do not use these credentials outside local development.
 
 ## Documentation
 
+### Payments / wallets
+
+Prize narrative for judges: [PRIVY.md](PRIVY.md) · [ARC.md](ARC.md). Ops detail: [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+
 ### Core Documentation
 - [Getting Started Guide](GETTING_STARTED.md) - Complete setup walkthrough
 - [Architecture Overview](ARCHITECTURE.md) - System design and data flows
@@ -417,7 +421,9 @@ Do not use these credentials outside local development.
 ### Backend Documentation
 - [Backend services](backend/docs/services-ports.md) - Ports and process layout
 - [Authentication](backend/docs/auth.md) - Privy integration
-- [Arc Testnet USDC payments](backend/docs/driver-wallet.md) - Escrow, wallets, and cash-out
+- [Privy × Eve](PRIVY.md) - ETHOnline: auth, embedded wallets, Buy onramp, escrow signing
+- [Arc × Eve](ARC.md) - ETHOnline: Arc Testnet → mainnet-ready USDC escrow story
+- [Arc Testnet USDC payments](backend/docs/driver-wallet.md) - Escrow, wallets, and cash-out (ops detail)
 - [Docker Setup](backend/docs/docker.md) - Backend Compose (mobile stays on the host)
 - [H3 Geospatial Matching](backend/docs/h3-matchmaking.md) - Location indexing
 - [gRPC Implementation](backend/docs/grpc.md) - Inter-service communication
