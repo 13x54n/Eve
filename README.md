@@ -69,7 +69,11 @@ For a physical device, replace `localhost` in the Expo environment file with the
 
 Trip escrow currently runs on Circle Arc Testnet (chain `5042002`). The apps obtain chain, token, and contract configuration from `GET /api/payment/config`; do not put a contract address or treasury key in a mobile environment file. Rider Wallet also exposes a Privy card-onramp entry point for a linked EVM wallet. Provider and destination-chain availability must be enabled in Privy before it can be used.
 
-Read [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) before deploying or testing escrow.
+### Payments / wallets
+
+Prize narrative for judges: [PRIVY.md](PRIVY.md) · [ARC.md](ARC.md).
+
+Ops detail before deploying or testing escrow: [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ## Documentation
 
@@ -81,7 +85,9 @@ Read [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) before deplo
 | API routes | [API_DOCUMENTATION.md](API_DOCUMENTATION.md) and [backend/docs/api/routes.yml](backend/docs/api/routes.yml) |
 | Backend process and ports | [backend/docs/services-ports.md](backend/docs/services-ports.md) |
 | Authentication | [backend/docs/auth.md](backend/docs/auth.md) |
-| Payment and escrow | [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) |
+| Privy × Eve (ETHOnline) | [PRIVY.md](PRIVY.md) |
+| Arc × Eve (ETHOnline) | [ARC.md](ARC.md) |
+| Payment and escrow (ops) | [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) |
 | Tests | [TESTING.md](TESTING.md) |
 | Deployment | [DEPLOYMENT.md](DEPLOYMENT.md) |
 | Store builds | [STORE.md](STORE.md) |
