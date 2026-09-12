@@ -96,6 +96,17 @@ export async function getGreeting(req: Request, res: Response, next: NextFunctio
   } catch (error) { next(error); }
 }
 
+export async function listNearbyDrivers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    const vehicleType = req.query.vehicleType === "BIKE" ? "BIKE" as const : "CAR" as const;
+    const drivers = await riderService.listNearbyDrivers(userId(req), { lat, lng, vehicleType });
+    res.json({ drivers });
+  } catch (error) { next(error); }
+}
+
+
 export async function addTripStop(req: Request, res: Response, next: NextFunction) {
   try {
     const trip = await riderService.addTripStop(userId(req), String(req.params.id), routePointSchema.parse(req.body));

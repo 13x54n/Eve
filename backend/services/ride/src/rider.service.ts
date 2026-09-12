@@ -526,6 +526,35 @@ export async function getGreeting(userId: string) {
   return { template: await selectGreetingTemplate(userId) };
 }
 
+export async function listNearbyDrivers(
+  userId: string,
+  input: { lat: number; lng: number; vehicleType?: "BIKE" | "CAR" },
+) {
+  const lat = Number(input.lat);
+  const lng = Number(input.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    fail("lat and lng are required", "ValidationError");
+  }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    fail("Invalid coordinates", "ValidationError");
+  }
+  const vehicleType = input.vehicleType === "BIKE" ? "BIKE" : "CAR";
+  const drivers = await nearbyDriversClient({
+    pickupLat: lat,
+    pickupLng: lng,
+    vehicleType,
+    excludeUserId: userId,
+    matchAllVehicleTypes: true,
+  });
+  return drivers.map((driver) => ({
+    id: driver.id,
+    latitude: driver.latitude,
+    longitude: driver.longitude,
+    distanceKm: Number(driver.distance.toFixed(2)),
+  }));
+}
+
+
 const MAX_TRIP_STOPS = 3;
 
 type RoutePoint = { address: string; lat: number; lng: number };
