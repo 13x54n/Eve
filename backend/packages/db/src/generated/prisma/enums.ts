@@ -169,6 +169,7 @@ export const PaymentMethodKind = {
   CARD: 'CARD',
   WALLET: 'WALLET',
   CASH: 'CASH',
+  BANK: 'BANK',
   CORPORATE: 'CORPORATE',
   PROMO: 'PROMO'
 } as const

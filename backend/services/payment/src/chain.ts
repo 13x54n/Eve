@@ -33,6 +33,11 @@ const ERC20_BALANCE_ABI = [
 
 let balanceOverride: ((address: string) => Promise<bigint>) | null = null;
 
+function isVitestRuntime() {
+  const value = process.env.VITEST?.trim().toLowerCase();
+  return value === "true" || value === "1";
+}
+
 export function setBalanceReaderForTests(
   reader: ((address: string) => Promise<bigint>) | null,
 ) {
@@ -67,7 +72,7 @@ export async function getUsdcBalance(address: string | null | undefined) {
     if (balanceOverride) {
       return Number(formatUnits(await balanceOverride(address), decimals));
     }
-    if (process.env.VITEST) {
+    if (isVitestRuntime()) {
       return 0;
     }
     const client = createPublicClient({
@@ -97,7 +102,7 @@ export async function getEurcBalance(address: string | null | undefined) {
   }
   const decimals = ARC_EURC_ERC20_DECIMALS;
   try {
-    if (process.env.VITEST) {
+    if (isVitestRuntime()) {
       return 0;
     }
     const client = createPublicClient({

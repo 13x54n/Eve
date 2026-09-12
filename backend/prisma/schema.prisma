@@ -122,6 +122,7 @@ enum PaymentMethodKind {
   CARD
   WALLET
   CASH
+  BANK
   CORPORATE
   PROMO
 }

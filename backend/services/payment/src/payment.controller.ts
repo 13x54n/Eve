@@ -18,6 +18,8 @@ const withdrawSchema = z.object({
   amount: z.coerce.number().positive().max(10000),
   idempotencyKey: z.string().trim().min(8).max(80).optional(),
   address: z.string().trim().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
+  destination: z.enum(["wallet", "bank"]).optional(),
+  bankAccountId: z.string().trim().min(1).max(80).optional(),
 });
 
 const transferSchema = z.object({

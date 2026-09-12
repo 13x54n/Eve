@@ -904,10 +904,94 @@ export async function withdrawRiderWallet(
   };
 }
 
+async function withdrawDriverToBank(
+  userId: string,
+  body: { amount: number; idempotencyKey?: string; bankAccountId?: string },
+) {
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount < MIN_WITHDRAW_USD) {
+    fail(`Minimum cash-out is $${MIN_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+  if (amount > MAX_WITHDRAW_USD) {
+    fail(`Maximum cash-out is $${MAX_WITHDRAW_USD.toFixed(2)}`, "ValidationError");
+  }
+  const rounded = Number(amount.toFixed(2));
+  const idempotencyKey = body.idempotencyKey?.trim() || null;
+  if (idempotencyKey) {
+    const existing = await prisma.ledgerEntry.findFirst({
+      where: { userId, type: "WALLET_WITHDRAW", brand: `idemp:${idempotencyKey}` },
+    });
+    if (existing) {
+      const profile = await prisma.driverProfile.findUnique({ where: { userId } });
+      return { entry: serializeLedger(existing), walletBalance: money(profile?.walletBalance), replayed: true };
+    }
+  }
+
+  const bankAccountId = body.bankAccountId?.trim();
+  if (!bankAccountId) {
+    fail("Choose a bank account to cash out to", "ValidationError");
+  }
+  const bank = await prisma.fiatBankAccount.findFirst({
+    where: { id: bankAccountId, userId },
+  });
+  if (!bank) {
+    fail("Bank account not found", "NotFoundError");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { driverProfile: true },
+  });
+  if (!user?.driverProfile) {
+    fail("Driver profile not found", "NotFoundError");
+  }
+  if (Number(user.driverProfile.walletBalance) < rounded) {
+    fail("Insufficient Eve wallet balance", "ConflictError");
+  }
+
+  const label = `${bank.bankName || "Bank"} ····${bank.last4}`;
+  const entry = await prisma.$transaction(async (tx) => {
+    const updated = await tx.driverProfile.updateMany({
+      where: { userId, walletBalance: { gte: rounded } },
+      data: { walletBalance: { decrement: rounded } },
+    });
+    if (updated.count !== 1) {
+      fail("Insufficient Eve wallet balance", "ConflictError");
+    }
+    return tx.ledgerEntry.create({
+      data: {
+        userId,
+        type: "WALLET_WITHDRAW",
+        status: "COMPLETED",
+        method: "BANK",
+        amount: rounded,
+        last4: bank.last4,
+        brand: idempotencyKey ? `idemp:${idempotencyKey}` : `bank:${bank.id}`,
+        note: `Cash-out to ${label}`,
+      },
+    });
+  });
+
+  return {
+    entry: serializeLedger(entry),
+    walletBalance: money(Number(user.driverProfile.walletBalance) - rounded),
+    replayed: false,
+    destination: "bank",
+    bankAccount: {
+      id: bank.id,
+      last4: bank.last4,
+      bankName: bank.bankName,
+    },
+  };
+}
+
 export async function withdrawDriverWallet(
   userId: string,
-  body: { amount: number; idempotencyKey?: string },
+  body: { amount: number; idempotencyKey?: string; destination?: string; bankAccountId?: string },
 ) {
+  if (body.destination === "bank") {
+    return withdrawDriverToBank(userId, body);
+  }
   const amount = Number(body.amount);
   if (!Number.isFinite(amount) || amount < MIN_WITHDRAW_USD) {
     fail(`Minimum cash-out is $${MIN_WITHDRAW_USD.toFixed(2)}`, "ValidationError");

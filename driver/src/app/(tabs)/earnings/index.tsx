@@ -32,6 +32,7 @@ import {
   getEarnings,
   getWallet,
   recordDriverTransfer,
+  withdrawWallet,
 } from '@/services/driver';
 import { PullRefresh, usePullToRefresh } from '@/components/pull-refresh';
 import { useCompletePrivySession } from '@/lib/complete-privy-session';
@@ -192,6 +193,8 @@ export default function Earnings() {
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [cashOutAddress, setCashOutAddress] = useState('');
+  const [cashOutTarget, setCashOutTarget] = useState<'wallet' | 'bank'>('wallet');
+  const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -214,6 +217,9 @@ export default function Earnings() {
       const [earningsResult, walletResult] = await Promise.all([getEarnings(), getWallet()]);
       setSummary(earningsResult.summary);
       setRecentTrips(earningsResult.recentTrips);
+      if (walletResult.bankAccounts?.[0]?.id) {
+        setSelectedBankId((current) => current ?? walletResult.bankAccounts?.[0]?.id ?? null);
+      }
       let onChainUsdc = walletResult.onChainUsdc;
       let onChainEurc = walletResult.onChainEurc ?? 0;
       try {
@@ -310,7 +316,61 @@ export default function Earnings() {
     }
   }
 
+  async function onCashOutBank() {
+    const value = Number(amount);
+    const min = wallet?.minWithdrawUsd ?? 1;
+    const bankId = selectedBankId ?? wallet?.bankAccounts?.[0]?.id;
+    if (!Number.isFinite(value) || value < min) {
+      Alert.alert('Cash out', `Enter at least ${min.toFixed(2)}.`);
+      return;
+    }
+    if (!bankId) {
+      Alert.alert('Cash out', 'Add a US bank account first.');
+      return;
+    }
+    if (value > (wallet?.walletBalance ?? 0)) {
+      Alert.alert('Cash out', 'Amount exceeds your Eve earnings balance');
+      return;
+    }
+    try {
+      setCashingOut(true);
+      setToast(`Sending ${value.toFixed(2)} to bank…`);
+      const result = await withdrawWallet(value, {
+        destination: 'bank',
+        bankAccountId: bankId,
+        idempotencyKey: `bank-${Date.now()}-${value.toFixed(2)}`,
+      });
+      lightImpact();
+      setAmount('');
+      setShowCashOut(false);
+      await load({ silent: true });
+      const bank = wallet?.bankAccounts?.find((item) => item.id === bankId);
+      setToast(`Cashed out ${value.toFixed(2)} to ${bank?.bankName || 'bank'} ····${bank?.last4 ?? ''}`);
+      void notifyRideEvent(
+        'Bank cash-out',
+        `${value.toFixed(2)} sent to bank ····${bank?.last4 ?? ''}`,
+        { screen: 'wallet' },
+      );
+      if (result.entry?.note) {
+        /* keep toast as the user-facing line */
+      }
+    } catch (caught: unknown) {
+      const message =
+        (caught as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        (caught instanceof Error ? caught.message : 'Cash-out failed');
+      setToast('Cash-out failed');
+      void notifyRideEvent('Cash-out failed', message, { screen: 'wallet' });
+      Alert.alert('Cash out', message);
+    } finally {
+      setCashingOut(false);
+    }
+  }
+
   async function onCashOut() {
+    if (cashOutTarget === 'bank') {
+      await onCashOutBank();
+      return;
+    }
     const value = Number(amount);
     const min = wallet?.minWithdrawUsd ?? 1;
     const address = cashOutAddress.trim();
@@ -451,13 +511,7 @@ export default function Earnings() {
         Alert.alert('Swap', 'Treasury is not configured for on-chain swaps');
         return;
       }
-      const quote =
-        swapEstimate &&
-        Number(swapEstimate.amountIn) === val &&
-        swapEstimate.tokenIn === tokenIn &&
-        swapEstimate.tokenOut === tokenOut
-          ? swapEstimate
-          : await estimateDriverSwap({ tokenIn, tokenOut, amountIn: val });
+      const quote = await estimateDriverSwap({ tokenIn, tokenOut, amountIn: val });
       if (quote.canSettle === false) {
         Alert.alert(
           'Swap',
@@ -649,8 +703,32 @@ export default function Earnings() {
 
             {showCashOut ? (
               <View style={styles.cashOutSection}>
-                <Text style={styles.cashOutTitle}>Cash out to wallet</Text>
-                <Text style={styles.inputLabel}>Amount (USD)</Text>
+                <Text style={styles.cashOutTitle}>Cash out</Text>
+                <View style={styles.destRow}>
+                  <TouchableOpacity
+                    style={[styles.destChip, cashOutTarget === 'wallet' && styles.destChipOn]}
+                    onPress={() => setCashOutTarget('wallet')}
+                    disabled={cashingOut}
+                  >
+                    <Text style={[styles.destChipText, cashOutTarget === 'wallet' && styles.destChipTextOn]}>
+                      Wallet
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.destChip, cashOutTarget === 'bank' && styles.destChipOn]}
+                    onPress={() => setCashOutTarget('bank')}
+                    disabled={cashingOut}
+                  >
+                    <Text style={[styles.destChipText, cashOutTarget === 'bank' && styles.destChipTextOn]}>
+                      Bank
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.inputLabel}>
+                  {cashOutTarget === 'bank'
+                    ? `Amount (Eve earnings · ${(wallet?.walletBalance ?? 0).toFixed(2)} available)`
+                    : 'Amount (USD)'}
+                </Text>
                 <TextInput
                   style={styles.cashOutInput}
                   placeholder="0.00"
@@ -659,19 +737,47 @@ export default function Earnings() {
                   onChangeText={setAmount}
                   editable={!cashingOut}
                 />
-                <Text style={styles.inputLabel}>Destination address (optional)</Text>
-                <View style={styles.cashOutRow}>
-                  <TextInput
-                    style={[styles.cashOutInput, { flex: 1, marginTop: 0 }]}
-                    placeholder={wallet?.ethereumWallet ? 'Your wallet' : '0x...'}
-                    value={cashOutAddress}
-                    onChangeText={setCashOutAddress}
-                    editable={!cashingOut}
-                  />
-                  <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()} disabled={cashingOut}>
-                    <Ionicons name="qr-code-outline" size={18} color="#2E4ED2" />
-                  </TouchableOpacity>
-                </View>
+                {cashOutTarget === 'wallet' ? (
+                  <>
+                    <Text style={styles.inputLabel}>Destination address (optional)</Text>
+                    <View style={styles.cashOutRow}>
+                      <TextInput
+                        style={[styles.cashOutInput, { flex: 1, marginTop: 0 }]}
+                        placeholder={wallet?.ethereumWallet ? 'Your wallet' : '0x...'}
+                        value={cashOutAddress}
+                        onChangeText={setCashOutAddress}
+                        editable={!cashingOut}
+                      />
+                      <TouchableOpacity style={styles.scanButton} onPress={() => void onScanQR()} disabled={cashingOut}>
+                        <Ionicons name="qr-code-outline" size={18} color="#2E4ED2" />
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.inputLabel}>Bank account</Text>
+                    {(wallet?.bankAccounts ?? []).length === 0 ? (
+                      <Text style={styles.inputLabel}>Add a US bank account below, then cash out here.</Text>
+                    ) : (
+                      (wallet?.bankAccounts ?? []).map((account) => {
+                        const selected = (selectedBankId ?? wallet?.bankAccounts?.[0]?.id) === account.id;
+                        return (
+                          <TouchableOpacity
+                            key={account.id}
+                            style={[styles.bankChoice, selected && styles.bankChoiceOn]}
+                            onPress={() => setSelectedBankId(account.id)}
+                            disabled={cashingOut}
+                          >
+                            <Text style={styles.bankChoiceTitle}>
+                              {account.bankName || 'Bank'} ····{account.last4}
+                            </Text>
+                            <Text style={styles.bankChoiceMeta}>{account.accountOwnerName}</Text>
+                          </TouchableOpacity>
+                        );
+                      })
+                    )}
+                  </>
+                )}
                 <TouchableOpacity
                   style={[styles.cashOutConfirm, cashingOut && styles.cashOutConfirmDisabled]}
                   onPress={() => void onCashOut()}
@@ -1096,6 +1202,28 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 14,
   },
+  destRow: { flexDirection: 'row', gap: 8, marginBottom: 4 },
+  destChip: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  destChipOn: { backgroundColor: '#2E4ED2', borderColor: '#2E4ED2' },
+  destChipText: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
+  destChipTextOn: { color: '#FFFFFF' },
+  bankChoice: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 8,
+  },
+  bankChoiceOn: { borderColor: '#2E4ED2', backgroundColor: '#EEF2FF' },
+  bankChoiceTitle: { fontSize: 14, fontWeight: '700', color: '#0F172A' },
+  bankChoiceMeta: { fontSize: 12, color: '#64748B', marginTop: 2 },
   cashOutTitle: {
     fontSize: 16,
     fontWeight: '700',

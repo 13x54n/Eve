@@ -152,12 +152,21 @@ export async function getWallet() {
   return data;
 }
 
-export async function withdrawWallet(amount: number, idempotencyKey?: string) {
+export async function withdrawWallet(
+  amount: number,
+  options?: { idempotencyKey?: string; destination?: 'wallet' | 'bank'; bankAccountId?: string },
+) {
   const { data } = await api.post<{
     entry: WalletLedgerEntry;
     walletBalance: number;
     replayed: boolean;
-  }>('/driver/wallet/withdraw', { amount, idempotencyKey });
+    destination?: string;
+  }>('/driver/wallet/withdraw', {
+    amount,
+    idempotencyKey: options?.idempotencyKey,
+    destination: options?.destination,
+    bankAccountId: options?.bankAccountId,
+  });
   return data;
 }
 
