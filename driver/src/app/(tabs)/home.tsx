@@ -13,7 +13,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect, usePathname, type Href } from 'expo-router';
-import BusyHoursChart from '@/components/busyHourChart';
+import { EveMap, EveMarker } from '@/components/map/eve-map';
+import { FALLBACK_CENTER } from '@/components/map/config';
 import { ActionButton } from '@/components/action-button';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -52,6 +53,7 @@ export default function Home() {
   const [offeringTripId, setOfferingTripId] = useState<string | null>(null);
   const [presence, setPresence] = useState<DriverPresence>('OFFLINE');
   const [presenceBusy, setPresenceBusy] = useState(false);
+  const [mapCenter, setMapCenter] = useState(FALLBACK_CENTER);
   const [profile, setProfile] = useState<DriverProfile | null>(null);
   const presenceRef = useRef<DriverPresence>('OFFLINE');
   const locationSubscriptionRef = useRef<Location.LocationSubscription | null>(null);
@@ -143,6 +145,10 @@ export default function Home() {
       locationSubscriptionRef.current = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.Balanced, timeInterval: 5000, distanceInterval: 25 },
         (location) => {
+          setMapCenter({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
           if (presenceRef.current === 'ONLINE') {
             sendDriverLocation(location.coords.latitude, location.coords.longitude);
           }
@@ -424,19 +430,48 @@ export default function Home() {
           </View>
         ) : null}
 
-        {/* Section: Earnings */}
-        <View style={{  backgroundColor: '#FFFFFF', borderColor: '#E5E7EB', marginBottom: 12, marginHorizontal: 16, borderRadius: 20,  }}>
+        {/* Section: Map */}
+        <View style={styles.mapCard}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Earnings</Text>
-            <Text style={styles.sectionSubtitle}>
-              Example hourly demand pattern
-            </Text>
+            <Text style={styles.sectionTitle}>Around you</Text>
             <Text style={styles.sectionBody}>
-              This is sample data to show typical busy hours. Real-time demand data coming soon.
+              Live map of your area
+              {incomingTrips.length
+                ? ` · ${incomingTrips.length} nearby request${incomingTrips.length === 1 ? '' : 's'}`
+                : ''}
             </Text>
           </View>
-
-          <BusyHoursChart />
+          <View style={styles.mapWrap}>
+            <EveMap
+              style={styles.map}
+              camera={{
+                center: mapCenter,
+                zoom: 13,
+                bounds: activeDispatch
+                  ? [
+                      mapCenter,
+                      {
+                        latitude: activeDispatch.pickupLat,
+                        longitude: activeDispatch.pickupLng,
+                      },
+                    ]
+                  : undefined,
+              }}
+              interactive
+            >
+              <EveMarker id="you" coordinate={mapCenter} color="#2E4ED5" />
+              {activeDispatch ? (
+                <EveMarker
+                  id={`pickup-${activeDispatch.tripId}`}
+                  coordinate={{
+                    latitude: activeDispatch.pickupLat,
+                    longitude: activeDispatch.pickupLng,
+                  }}
+                  color="#16A34A"
+                />
+              ) : null}
+            </EveMap>
+          </View>
         </View>
 
         {/* Spacer so content isn't hidden behind the fixed button */}
@@ -656,6 +691,26 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
+
+  mapCard: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    marginBottom: 12,
+    marginHorizontal: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  mapWrap: {
+    height: 240,
+    marginHorizontal: 12,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#E5E7EB',
+  },
+  map: {
+    flex: 1,
+  },
   // --- Fixed Go Online button ---
   goOnlineWrapper: {
     position: 'absolute',

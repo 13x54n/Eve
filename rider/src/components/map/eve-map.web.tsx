@@ -113,6 +113,40 @@ export function EveMarker({ id, coordinate, color = "#2E4ED5" }: EveMarkerProps)
   return null;
 }
 
+
+export function EveCarMarker({ id, coordinate, color = "#111827" }: EveMarkerProps) {
+  const { map } = useContext(WebMapContext);
+
+  useEffect(() => {
+    if (!map) return;
+    const el = document.createElement("div");
+    el.title = id;
+    el.style.cssText = [
+      "width:28px",
+      "height:28px",
+      "border-radius:999px",
+      `background:${color}`,
+      "border:2px solid #fff",
+      "box-shadow:0 0 0 1px rgba(0,0,0,.25)",
+      "display:flex",
+      "align-items:center",
+      "justify-content:center",
+      "color:#fff",
+      "font-size:12px",
+      "font-weight:700",
+    ].join(";");
+    el.textContent = "🚗";
+    const marker = new mapboxgl.Marker({ element: el })
+      .setLngLat([coordinate.longitude, coordinate.latitude])
+      .addTo(map);
+    return () => {
+      marker.remove();
+    };
+  }, [map, id, coordinate.latitude, coordinate.longitude, color]);
+
+  return null;
+}
+
 export function EveRoute({
   id = "route",
   coordinates,

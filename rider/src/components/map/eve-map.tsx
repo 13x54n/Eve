@@ -1,5 +1,6 @@
 import { Camera, LineLayer, MapView, PointAnnotation, ShapeSource } from "@rnmapbox/maps";
 import { View, StyleSheet } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAppTheme } from "@/context/theme-context";
 import { boundsFromPoints, mapStyleForScheme } from "./config";
 import type { EveMapProps, EveMarkerProps, EveRouteProps } from "./types";
@@ -70,6 +71,17 @@ export function EveMarker({ id, coordinate, color = "#2E4ED5" }: EveMarkerProps)
   );
 }
 
+
+export function EveCarMarker({ id, coordinate, color = "#111827" }: EveMarkerProps) {
+  return (
+    <PointAnnotation id={id} coordinate={[coordinate.longitude, coordinate.latitude]}>
+      <View style={[styles.carBadge, { backgroundColor: color }]}>
+        <MaterialCommunityIcons name="car" size={14} color="#FFFFFF" />
+      </View>
+    </PointAnnotation>
+  );
+}
+
 export function EveRoute({
   id = "route",
   coordinates,
@@ -106,6 +118,15 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
+  carBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
