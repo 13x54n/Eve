@@ -451,7 +451,21 @@ export default function Earnings() {
         Alert.alert('Swap', 'Treasury is not configured for on-chain swaps');
         return;
       }
-      setToast(`Sending ${val.toFixed(2)} ${tokenIn}…`);
+      const quote =
+        swapEstimate &&
+        Number(swapEstimate.amountIn) === val &&
+        swapEstimate.tokenIn === tokenIn &&
+        swapEstimate.tokenOut === tokenOut
+          ? swapEstimate
+          : await estimateDriverSwap({ tokenIn, tokenOut, amountIn: val });
+      if (quote.canSettle === false) {
+        Alert.alert(
+          'Swap',
+          `Treasury only has ${Number(quote.treasuryOutBalance ?? 0).toFixed(2)} ${tokenOut} available. Swap a smaller amount or fund the treasury first.`,
+        );
+        return;
+      }
+      setToast(`Sending ${val.toFixed(2)} ${tokenIn} to treasury…`);
       const depositTxHash = await sendUsdc({
         to: treasury,
         amountUsd: val,
@@ -763,6 +777,15 @@ export default function Earnings() {
                         {swapEstimate.stopLimit.amount} {tokenOut}
                       </Text>
                     </View>
+                    {typeof swapEstimate.treasuryOutBalance === 'number' ? (
+                      <View style={styles.swapQuoteRow}>
+                        <Text style={styles.swapQuoteKey}>Treasury available</Text>
+                        <Text style={styles.swapQuoteVal}>
+                          {swapEstimate.treasuryOutBalance.toFixed(2)} {tokenOut}
+                          {swapEstimate.canSettle === false ? ' — too low for this swap' : ''}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 ) : null}
 

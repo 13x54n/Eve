@@ -194,6 +194,8 @@ export type SwapEstimate = {
   };
   exchangeRate: number;
   fees: SwapEstimateFee[];
+  treasuryOutBalance?: number;
+  canSettle?: boolean;
 };
 
 export type SwapResult = {

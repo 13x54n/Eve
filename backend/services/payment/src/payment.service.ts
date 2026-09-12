@@ -1045,8 +1045,23 @@ export async function estimateDriverSwap(
     amountIn: input.amountIn,
     sourceWalletAddress,
   });
+  const { treasuryAccount } = await import("@eve/shared/treasury");
+  const { getEurcBalance, getUsdcBalance } = await import("./chain.js");
+  const treasury = treasuryAccount()?.address ?? null;
+  const neededOut = Number(estimate.estimatedOutput.amount);
+  const treasuryOutBalance = treasury
+    ? estimate.tokenOut === "EURC"
+      ? await getEurcBalance(treasury)
+      : await getUsdcBalance(treasury)
+    : 0;
 
-  return { estimate };
+  return {
+    estimate: {
+      ...estimate,
+      treasuryOutBalance,
+      canSettle: Boolean(treasury) && treasuryOutBalance + 1e-9 >= neededOut,
+    },
+  };
 }
 
 export async function executeDriverSwap(

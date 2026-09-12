@@ -251,21 +251,77 @@ export async function executeTokenSwap(input: ExecuteInput): Promise<SwapResult>
   const tokenInDecimals = estimate.tokenIn === "EURC" ? ARC_EURC_ERC20_DECIMALS : ARC_USDC_ERC20_DECIMALS;
   const tokenOutDecimals = estimate.tokenOut === "EURC" ? ARC_EURC_ERC20_DECIMALS : ARC_USDC_ERC20_DECIMALS;
 
-  await waitForErc20Transfer({
-    txHash: confirmedDeposit,
-    token: tokenInAddress,
-    from: estimate.fromAddress,
-    to: treasuryAddress,
-    minAmount: Number(estimate.amountIn),
-    decimals: tokenInDecimals,
-  });
+  const { getEurcBalance, getUsdcBalance } = await import("./chain.js");
+  const neededOut = Number(estimate.estimatedOutput.amount);
+  const readTreasuryOut = () =>
+    estimate.tokenOut === "EURC"
+      ? getEurcBalance(treasuryAddress)
+      : getUsdcBalance(treasuryAddress);
 
-  const payout = await sendTreasuryErc20(
-    estimate.toAddress,
-    tokenOutAddress,
-    Number(estimate.estimatedOutput.amount),
-    tokenOutDecimals,
-  );
+  async function refundDeposit(treasuryOut: number, reason: string): Promise<never> {
+    try {
+      await sendTreasuryErc20(
+        estimate.fromAddress,
+        tokenInAddress,
+        Number(estimate.amountIn),
+        tokenInDecimals,
+      );
+    } catch (refundError) {
+      console.error("[swap] Failed to refund tokenIn after payout failure:", refundError);
+    }
+    fail(
+      `Treasury has ${treasuryOut.toFixed(6)} ${estimate.tokenOut} but this swap needs ${neededOut} ${estimate.tokenOut}. ${reason} Fund the treasury, then retry.`,
+      "ConflictError",
+    );
+  }
+
+  async function confirmDeposit() {
+    try {
+      await waitForErc20Transfer({
+        txHash: confirmedDeposit,
+        token: tokenInAddress,
+        from: estimate.fromAddress,
+        to: treasuryAddress,
+        minAmount: Number(estimate.amountIn),
+        decimals: tokenInDecimals,
+      });
+      return true;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Deposit was not confirmed on-chain";
+      fail(message, "ValidationError");
+    }
+  }
+
+  // Liquidity first: do not wait on a doomed payout. If the driver already sent tokenIn, refund it.
+  const treasuryOutBefore = await readTreasuryOut();
+  if (treasuryOutBefore + 1e-9 < neededOut) {
+    await confirmDeposit();
+    await refundDeposit(treasuryOutBefore, "Output token balance is too low.");
+  }
+
+  await confirmDeposit();
+
+  let payout;
+  try {
+    payout = await sendTreasuryErc20(
+      estimate.toAddress,
+      tokenOutAddress,
+      neededOut,
+      tokenOutDecimals,
+    );
+  } catch (error) {
+    const raw = error instanceof Error ? error.message : String(error);
+    const treasuryOutNow = await readTreasuryOut();
+    if (raw.includes("exceeds balance") || raw.includes("transfer amount exceeds")) {
+      await refundDeposit(treasuryOutNow, "On-chain payout reverted (insufficient treasury balance).");
+    }
+    fail(
+      raw.includes("exceeds balance")
+        ? `Treasury cannot pay ${neededOut} ${estimate.tokenOut} right now. Fund the treasury and retry.`
+        : `Swap payout failed: ${raw}`,
+      "ConflictError",
+    );
+  }
 
   return {
     tokenIn: estimate.tokenIn,
