@@ -21,6 +21,8 @@ import { PullRefresh, usePullToRefresh } from "@/components/pull-refresh";
 import { FindingBanner } from "@/components/finding-banner";
 import { MapLocationPicker } from "@/components/map-location-picker";
 import { FALLBACK_CENTER } from "@/components/map/config";
+import { EveMap, EveMarker, EveCarMarker } from "@/components/map/eve-map";
+import { getNearbyDrivers, type NearbyDriverPin } from "@/services/nearby-drivers";
 import { useBrand } from "@/context/theme-context";
 import {
   DEFAULT_GREETING_TEMPLATE,
@@ -42,6 +44,7 @@ export default function HomeScreen() {
   const [mapPickerVisible, setMapPickerVisible] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [mapPin, setMapPin] = useState(FALLBACK_CENTER);
+  const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriverPin[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -78,6 +81,24 @@ export default function HomeScreen() {
   useEffect(() => {
     void loadLocation(true);
   }, [loadLocation]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function refreshDrivers() {
+      try {
+        const drivers = await getNearbyDrivers(region.latitude, region.longitude);
+        if (!cancelled) setNearbyDrivers(drivers);
+      } catch {
+        if (!cancelled) setNearbyDrivers([]);
+      }
+    }
+    void refreshDrivers();
+    const timer = setInterval(() => void refreshDrivers(), 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [region.latitude, region.longitude]);
 
   const reloadHome = useCallback(async () => {
     await Promise.all([
@@ -346,10 +367,33 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      <Image
-        source={{ uri: "https://images.unsplash.com/vector-1786329675328-b975cece8a57?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }}
-        style={{ width: "90%", height: 230, marginBottom: 16, marginHorizontal: "auto" }}
-      />
+      <View style={styles.homeMapCard}>
+        <View style={styles.homeMapHeader}>
+          <Text style={styles.homeMapTitle}>Drivers around you</Text>
+          <Text style={styles.homeMapMeta}>
+            {nearbyDrivers.length
+              ? `${nearbyDrivers.length} online nearby`
+              : "Looking for online drivers…"}
+          </Text>
+        </View>
+        <View style={styles.homeMapWrap}>
+          <EveMap
+            style={styles.homeMap}
+            camera={{ center: region, zoom: 13 }}
+            interactive
+          >
+            <EveMarker id="you" coordinate={region} color="#2E4ED5" />
+            {nearbyDrivers.map((driver) => (
+              <EveCarMarker
+                key={driver.id}
+                id={`driver-${driver.id}`}
+                coordinate={{ latitude: driver.latitude, longitude: driver.longitude }}
+                color="#111827"
+              />
+            ))}
+          </EveMap>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -473,4 +517,37 @@ const styles = StyleSheet.create({
   mapPickerHint: { marginBottom: 14, color: "#6B7280", fontSize: 13 },
   confirmMapButton: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, padding: 16, borderRadius: 12, backgroundColor: "#2E4ED5" },
   confirmMapText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+
+  homeMapCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  homeMapHeader: {
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+  homeMapTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#0F172A",
+  },
+  homeMapMeta: {
+    marginTop: 2,
+    fontSize: 12,
+    color: "#6B7280",
+  },
+  homeMapWrap: {
+    height: 240,
+    marginHorizontal: 10,
+    marginBottom: 12,
+    borderRadius: 14,
+    overflow: "hidden",
+    backgroundColor: "#E5E7EB",
+  },
+  homeMap: {
+    flex: 1,
+  },
 });
