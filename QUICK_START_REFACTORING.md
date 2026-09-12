@@ -1,3 +1,5 @@
+> **Status as of Sep 2026:** Historical. Desktop Eve runs the split six-service stack (Docker often postgres+redis only; apps via `tsx` watch). See README / GETTING_STARTED / backend/docs/driver-wallet.md for current behavior.
+
 # Quick Start: High-Impact Refactoring
 
 ## 🎯 Goal: Reduce 40ms latency in 1 week

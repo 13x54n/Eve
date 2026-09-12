@@ -192,7 +192,7 @@ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your_token
 - Next.js rewrites each prefix to `AUTH_PROXY_TARGET`, `RIDE_PROXY_TARGET`, `NOTIFY_PROXY_TARGET`, `ADMIN_PROXY_TARGET`, `PAYMENT_PROXY_TARGET`
 - No CORS issues
 
-Dispute resolve and driver wallet credit go through this payment proxy. Operator txs need `TREASURY_PRIVATE_KEY` on the **payment** process, not in `admin/.env.local`.
+Dispute resolve, driver wallet credit, and wallet/bank/swap routes go through this payment proxy. Operator txs need `TREASURY_PRIVATE_KEY` on the **payment** process, not in `admin/.env.local`.
 
 ### 3. Start Development Server
 

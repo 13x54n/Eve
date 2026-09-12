@@ -186,9 +186,9 @@ IMAGEKIT_URL_ENDPOINT=https://ik.imagekit.io/your-id
 IMAGEKIT_DRIVER_FOLDER=/eve/drivers
 ```
 
-### Driver Eve Wallet / Arc escrow (optional)
+### Driver / rider wallets, bank cash-out, swaps (Arc Testnet)
 
-Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC (6 decimals at `0x3600…0000`). Trip fares lock in RideEscrow as native Arc USDC (18-decimal `msg.value`) — the same asset, not a second token.
+Platform credits cash out to the driver's Privy Ethereum address as ERC-20 USDC (6 decimals at `0x3600000000000000000000000000000000000000`). Trip fares lock in RideEscrow as native Arc USDC (18-decimal `msg.value`) — the same asset, not a second token. EURC for swaps: `0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a` (6 decimals).
 
 Live Arc Testnet RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Operator / treasury: `0xf4Ea0728c0EEc26c590a651A27a388121e1fA8e3`. Rider and driver apps do **not** take a contract address in Expo env; they use `EXPO_PUBLIC_PAYMENT_URL` and `GET /api/payment/config`. Restart payment after changing these vars. Leave `LOAD_ESCROW` unset for the live contract. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
@@ -197,7 +197,8 @@ Live Arc Testnet RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Opera
 | `PAYMENT_PORT` | Payment HTTP port | `4006` | No |
 | `ESCROW_CONTRACT_ADDRESS` | Deployed RideEscrow (`0xdE6f01794e74AfDbAd4C783123241285c1947f4C` on Arc Testnet) | — | For live chain |
 | `ESCROW_OPERATOR_ADDRESS` | RideEscrow operator (finalize/resolve). Defaults to the treasury key address | — | For live operator txs |
-| `TREASURY_PRIVATE_KEY` | Hex key for platform-credit cash-out and escrow operator calls | — | For on-chain send |
+| `TREASURY_PRIVATE_KEY` | Hex key for credit cash-out, escrow operator calls, and treasury swap settlement | — | For on-chain send |
+| `PRIVY_FIAT_ENVIRONMENT` | Privy Bridge fiat mode for bank cash-out | `sandbox` | No |
 | `OPENAI_API_KEY` | Optional LLM for escrow dispute review (else heuristic) | — | No |
 | `CHAIN_RPC_URL` | JSON-RPC URL | `https://rpc.testnet.arc.io` | No (defaults to Circle) |
 | `PAYOUT_CHAIN_ID` | EVM chain id | `5042002` (Arc Testnet) | No |
@@ -207,8 +208,9 @@ Live Arc Testnet RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Opera
 | `PAYOUT_TOKEN_SYMBOL` | Display symbol | `USDC` | No |
 | `PAYOUT_TOKEN_DECIMALS` | ERC-20 USDC view decimals | `6` | No |
 | `PAYOUT_USD_PER_TOKEN` | Ledger USD per 1 USDC | `1` | No |
+| `VITEST` | Test-mode stubs for balances / schedulers | `false` | Tests only — treat as true **only** when `true` or `1` |
 
-Treasury gas, payout value, and escrow operator calls are **USDC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, `POST /api/driver/wallet/withdraw` stays `PENDING` and live auto-finalize cannot send. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+Treasury gas, payout value, escrow operator calls, and swap settlement are **USDC/EURC** on Arc Testnet (20 Gwei `maxFeePerGas` floor). Faucet: https://faucet.circle.com. If `TREASURY_PRIVATE_KEY` is unset, treasury wallet cash-out / swap settlement cannot send on-chain. Bank cash-out with `PRIVY_FIAT_ENVIRONMENT=sandbox` records the debit; live ACH needs Privy Bridge production + KYC. Never put private keys or app secrets in docs or Expo env.
 
 ### Email Configuration (Optional)
 
@@ -269,7 +271,7 @@ CORS_ORIGINS=https://admin.example.com
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `VITEST` | Enable test mode | `false` | Tests only |
+| `VITEST` | Enable test stubs | `false` | Tests only (`true` or `1` only; `false` is off) |
 
 ## Mobile Apps
 

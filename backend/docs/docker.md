@@ -1,6 +1,8 @@
 # Docker (local split stack)
 
-Postgres, Redis, Kafka, a one-shot Prisma migrate job, and six Node processes (auth, location, ride, notify, admin, payment) on one Compose network.
+Compose can run Postgres, Redis, Kafka, a one-shot Prisma migrate job, and six Node processes (auth, location, ride, notify, admin, payment) on one network.
+
+**Typical desktop host:** only `postgres` and `redis` are up; run `npm run dev` on the host for the six services (`tsx` watch). Use full `docker compose up --build` when you want Kafka and in-container Node processes.
 
 This stack is **backend-only**. `Dockerfile.dev` does not install the Android SDK, Xcode, or Expo. Rider and driver apps stay on the host (or [EAS](../../STORE.md)) so you can open them in the iOS Simulator or Android Emulator later.
 
@@ -19,7 +21,16 @@ Restart `next dev` after changing env.
 - `docker-compose.yml` — local stack
 - `.dockerignore` — keeps `prisma/migrations` and `package-lock.json` in the build context
 
-## Start
+## Host processes + Docker infra
+
+```bash
+cd backend
+docker compose up postgres redis -d
+npm run db:generate && npm run db:migrate && npm run db:seed
+npm run dev
+```
+
+## Full Compose Start
 
 From `backend/`:
 

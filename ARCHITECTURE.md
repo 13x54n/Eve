@@ -16,16 +16,17 @@ This document provides a comprehensive overview of Eve's system architecture, de
 
 ## Overview
 
-Eve is a **microservices-based** ride-matching platform designed for scalability, maintainability, and real-time performance.
+Eve is a **split-service** ride-matching platform designed for scalability, maintainability, and real-time performance. Local desktop development typically runs Postgres + Redis in Docker and the six Node services on the host with `tsx` watch (`auth 4001`, `location 4002`, `ride 4003`, `notify 4004`, `admin 4005`, `payment 4006`).
 
 ### Core Principles
 
-1. **Microservices Architecture**: Separate, independently deployable services
-2. **Direct client-to-service HTTP**: Rider/driver call auth, ride, and notify (no API gateway)
-3. **Real-time Communication**: WebSocket on notify `:4004`, domain events on Kafka
-4. **Geospatial Optimization**: H3 hexagonal indexing for fast matching
-5. **Privy Integration**: SMS, passkeys, and embedded wallets
-6. **Type Safety**: TypeScript across the entire stack
+1. **Split services**: Separate, independently deployable Node processes (Compose optional)
+2. **Direct client-to-service HTTP**: Rider/driver call auth, ride, payment, and notify (no API gateway)
+3. **Real-time Communication**: WebSocket on notify `:4004`; Kafka optional on host (in-process bus when unset)
+4. **Geospatial Optimization**: H3 hexagonal indexing for fast matching; rider `GET /api/rider/nearby-drivers` for map pins
+5. **Privy Integration**: SMS, passkeys, embedded wallets, optional fiat Bridge (sandbox by default)
+6. **Arc payments**: RideEscrow USDC plus driver bank cash-out and treasury-settled swaps
+7. **Type Safety**: TypeScript across the entire stack
 
 ## System Architecture
 
@@ -50,7 +51,7 @@ graph TB
         Ride[Ride Service :4003<br/>Trip lifecycle and presence]
         Notify[Notify Service :4004<br/>WebSocket and events]
         AdminApi[Admin Service :4005<br/>Staff API]
-        Payment[Payment Service :4006<br/>Arc USDC escrow]
+        Payment[Payment Service :4006<br/>Escrow, wallets, bank, swap]
     end
 
     subgraph DataLayer["Data Layer"]

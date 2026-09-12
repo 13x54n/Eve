@@ -491,9 +491,13 @@ PATCH /driver/trips/:id
 GET /api/driver/earnings
 GET /api/driver/wallet
 POST /api/driver/wallet/withdraw
+POST /api/driver/wallet/swap/estimate
+POST /api/driver/wallet/swap
+GET|POST /api/driver/wallet/bank-accounts
+DELETE /api/driver/wallet/bank-accounts/:id
 ```
 
-`GET /earnings` remains on **ride** (`:4003`). Wallet routes are on **payment** (`:4006`). See [Payment endpoints](#payment-endpoints) and [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+`GET /earnings` remains on **ride** (`:4003`). Wallet / swap / bank routes are on **payment** (`:4006`). `POST /withdraw` accepts `destination: "wallet" | "bank"` and optional `bankAccountId` (ledger `method: "BANK"` for bank). See [Payment endpoints](#payment-endpoints) and [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 **Response** (`GET /driver/earnings`):
 ```json
@@ -518,12 +522,24 @@ Base: `http://localhost:4006/api`. JWT required.
 | --- | --- | --- | --- |
 | `GET` | `/payment/config` | any | Arc chain id, ERC-20 USDC address, escrow address |
 | `GET` | `/payment/trips/:id/deposit` | rider | Native `value` + calldata for `RideEscrow.deposit` |
-| `POST` | `/payment/trips/:id/confirm` | rider | `{ "txHash": "0x…" }` → `ESCROWED` |
+| `GET` | `/payment/trips/:id/settlement` | driver | Quote `startSettlement` / `finalize` |
+| `GET` | `/payment/trips/:id/dispute` | rider | Quote `dispute` |
+| `GET` | `/payment/trips/:id/refund` | rider | Quote `refund` |
+| `POST` | `/payment/trips/:id/confirm` | rider/driver | `{ "txHash": "0x…", "action?" }` |
 | `GET` | `/rider/wallet` | rider | ERC-20 USDC balance (6 decimals), address, ledger |
-| `GET` | `/driver/wallet` | driver | ERC-20 USDC, platform credits, ledger |
-| `POST` | `/driver/wallet/withdraw` | driver | Cash out credits as ERC-20 USDC |
+| `POST` | `/rider/wallet/withdraw` | rider | Cash-out / withdraw record |
+| `POST` | `/rider/wallet/transfers` | rider | Record client-signed transfer |
+| `GET` | `/driver/wallet` | driver | ERC-20 USDC, platform credits, banks, ledger |
+| `POST` | `/driver/wallet/withdraw` | driver | Cash out: `destination=wallet|bank` + optional `bankAccountId` |
+| `POST` | `/driver/wallet/transfers` | driver | Record client-signed transfer |
+| `POST` | `/driver/wallet/swap/estimate` | driver | Quote + `treasuryOutBalance` / `canSettle` |
+| `POST` | `/driver/wallet/swap` | driver | Treasury-settled swap (`depositTxHash`; 409 if treasury cannot pay) |
+| `GET` / `POST` | `/driver/wallet/bank-accounts` | driver | List / register US bank (last-4) |
+| `DELETE` | `/driver/wallet/bank-accounts/:id` | driver | Remove bank |
 
-Accepting an offer on ride (`POST /api/rider/trips/:id/offers/:offerId/accept`) returns `{ trip, deposit }`. The rider app sends `deposit` with Privy `eth_sendTransaction` (chain `5042002`), then confirms. Native `msg.value` is 18 decimals; displayed balances use the ERC-20 view. Live RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Apps read `to` / `chainId` from quotes and `GET /payment/config` — do not put the contract in Expo env. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+Also on **ride** `:4003`: `GET /api/rider/nearby-drivers?lat=&lng=` returns ONLINE/IDLE drivers (`id`, `latitude`, `longitude`, `distanceKm`) for map pins.
+
+Accepting an offer on ride (`POST /api/rider/trips/:id/offers/:offerId/accept`) returns `{ trip, deposit }`. The rider app sends `deposit` with Privy `eth_sendTransaction` (chain `5042002`), then confirms. Native `msg.value` is 18 decimals; displayed balances use the ERC-20 view. Live RideEscrow: `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Treasury: `0xf4Ea0728c0EEc26c590a651A27a388121e1fA8e3`. USDC `0x3600…0000`, EURC `0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a`. Apps read `to` / `chainId` from quotes and `GET /payment/config` — do not put the contract in Expo env. See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Admin Endpoints
 

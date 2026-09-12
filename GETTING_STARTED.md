@@ -1,6 +1,8 @@
 # Getting Started with Eve
 
-Alpha path: **PostgreSQL/Redis → backend (`npm run dev`) → rider/driver**. The admin console and marketing site (www) are optional and are not alpha release targets.
+Alpha path: **PostgreSQL/Redis (Docker) → backend `npm run dev` (`tsx` watch on 4001–4006) → rider/driver**. The admin console and marketing site (www) are optional and are not alpha release targets.
+
+On the desktop host used for day-to-day work, Docker often runs **only** `eve-postgres` and `eve-redis`; Kafka and the six Node containers are optional. Physical devices in the office: iPhone 17 Pro = rider, iPhone 12 mini = driver (point Expo env at the desktop LAN IP).
 
 This guide will help you set up local development in under 1 hour.
 
@@ -23,21 +25,25 @@ This guide will help you set up local development in under 1 hour.
 
 Use one of these paths for a complete development environment. Both paths run PostgreSQL, Redis, all six backend services, and the optional admin console, marketing site, and mobile clients described below.
 
-### Local backend processes
+### Local backend processes (typical desktop)
 
-Use this path when you want hot reload for the backend services:
+Use this path when you want hot reload for the backend services. Postgres + Redis in Docker is enough:
 
 ```bash
 cd backend
 cp .env.example .env
 # Set JWT_ACCESS_SECRET and any Privy, ImageKit, or SMTP values you need.
+# For wallets/swaps: ESCROW_*, TREASURY_PRIVATE_KEY; PRIVY_FIAT_ENVIRONMENT=sandbox
+# Keep VITEST=false in .env (balance helpers treat only VITEST=true|1 as test mode).
 npm install
-docker compose up postgres redis kafka -d
+docker compose up postgres redis -d
 npm run db:generate
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
+
+Optional Kafka: `docker compose up postgres redis kafka -d` and set `KAFKA_BROKERS=localhost:9094`. Otherwise the in-process bus is used.
 
 The `db:generate` step must run after dependency installation, and `db:migrate` must run before any service handles requests. Keep this terminal open; start the optional clients in separate terminals.
 
@@ -123,15 +129,15 @@ This sets up:
 
 ## Step 2: Infrastructure Setup
 
-Eve requires PostgreSQL, Redis, and (for the full event bus) Kafka. We'll use Docker for all three.
+Eve requires PostgreSQL and Redis. Kafka is optional (full event bus). We'll use Docker for infra.
 
 ### 2.1 Start Infrastructure Services
 
 ```bash
 cd backend
 
-# Start PostgreSQL, Redis, and Kafka
-docker compose up postgres redis kafka -d
+# Typical desktop: Postgres + Redis only
+docker compose up postgres redis -d
 
 # Verify services are running
 docker compose ps
@@ -142,8 +148,9 @@ Expected output:
 NAME            STATUS          PORTS
 eve-postgres    Up 10 seconds   0.0.0.0:5432->5432/tcp
 eve-redis       Up 10 seconds   0.0.0.0:6379->6379/tcp
-eve-kafka       Up 10 seconds   0.0.0.0:9092->9092/tcp, 0.0.0.0:9094->9094/tcp
 ```
+
+Add `kafka` to the `up` command only if you want the Compose broker.
 
 ### 2.2 Verify Database Connection
 

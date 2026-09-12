@@ -1,16 +1,34 @@
-# Architecture Refactoring - Implementation Summary
+# Implementation status (as of Sep 2026)
 
-Branch: `cursor/refactor-to-monolith-2c6c`  
-Status: **✅ ALL PHASES COMPLETE - READY FOR PRODUCTION**  
-Last Updated: 2026-09-07
+**What is running on the desktop host today:** the **split six-service stack** on branch `cursor/refactor-to-monolith-2c6c`. Docker commonly runs only **Postgres + Redis**; auth/location/ride/notify/admin/payment run on the host with `npm run dev` (`tsx` watch) on ports **4001-4006**.
 
-## 🎉 Complete - Ready for Production Rollout!
+The microservices-to-monolith migration notes below are **historical**. They are not the default local or alpha runtime. Prefer [README.md](README.md), [GETTING_STARTED.md](GETTING_STARTED.md), and [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md) for current product behavior.
 
-All 4 phases of the microservices-to-monolith migration are complete. The infrastructure is ready for gradual production deployment.
+## Current product surface (verified)
+
+| Area | Status |
+| --- | --- |
+| Split services `@eve/auth|location|ride|notify|admin|payment` | Running on host |
+| Arc Testnet RideEscrow + USDC wallets | Live |
+| Rider wallet Receive / Buy (`useFundWallet`) / cash-out | Live |
+| Driver Receive / Wallet cash-out / Bank cash-out (`destination=bank`, ledger `BANK`) | Live (ACH sandbox via `PRIVY_FIAT_ENVIRONMENT=sandbox`) |
+| Driver swap estimate (`treasuryOutBalance`, `canSettle`) + treasury execute | Live (409 if treasury cannot pay; refunds `tokenIn` on payout failure) |
+| `GET /api/rider/nearby-drivers` | Live on ride `:4003` (ONLINE/IDLE) |
+| Full Compose (Kafka + six containers) | Optional |
+| Single-port monolith on `:4000` | Experimental / not the desktop default |
+
+## Historical note
+
+An earlier refactoring effort produced feature flags, notify-client work, Compose monolith files, and migration guides. Treat those as archive unless you are explicitly evaluating that path.
 
 ---
 
-## ✅ Completed Work
+# Architecture Refactoring - Implementation Summary (archive)
+
+Branch: `cursor/refactor-to-monolith-2c6c`
+Archive status as of Sep 2026: **historical** - desktop Eve runs the split stack described above, not the monolith as the default.
+
+## Completed Work (archive)
 
 ### Phase 1: Remove Kafka for Notify Events ✅ COMPLETE
 
@@ -379,5 +397,5 @@ git push origin cursor/refactor-to-monolith-2c6c:main --force
 
 ---
 
-**Status**: 🎉 **READY FOR PRODUCTION ROLLOUT**  
+**Status** (archive): historical - not the desktop default runtime
 **All 9 phases complete!**

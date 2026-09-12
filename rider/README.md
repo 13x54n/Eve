@@ -29,7 +29,8 @@ The Rider app enables passengers to:
 - Chat with drivers during trips
 - View trip history and receipts
 - Pay matched fares in Arc Testnet USDC from the Privy wallet
-- Profile → Wallet for the ERC-20 USDC balance
+- Profile → Wallet: Receive QR, Buy (Privy `useFundWallet` / MoonPay sandbox), cash-out via `POST /api/rider/wallet/withdraw`
+- Home can poll `GET /api/rider/nearby-drivers?lat=&lng=` (ride `:4003`) for ONLINE/IDLE car pins
 
 Arc escrow (canonical: [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md)): RideEscrow is on Arc Testnet at `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. This app does **not** take a contract address in Expo env — only `EXPO_PUBLIC_PAYMENT_URL` (and optional `EXPO_PUBLIC_CHAIN_RPC_URL`). After Privy login, fund the **embedded** Ethereum wallet from [faucet.circle.com](https://faucet.circle.com). Physical devices need a LAN IP, not `localhost`.
 
@@ -63,7 +64,7 @@ Arc escrow (canonical: [backend/docs/driver-wallet.md](../backend/docs/driver-wa
 ### Profile & History
 - View past trips
 - Profile and legal screens
-- Profile → Wallet (Arc Testnet USDC)
+- Profile → Wallet (Arc Testnet USDC): Receive, Buy, Cash out
 
 ## Architecture
 
@@ -98,7 +99,7 @@ src/app/
   courier/                 # Courier request and public track token
   legal/
   profile/
-    wallet.tsx             # Arc USDC wallet
+    wallet.tsx             # Arc USDC: Receive QR, Buy, cash-out
 ```
 
 ### State Management

@@ -366,7 +366,7 @@ npm run db:studio
 
 All services support hot reload:
 
-- **Backend**: `tsx watch` automatically restarts on file changes
+- **Backend**: `tsx watch` automatically restarts on file changes (`npm run dev` from `backend/`; typical desktop uses Docker only for Postgres + Redis)
 - **Next.js**: Fast Refresh for React components
 - **Expo**: Metro bundler hot reload
 

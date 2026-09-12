@@ -11,6 +11,6 @@ Auth, location, ride, notify, and admin each run as their own Node process. Ther
 | `@eve/admin` | 4005 | Staff `/api/admin` |
 | `@eve/payment` | 4006 | Wallet, Arc escrow, treasury payouts |
 
-Local: `npm run dev` from `backend/`. Docker: `docker compose up`.
+Typical desktop host: Docker runs **postgres + redis** only; app services use `npm run dev` from `backend/` (`tsx` watch on 4001–4006). Optional: `docker compose up` for the full stack including Kafka and in-container services.
 
 Tests mount the same HTTP prefixes in [`tests/helpers/test-app.ts`](../tests/helpers/test-app.ts).

@@ -22,7 +22,7 @@ Eve's backend consists of six Node services:
 - **Ride**: Trip lifecycle, offers, and driver presence HTTP
 - **Notify**: Real-time events via WebSocket
 - **Admin**: Staff console API (`/api/admin`)
-- **Payment**: Arc Testnet USDC wallets, ride escrow, and treasury cash-out
+- **Payment**: Arc Testnet USDC wallets, ride escrow, treasury cash-out, driver bank cash-out, and treasury-settled swaps
 
 See [services-ports.md](services-ports.md) for ports. Clients call services directly (no HTTP gateway).
 
@@ -212,10 +212,11 @@ If Redis is unavailable:
 ### Key Endpoints
 
 **Rider**:
+- `GET /api/rider/nearby-drivers?lat=&lng=` - ONLINE/IDLE drivers near a point (map pins)
 - `POST /api/rider/trips` - Create trip request
 - `GET /api/rider/trips` - List rider's trips
 - `GET /api/rider/trips/:id` - Get trip details
-- `POST /api/rider/trips/:id/accept-offer` - Accept offer
+- `POST /api/rider/trips/:id/offers/:offerId/accept` - Accept offer
 - `POST /api/rider/trips/:id/cancel` - Cancel trip
 
 **Driver**:
@@ -379,7 +380,9 @@ WebSocket connections authenticated via JWT:
 - Arc Testnet USDC wallet reads (ERC-20 6-decimal view)
 - RideEscrow quotes and confirm (`deposit`, `startSettlement`, `dispute`, `refund`)
 - Event-driven operator `finalize` after the dispute window; operator `resolve` after a dispute
-- Driver platform-credit cash-out (ERC-20 transfer; treasury key)
+- Driver / rider wallet cash-out (wallet or bank for drivers)
+- Driver treasury-settled token swap (USDC/EURC; estimate includes `treasuryOutBalance` / `canSettle`)
+- Driver US bank account CRUD (Privy Bridge; sandbox by default)
 
 USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefin/skills/blob/master/plugins/circle/skills/use-arc/SKILL.md)): native 18-decimal `msg.value` for escrow; ERC-20 `0x3600…0000` for display and cash-out. Never sum the two.
 
@@ -395,8 +398,13 @@ USDC on Arc is one asset with two views ([`use-arc`](https://github.com/circlefi
 | `/api/payment/trips/:id/confirm` | POST | Confirm app-signed tx hash |
 | `/api/admin/tickets/:id/escrow-resolve` | POST | Staff operator resolve (`releaseToPayee`) |
 | `/api/rider/wallet` | GET | Rider on-chain USDC |
-| `/api/driver/wallet` | GET | Driver USDC + credits |
-| `/api/driver/wallet/withdraw` | POST | Cash out credits |
+| `/api/rider/wallet/withdraw` | POST | Rider cash-out |
+| `/api/driver/wallet` | GET | Driver USDC + credits + banks |
+| `/api/driver/wallet/withdraw` | POST | Cash out: `destination=wallet|bank` |
+| `/api/driver/wallet/swap/estimate` | POST | Quote + treasury liquidity |
+| `/api/driver/wallet/swap` | POST | Execute treasury-settled swap |
+| `/api/driver/wallet/bank-accounts` | GET/POST | List / register US banks |
+| `/api/driver/wallet/bank-accounts/:id` | DELETE | Remove bank |
 
 **See**: [driver-wallet.md](driver-wallet.md) (live Arc Testnet address) and [contracts/README.md](../contracts/README.md). Rider/driver apps never set the contract in Expo env.
 
@@ -509,7 +517,7 @@ Each service can be configured via environment variables. See [ENVIRONMENT_VARIA
 **Service-specific**:
 - `AUTH_PORT`, `LOCATION_PORT`, `RIDE_PORT`, `NOTIFY_PORT`, `ADMIN_PORT`, `PAYMENT_PORT`
 - `LOCATION_GRPC_URL`, `NOTIFY_GRPC_URL`, `GRPC_LOGGING`
-- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`
+- `TREASURY_PRIVATE_KEY`, `CHAIN_RPC_URL`, `ESCROW_CONTRACT_ADDRESS`, `ESCROW_OPERATOR_ADDRESS`, `PRIVY_FIAT_ENVIRONMENT`
 
 ## Monitoring
 
@@ -565,4 +573,4 @@ logger.error('Database error', { error });
 
 ---
 
-**Last Updated**: 2026-09-06
+**Last Updated**: 2026-09-11

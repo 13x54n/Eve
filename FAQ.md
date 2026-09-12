@@ -48,7 +48,7 @@ netstat -ano | findstr :4003  # Windows
 
 ### Q: How do trip fares get paid?
 
-**A:** On Arc Testnet, the rider pays USDC from a Privy embedded wallet into `RideEscrow` (one signature). Completing the trip: the driver signs `startSettlement`; after 5 minutes with no dispute the operator auto-finalizes. Cancel before settlement: the rider signs `refund`. Wallets show the ERC-20 USDC view (6 decimals). Live contract: [`0xdE6f01794e74AfDbAd4C783123241285c1947f4C`](https://testnet.arcscan.app/address/0xde6f01794e74afdbad4c783123241285c1947f4c). Apps do not hardcode it — `GET /api/payment/config` via `EXPO_PUBLIC_PAYMENT_URL`. Fund the **embedded** rider wallet (and the operator) at https://faucet.circle.com (Arc Testnet). See [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
+**A:** On Arc Testnet, the rider pays USDC from a Privy embedded wallet into `RideEscrow` (one signature). Completing the trip: the driver signs `startSettlement`; undisputed fares auto-finalize to the driver. Rider Profile → Wallet supports Receive QR, Buy (`useFundWallet` / MoonPay), and cash-out. Driver earnings support Receive, Wallet cash-out, Bank cash-out (`destination=bank`, sandbox ACH by default), and treasury-settled USDC/EURC swaps. Details: [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md).
 
 ### Q: Do I need Privy to run the backend?
 
@@ -491,7 +491,8 @@ docker system df
 
 ```bash
 cd backend  # Docker Compose files are here
-docker compose up
+docker compose up postgres redis -d   # typical desktop
+# or: docker compose up --build       # full stack
 ```
 
 ### Q: Services can't communicate in Docker

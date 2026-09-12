@@ -30,7 +30,8 @@ The Driver app enables drivers to:
 - Submit competitive fare offers
 - Navigate to pickup and dropoff locations
 - Track trip status, matched fares, and Arc USDC wallet
-- Cash out platform credits as ERC-20 USDC to the Privy Ethereum wallet
+- Receive QR, cash out Wallet (on-chain USDC) or Bank (Eve earnings → saved US bank, last-4 only)
+- Swap USDC/EURC via treasury settlement (`estimate` includes `canSettle`)
 
 ## Features
 
@@ -58,7 +59,10 @@ The Driver app enables drivers to:
 ### Eve Wallet
 - On-chain Arc Testnet USDC (ERC-20 6-decimal view — same asset as gas)
 - Trip fares settle from rider `RideEscrow` on complete
-- Platform credits (`walletBalance`) cash out as ERC-20 USDC
+- Receive QR for the Privy embedded address
+- Cash out **Wallet** (`POST /api/driver/wallet/withdraw` `destination=wallet`) or **Bank** (`destination=bank` + `bankAccountId`; ledger `method: BANK`)
+- Bank account CRUD (`/api/driver/wallet/bank-accounts`); `PRIVY_FIAT_ENVIRONMENT=sandbox` records debit locally; live ACH needs Privy Bridge production + KYC
+- Token swap estimate/execute against treasury (409 if treasury cannot pay `tokenOut`)
 - Admin credits and payouts
 
 Arc escrow (canonical: [backend/docs/driver-wallet.md](../backend/docs/driver-wallet.md)): live RideEscrow `0xdE6f01794e74AfDbAd4C783123241285c1947f4C`. Do **not** put the contract in Expo env — `EXPO_PUBLIC_PAYMENT_URL` plus `GET /api/payment/config` and settlement quotes. After complete, the driver signs `startSettlement` with the Privy Ethereum wallet. Physical devices need a LAN IP. Faucet: [faucet.circle.com](https://faucet.circle.com) if the embedded wallet needs gas.
@@ -94,7 +98,7 @@ src/app/
     forgot-password.tsx
   (tabs)/
     home.tsx
-    earnings/            # Arc USDC wallet + trip list
+    earnings/            # Arc USDC wallet, bank payout, swap, trip list
     menu.tsx
   onboarding/
     vehicle.tsx
@@ -113,7 +117,7 @@ src/app/
 ### State Management
 
 - React context — not Zustand
-- REST via `src/services/driver.ts` (`getWallet`, `withdrawWallet`, `getEarnings`)
+- REST via `src/services/driver.ts` (`getWallet`, `withdrawWallet`, `estimateDriverSwap`, `executeDriverSwap`, bank-account helpers, `getEarnings`)
 
 ### Key Services
 

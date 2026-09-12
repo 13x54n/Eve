@@ -16,22 +16,9 @@ Arc Testnet RideEscrow is already deployed (`0xdE6f01794e74AfDbAd4C783123241285c
 
 ## Quick Start
 
-### With Docker (recommended)
+### Typical desktop host (recommended)
 
-From `backend/`:
-
-```bash
-cp .env.example .env
-# Set JWT_ACCESS_SECRET (required)
-
-docker compose up --build
-```
-
-The `migrate` service generates Prisma Client, applies all pending migrations, and must exit with code 0 before the six application services start. See **[docs/docker.md](docs/docker.md)** for health URLs, logs, seed, recovery from an existing database volume, and host emulator networking. Rider/driver apps are not in Compose. Arc USDC escrow and wallets: **[docs/driver-wallet.md](docs/driver-wallet.md)**.
-
-### Without Docker
-
-Run Postgres and Redis, install dependencies, generate Prisma Client, apply migrations, and seed the database before starting the services:
+Docker runs **Postgres + Redis**; the six app services run on the host with `tsx` watch:
 
 ```bash
 cd backend
@@ -43,6 +30,21 @@ npm run db:migrate
 npm run db:seed
 npm run dev
 ```
+
+Kafka is optional on this path (in-process bus when `KAFKA_BROKERS` is unset). Arc USDC escrow, wallets, bank cash-out, and swaps: **[docs/driver-wallet.md](docs/driver-wallet.md)**.
+
+### Full stack in Docker
+
+From `backend/`:
+
+```bash
+cp .env.example .env
+# Set JWT_ACCESS_SECRET (required)
+
+docker compose up --build
+```
+
+The `migrate` service generates Prisma Client, applies all pending migrations, and must exit with code 0 before the six application services start. See **[docs/docker.md](docs/docker.md)** for health URLs, logs, seed, recovery from an existing database volume, and host emulator networking. Rider/driver apps are not in Compose.
 
 `npm run db:migrate` updates the database selected by `backend/.env`. This may be the shared Prisma Postgres database rather than the local Docker Postgres container. Check `npx prisma migrate status` if a service reports a missing column, then run `npx prisma migrate deploy` and restart `npm run dev`.
 

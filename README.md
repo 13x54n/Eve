@@ -25,11 +25,13 @@ Community ride-matching marketplace. Riders request a trip, drivers send fare of
 
 Eve is a full-stack ride-matching platform featuring:
 - **Real-time matching** using Uber H3 geospatial indexing
-- **Microservices architecture** with gRPC between location/notify and ride/admin
+- **Split Node services** (auth/location/ride/notify/admin/payment) with gRPC between location/notify and ride/admin
+- **Desktop-first local stack**: Docker often runs only Postgres + Redis; app services use `tsx` watch on the host (`npm run dev` in `backend/`)
 - **Native mobile apps** for riders and drivers (iOS/Android) — built on the host or EAS, not Docker
 - **Admin dashboard** for operations and support
 - **Privy integration** for SMS, passkeys, and embedded wallets
-- **Arc Testnet USDC escrow** for trip fares (`@eve/payment` on `:4006`)
+- **Arc Testnet USDC escrow** for trip fares (`@eve/payment` on `:4006`), plus rider Buy/Receive/cash-out and driver wallet/bank cash-out and treasury-settled swaps
+- **Nearby driver pins** via `GET /api/rider/nearby-drivers` on ride `:4003`
 - **WebSocket** real-time updates for live tracking
 
 ## Technology Stack
@@ -154,9 +156,9 @@ Public prefixes:
 | `/api/auth` | auth :4001 | Privy exchange, admin login, `/me` |
 | `/api/driver/login` `register` `privy` | auth :4001 | Driver auth |
 | `/api/driver` | ride :4003 | Presence, trips, earnings |
-| `/api/driver/wallet` | payment :4006 | Driver USDC wallet and cash-out |
-| `/api/rider` | ride :4003 | Rider trips and offer accept |
-| `/api/rider/wallet` | payment :4006 | Rider USDC wallet |
+| `/api/driver/wallet` | payment :4006 | Driver USDC wallet, bank cash-out, swap |
+| `/api/rider` | ride :4003 | Rider trips, offer accept, nearby-drivers |
+| `/api/rider/wallet` | payment :4006 | Rider USDC wallet, cash-out |
 | `/api/payment` | payment :4006 | Escrow quote, confirm, config |
 | `/api/admin` | admin :4005 | Staff console (RBAC) |
 | `/socket.io` | notify :4004 | Realtime |
@@ -173,7 +175,7 @@ Public prefixes:
 | `@eve/ride` | Matching, offers, trip lifecycle, presence (`RIDE_PORT`, default 4003) |
 | `@eve/notify` | Notifications + Socket.IO (`NOTIFY_PORT`, default 4004) |
 | `@eve/admin` | Staff HTTP API (`ADMIN_PORT`, default 4005) |
-| `@eve/payment` | Arc USDC wallets and RideEscrow (`PAYMENT_PORT`, default 4006) |
+| `@eve/payment` | Arc USDC wallets, RideEscrow, bank cash-out, swaps (`PAYMENT_PORT`, default 4006) |
 
 ## Prerequisites
 
@@ -262,20 +264,20 @@ For detailed setup instructions, see [GETTING_STARTED.md](GETTING_STARTED.md).
 
 ## Local setup
 
-### 1. Database
+### 1. Database / infra
 
-From `backend/`, start Postgres only:
+Typical desktop path — Postgres + Redis only:
 
 ```bash
-docker compose up postgres -d
+docker compose up postgres redis -d
 ```
 
-Default compose credentials: user `eve`, password `eve`, database `eve` on `localhost:5432`.
+Default compose credentials: user `eve`, password `eve`, database `eve` on `localhost:5432`. Redis on `6379`.
 
-Or start auth, location, ride, notify, and admin together:
+Optional full Compose (Kafka + six Node services in containers):
 
 ```bash
-docker compose up
+docker compose up --build
 ```
 
 ### 2. Backend env
@@ -395,9 +397,9 @@ Do not use these credentials outside local development.
 
 ## Apps in more detail
 
-**Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, pay the fare in Arc Testnet USDC (one Privy signature into escrow), track, complete, ride history, Profile → Wallet.
+**Rider** — Privy SMS/passkey sign-in, request a trip with a suggested fare, review driver offers, accept a match, pay the fare in Arc Testnet USDC (one Privy signature into escrow), track, complete, ride history, Profile → Wallet (Receive QR, Privy Buy via MoonPay/Coinbase, cash-out). Ride can poll `GET /api/rider/nearby-drivers` for live ONLINE/IDLE pins.
 
-**Driver** — Privy SMS/email OTP sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, matched-fare earnings, Arc USDC wallet (escrow releases plus Eve credits cash-out).
+**Driver** — Privy SMS/email OTP sign-in, vehicle and documents onboarding, go online, incoming trips, send offers, pickup / start / complete, matched-fare earnings, Arc USDC wallet (Receive QR, on-chain Wallet cash-out, Bank cash-out of Eve earnings to a saved US bank last-4, treasury-settled USDC/EURC swap).
 
 **Admin** — staff email/password login with roles (`OWNER`, `OPERATIONS`, `FINANCE`, `SUPPORT`, `SAFETY`). Suggested-fare configs and zones; trip and offer audit; driver approval; driver Eve Wallet credit/payout; safety and support. Eve escrow holds trip USDC and does not take commission.
 

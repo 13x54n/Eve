@@ -24,3 +24,7 @@ Host Apple App Site Association and Digital Asset Links on `EXPO_PUBLIC_PRIVY_RE
 ## Mapbox
 
 Use a public token with the URL restrictions you need for store builds.
+
+## Wallet / payments (store builds)
+
+Point `EXPO_PUBLIC_PAYMENT_URL` at the public payment service. Rider Buy uses Privy client funding (MoonPay/Coinbase); cash-out and driver bank/swap hit payment `:4006` routes documented in [backend/docs/driver-wallet.md](backend/docs/driver-wallet.md). Do not embed treasury keys or escrow private config in the binary.

@@ -13,7 +13,7 @@ npm run test:coverage
 npm run test:contracts   # OpenAPI contract suite (partial)
 ```
 
-Requires PostgreSQL (`DATABASE_URL`) and, for matchmaking tests, Redis (`REDIS_URL`). Tests talk to an in-process Express app ([backend/tests/helpers/test-app.ts](backend/tests/helpers/test-app.ts)) that mounts the same prefixes as the split services — there is no gateway. Escrow coverage lives in `tests/payment-escrow.test.ts` (in-memory escrow when `VITEST` is set and no contract address is configured).
+Requires PostgreSQL (`DATABASE_URL`) and, for matchmaking tests, Redis (`REDIS_URL`). Tests talk to an in-process Express app ([backend/tests/helpers/test-app.ts](backend/tests/helpers/test-app.ts)) that mounts the same prefixes as the split services — there is no gateway. Escrow coverage lives in `tests/payment-escrow.test.ts` (in-memory escrow when Vitest mode is on and no contract address is configured). Balance helpers treat Vitest as true **only** when `VITEST=true` or `VITEST=1` — a `.env` value `VITEST=false` must not stub chain reads.
 
 Password `POST /api/auth/login` and `/api/auth/driver/register` exist for tests and k6. Mobile apps use Privy.
 
