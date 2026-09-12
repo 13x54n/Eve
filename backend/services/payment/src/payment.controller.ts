@@ -132,6 +132,7 @@ const swapSchema = z.object({
   tokenIn: z.string().trim().min(1),
   tokenOut: z.string().trim().min(1),
   amountIn: z.coerce.number().positive().max(100000),
+  depositTxHash: z.string().trim().optional(),
 });
 
 export async function estimateSwap(req: Request, res: Response, next: NextFunction) {
@@ -147,6 +148,49 @@ export async function executeSwap(req: Request, res: Response, next: NextFunctio
   try {
     const data = swapSchema.parse(req.body);
     res.status(201).json(await paymentService.executeDriverSwap(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}
+
+const bankAccountSchema = z.object({
+  accountOwnerName: z.string().trim().min(3).max(256),
+  bankName: z.string().trim().min(2).max(256).optional(),
+  currency: z.string().trim().min(3).max(8).optional(),
+  accountNumber: z.string().trim().min(6).max(17),
+  routingNumber: z.string().trim().min(9).max(9),
+  checkingOrSavings: z.enum(["checking", "savings"]).optional(),
+  streetLine1: z.string().trim().min(3).max(256),
+  streetLine2: z.string().trim().max(256).optional(),
+  city: z.string().trim().min(2).max(128),
+  state: z.string().trim().min(2).max(64),
+  postalCode: z.string().trim().min(3).max(16),
+  country: z.string().trim().min(2).max(3).optional(),
+});
+
+export async function listBankAccounts(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { syncDriverBankAccounts } = await import("./fiat-bank.js");
+    res.json(await syncDriverBankAccounts(userId(req)));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createBankAccount(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = bankAccountSchema.parse(req.body);
+    const { registerDriverBankAccount } = await import("./fiat-bank.js");
+    res.status(201).json(await registerDriverBankAccount(userId(req), data));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteBankAccount(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { deleteDriverBankAccount } = await import("./fiat-bank.js");
+    res.json(await deleteDriverBankAccount(userId(req), String(req.params.id)));
   } catch (error) {
     next(error);
   }

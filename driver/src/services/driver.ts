@@ -98,6 +98,8 @@ export type WalletChain = {
   tokenDecimals?: number;
   nativeDecimals?: number;
   treasuryConfigured: boolean;
+  treasuryAddress?: string | null;
+  eurcAddress?: string | null;
   usdPerToken: number;
   escrowAddress?: string | null;
   escrowConfigured?: boolean;
@@ -116,7 +118,23 @@ export type WalletLedgerEntry = {
   createdAt: string;
 };
 
+export type BankAccount = {
+  id: string;
+  providerAccountId: string | null;
+  provider: string;
+  environment: string;
+  currency: string;
+  accountType: string;
+  bankName: string | null;
+  last4: string;
+  accountOwnerName: string;
+  providerStatus: string;
+  payoutsLive: boolean;
+  createdAt: string;
+};
+
 export type DriverWallet = {
+  bankAccounts?: BankAccount[];
   walletBalance: number;
   onChainUsdc: number;
   onChainEurc?: number;
@@ -201,6 +219,7 @@ export type SwapParams = {
   tokenIn: string;
   tokenOut: string;
   amountIn: number;
+  depositTxHash?: string;
 };
 
 export async function estimateDriverSwap(input: SwapParams) {
@@ -449,5 +468,35 @@ export async function getDocumentUploadAuth() {
     publicKey: string;
     folder: string;
   }>('/driver/documents/upload-auth');
+  return data;
+}
+export async function listBankAccounts() {
+  const { data } = await api.get<{ accounts: BankAccount[]; environment: string }>('/driver/wallet/bank-accounts');
+  return data;
+}
+
+export async function registerBankAccount(input: {
+  accountOwnerName: string;
+  bankName?: string;
+  accountNumber: string;
+  routingNumber: string;
+  checkingOrSavings?: 'checking' | 'savings';
+  streetLine1: string;
+  streetLine2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+}) {
+  const { data } = await api.post<{
+    account: BankAccount;
+    providerError: string | null;
+    note: string;
+  }>('/driver/wallet/bank-accounts', input);
+  return data;
+}
+
+export async function deleteBankAccount(id: string) {
+  const { data } = await api.delete<{ deleted: boolean }>(`/driver/wallet/bank-accounts/${id}`);
   return data;
 }

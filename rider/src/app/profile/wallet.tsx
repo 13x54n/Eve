@@ -28,7 +28,8 @@ import {
   type WalletLedgerEntry,
 } from "@/services/wallet";
 import { useCompletePrivySession } from "@/lib/complete-privy-session";
-import { getArcUsdcBalance } from "@/lib/arc-chain";
+import { eveArcTestnet, getArcUsdcBalance } from "@/lib/arc-chain";
+import { useFundWallet } from "@privy-io/expo/ui";
 import { useSendUsdcTransfer } from "@/lib/send-escrow";
 import { lightImpact } from "@/lib/haptics";
 import { notifyRideEvent } from "@/services/notifications";
@@ -43,6 +44,7 @@ export default function RiderWalletScreen() {
   const brand = useBrand();
   const completePrivy = useCompletePrivySession();
   const sendUsdc = useSendUsdcTransfer();
+  const { fundWallet } = useFundWallet();
   const [wallet, setWallet] = useState<RiderWallet | null>(null);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState(false);
@@ -56,6 +58,7 @@ export default function RiderWalletScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [funding, setFunding] = useState(false);
 
   useEffect(() => {
     if (!toast || cashingOut) return;
@@ -98,6 +101,39 @@ export default function RiderWalletScreen() {
   );
 
   const { refreshing, onRefresh } = usePullToRefresh(load);
+
+
+  async function onBuy() {
+    if (!wallet?.ethereumWallet) {
+      Alert.alert("Buy", "Link your Privy wallet first");
+      return;
+    }
+    const tokenAddress =
+      wallet.chain?.tokenAddress || "0x3600000000000000000000000000000000000000";
+    try {
+      setFunding(true);
+      await fundWallet({
+        address: wallet.ethereumWallet,
+        chain: eveArcTestnet,
+        asset: { tokenAddress },
+        amount: "20",
+        defaultPaymentMethod: "card",
+        card: { preferredProvider: "moonpay" },
+        moonpay: { useSandbox: true },
+      });
+      lightImpact();
+      setToast("Funding started");
+      await load();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not open funding";
+      if (!/cancel|closed|dismiss/i.test(message)) {
+        Alert.alert("Buy", message);
+      }
+    } finally {
+      setFunding(false);
+    }
+  }
 
   async function onReceive() {
     if (!wallet?.ethereumWallet) return;
@@ -350,6 +386,14 @@ export default function RiderWalletScreen() {
           </Text>
         </View>
         <View style={styles.actions}>
+          <Pressable
+            style={styles.action}
+            onPress={() => void onBuy()}
+            disabled={!wallet?.ethereumWallet || funding}
+          >
+            <Feather name="plus-circle" size={18} color={Brand.accent} />
+            <Text style={styles.actionText}>{funding ? "Buying…" : "Buy"}</Text>
+          </Pressable>
           <Pressable style={styles.action} onPress={() => void onReceive()} disabled={!wallet?.ethereumWallet}>
             <Feather name="arrow-down" size={18} color={Brand.accent} />
             <Text style={styles.actionText}>Receive</Text>

@@ -111,6 +111,7 @@ export function getPayoutChainPublicConfig() {
     eurcDecimals: ARC_EURC_ERC20_DECIMALS,
     supportedSwapTokens: ["USDC", "EURC"] as const,
     nativeDecimals: ARC_NATIVE_DECIMALS,
+    treasuryAddress: treasuryAccount()?.address ?? null,
     treasuryConfigured: isTreasuryConfigured(),
     usdPerToken: Number(process.env.PAYOUT_USD_PER_TOKEN || 1),
   };
@@ -204,6 +205,26 @@ export async function sendTreasuryPayout(
   const hash = await client.sendTransaction({
     to: toAddr,
     value: parseUnits(tokenAmount.toFixed(ARC_NATIVE_DECIMALS), ARC_NATIVE_DECIMALS),
+    ...fees,
+  });
+  await client.waitForTransactionReceipt({ hash });
+  return { txHash: hash };
+}
+
+
+export async function sendTreasuryErc20(
+  to: string,
+  tokenAddress: string,
+  amount: number,
+  decimals: number,
+): Promise<PayoutSendResult> {
+  const client = treasuryWallet();
+  const fees = await eip1559Fees(client);
+  const hash = await client.writeContract({
+    address: getAddress(tokenAddress),
+    abi: ERC20_ABI,
+    functionName: "transfer",
+    args: [getAddress(to), parseUnits(amount.toFixed(decimals), decimals)],
     ...fees,
   });
   await client.waitForTransactionReceipt({ hash });

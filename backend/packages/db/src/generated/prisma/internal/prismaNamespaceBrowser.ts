@@ -81,7 +81,8 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   AdminLoginEvent: 'AdminLoginEvent',
   AdminSession: 'AdminSession',
-  Alert: 'Alert'
+  Alert: 'Alert',
+  FiatBankAccount: 'FiatBankAccount'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -602,6 +603,24 @@ export const AlertScalarFieldEnum = {
 } as const
 
 export type AlertScalarFieldEnum = (typeof AlertScalarFieldEnum)[keyof typeof AlertScalarFieldEnum]
+
+
+export const FiatBankAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  environment: 'environment',
+  currency: 'currency',
+  accountType: 'accountType',
+  bankName: 'bankName',
+  last4: 'last4',
+  accountOwnerName: 'accountOwnerName',
+  providerAccountId: 'providerAccountId',
+  providerStatus: 'providerStatus',
+  createdAt: 'createdAt'
+} as const
+
+export type FiatBankAccountScalarFieldEnum = (typeof FiatBankAccountScalarFieldEnum)[keyof typeof FiatBankAccountScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -329,6 +329,7 @@ export type UserWhereInput = {
   notifications?: Prisma.NotificationListRelationFilter
   tripMessages?: Prisma.TripMessageListRelationFilter
   receivedCouriers?: Prisma.TripListRelationFilter
+  fiatBankAccounts?: Prisma.FiatBankAccountListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -365,6 +366,7 @@ export type UserOrderByWithRelationInput = {
   notifications?: Prisma.NotificationOrderByRelationAggregateInput
   tripMessages?: Prisma.TripMessageOrderByRelationAggregateInput
   receivedCouriers?: Prisma.TripOrderByRelationAggregateInput
+  fiatBankAccounts?: Prisma.FiatBankAccountOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -404,6 +406,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   notifications?: Prisma.NotificationListRelationFilter
   tripMessages?: Prisma.TripMessageListRelationFilter
   receivedCouriers?: Prisma.TripListRelationFilter
+  fiatBankAccounts?: Prisma.FiatBankAccountListRelationFilter
 }, "id" | "email" | "phone" | "auth0Sub" | "privyDid">
 
 export type UserOrderByWithAggregationInput = {
@@ -496,6 +499,7 @@ export type UserCreateInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -532,6 +536,7 @@ export type UserUncheckedCreateInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -568,6 +573,7 @@ export type UserUpdateInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -604,6 +610,7 @@ export type UserUncheckedUpdateInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -966,6 +973,20 @@ export type UserUpdateOneRequiredWithoutSessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSessionsInput, Prisma.UserUpdateWithoutSessionsInput>, Prisma.UserUncheckedUpdateWithoutSessionsInput>
 }
 
+export type UserCreateNestedOneWithoutFiatBankAccountsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFiatBankAccountsInput, Prisma.UserUncheckedCreateWithoutFiatBankAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFiatBankAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutFiatBankAccountsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFiatBankAccountsInput, Prisma.UserUncheckedCreateWithoutFiatBankAccountsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFiatBankAccountsInput
+  upsert?: Prisma.UserUpsertWithoutFiatBankAccountsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFiatBankAccountsInput, Prisma.UserUpdateWithoutFiatBankAccountsInput>, Prisma.UserUncheckedUpdateWithoutFiatBankAccountsInput>
+}
+
 export type UserCreateWithoutResetCodesInput = {
   id?: string
   name: string
@@ -999,6 +1020,7 @@ export type UserCreateWithoutResetCodesInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutResetCodesInput = {
@@ -1034,6 +1056,7 @@ export type UserUncheckedCreateWithoutResetCodesInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutResetCodesInput = {
@@ -1085,6 +1108,7 @@ export type UserUpdateWithoutResetCodesInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutResetCodesInput = {
@@ -1120,6 +1144,7 @@ export type UserUncheckedUpdateWithoutResetCodesInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutRiderProfileInput = {
@@ -1155,6 +1180,7 @@ export type UserCreateWithoutRiderProfileInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutRiderProfileInput = {
@@ -1190,6 +1216,7 @@ export type UserUncheckedCreateWithoutRiderProfileInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutRiderProfileInput = {
@@ -1241,6 +1268,7 @@ export type UserUpdateWithoutRiderProfileInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutRiderProfileInput = {
@@ -1276,6 +1304,7 @@ export type UserUncheckedUpdateWithoutRiderProfileInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutDriverProfileInput = {
@@ -1311,6 +1340,7 @@ export type UserCreateWithoutDriverProfileInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutDriverProfileInput = {
@@ -1346,6 +1376,7 @@ export type UserUncheckedCreateWithoutDriverProfileInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutDriverProfileInput = {
@@ -1397,6 +1428,7 @@ export type UserUpdateWithoutDriverProfileInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDriverProfileInput = {
@@ -1432,6 +1464,7 @@ export type UserUncheckedUpdateWithoutDriverProfileInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReceivedCouriersInput = {
@@ -1467,6 +1500,7 @@ export type UserCreateWithoutReceivedCouriersInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReceivedCouriersInput = {
@@ -1502,6 +1536,7 @@ export type UserUncheckedCreateWithoutReceivedCouriersInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReceivedCouriersInput = {
@@ -1553,6 +1588,7 @@ export type UserUpdateWithoutReceivedCouriersInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReceivedCouriersInput = {
@@ -1588,6 +1624,7 @@ export type UserUncheckedUpdateWithoutReceivedCouriersInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTripMessagesInput = {
@@ -1623,6 +1660,7 @@ export type UserCreateWithoutTripMessagesInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTripMessagesInput = {
@@ -1658,6 +1696,7 @@ export type UserUncheckedCreateWithoutTripMessagesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTripMessagesInput = {
@@ -1709,6 +1748,7 @@ export type UserUpdateWithoutTripMessagesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTripMessagesInput = {
@@ -1744,6 +1784,7 @@ export type UserUncheckedUpdateWithoutTripMessagesInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAssignedTicketsInput = {
@@ -1779,6 +1820,7 @@ export type UserCreateWithoutAssignedTicketsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedTicketsInput = {
@@ -1814,6 +1856,7 @@ export type UserUncheckedCreateWithoutAssignedTicketsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedTicketsInput = {
@@ -1865,6 +1908,7 @@ export type UserUpdateWithoutAssignedTicketsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
@@ -1900,6 +1944,7 @@ export type UserUncheckedUpdateWithoutAssignedTicketsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAssignedIncidentsInput = {
@@ -1935,6 +1980,7 @@ export type UserCreateWithoutAssignedIncidentsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
@@ -1970,6 +2016,7 @@ export type UserUncheckedCreateWithoutAssignedIncidentsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAssignedIncidentsInput = {
@@ -2021,6 +2068,7 @@ export type UserUpdateWithoutAssignedIncidentsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
@@ -2056,6 +2104,7 @@ export type UserUncheckedUpdateWithoutAssignedIncidentsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -2091,6 +2140,7 @@ export type UserCreateWithoutNotificationsInput = {
   assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -2126,6 +2176,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -2177,6 +2228,7 @@ export type UserUpdateWithoutNotificationsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -2212,6 +2264,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAuditLogsInput = {
@@ -2247,6 +2300,7 @@ export type UserCreateWithoutAuditLogsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAuditLogsInput = {
@@ -2282,6 +2336,7 @@ export type UserUncheckedCreateWithoutAuditLogsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAuditLogsInput = {
@@ -2333,6 +2388,7 @@ export type UserUpdateWithoutAuditLogsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditLogsInput = {
@@ -2368,6 +2424,7 @@ export type UserUncheckedUpdateWithoutAuditLogsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLoginEventsInput = {
@@ -2403,6 +2460,7 @@ export type UserCreateWithoutLoginEventsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLoginEventsInput = {
@@ -2438,6 +2496,7 @@ export type UserUncheckedCreateWithoutLoginEventsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLoginEventsInput = {
@@ -2489,6 +2548,7 @@ export type UserUpdateWithoutLoginEventsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLoginEventsInput = {
@@ -2524,6 +2584,7 @@ export type UserUncheckedUpdateWithoutLoginEventsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -2559,6 +2620,7 @@ export type UserCreateWithoutSessionsInput = {
   notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -2594,6 +2656,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
   tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
   receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -2645,6 +2708,7 @@ export type UserUpdateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -2680,6 +2744,167 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
   tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
   receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
+  fiatBankAccounts?: Prisma.FiatBankAccountUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutFiatBankAccountsInput = {
+  id?: string
+  name: string
+  email?: string | null
+  phone?: string | null
+  passwordHash?: string | null
+  auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  ethereumWalletId?: string | null
+  solanaWallet?: string | null
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripCreateNestedManyWithoutRecipientUserInput
+}
+
+export type UserUncheckedCreateWithoutFiatBankAccountsInput = {
+  id?: string
+  name: string
+  email?: string | null
+  phone?: string | null
+  passwordHash?: string | null
+  auth0Sub?: string | null
+  privyDid?: string | null
+  ethereumWallet?: string | null
+  ethereumWalletId?: string | null
+  solanaWallet?: string | null
+  role?: $Enums.UserRole
+  adminStaffRole?: $Enums.AdminStaffRole | null
+  adminStaffTitle?: $Enums.AdminStaffTitle | null
+  accountStatus?: $Enums.AccountStatus
+  isActive?: boolean
+  flagged?: boolean
+  city?: string | null
+  mfaEnabled?: boolean
+  pushNotificationsEnabled?: boolean
+  lastLoginAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedCreateNestedManyWithoutUserInput
+  riderProfile?: Prisma.RiderProfileUncheckedCreateNestedOneWithoutUserInput
+  driverProfile?: Prisma.DriverProfileUncheckedCreateNestedOneWithoutUserInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedCreateNestedManyWithoutUserInput
+  sessions?: Prisma.AdminSessionUncheckedCreateNestedManyWithoutUserInput
+  auditLogs?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  assignedTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutAssigneeInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedCreateNestedManyWithoutAssigneeInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  tripMessages?: Prisma.TripMessageUncheckedCreateNestedManyWithoutAuthorInput
+  receivedCouriers?: Prisma.TripUncheckedCreateNestedManyWithoutRecipientUserInput
+}
+
+export type UserCreateOrConnectWithoutFiatBankAccountsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFiatBankAccountsInput, Prisma.UserUncheckedCreateWithoutFiatBankAccountsInput>
+}
+
+export type UserUpsertWithoutFiatBankAccountsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFiatBankAccountsInput, Prisma.UserUncheckedUpdateWithoutFiatBankAccountsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFiatBankAccountsInput, Prisma.UserUncheckedCreateWithoutFiatBankAccountsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFiatBankAccountsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFiatBankAccountsInput, Prisma.UserUncheckedUpdateWithoutFiatBankAccountsInput>
+}
+
+export type UserUpdateWithoutFiatBankAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWalletId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUpdateManyWithoutRecipientUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFiatBankAccountsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth0Sub?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  privyDid?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ethereumWalletId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solanaWallet?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  adminStaffRole?: Prisma.NullableEnumAdminStaffRoleFieldUpdateOperationsInput | $Enums.AdminStaffRole | null
+  adminStaffTitle?: Prisma.NullableEnumAdminStaffTitleFieldUpdateOperationsInput | $Enums.AdminStaffTitle | null
+  accountStatus?: Prisma.EnumAccountStatusFieldUpdateOperationsInput | $Enums.AccountStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  flagged?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mfaEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  pushNotificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resetCodes?: Prisma.PasswordResetCodeUncheckedUpdateManyWithoutUserNestedInput
+  riderProfile?: Prisma.RiderProfileUncheckedUpdateOneWithoutUserNestedInput
+  driverProfile?: Prisma.DriverProfileUncheckedUpdateOneWithoutUserNestedInput
+  loginEvents?: Prisma.AdminLoginEventUncheckedUpdateManyWithoutUserNestedInput
+  sessions?: Prisma.AdminSessionUncheckedUpdateManyWithoutUserNestedInput
+  auditLogs?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  assignedTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutAssigneeNestedInput
+  assignedIncidents?: Prisma.SafetyIncidentUncheckedUpdateManyWithoutAssigneeNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  tripMessages?: Prisma.TripMessageUncheckedUpdateManyWithoutAuthorNestedInput
+  receivedCouriers?: Prisma.TripUncheckedUpdateManyWithoutRecipientUserNestedInput
 }
 
 
@@ -2697,6 +2922,7 @@ export type UserCountOutputType = {
   notifications: number
   tripMessages: number
   receivedCouriers: number
+  fiatBankAccounts: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2709,6 +2935,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
   tripMessages?: boolean | UserCountOutputTypeCountTripMessagesArgs
   receivedCouriers?: boolean | UserCountOutputTypeCountReceivedCouriersArgs
+  fiatBankAccounts?: boolean | UserCountOutputTypeCountFiatBankAccountsArgs
 }
 
 /**
@@ -2784,6 +3011,13 @@ export type UserCountOutputTypeCountReceivedCouriersArgs<ExtArgs extends runtime
   where?: Prisma.TripWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFiatBankAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.FiatBankAccountWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2819,6 +3053,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
   receivedCouriers?: boolean | Prisma.User$receivedCouriersArgs<ExtArgs>
+  fiatBankAccounts?: boolean | Prisma.User$fiatBankAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2910,6 +3145,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   tripMessages?: boolean | Prisma.User$tripMessagesArgs<ExtArgs>
   receivedCouriers?: boolean | Prisma.User$receivedCouriersArgs<ExtArgs>
+  fiatBankAccounts?: boolean | Prisma.User$fiatBankAccountsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -2929,6 +3165,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     notifications: Prisma.$NotificationPayload<ExtArgs>[]
     tripMessages: Prisma.$TripMessagePayload<ExtArgs>[]
     receivedCouriers: Prisma.$TripPayload<ExtArgs>[]
+    fiatBankAccounts: Prisma.$FiatBankAccountPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3358,6 +3595,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tripMessages<T extends Prisma.User$tripMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tripMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   receivedCouriers<T extends Prisma.User$receivedCouriersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$receivedCouriersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TripPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  fiatBankAccounts<T extends Prisma.User$fiatBankAccountsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$fiatBankAccountsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FiatBankAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -4053,6 +4291,30 @@ export type User$receivedCouriersArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.TripScalarFieldEnum | Prisma.TripScalarFieldEnum[]
+}
+
+/**
+ * User.fiatBankAccounts
+ */
+export type User$fiatBankAccountsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the FiatBankAccount
+   */
+  select?: Prisma.FiatBankAccountSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the FiatBankAccount
+   */
+  omit?: Prisma.FiatBankAccountOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.FiatBankAccountInclude<ExtArgs> | null
+  where?: Prisma.FiatBankAccountWhereInput
+  orderBy?: Prisma.FiatBankAccountOrderByWithRelationInput | Prisma.FiatBankAccountOrderByWithRelationInput[]
+  cursor?: Prisma.FiatBankAccountWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.FiatBankAccountScalarFieldEnum | Prisma.FiatBankAccountScalarFieldEnum[]
 }
 
 /**

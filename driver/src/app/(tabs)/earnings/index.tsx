@@ -40,6 +40,7 @@ import { getArcEurcBalance, getArcUsdcBalance } from '@/lib/arc-chain';
 import { useSendUsdcTransfer } from '@/lib/send-escrow';
 import { lightImpact } from '@/lib/haptics';
 import { notifyRideEvent } from '@/services/notifications';
+import { BankPayoutCard } from '@/components/BankPayoutCard';
 
 type TxType = 'trip' | 'credit' | 'withdraw' | 'payout' | 'charge' | 'refund' | 'swap';
 
@@ -441,11 +442,29 @@ export default function Earnings() {
 
     try {
       setSwapping(true);
-      setToast(`Swapping ${val.toFixed(2)} ${tokenIn}…`);
+      const treasury = wallet?.chain?.treasuryAddress;
+      const tokenAddress =
+        tokenIn === 'USDC'
+          ? wallet?.chain?.tokenAddress
+          : wallet?.chain?.eurcAddress;
+      if (!treasury || !tokenAddress) {
+        Alert.alert('Swap', 'Treasury is not configured for on-chain swaps');
+        return;
+      }
+      setToast(`Sending ${val.toFixed(2)} ${tokenIn}…`);
+      const depositTxHash = await sendUsdc({
+        to: treasury,
+        amountUsd: val,
+        tokenAddress,
+        chainId: wallet?.chain?.chainId,
+        decimals: 6,
+      });
+      setToast('Settling swap on-chain…');
       const { result } = await executeDriverSwap({
         tokenIn,
         tokenOut,
         amountIn: val,
+        depositTxHash,
       });
       lightImpact();
       setSwapAmount('');
@@ -649,6 +668,13 @@ export default function Earnings() {
                 </TouchableOpacity>
               </View>
             ) : null}
+
+            <BankPayoutCard
+              accounts={wallet?.bankAccounts ?? []}
+              onChanged={async () => {
+                await load({ silent: true });
+              }}
+            />
 
             {showSwap ? (
               <View style={styles.swapSection}>

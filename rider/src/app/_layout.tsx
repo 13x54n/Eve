@@ -2,6 +2,7 @@ import "@/components/map/mapbox-token";
 import { Stack } from "expo-router/stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { PrivyProvider } from "@privy-io/expo";
+import { PrivyElements } from "@privy-io/expo/ui";
 import { AuthProvider, useAuth } from "@/context/auth-context";
 import { RideSessionProvider } from "@/context/ride-session";
 import { ThemeProvider } from "@/context/theme-context";
@@ -33,6 +34,7 @@ export default function RootLayout() {
                 <RootNavigator />
               </RideSessionProvider>
             </AuthProvider>
+            <PrivyElements />
           </PrivyProvider>
         </NetworkProvider>
       </ThemeProvider>

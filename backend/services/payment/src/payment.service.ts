@@ -696,6 +696,27 @@ export async function getDriverWallet(userId: string) {
     chain: publicPaymentConfig(),
     minWithdrawUsd: 1,
     entries: await walletActivity(userId),
+    bankAccounts: (await prisma.fiatBankAccount.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        providerAccountId: true,
+        provider: true,
+        environment: true,
+        currency: true,
+        accountType: true,
+        bankName: true,
+        last4: true,
+        accountOwnerName: true,
+        providerStatus: true,
+        createdAt: true,
+      },
+    })).map((row) => ({
+      ...row,
+      payoutsLive: row.providerStatus === "READY" && row.environment === "production",
+      createdAt: row.createdAt.toISOString(),
+    })),
   };
 }
 
@@ -1030,7 +1051,7 @@ export async function estimateDriverSwap(
 
 export async function executeDriverSwap(
   userId: string,
-  input: { tokenIn: string; tokenOut: string; amountIn: number | string },
+  input: { tokenIn: string; tokenOut: string; amountIn: number | string; depositTxHash?: string },
 ) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -1049,6 +1070,7 @@ export async function executeDriverSwap(
     tokenOut: input.tokenOut,
     amountIn: input.amountIn,
     sourceWalletAddress,
+    depositTxHash: input.depositTxHash,
   });
 
   const roundedAmount = Number(Number(result.amountIn).toFixed(2));

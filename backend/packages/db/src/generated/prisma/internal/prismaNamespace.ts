@@ -427,7 +427,8 @@ export const ModelName = {
   AuditLog: 'AuditLog',
   AdminLoginEvent: 'AdminLoginEvent',
   AdminSession: 'AdminSession',
-  Alert: 'Alert'
+  Alert: 'Alert',
+  FiatBankAccount: 'FiatBankAccount'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -443,7 +444,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripDispatch" | "tripStop" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "greeting" | "greetingSettings" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert"
+    modelProps: "user" | "passwordResetCode" | "riderProfile" | "fleetCompany" | "driverProfile" | "vehicle" | "driverDocument" | "trip" | "tripDispatch" | "tripStop" | "tripMessage" | "tripOffer" | "tripEvent" | "paymentMethod" | "ledgerEntry" | "fareConfig" | "zone" | "supportTicket" | "ticketMessage" | "safetyIncident" | "lostItem" | "privacyRequest" | "greeting" | "greetingSettings" | "promo" | "driverIncentive" | "notification" | "auditLog" | "adminLoginEvent" | "adminSession" | "alert" | "fiatBankAccount"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2741,6 +2742,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    FiatBankAccount: {
+      payload: Prisma.$FiatBankAccountPayload<ExtArgs>
+      fields: Prisma.FiatBankAccountFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.FiatBankAccountFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.FiatBankAccountFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        findFirst: {
+          args: Prisma.FiatBankAccountFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.FiatBankAccountFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        findMany: {
+          args: Prisma.FiatBankAccountFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>[]
+        }
+        create: {
+          args: Prisma.FiatBankAccountCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        createMany: {
+          args: Prisma.FiatBankAccountCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.FiatBankAccountCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>[]
+        }
+        delete: {
+          args: Prisma.FiatBankAccountDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        update: {
+          args: Prisma.FiatBankAccountUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        deleteMany: {
+          args: Prisma.FiatBankAccountDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.FiatBankAccountUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.FiatBankAccountUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>[]
+        }
+        upsert: {
+          args: Prisma.FiatBankAccountUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$FiatBankAccountPayload>
+        }
+        aggregate: {
+          args: Prisma.FiatBankAccountAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateFiatBankAccount>
+        }
+        groupBy: {
+          args: Prisma.FiatBankAccountGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FiatBankAccountGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.FiatBankAccountCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.FiatBankAccountCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -3282,6 +3357,24 @@ export const AlertScalarFieldEnum = {
 } as const
 
 export type AlertScalarFieldEnum = (typeof AlertScalarFieldEnum)[keyof typeof AlertScalarFieldEnum]
+
+
+export const FiatBankAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  provider: 'provider',
+  environment: 'environment',
+  currency: 'currency',
+  accountType: 'accountType',
+  bankName: 'bankName',
+  last4: 'last4',
+  accountOwnerName: 'accountOwnerName',
+  providerAccountId: 'providerAccountId',
+  providerStatus: 'providerStatus',
+  createdAt: 'createdAt'
+} as const
+
+export type FiatBankAccountScalarFieldEnum = (typeof FiatBankAccountScalarFieldEnum)[keyof typeof FiatBankAccountScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -3960,6 +4053,7 @@ export type GlobalOmitConfig = {
   adminLoginEvent?: Prisma.AdminLoginEventOmit
   adminSession?: Prisma.AdminSessionOmit
   alert?: Prisma.AlertOmit
+  fiatBankAccount?: Prisma.FiatBankAccountOmit
 }
 
 /* Types for Logging */

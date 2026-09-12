@@ -196,3 +196,8 @@ export type AdminSession = Prisma.AdminSessionModel
  * 
  */
 export type Alert = Prisma.AlertModel
+/**
+ * Model FiatBankAccount
+ * 
+ */
+export type FiatBankAccount = Prisma.FiatBankAccountModel

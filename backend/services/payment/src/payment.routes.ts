@@ -33,5 +33,8 @@ driverWalletRouter.post("/wallet/withdraw", controller.withdrawWallet);
 driverWalletRouter.post("/wallet/transfers", controller.recordWalletTransfer);
 driverWalletRouter.post("/wallet/swap/estimate", controller.estimateSwap);
 driverWalletRouter.post("/wallet/swap", controller.executeSwap);
+driverWalletRouter.get("/wallet/bank-accounts", controller.listBankAccounts);
+driverWalletRouter.post("/wallet/bank-accounts", controller.createBankAccount);
+driverWalletRouter.delete("/wallet/bank-accounts/:id", controller.deleteBankAccount);
 
 export const paymentInternalRouter = Router();

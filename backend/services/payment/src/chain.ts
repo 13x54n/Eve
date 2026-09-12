@@ -3,7 +3,10 @@ import {
   formatUnits,
   getAddress,
   http,
+  decodeEventLog,
+  parseAbiItem,
   type Chain,
+  type Hex,
 } from "viem";
 import { arcTestnet } from "viem/chains";
 import {
@@ -114,3 +117,60 @@ export async function getEurcBalance(address: string | null | undefined) {
 }
 
 export const getNativeUsdcBalance = getUsdcBalance;
+
+const TRANSFER_EVENT = parseAbiItem(
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+);
+
+export async function waitForErc20Transfer(input: {
+  txHash: string;
+  token: string;
+  from: string;
+  to: string;
+  minAmount: number;
+  decimals: number;
+}) {
+  if (!/^0x[a-fA-F0-9]{64}$/.test(input.txHash)) {
+    throw new Error("Provide a valid deposit transaction hash");
+  }
+  const client = createPublicClient({
+    chain: payoutChain(),
+    transport: http(getChainRpcUrl()),
+  });
+  const receipt = await client.waitForTransactionReceipt({
+    hash: input.txHash as Hex,
+    timeout: 120_000,
+  });
+  if (receipt.status !== "success") {
+    throw new Error("Deposit transaction failed on-chain");
+  }
+  const token = getAddress(input.token);
+  const from = getAddress(input.from);
+  const to = getAddress(input.to);
+  let transferred = 0n;
+  for (const log of receipt.logs) {
+    if (log.address.toLowerCase() !== token.toLowerCase()) continue;
+    try {
+      const decoded = decodeEventLog({
+        abi: [TRANSFER_EVENT],
+        data: log.data,
+        topics: log.topics,
+      });
+      if (
+        getAddress(decoded.args.from) === from &&
+        getAddress(decoded.args.to) === to
+      ) {
+        transferred += decoded.args.value;
+      }
+    } catch {
+      /* not a Transfer */
+    }
+  }
+  const amount = Number(formatUnits(transferred, input.decimals));
+  if (amount + 1e-9 < input.minAmount) {
+    throw new Error(
+      `Deposit amount ${amount} is below the swap input ${input.minAmount}`,
+    );
+  }
+  return { txHash: input.txHash, amount };
+}

@@ -236,6 +236,7 @@ model User {
   notifications     Notification[]
   tripMessages      TripMessage[]
   receivedCouriers  Trip[]              @relation("CourierRecipient")
+  fiatBankAccounts  FiatBankAccount[]
 }
 
 model PasswordResetCode {
@@ -709,4 +710,22 @@ model Alert {
   entityId  String?
   resolved  Boolean          @default(false)
   createdAt DateTime         @default(now())
+}
+
+model FiatBankAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String   @default("bridge")
+  environment       String
+  currency          String
+  accountType       String
+  bankName          String?
+  last4             String
+  accountOwnerName  String
+  providerAccountId String?
+  providerStatus    String
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
 }

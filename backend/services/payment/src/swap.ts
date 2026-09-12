@@ -3,7 +3,6 @@ import {
   ARC_EURC_ERC20_ADDRESS,
   ARC_USDC_ERC20_ADDRESS,
 } from "@eve/shared/treasury";
-import { randomBytes } from "node:crypto";
 
 export type SupportedToken = "USDC" | "EURC" | "cirBTC";
 
@@ -71,6 +70,7 @@ export type ExecuteInput = {
   tokenOut: string;
   amountIn: number | string;
   sourceWalletAddress: string;
+  depositTxHash?: string;
 };
 
 // Base exchange rates on Arc Testnet
@@ -161,9 +161,6 @@ export function calculateSwapEstimate(input: EstimateInput): SwapEstimate {
   };
 }
 
-/**
- * Executes a token swap on Arc Testnet via App Kit SDK or simulated on-chain execution.
- */
 export async function executeTokenSwap(input: ExecuteInput): Promise<SwapResult> {
   const estimate = calculateSwapEstimate(input);
 
@@ -217,12 +214,58 @@ export async function executeTokenSwap(input: ExecuteInput): Promise<SwapResult>
         }
       }
     } catch (error) {
-      console.warn("[swap] Live AppKit execution failed, falling back to simulated settlement:", error);
+      console.warn("[swap] Live AppKit execution failed, using treasury settlement:", error);
     }
   }
 
-  const randomHash = `0x${randomBytes(32).toString("hex")}`;
-  const explorerUrl = `https://testnet.arcscan.app/tx/${randomHash}`;
+  const { fail } = await import("@eve/shared");
+  const {
+    ARC_EURC_ERC20_ADDRESS,
+    ARC_EURC_ERC20_DECIMALS,
+    ARC_USDC_ERC20_ADDRESS,
+    ARC_USDC_ERC20_DECIMALS,
+    isTreasuryConfigured,
+    sendTreasuryErc20,
+    treasuryAccount,
+  } = await import("@eve/shared/treasury");
+  const { waitForErc20Transfer } = await import("./chain.js");
+
+  if (!isTreasuryConfigured()) {
+    fail("Treasury is not configured; cannot settle swap on-chain", "ConflictError");
+  }
+  const treasury = treasuryAccount()?.address;
+  if (!treasury) {
+    fail("Treasury is not configured; cannot settle swap on-chain", "ConflictError");
+  }
+  const treasuryAddress = treasury as string;
+  const depositTxHash = input.depositTxHash?.trim();
+  if (!depositTxHash) {
+    fail("Swap execute requires an on-chain deposit of tokenIn to the treasury", "ValidationError");
+  }
+  const confirmedDeposit = depositTxHash as string;
+
+  const tokenInAddress =
+    estimate.tokenIn === "EURC" ? ARC_EURC_ERC20_ADDRESS : ARC_USDC_ERC20_ADDRESS;
+  const tokenOutAddress =
+    estimate.tokenOut === "EURC" ? ARC_EURC_ERC20_ADDRESS : ARC_USDC_ERC20_ADDRESS;
+  const tokenInDecimals = estimate.tokenIn === "EURC" ? ARC_EURC_ERC20_DECIMALS : ARC_USDC_ERC20_DECIMALS;
+  const tokenOutDecimals = estimate.tokenOut === "EURC" ? ARC_EURC_ERC20_DECIMALS : ARC_USDC_ERC20_DECIMALS;
+
+  await waitForErc20Transfer({
+    txHash: confirmedDeposit,
+    token: tokenInAddress,
+    from: estimate.fromAddress,
+    to: treasuryAddress,
+    minAmount: Number(estimate.amountIn),
+    decimals: tokenInDecimals,
+  });
+
+  const payout = await sendTreasuryErc20(
+    estimate.toAddress,
+    tokenOutAddress,
+    Number(estimate.estimatedOutput.amount),
+    tokenOutDecimals,
+  );
 
   return {
     tokenIn: estimate.tokenIn,
@@ -232,8 +275,8 @@ export async function executeTokenSwap(input: ExecuteInput): Promise<SwapResult>
     amountIn: estimate.amountIn,
     fromAddress: estimate.fromAddress,
     toAddress: estimate.toAddress,
-    txHash: randomHash,
-    explorerUrl,
+    txHash: payout.txHash,
+    explorerUrl: `https://testnet.arcscan.app/tx/${payout.txHash}`,
     fees: [{ token: estimate.tokenIn, amount: estimate.fees[0].amount, type: "provider" }],
     progress: {
       status: "DONE",
